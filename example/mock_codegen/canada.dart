@@ -129,8 +129,7 @@ class CanadaGeometry {
             final poly = <List<double>>[];
             final ringList = decoder.unkeyed();
             while (ringList.hasNext()) {
-              final pointList = decoder.unkeyed();
-              poly.add(pointList.decodeDoubleList());
+              poly.add(ringList.decodeDoubleList());
             }
             coords.add(poly);
           }
@@ -146,15 +145,5 @@ class CanadaGeometry {
       type: type ?? '',
       coordinates: coordinates ?? const [],
     );
-  }
-}
-
-extension on UnkeyedDecoder {
-  List<double> decodeDoubleList() {
-    final list = <double>[];
-    while (hasNext()) {
-      list.add(readDouble());
-    }
-    return list;
   }
 }

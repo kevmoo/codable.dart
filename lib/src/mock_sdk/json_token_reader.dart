@@ -49,6 +49,15 @@ abstract interface class JsonTokenReader {
   /// Reads a numeric token as a [num] (either [int] or [double]).
   num readNum();
 
+  /// Reads a contiguous JSON array of doubles as a [List<double>].
+  List<double> readDoubleList();
+
+  /// Reads a contiguous JSON array of doubles as an unboxed [Float64List].
+  Float64List readFloat64List();
+
+  /// Reads a contiguous JSON array of integers as a [List<int>].
+  List<int> readIntList();
+
   /// Reads a boolean value.
   bool readBool();
 
@@ -254,6 +263,39 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   double readDouble() {
     final (start, end) = _scanValueSpan();
     return parseDoubleUtf8(_bytes, start, end);
+  }
+
+  @override
+  List<double> readDoubleList() {
+    beginArray();
+    final list = <double>[];
+    while (hasNext()) {
+      list.add(readDouble());
+    }
+    endArray();
+    return list;
+  }
+
+  @override
+  Float64List readFloat64List() {
+    beginArray();
+    final list = <double>[];
+    while (hasNext()) {
+      list.add(readDouble());
+    }
+    endArray();
+    return Float64List.fromList(list);
+  }
+
+  @override
+  List<int> readIntList() {
+    beginArray();
+    final list = <int>[];
+    while (hasNext()) {
+      list.add(readInt());
+    }
+    endArray();
+    return list;
   }
 
   @override

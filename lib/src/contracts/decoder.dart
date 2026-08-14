@@ -1,5 +1,4 @@
-/// Decoder and container contracts for deserialization.
-library;
+import 'dart:typed_data';
 
 import 'codable.dart';
 import 'static_key.dart';
@@ -207,6 +206,12 @@ abstract interface class MappedDecoder {
   /// Decodes a double list associated with [key].
   List<double> decodeDoubleListKey(StaticKey key);
 
+  /// Decodes a double list associated with string [key] directly as an unboxed [Float64List].
+  Float64List decodeFloat64List(String key);
+
+  /// Decodes a double list associated with [key] directly as an unboxed [Float64List].
+  Float64List decodeFloat64ListKey(StaticKey key);
+
   /// Decodes a String list associated with string [key].
   List<String> decodeStringList(String key);
 
@@ -263,6 +268,15 @@ abstract interface class UnkeyedDecoder {
 
   /// Decodes a nullable element using [decoder].
   T? decodeNullableElement<T>(DecoderCallback<T> decoder);
+
+  /// Decodes a nested contiguous list of integers.
+  List<int> decodeIntList();
+
+  /// Decodes a nested contiguous list of doubles.
+  List<double> decodeDoubleList();
+
+  /// Decodes a nested contiguous list of doubles directly as an unboxed [Float64List].
+  Float64List decodeFloat64List();
 }
 
 /// Decoder for standalone scalar values or primitive wrappers.

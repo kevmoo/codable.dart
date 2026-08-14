@@ -256,6 +256,22 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  Float64List decodeFloat64List(String key) {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return Float64List.fromList(list);
+  }
+
+  @override
+  Float64List decodeFloat64ListKey(StaticKey key) =>
+      decodeFloat64List(key.name);
+
+  @override
   List<String> decodeStringList() {
     _ensureStarted();
     final list = <String>[];
@@ -408,6 +424,15 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
 
   @override
+  Float64List decodeFloat64List(String key) => Float64List.fromList(
+    (_map[key] as List).map((e) => (e as num).toDouble()).toList(),
+  );
+
+  @override
+  Float64List decodeFloat64ListKey(StaticKey key) =>
+      decodeFloat64List(key.name);
+
+  @override
   List<String> decodeStringList(String key) =>
       (_map[key] as List).cast<String>();
 
@@ -537,6 +562,42 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
       return null;
     }
     return decodeElement(decoder);
+  }
+
+  @override
+  List<int> decodeIntList() {
+    _ensureStarted();
+    final list = <int>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readInt());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<double> decodeDoubleList() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  Float64List decodeFloat64List() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return Float64List.fromList(list);
   }
 }
 
