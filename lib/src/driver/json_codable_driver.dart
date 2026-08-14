@@ -96,7 +96,8 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   @override
   int selectKeyIndex(KeyOptions options) {
     _ensureStarted();
-    return _reader.selectName(JsonKeyOptions.of(options.keys));
+    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
+    return _reader.selectName(compiled as JsonKeyOptions);
   }
 
   @override
@@ -108,7 +109,8 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   @override
   int selectStringIndex(KeyOptions options) {
     _ensureStarted();
-    return _reader.selectString(JsonKeyOptions.of(options.keys));
+    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
+    return _reader.selectString(compiled as JsonKeyOptions);
   }
 
   @override

@@ -3,68 +3,31 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-class Coordinate {
-  final double latitude;
-  final double longitude;
+import '../example/mock_codegen/canada.dart';
+import '../example/mock_codegen/citm_catalog.dart';
+import '../example/mock_codegen/coordinate.dart';
 
-  const Coordinate({required this.latitude, required this.longitude});
-
-  static Coordinate decode(Decoder decoder) {
-    final keyed = decoder.keyed();
-    double? lat;
-    double? lon;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'latitude':
-        case 'lat':
-          lat = keyed.readDouble();
-          break;
-        case 'longitude':
-        case 'lon':
-          lon = keyed.readDouble();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-
-    if (lat == null || lon == null) {
-      throw CodableException('Missing required fields for Coordinate');
-    }
-    return Coordinate(latitude: lat, longitude: lon);
-  }
-
-  @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeDouble('latitude', latitude);
-    keyed.encodeDouble('longitude', longitude);
-  }
-
-  @override
-  int get hashCode => Object.hash(latitude, longitude);
-}
+// =============================================================================
+// 1. Coordinate List (10,000 Items)
+// =============================================================================
 
 class NativeCoordinateBenchmark extends BenchmarkBase {
   final String jsonStr;
-  late List<dynamic> _parsed;
 
   NativeCoordinateBenchmark(this.jsonStr)
-    : super('Native Coordinate List          ');
+    : super('Native Coordinate (jsonDecode + Map)'.padRight(42));
 
   @override
   void run() {
     int hash = 0;
     final list = jsonDecode(jsonStr) as List<dynamic>;
     for (var item in list) {
+      final map = item as Map<String, dynamic>;
       final c = Coordinate(
-        latitude: item['latitude'] ?? item['lat'] as double,
-        longitude: item['longitude'] ?? item['lon'] as double,
+        latitude: (map['latitude'] ?? map['lat']) as double,
+        longitude: (map['longitude'] ?? map['lon']) as double,
       );
       hash ^= c.hashCode;
     }
@@ -76,7 +39,7 @@ class CodableCoordinateBenchmark extends BenchmarkBase {
   final Uint8List bytes;
 
   CodableCoordinateBenchmark(this.bytes)
-    : super('Codable Coordinate List         ');
+    : super('Codable Coordinate (Mock Codegen)     '.padRight(42));
 
   @override
   void run() {
@@ -90,66 +53,106 @@ class CodableCoordinateBenchmark extends BenchmarkBase {
   }
 }
 
-class NativePayloadBenchmark extends BenchmarkBase {
+// =============================================================================
+// 2. canada.json (536 KB GeoJSON - Coordinate Arrays & Float Operations)
+// =============================================================================
+
+class NativeCanadaBenchmark extends BenchmarkBase {
   final String jsonStr;
-  NativePayloadBenchmark(String name, this.jsonStr)
-    : super('Native  $name'.padRight(32));
+
+  NativeCanadaBenchmark(this.jsonStr)
+    : super('Native canada.json (jsonDecode -> Map)'.padRight(42));
 
   @override
   void run() {
     final dynamic obj = jsonDecode(jsonStr);
-    if (obj == null) print('null payload');
+    if (obj == null) print('null');
   }
 }
 
-class CodablePayloadBenchmark extends BenchmarkBase {
+class CodableCanadaBenchmark extends BenchmarkBase {
   final Uint8List bytes;
-  CodablePayloadBenchmark(String name, this.bytes)
-    : super('Codable $name'.padRight(32));
+
+  CodableCanadaBenchmark(this.bytes)
+    : super('Codable canada.json (Mock Codegen DOM) '.padRight(42));
 
   @override
   void run() {
     final decoder = JsonCodableDecoder.fromBytes(bytes);
-    final keyed = decoder.keyed();
-    while (keyed.hasNextKey()) {
-      keyed.nextKey();
-      keyed.skipValue();
-    }
+    final fc = CanadaFeatureCollection.decode(decoder);
+    if (fc.features.isEmpty && bytes.isEmpty) print('empty');
+  }
+}
+
+// =============================================================================
+// 3. citm_catalog.json (1.7 MB - Deeply Nested Objects, Strings, Maps)
+// =============================================================================
+
+class NativeCitmBenchmark extends BenchmarkBase {
+  final String jsonStr;
+
+  NativeCitmBenchmark(this.jsonStr)
+    : super('Native citm_catalog (jsonDecode -> Map)'.padRight(42));
+
+  @override
+  void run() {
+    final dynamic obj = jsonDecode(jsonStr);
+    if (obj == null) print('null');
+  }
+}
+
+class CodableCitmBenchmark extends BenchmarkBase {
+  final Uint8List bytes;
+
+  CodableCitmBenchmark(this.bytes)
+    : super('Codable citm_catalog (Mock Codegen DOM)'.padRight(42));
+
+  @override
+  void run() {
+    final decoder = JsonCodableDecoder.fromBytes(bytes);
+    final catalog = CitmCatalog.decode(decoder);
+    if (catalog.events.isEmpty && bytes.isEmpty) print('empty');
   }
 }
 
 void main() {
+  print(
+    '========================================================================',
+  );
+  print('End-to-End Serialization Throughput Benchmark');
+  print(
+    '========================================================================',
+  );
+
+  // 1. Coordinates (10,000 points)
   final coordsList = List.generate(
     10000,
-    (i) => '{"lat": 34.0, "lon": -118.0}',
+    (i) => '{"lat": 34.012345, "lon": -118.098765}',
   ).join(',');
   final coordsJson = '[$coordsList]';
   final coordsBytes = utf8.encode(coordsJson) as Uint8List;
 
-  print(
-    '========================================================================',
-  );
-  print('JIT Benchmark (Run #1)');
-  print(
-    '========================================================================',
-  );
+  print('\n[1] 10,000 Coordinates Deserialization:');
   NativeCoordinateBenchmark(coordsJson).report();
   CodableCoordinateBenchmark(coordsBytes).report();
 
+  // 2. canada.json
   final canadaFile = File('benchmark/data/canada.json');
-  final citmFile = File('benchmark/data/citm_catalog.json');
-
   if (canadaFile.existsSync()) {
+    print('\n[2] canada.json (GeoJSON Polygons / Double Arrays):');
     final str = canadaFile.readAsStringSync();
     final bytes = canadaFile.readAsBytesSync();
-    NativePayloadBenchmark('canada.json', str).report();
-    CodablePayloadBenchmark('canada.json', bytes).report();
+    NativeCanadaBenchmark(str).report();
+    CodableCanadaBenchmark(bytes).report();
   }
 
+  // 3. citm_catalog.json
+  final citmFile = File('benchmark/data/citm_catalog.json');
   if (citmFile.existsSync()) {
+    print('\n[3] citm_catalog.json (Relational Catalog / Nested Objects):');
     final str = citmFile.readAsStringSync();
     final bytes = citmFile.readAsBytesSync();
-    NativePayloadBenchmark('citm_catalog.json', str).report();
-    CodablePayloadBenchmark('citm_catalog.json', bytes).report();
+    NativeCitmBenchmark(str).report();
+    CodableCitmBenchmark(bytes).report();
   }
 }

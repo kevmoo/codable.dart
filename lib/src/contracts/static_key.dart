@@ -37,8 +37,11 @@ final class KeyOptions {
 
   final Map<String, int> _indexMap;
 
+  /// Cached format-specific compiled representation (e.g. JsonKeyOptions).
+  Object? compiled;
+
   /// Creates a [KeyOptions] table from an ordered list of [keys].
-  KeyOptions(List<String> keys)
+  KeyOptions(List<String> keys, {this.compiled})
     : keys = List.unmodifiable(keys),
       _indexMap = {for (var i = 0; i < keys.length; i++) keys[i]: i};
 
