@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:codable/codable.dart';
 
 class CanadaFeatureCollection {
@@ -106,7 +108,7 @@ class CanadaProperties {
 
 class CanadaGeometry {
   final String type;
-  final List<List<List<double>>> coordinates;
+  final List<List<Float64List>> coordinates;
 
   const CanadaGeometry({required this.type, required this.coordinates});
 
@@ -115,7 +117,7 @@ class CanadaGeometry {
   static CanadaGeometry decode(Decoder decoder) {
     final keyed = decoder.keyed();
     String? type;
-    List<List<List<double>>>? coordinates;
+    List<List<Float64List>>? coordinates;
 
     while (keyed.hasNextKey()) {
       switch (keyed.selectKeyIndex(_options)) {
@@ -123,13 +125,13 @@ class CanadaGeometry {
           type = keyed.readString();
           break;
         case 1:
-          final coords = <List<List<double>>>[];
+          final coords = <List<Float64List>>[];
           final outerList = decoder.unkeyed();
           while (outerList.hasNext()) {
-            final poly = <List<double>>[];
+            final poly = <Float64List>[];
             final ringList = decoder.unkeyed();
             while (ringList.hasNext()) {
-              poly.add(ringList.decodeDoubleList());
+              poly.add(ringList.decodeFloat64List());
             }
             coords.add(poly);
           }
