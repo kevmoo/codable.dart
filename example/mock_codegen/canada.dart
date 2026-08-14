@@ -227,12 +227,11 @@ class CanadaGeometry {
             reader.beginArray();
             while (reader.hasNext()) {
               reader.beginArray();
-              final ring = <double>[];
-              while (reader.hasNext()) {
-                ring.add(reader.readDouble());
-              }
+              final point = Float64List(2);
+              point[0] = reader.readDouble();
+              point[1] = reader.readDouble();
               reader.endArray();
-              poly.add(Float64List.fromList(ring));
+              poly.add(point);
             }
             reader.endArray();
             coords.add(poly);
