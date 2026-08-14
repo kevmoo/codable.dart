@@ -14,6 +14,9 @@ final class JsonCodableDecoder implements Decoder {
   @override
   final Map<Object, Object?> userInfo;
 
+  /// Exposes the underlying pull-based token reader for direct, devirtualized decoding.
+  JsonTokenReader get reader => _reader;
+
   JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}});
 
   factory JsonCodableDecoder.fromBytes(
