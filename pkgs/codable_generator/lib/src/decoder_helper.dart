@@ -89,10 +89,10 @@ final class DecoderGeneratorHelper {
       );
       for (final field in nonIgnoredFields) {
         final suffix = toSafeIdentifierSuffix(field.name);
-        buffer.writeln('    name$suffix,');
+        buffer.writeln('    $schemaName.name$suffix,');
         for (var i = 0; i < field.aliases.length; i++) {
           final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
-          buffer.writeln('    alias$suffix$aliasSuffix,');
+          buffer.writeln('    $schemaName.alias$suffix$aliasSuffix,');
         }
       }
       buffer.writeln('  ]);');
