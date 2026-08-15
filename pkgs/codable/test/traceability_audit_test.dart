@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
-import 'package:codable/src/mock_sdk/json_utf8_codec.dart';
 import 'package:test/scaffolding.dart';
 
 void main() {
