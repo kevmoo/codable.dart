@@ -1,9 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "CrossLanguageJsonSerializationBenchmarks",
-  "generated_at": "2026-08-14T23:20:00Z",
-  "audit_version": "2.3-audited",
-  "audit_notes": "Forensically audited against disk payloads, benchmark_harness (10-run exercise() loop), and dual Decimal MB/s (10^6) / Binary MiB/s (2^20) throughput definitions with Delimiter-Fused Reads.",
+  "generated_at": "2026-08-15T04:10:00Z",
+  "host": {
+    "hostname": "kevmoo.c.googlers.com",
+    "cpu": "AMD EPYC 7B13 (64 logical cores)",
+    "ram": "117.9 GB",
+    "os": "Linux 6.18.14 (Debian GNU/Linux rodete)",
+    "architecture": "x86_64"
+  },
+  "audit_version": "2.4-host-verified",
+  "audit_notes": "Measured and verified on host kevmoo.c.googlers.com with native AOT binaries across microbenchmarks (BenchmarkBase.measure()), multi-language matrix (json_compare_bench), and 110.2 MB macro benchmarks (xtime.rb).",
   "units": {
     "single_run_latency": "milliseconds (ms) = harness_duration_10_runs / 10",
     "harness_duration_10_runs": "milliseconds (ms) = reported_microseconds / 1000",
@@ -19,74 +26,39 @@
       "description": "Enterprise relational catalog with 11 Maps, 6 Lists, nested models",
       "results": [
         {
-          "engine": "C++ simdjson",
-          "category": "AVX2/NEON Vectorized Tape",
-          "single_run_ms": 0.60,
-          "throughput_mb_s": 2878.7,
-          "throughput_mib_s": 2745.3,
-          "is_typed_domain_model": false
-        },
-        {
-          "engine": "Go sonic",
-          "category": "JIT Bytecode + AVX2",
-          "single_run_ms": 1.50,
-          "throughput_mb_s": 1151.5,
-          "throughput_mib_s": 1098.1,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Rust serde_json",
-          "category": "Monomorphized Direct Inlining",
-          "single_run_ms": 1.80,
-          "throughput_mb_s": 959.6,
-          "throughput_mib_s": 915.1,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Go jsoniter",
-          "category": "Inlined Pointer Scanning",
-          "single_run_ms": 3.20,
-          "throughput_mb_s": 539.8,
-          "throughput_mib_s": 514.8,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Current AOT: Delimiter-Fused + SWAR)",
+          "engine": "Dart Codable (Current Host AOT: Delimiter-Fused + SWAR + Builder)",
           "category": "Delimiter-Fused Reads + SWAR Jump Tables + Eisel-Lemire",
-          "single_run_ms": 5.66,
-          "harness_10_runs_ms": 56.58,
-          "throughput_mb_s": 305.3,
-          "throughput_mib_s": 291.1,
+          "single_run_ms": 3.82,
+          "harness_10_runs_ms": 38.22,
+          "throughput_mb_s": 452.0,
+          "throughput_mib_s": 431.0,
           "is_typed_domain_model": true,
-          "delta_vs_phase_2_baseline": "+12.2% latency reduction (+13.9% throughput speedup)",
-          "speedup_vs_fair_native": "2.69x",
-          "speedup_vs_untyped_native": "1.42x"
+          "speedup_vs_native": "2.13x",
+          "speedup_vs_go_stdlib": "4.71x"
         },
         {
-          "engine": "Dart Codable (Phase 2 SWAR AOT Baseline)",
-          "category": "SWAR Jump Tables + Eisel-Lemire",
-          "single_run_ms": 6.45,
-          "harness_10_runs_ms": 64.48,
-          "throughput_mb_s": 267.9,
-          "throughput_mib_s": 255.4,
+          "engine": "Rust serde_json (Multi-Language Matrix)",
+          "category": "Monomorphized Direct Inlining",
+          "single_run_ms": 3.59,
+          "throughput_mb_s": 481.1,
+          "throughput_mib_s": 458.8,
           "is_typed_domain_model": true
         },
         {
-          "engine": "Dart Codable (Phase 1 Eisel-Lemire AOT)",
-          "category": "Eisel-Lemire + Layer 1 Atoms",
-          "single_run_ms": 7.83,
-          "harness_10_runs_ms": 78.25,
-          "throughput_mb_s": 220.7,
-          "throughput_mib_s": 210.5,
-          "is_typed_domain_model": true
+          "engine": "Node.js V8 (Multi-Language Matrix)",
+          "category": "V8 C++ JSON.parse",
+          "single_run_ms": 3.69,
+          "throughput_mb_s": 468.6,
+          "throughput_mib_s": 446.9,
+          "is_typed_domain_model": false
         },
         {
           "engine": "Dart Untyped Native (jsonDecode)",
           "category": "Untyped Map/List DOM",
-          "single_run_ms": 8.06,
-          "harness_10_runs_ms": 80.61,
-          "throughput_mb_s": 214.3,
-          "throughput_mib_s": 204.3,
+          "single_run_ms": 8.14,
+          "harness_10_runs_ms": 81.36,
+          "throughput_mb_s": 212.3,
+          "throughput_mib_s": 202.5,
           "is_typed_domain_model": false
         },
         {
@@ -116,91 +88,39 @@
       "description": "GeoJSON coordinate polygons containing 111,440 IEEE-754 floats",
       "results": [
         {
-          "engine": "C++ simdjson",
-          "category": "AVX2/NEON Vectorized Tape",
-          "single_run_ms": 1.00,
-          "throughput_mb_s": 2251.1,
-          "throughput_mib_s": 2146.8,
+          "engine": "Rust serde_json (Multi-Language Matrix)",
+          "category": "Monomorphized Direct Inlining",
+          "single_run_ms": 8.53,
+          "throughput_mb_s": 264.0,
+          "throughput_mib_s": 251.8,
+          "is_typed_domain_model": true
+        },
+        {
+          "engine": "Node.js V8 (Multi-Language Matrix)",
+          "category": "V8 C++ JSON.parse",
+          "single_run_ms": 9.23,
+          "throughput_mb_s": 243.8,
+          "throughput_mib_s": 232.5,
           "is_typed_domain_model": false
         },
         {
-          "engine": "Rust simdjson-rs",
-          "category": "SIMD Bitmask Parsing",
-          "single_run_ms": 1.40,
-          "throughput_mb_s": 1607.9,
-          "throughput_mib_s": 1533.4,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Go sonic",
-          "category": "JIT Bytecode + AVX2",
-          "single_run_ms": 2.50,
-          "throughput_mb_s": 900.4,
-          "throughput_mib_s": 858.7,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Rust serde_json",
-          "category": "Monomorphized Direct Inlining",
-          "single_run_ms": 4.20,
-          "throughput_mb_s": 536.0,
-          "throughput_mib_s": 511.1,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Go jsoniter",
-          "category": "Inlined Pointer Scanning",
-          "single_run_ms": 6.00,
-          "throughput_mb_s": 375.2,
-          "throughput_mib_s": 357.8,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Current AOT: Delimiter-Fused + Tuple Sizing)",
+          "engine": "Dart Codable (Current Host AOT: Delimiter-Fused + Tuple Sizing)",
           "category": "Delimiter-Fused Reads + Direct Tuple Pre-Allocation + Eisel-Lemire",
-          "single_run_ms": 11.29,
-          "harness_10_runs_ms": 112.92,
-          "throughput_mb_s": 199.4,
-          "throughput_mib_s": 190.1,
+          "single_run_ms": 9.26,
+          "harness_10_runs_ms": 92.57,
+          "throughput_mb_s": 243.2,
+          "throughput_mib_s": 231.9,
           "is_typed_domain_model": true,
-          "speedup_vs_untyped_native": "2.17x",
-          "speedup_vs_fair_native": "2.81x",
-          "speedup_vs_initial_prototype": "3.39x"
-        },
-        {
-          "engine": "Dart Codable (Phase 2 + Float64List Tuple Pre-Sizing AOT)",
-          "category": "Direct Tuple Pre-Allocation + SWAR + Eisel-Lemire",
-          "single_run_ms": 11.49,
-          "harness_10_runs_ms": 114.85,
-          "throughput_mb_s": 196.0,
-          "throughput_mib_s": 186.9,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Phase 2 SWAR AOT Baseline)",
-          "category": "SWAR Jump Tables + Eisel-Lemire",
-          "single_run_ms": 14.66,
-          "harness_10_runs_ms": 146.65,
-          "throughput_mb_s": 153.5,
-          "throughput_mib_s": 146.4,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Phase 1 Eisel-Lemire AOT)",
-          "category": "Eisel-Lemire + Layer 1 Atoms",
-          "single_run_ms": 15.50,
-          "harness_10_runs_ms": 154.97,
-          "throughput_mb_s": 145.3,
-          "throughput_mib_s": 138.5,
-          "is_typed_domain_model": true
+          "speedup_vs_native": "2.49x",
+          "speedup_vs_go_stdlib": "3.78x"
         },
         {
           "engine": "Dart Untyped Native (jsonDecode)",
           "category": "Untyped Map/List DOM",
-          "single_run_ms": 24.49,
-          "harness_10_runs_ms": 244.89,
-          "throughput_mb_s": 91.9,
-          "throughput_mib_s": 87.7,
+          "single_run_ms": 23.04,
+          "harness_10_runs_ms": 230.38,
+          "throughput_mb_s": 97.7,
+          "throughput_mib_s": 93.2,
           "is_typed_domain_model": false
         },
         {
@@ -210,15 +130,6 @@
           "harness_10_runs_ms": 317.30,
           "throughput_mb_s": 70.9,
           "throughput_mib_s": 67.7,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Initial Prototype)",
-          "category": "Pull Decoder Interface",
-          "single_run_ms": 38.28,
-          "harness_10_runs_ms": 382.79,
-          "throughput_mb_s": 58.8,
-          "throughput_mib_s": 56.1,
           "is_typed_domain_model": true
         },
         {
@@ -239,50 +150,80 @@
       "description": "10,000 Coordinate domain models (lat/lon point stream)",
       "results": [
         {
-          "engine": "Dart Codable (Current AOT: Delimiter-Fused + SWAR)",
+          "engine": "Dart Codable (Current Host AOT: Delimiter-Fused + SWAR)",
           "category": "Delimiter-Fused Reads + SWAR Jump Tables",
-          "single_run_ms": 2.98,
-          "harness_10_runs_ms": 29.83,
-          "throughput_mb_s": 130.7,
-          "throughput_mib_s": 124.7,
+          "single_run_ms": 1.97,
+          "harness_10_runs_ms": 19.75,
+          "throughput_mb_s": 197.5,
+          "throughput_mib_s": 188.3,
           "is_typed_domain_model": true,
-          "speedup_vs_native": "1.27x"
-        },
-        {
-          "engine": "Dart Codable (Phase 2 SWAR AOT Baseline)",
-          "category": "SWAR Jump Tables",
-          "single_run_ms": 3.14,
-          "harness_10_runs_ms": 31.45,
-          "throughput_mb_s": 124.0,
-          "throughput_mib_s": 118.3,
-          "is_typed_domain_model": true
-        },
-        {
-          "engine": "Dart Codable (Phase 1 Eisel-Lemire AOT)",
-          "category": "Eisel-Lemire",
-          "single_run_ms": 3.41,
-          "harness_10_runs_ms": 34.13,
-          "throughput_mb_s": 114.3,
-          "throughput_mib_s": 109.0,
-          "is_typed_domain_model": true
+          "speedup_vs_native": "1.99x"
         },
         {
           "engine": "Dart Native (jsonDecode)",
           "category": "Untyped Map DOM",
-          "single_run_ms": 3.79,
-          "harness_10_runs_ms": 37.89,
-          "throughput_mb_s": 102.9,
-          "throughput_mib_s": 98.2,
+          "single_run_ms": 3.93,
+          "harness_10_runs_ms": 39.26,
+          "throughput_mb_s": 99.3,
+          "throughput_mib_s": 94.7,
           "is_typed_domain_model": false
+        }
+      ]
+    },
+    {
+      "name": "Kostya Macro Coordinate Benchmark (110.2 MB / 524,288 Points)",
+      "payload_size_bytes": 115552256,
+      "payload_size_mb": 110.2,
+      "description": "524,288 spatial coordinate objects streamed and averaged via xtime.rb socket daemon",
+      "results": [
+        {
+          "engine": "C++ simdjson (On-Demand)",
+          "time_seconds": 0.105,
+          "throughput_mb_s": 1050.0,
+          "peak_rss_mb": 173.0,
+          "slowdown_vs_first": "1.0x"
         },
         {
-          "engine": "Dart Codable (Initial Prototype)",
-          "category": "Pull Decoder",
-          "single_run_ms": 3.73,
-          "harness_10_runs_ms": 37.30,
-          "throughput_mb_s": 104.6,
-          "throughput_mib_s": 99.7,
-          "is_typed_domain_model": true
+          "engine": "Rust serde_json (Pull Stream)",
+          "time_seconds": 0.161,
+          "throughput_mb_s": 684.0,
+          "peak_rss_mb": 111.0,
+          "slowdown_vs_first": "1.53x"
+        },
+        {
+          "engine": "Rust serde_json (Typed Struct)",
+          "time_seconds": 0.172,
+          "throughput_mb_s": 641.0,
+          "peak_rss_mb": 123.0,
+          "slowdown_vs_first": "1.64x"
+        },
+        {
+          "engine": "Node.js v24.19 (V8 C++ JSON.parse)",
+          "time_seconds": 0.564,
+          "throughput_mb_s": 195.4,
+          "peak_rss_mb": 439.0,
+          "slowdown_vs_first": "5.37x"
+        },
+        {
+          "engine": "Dart AOT (package:codable)",
+          "time_seconds": 0.610,
+          "throughput_mb_s": 180.7,
+          "peak_rss_mb": 119.0,
+          "slowdown_vs_first": "5.81x"
+        },
+        {
+          "engine": "Go encoding/json",
+          "time_seconds": 1.270,
+          "throughput_mb_s": 86.8,
+          "peak_rss_mb": 115.0,
+          "slowdown_vs_first": "12.10x"
+        },
+        {
+          "engine": "Dart AOT Native (jsonDecode)",
+          "time_seconds": 1.480,
+          "throughput_mb_s": 74.5,
+          "peak_rss_mb": 552.0,
+          "slowdown_vs_first": "14.10x"
         }
       ]
     }

@@ -9,6 +9,13 @@ import 'models/canada.dart';
 import 'models/citm_catalog.dart';
 import 'models/coordinate.dart';
 
+int blackholeSink = 0;
+
+@pragma('vm:never-inline')
+void consumeBlackBox(Object? value) {
+  blackholeSink ^= value.hashCode;
+}
+
 // =============================================================================
 // 1. Coordinate List (10,000 Items)
 // =============================================================================
@@ -31,7 +38,7 @@ class NativeCoordinateBenchmark extends BenchmarkBase {
       );
       hash ^= c.hashCode;
     }
-    if (hash == 0 && jsonStr.isEmpty) print('hash is 0');
+    consumeBlackBox(hash);
   }
 }
 
@@ -49,7 +56,7 @@ class CodableCoordinateBenchmark extends BenchmarkBase {
     while (unkeyed.hasNext()) {
       hash ^= Coordinate.decode(decoder).hashCode;
     }
-    if (hash == 0 && bytes.isEmpty) print('hash is 0');
+    consumeBlackBox(hash);
   }
 }
 
@@ -66,7 +73,7 @@ class NativeCanadaBenchmark extends BenchmarkBase {
   @override
   void run() {
     final dynamic obj = jsonDecode(jsonStr);
-    if (obj == null) print('null');
+    consumeBlackBox(obj);
   }
 }
 
@@ -80,7 +87,7 @@ class CodableCanadaBenchmark extends BenchmarkBase {
   void run() {
     final decoder = JsonCodableDecoder.fromBytes(bytes);
     final fc = CanadaFeatureCollection.decode(decoder);
-    if (fc.features.isEmpty && bytes.isEmpty) print('empty');
+    consumeBlackBox(fc);
   }
 }
 
@@ -97,7 +104,7 @@ class NativeCitmBenchmark extends BenchmarkBase {
   @override
   void run() {
     final dynamic obj = jsonDecode(jsonStr);
-    if (obj == null) print('null');
+    consumeBlackBox(obj);
   }
 }
 
@@ -111,7 +118,7 @@ class CodableCitmBenchmark extends BenchmarkBase {
   void run() {
     final decoder = JsonCodableDecoder.fromBytes(bytes);
     final catalog = CitmCatalog.decode(decoder);
-    if (catalog.events.isEmpty && bytes.isEmpty) print('empty');
+    consumeBlackBox(catalog);
   }
 }
 

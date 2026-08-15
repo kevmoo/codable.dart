@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 const List<double> _powersOfTen = [
@@ -133,78 +132,94 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   }
   if (i >= end) return null;
 
+  var j = end;
+  while (j > i && source[j - 1] <= 32) {
+    j--;
+  }
+  if (i >= j) return null;
+
   var negative = false;
-  if (source[i] == 45) {
+  var cur = i;
+  if (source[cur] == 45) {
     // '-'
     negative = true;
-    i++;
-  } else if (source[i] == 43) {
+    cur++;
+  } else if (source[cur] == 43) {
     // '+'
-    i++;
+    cur++;
   }
-  if (i >= end) return null;
+  if (cur >= j) return null;
 
-  var integerPart = 0;
+  var mantissa = 0;
+  var decimalExp = 0;
   var hasDigits = false;
-  while (i < end && source[i] >= 48 && source[i] <= 57) {
+  var hasExp = false;
+
+  while (cur < j && source[cur] >= 48 && source[cur] <= 57) {
     hasDigits = true;
-    integerPart = integerPart * 10 + (source[i] - 48);
-    i++;
+    if (mantissa <= 922337203685477580) {
+      // 18 digits safely fit in signed 64-bit int
+      mantissa = mantissa * 10 + (source[cur] - 48);
+    } else {
+      decimalExp++;
+    }
+    cur++;
   }
 
-  var fractionalPart = 0;
-  var fractionDigits = 0;
-  if (i < end && source[i] == 46) {
+  if (cur < j && source[cur] == 46) {
     // '.'
-    i++;
-    while (i < end && source[i] >= 48 && source[i] <= 57) {
+    cur++;
+    while (cur < j && source[cur] >= 48 && source[cur] <= 57) {
       hasDigits = true;
-      fractionalPart = fractionalPart * 10 + (source[i] - 48);
-      fractionDigits++;
-      i++;
+      if (mantissa <= 922337203685477580) {
+        mantissa = mantissa * 10 + (source[cur] - 48);
+        decimalExp--;
+      }
+      cur++;
     }
   }
 
   if (!hasDigits) return null;
 
-  var val = integerPart.toDouble();
-  if (fractionDigits > 0) {
-    if (fractionDigits < _powersOfTen.length) {
-      val += fractionalPart / _powersOfTen[fractionDigits];
-    } else {
-      val += fractionalPart / math.pow(10, fractionDigits);
-    }
-  }
-
-  if (i < end && (source[i] == 101 || source[i] == 69)) {
+  if (cur < j && (source[cur] == 101 || source[cur] == 69)) {
     // 'e' or 'E'
-    i++;
+    cur++;
+    hasExp = true;
     var expNegative = false;
-    if (i < end && source[i] == 45) {
+    if (cur < j && source[cur] == 45) {
       expNegative = true;
-      i++;
-    } else if (i < end && source[i] == 43) {
-      i++;
+      cur++;
+    } else if (cur < j && source[cur] == 43) {
+      cur++;
     }
     var exp = 0;
     var hasExpDigits = false;
-    while (i < end && source[i] >= 48 && source[i] <= 57) {
+    while (cur < j && source[cur] >= 48 && source[cur] <= 57) {
       hasExpDigits = true;
-      exp = exp * 10 + (source[i] - 48);
-      i++;
+      exp = exp * 10 + (source[cur] - 48);
+      cur++;
     }
     if (!hasExpDigits) return null;
-    final factor =
-        exp < _powersOfTen.length ? _powersOfTen[exp] : math.pow(10, exp);
-    val = expNegative ? val / factor : val * factor;
+    decimalExp += expNegative ? -exp : exp;
   }
 
-  while (i < end && source[i] <= 32) {
-    i++;
-  }
-  if (i < end) return null;
+  if (cur != j) return null;
 
-  return negative ? -val : val;
+  if (!hasExp && decimalExp >= -22 && decimalExp <= 0) {
+    final factor = _powersOfTen[-decimalExp];
+    final val = mantissa / factor;
+    return negative ? -val : val;
+  }
+
+  if (!hasExp && decimalExp > 0 && decimalExp <= 22) {
+    final factor = _powersOfTen[decimalExp];
+    final val = mantissa * factor;
+    return negative ? -val : val;
+  }
+
+  // Exact fallback for scientific notation or extreme exponents
+  final str = String.fromCharCodes(source, i, j);
+  return double.tryParse(str);
 }
 
 /// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span `[start, end)` in [source].
