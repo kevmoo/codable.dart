@@ -1,49 +1,75 @@
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
+part 'canada.g.dart';
+
+final class CanadaCoordinatesDecoder {
+  const CanadaCoordinatesDecoder();
+
+  List<List<Float64List>> decodeFromReader(JsonTokenReader reader) {
+    final coords = <List<Float64List>>[];
+    reader.beginArray();
+    while (reader.hasNext()) {
+      final poly = <Float64List>[];
+      reader.beginArray();
+      while (reader.hasNext()) {
+        reader.beginArray();
+        final point = Float64List(2);
+        point[0] = reader.readDouble();
+        point[1] = reader.readDouble();
+        reader.endArray();
+        poly.add(point);
+      }
+      reader.endArray();
+      coords.add(poly);
+    }
+    reader.endArray();
+    return coords;
+  }
+
+  void encodeToWriter(
+    List<List<Float64List>> coordinates,
+    JsonTokenWriter writer,
+  ) {
+    writer.beginArray();
+    for (final poly in coordinates) {
+      writer.beginArray();
+      for (final ring in poly) {
+        writer.beginArray();
+        writer.writeDouble(ring[0]);
+        writer.writeDouble(ring[1]);
+        writer.endArray();
+      }
+      writer.endArray();
+    }
+    writer.endArray();
+  }
+}
+
+@Codable()
 class CanadaFeatureCollection {
   final String type;
   final List<CanadaFeature> features;
 
-  const CanadaFeatureCollection({required this.type, required this.features});
+  const CanadaFeatureCollection({required this.type, this.features = const []});
 
-  static final _options = JsonKeyOptions.of(['type', 'features']);
+  static CanadaFeatureCollection fromReader(JsonTokenReader reader) =>
+      _$CanadaFeatureCollectionFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CanadaFeatureCollectionToWriter(this, writer);
 
-  static CanadaFeatureCollection decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    String? type;
-    List<CanadaFeature>? features;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          type = reader.readString();
-          break;
-        case 1:
-          reader.beginArray();
-          final list = <CanadaFeature>[];
-          while (reader.hasNext()) {
-            list.add(CanadaFeature.decodeFromReader(reader));
-          }
-          reader.endArray();
-          features = list;
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CanadaFeatureCollection(
-      type: type ?? '',
-      features: features ?? const [],
-    );
-  }
+  static CanadaFeatureCollection decodeFromReader(JsonTokenReader reader) =>
+      _$CanadaFeatureCollectionFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CanadaFeatureCollectionToWriter(this, writer);
 
   static CanadaFeatureCollection decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CanadaFeatureCollectionFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     String? type;
@@ -70,6 +96,7 @@ class CanadaFeatureCollection {
   }
 }
 
+@Codable()
 class CanadaFeature {
   final String type;
   final CanadaProperties properties;
@@ -81,42 +108,19 @@ class CanadaFeature {
     required this.geometry,
   });
 
-  static final _options = JsonKeyOptions.of(['type', 'properties', 'geometry']);
+  static CanadaFeature fromReader(JsonTokenReader reader) =>
+      _$CanadaFeatureFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CanadaFeatureToWriter(this, writer);
 
-  static CanadaFeature decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    String? type;
-    CanadaProperties? properties;
-    CanadaGeometry? geometry;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          type = reader.readString();
-          break;
-        case 1:
-          properties = CanadaProperties.decodeFromReader(reader);
-          break;
-        case 2:
-          geometry = CanadaGeometry.decodeFromReader(reader);
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CanadaFeature(
-      type: type ?? '',
-      properties: properties ?? const CanadaProperties(name: ''),
-      geometry: geometry ?? const CanadaGeometry(type: '', coordinates: []),
-    );
-  }
+  static CanadaFeature decodeFromReader(JsonTokenReader reader) =>
+      _$CanadaFeatureFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CanadaFeatureToWriter(this, writer);
 
   static CanadaFeature decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CanadaFeatureFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     String? type;
@@ -150,35 +154,25 @@ class CanadaFeature {
   }
 }
 
+@Codable()
 class CanadaProperties {
   final String name;
 
   const CanadaProperties({required this.name});
 
-  static final _options = JsonKeyOptions.of(['name']);
+  static CanadaProperties fromReader(JsonTokenReader reader) =>
+      _$CanadaPropertiesFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CanadaPropertiesToWriter(this, writer);
 
-  static CanadaProperties decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    String? name;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          name = reader.readString();
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CanadaProperties(name: name ?? '');
-  }
+  static CanadaProperties decodeFromReader(JsonTokenReader reader) =>
+      _$CanadaPropertiesFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CanadaPropertiesToWriter(this, writer);
 
   static CanadaProperties decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CanadaPropertiesFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     String? name;
@@ -198,60 +192,27 @@ class CanadaProperties {
   }
 }
 
+@Codable()
 class CanadaGeometry {
   final String type;
+  @CodableKey(customDecoder: CanadaCoordinatesDecoder())
   final List<List<Float64List>> coordinates;
 
-  const CanadaGeometry({required this.type, required this.coordinates});
+  const CanadaGeometry({required this.type, this.coordinates = const []});
 
-  static final _options = JsonKeyOptions.of(['type', 'coordinates']);
+  static CanadaGeometry fromReader(JsonTokenReader reader) =>
+      _$CanadaGeometryFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CanadaGeometryToWriter(this, writer);
 
-  static CanadaGeometry decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    String? type;
-    List<List<Float64List>>? coordinates;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          type = reader.readString();
-          break;
-        case 1:
-          final coords = <List<Float64List>>[];
-          reader.beginArray();
-          while (reader.hasNext()) {
-            final poly = <Float64List>[];
-            reader.beginArray();
-            while (reader.hasNext()) {
-              reader.beginArray();
-              final point = Float64List(2);
-              point[0] = reader.readDouble();
-              point[1] = reader.readDouble();
-              reader.endArray();
-              poly.add(point);
-            }
-            reader.endArray();
-            coords.add(poly);
-          }
-          reader.endArray();
-          coordinates = coords;
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CanadaGeometry(
-      type: type ?? '',
-      coordinates: coordinates ?? const [],
-    );
-  }
+  static CanadaGeometry decodeFromReader(JsonTokenReader reader) =>
+      _$CanadaGeometryFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CanadaGeometryToWriter(this, writer);
 
   static CanadaGeometry decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CanadaGeometryFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     String? type;
@@ -263,17 +224,14 @@ class CanadaGeometry {
           type = keyed.readString();
           break;
         case 1:
-          final coords = <List<Float64List>>[];
-          final outerList = decoder.unkeyed();
-          while (outerList.hasNext()) {
+          coordinates = keyed.decodeList((polyDecoder) {
+            final polyUnkeyed = polyDecoder.unkeyed();
             final poly = <Float64List>[];
-            final ringList = decoder.unkeyed();
-            while (ringList.hasNext()) {
-              poly.add(ringList.decodeFloat64List());
+            while (polyUnkeyed.hasNext()) {
+              poly.add(polyUnkeyed.decodeFloat64List());
             }
-            coords.add(poly);
-          }
-          coordinates = coords;
+            return poly;
+          });
           break;
         default:
           keyed.skipValue();

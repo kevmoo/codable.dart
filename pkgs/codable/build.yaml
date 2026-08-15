@@ -1,0 +1,12 @@
+targets:
+  $default:
+    sources:
+      - "lib/**"
+      - "example/**"
+      - "test/**"
+      - "$package$"
+    builders:
+      codable_generator|codable:
+        generate_for:
+          - "example/**"
+          - "test/**"

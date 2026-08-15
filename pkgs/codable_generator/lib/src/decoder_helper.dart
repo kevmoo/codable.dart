@@ -127,11 +127,9 @@ final class DecoderGeneratorHelper {
       );
     }
 
-    buffer.writeln();
-    buffer.writeln('  // Composite Golden Mask for Required Fields');
-    if (model.requiredFields.isEmpty) {
-      buffer.writeln('  static const $schemaName golden = $schemaName(0);');
-    } else {
+    if (model.requiredFields.isNotEmpty && model.useGoldenMask) {
+      buffer.writeln();
+      buffer.writeln('  // Composite Golden Mask for Required Fields');
       final goldenExpr = model.requiredFields
           .map((f) => '_${f.name}Bit')
           .join(' | ');
@@ -165,9 +163,9 @@ final class DecoderGeneratorHelper {
       buffer.writeln('    final missing = <String>[];');
       for (final reqField in model.requiredFields) {
         final suffix = toSafeIdentifierSuffix(reqField.name);
-        buffer.writeln(
-          '    if ((_value & _${reqField.name}Bit) == 0) missing.add(name$suffix);',
-        );
+        buffer.writeln('    if ((_value & _${reqField.name}Bit) == 0) {');
+        buffer.writeln('      missing.add(name$suffix);');
+        buffer.writeln('    }');
       }
       buffer.writeln(
         "    throw CodableException('Missing required fields for ${model.className}: \${missing.join(\", \")}');",

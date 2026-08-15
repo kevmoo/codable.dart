@@ -1,6 +1,13 @@
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
+part 'citm_catalog.g.dart';
+
+@Codable()
 class CitmCatalog {
   final Map<String, String> areaNames;
   final Map<String, String> audienceSubCategoryNames;
@@ -15,126 +22,44 @@ class CitmCatalog {
   final Map<String, String> venueNames;
 
   const CitmCatalog({
-    required this.areaNames,
-    required this.audienceSubCategoryNames,
-    required this.blockNames,
-    required this.events,
-    required this.performances,
-    required this.seatCategoryNames,
-    required this.subTopicNames,
-    required this.subjectNames,
-    required this.topicNames,
-    required this.topicSynced,
-    required this.venueNames,
+    this.areaNames = const {},
+    this.audienceSubCategoryNames = const {},
+    this.blockNames = const {},
+    this.events = const {},
+    this.performances = const [],
+    this.seatCategoryNames = const {},
+    this.subTopicNames = const {},
+    this.subjectNames = const {},
+    this.topicNames = const {},
+    this.topicSynced = const {},
+    this.venueNames = const {},
   });
 
-  static final _options = JsonKeyOptions.of([
-    'areaNames',
-    'audienceSubCategoryNames',
-    'blockNames',
-    'events',
-    'performances',
-    'seatCategoryNames',
-    'subTopicNames',
-    'subjectNames',
-    'topicNames',
-    'topicSynced',
-    'venueNames',
-  ]);
+  static CitmCatalog fromReader(JsonTokenReader reader) =>
+      _$CitmCatalogFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CitmCatalogToWriter(this, writer);
 
-  static CitmCatalog decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    Map<String, String>? areaNames;
-    Map<String, String>? audienceSubCategoryNames;
-    Map<String, String>? blockNames;
-    Map<String, CitmEvent>? events;
-    List<CitmPerformance>? performances;
-    Map<String, String>? seatCategoryNames;
-    Map<String, String>? subTopicNames;
-    Map<String, String>? subjectNames;
-    Map<String, String>? topicNames;
-    Map<String, bool>? topicSynced;
-    Map<String, String>? venueNames;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          areaNames = _readStringMap(reader);
-          break;
-        case 1:
-          audienceSubCategoryNames = _readStringMap(reader);
-          break;
-        case 2:
-          blockNames = _readStringMap(reader);
-          break;
-        case 3:
-          events = _readEventMap(reader);
-          break;
-        case 4:
-          reader.beginArray();
-          final list = <CitmPerformance>[];
-          while (reader.hasNext()) {
-            list.add(CitmPerformance.decodeFromReader(reader));
-          }
-          reader.endArray();
-          performances = list;
-          break;
-        case 5:
-          seatCategoryNames = _readStringMap(reader);
-          break;
-        case 6:
-          subTopicNames = _readStringMap(reader);
-          break;
-        case 7:
-          subjectNames = _readStringMap(reader);
-          break;
-        case 8:
-          topicNames = _readStringMap(reader);
-          break;
-        case 9:
-          topicSynced = _readBoolMap(reader);
-          break;
-        case 10:
-          venueNames = _readStringMap(reader);
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmCatalog(
-      areaNames: areaNames ?? const {},
-      audienceSubCategoryNames: audienceSubCategoryNames ?? const {},
-      blockNames: blockNames ?? const {},
-      events: events ?? const {},
-      performances: performances ?? const [],
-      seatCategoryNames: seatCategoryNames ?? const {},
-      subTopicNames: subTopicNames ?? const {},
-      subjectNames: subjectNames ?? const {},
-      topicNames: topicNames ?? const {},
-      topicSynced: topicSynced ?? const {},
-      venueNames: venueNames ?? const {},
-    );
-  }
+  static CitmCatalog decodeFromReader(JsonTokenReader reader) =>
+      _$CitmCatalogFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmCatalogToWriter(this, writer);
 
   static CitmCatalog decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmCatalogFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
-    Map<String, String>? areaNames;
-    Map<String, String>? audienceSubCategoryNames;
-    Map<String, String>? blockNames;
-    Map<String, CitmEvent>? events;
-    List<CitmPerformance>? performances;
-    Map<String, String>? seatCategoryNames;
-    Map<String, String>? subTopicNames;
-    Map<String, String>? subjectNames;
-    Map<String, String>? topicNames;
-    Map<String, bool>? topicSynced;
-    Map<String, String>? venueNames;
+    Map<String, String> areaNames = const {};
+    Map<String, String> audienceSubCategoryNames = const {};
+    Map<String, String> blockNames = const {};
+    Map<String, CitmEvent> events = const {};
+    List<CitmPerformance> performances = const [];
+    Map<String, String> seatCategoryNames = const {};
+    Map<String, String> subTopicNames = const {};
+    Map<String, String> subjectNames = const {};
+    Map<String, String> topicNames = const {};
+    Map<String, bool> topicSynced = const {};
+    Map<String, String> venueNames = const {};
 
     while (keyed.hasNextKey()) {
       switch (keyed.selectKeyIndex(
@@ -153,37 +78,39 @@ class CitmCatalog {
         ]),
       )) {
         case 0:
-          areaNames = decoder.decodeStringMap();
+          areaNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 1:
-          audienceSubCategoryNames = decoder.decodeStringMap();
+          audienceSubCategoryNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 2:
-          blockNames = decoder.decodeStringMap();
+          blockNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 3:
-          events = decoder.decodeObjectMap(CitmEvent.decode);
+          events = keyed.decodeValue(
+            (d) => _decodeObjectMap(d, CitmEvent.decode),
+          );
           break;
         case 4:
           performances = keyed.decodeList(CitmPerformance.decode);
           break;
         case 5:
-          seatCategoryNames = decoder.decodeStringMap();
+          seatCategoryNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 6:
-          subTopicNames = decoder.decodeStringMap();
+          subTopicNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 7:
-          subjectNames = decoder.decodeStringMap();
+          subjectNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 8:
-          topicNames = decoder.decodeStringMap();
+          topicNames = keyed.decodeValue(_decodeStringMap);
           break;
         case 9:
-          topicSynced = decoder.decodeBoolMap();
+          topicSynced = keyed.decodeValue(_decodeBoolMap);
           break;
         case 10:
-          venueNames = decoder.decodeStringMap();
+          venueNames = keyed.decodeValue(_decodeStringMap);
           break;
         default:
           keyed.skipValue();
@@ -192,21 +119,22 @@ class CitmCatalog {
     }
 
     return CitmCatalog(
-      areaNames: areaNames ?? const {},
-      audienceSubCategoryNames: audienceSubCategoryNames ?? const {},
-      blockNames: blockNames ?? const {},
-      events: events ?? const {},
-      performances: performances ?? const [],
-      seatCategoryNames: seatCategoryNames ?? const {},
-      subTopicNames: subTopicNames ?? const {},
-      subjectNames: subjectNames ?? const {},
-      topicNames: topicNames ?? const {},
-      topicSynced: topicSynced ?? const {},
-      venueNames: venueNames ?? const {},
+      areaNames: areaNames,
+      audienceSubCategoryNames: audienceSubCategoryNames,
+      blockNames: blockNames,
+      events: events,
+      performances: performances,
+      seatCategoryNames: seatCategoryNames,
+      subTopicNames: subTopicNames,
+      subjectNames: subjectNames,
+      topicNames: topicNames,
+      topicSynced: topicSynced,
+      venueNames: venueNames,
     );
   }
 }
 
+@Codable()
 class CitmEvent {
   final String? description;
   final int id;
@@ -222,94 +150,24 @@ class CitmEvent {
     required this.id,
     this.logo,
     required this.name,
-    required this.subTopicIds,
+    this.subTopicIds = const [],
     this.subjectCode,
     this.subtitle,
-    required this.topicIds,
+    this.topicIds = const [],
   });
 
-  static final _options = JsonKeyOptions.of([
-    'description',
-    'id',
-    'logo',
-    'name',
-    'subTopicIds',
-    'subjectCode',
-    'subtitle',
-    'topicIds',
-  ]);
+  static CitmEvent fromReader(JsonTokenReader reader) =>
+      _$CitmEventFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CitmEventToWriter(this, writer);
 
-  static CitmEvent decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    String? description;
-    int? id;
-    String? logo;
-    String? name;
-    List<int>? subTopicIds;
-    int? subjectCode;
-    String? subtitle;
-    List<int>? topicIds;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          description = _readNullableString(reader);
-          break;
-        case 1:
-          id = reader.readInt();
-          break;
-        case 2:
-          logo = _readNullableString(reader);
-          break;
-        case 3:
-          name = reader.readString();
-          break;
-        case 4:
-          reader.beginArray();
-          final list = <int>[];
-          while (reader.hasNext()) {
-            list.add(reader.readInt());
-          }
-          reader.endArray();
-          subTopicIds = list;
-          break;
-        case 5:
-          subjectCode = _readNullableInt(reader);
-          break;
-        case 6:
-          subtitle = _readNullableString(reader);
-          break;
-        case 7:
-          reader.beginArray();
-          final list = <int>[];
-          while (reader.hasNext()) {
-            list.add(reader.readInt());
-          }
-          reader.endArray();
-          topicIds = list;
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmEvent(
-      description: description,
-      id: id ?? 0,
-      logo: logo,
-      name: name ?? '',
-      subTopicIds: subTopicIds ?? const [],
-      subjectCode: subjectCode,
-      subtitle: subtitle,
-      topicIds: topicIds ?? const [],
-    );
-  }
+  static CitmEvent decodeFromReader(JsonTokenReader reader) =>
+      _$CitmEventFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmEventToWriter(this, writer);
 
   static CitmEvent decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmEventFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     String? description;
@@ -377,6 +235,7 @@ class CitmEvent {
   }
 }
 
+@Codable()
 class CitmPerformance {
   final int eventId;
   final int id;
@@ -392,94 +251,25 @@ class CitmPerformance {
     required this.id,
     this.logo,
     this.name,
-    required this.prices,
-    required this.seatCategories,
+    this.prices = const [],
+    this.seatCategories = const [],
     required this.start,
     required this.venueCode,
   });
 
-  static final _options = JsonKeyOptions.of([
-    'eventId',
-    'id',
-    'logo',
-    'name',
-    'prices',
-    'seatCategories',
-    'start',
-    'venueCode',
-  ]);
+  static CitmPerformance fromReader(JsonTokenReader reader) =>
+      _$CitmPerformanceFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CitmPerformanceToWriter(this, writer);
 
-  static CitmPerformance decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    int? eventId;
-    int? id;
-    String? logo;
-    String? name;
-    List<CitmPrice>? prices;
-    List<CitmSeatCategory>? seatCategories;
-    int? start;
-    String? venueCode;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          eventId = reader.readInt();
-          break;
-        case 1:
-          id = reader.readInt();
-          break;
-        case 2:
-          logo = _readNullableString(reader);
-          break;
-        case 3:
-          name = _readNullableString(reader);
-          break;
-        case 4:
-          reader.beginArray();
-          final list = <CitmPrice>[];
-          while (reader.hasNext()) {
-            list.add(CitmPrice.decodeFromReader(reader));
-          }
-          reader.endArray();
-          prices = list;
-          break;
-        case 5:
-          reader.beginArray();
-          final list = <CitmSeatCategory>[];
-          while (reader.hasNext()) {
-            list.add(CitmSeatCategory.decodeFromReader(reader));
-          }
-          reader.endArray();
-          seatCategories = list;
-          break;
-        case 6:
-          start = reader.readInt();
-          break;
-        case 7:
-          venueCode = reader.readString();
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmPerformance(
-      eventId: eventId ?? 0,
-      id: id ?? 0,
-      logo: logo,
-      name: name,
-      prices: prices ?? const [],
-      seatCategories: seatCategories ?? const [],
-      start: start ?? 0,
-      venueCode: venueCode ?? '',
-    );
-  }
+  static CitmPerformance decodeFromReader(JsonTokenReader reader) =>
+      _$CitmPerformanceFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmPerformanceToWriter(this, writer);
 
   static CitmPerformance decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmPerformanceFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     int? eventId;
@@ -547,6 +337,7 @@ class CitmPerformance {
   }
 }
 
+@Codable()
 class CitmPrice {
   final int amount;
   final int audienceSubCategoryId;
@@ -558,46 +349,18 @@ class CitmPrice {
     required this.seatCategoryId,
   });
 
-  static final _options = JsonKeyOptions.of([
-    'amount',
-    'audienceSubCategoryId',
-    'seatCategoryId',
-  ]);
+  static CitmPrice fromReader(JsonTokenReader reader) =>
+      _$CitmPriceFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CitmPriceToWriter(this, writer);
 
-  static CitmPrice decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    int? amount;
-    int? audienceSubCategoryId;
-    int? seatCategoryId;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          amount = reader.readInt();
-          break;
-        case 1:
-          audienceSubCategoryId = reader.readInt();
-          break;
-        case 2:
-          seatCategoryId = reader.readInt();
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmPrice(
-      amount: amount ?? 0,
-      audienceSubCategoryId: audienceSubCategoryId ?? 0,
-      seatCategoryId: seatCategoryId ?? 0,
-    );
-  }
+  static CitmPrice decodeFromReader(JsonTokenReader reader) =>
+      _$CitmPriceFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmPriceToWriter(this, writer);
 
   static CitmPrice decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmPriceFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     int? amount;
@@ -631,49 +394,26 @@ class CitmPrice {
   }
 }
 
+@Codable()
 class CitmSeatCategory {
   final List<CitmArea> areas;
   final int seatCategoryId;
 
-  const CitmSeatCategory({required this.areas, required this.seatCategoryId});
+  const CitmSeatCategory({this.areas = const [], required this.seatCategoryId});
 
-  static final _options = JsonKeyOptions.of(['areas', 'seatCategoryId']);
+  static CitmSeatCategory fromReader(JsonTokenReader reader) =>
+      _$CitmSeatCategoryFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$CitmSeatCategoryToWriter(this, writer);
 
-  static CitmSeatCategory decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    List<CitmArea>? areas;
-    int? seatCategoryId;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          reader.beginArray();
-          final list = <CitmArea>[];
-          while (reader.hasNext()) {
-            list.add(CitmArea.decodeFromReader(reader));
-          }
-          reader.endArray();
-          areas = list;
-          break;
-        case 1:
-          seatCategoryId = reader.readInt();
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmSeatCategory(
-      areas: areas ?? const [],
-      seatCategoryId: seatCategoryId ?? 0,
-    );
-  }
+  static CitmSeatCategory decodeFromReader(JsonTokenReader reader) =>
+      _$CitmSeatCategoryFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmSeatCategoryToWriter(this, writer);
 
   static CitmSeatCategory decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmSeatCategoryFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     List<CitmArea>? areas;
@@ -700,46 +440,25 @@ class CitmSeatCategory {
   }
 }
 
+@Codable()
 class CitmArea {
   final int areaId;
   final List<int> blockIds;
 
-  const CitmArea({required this.areaId, required this.blockIds});
+  const CitmArea({required this.areaId, this.blockIds = const []});
 
-  static final _options = JsonKeyOptions.of(['areaId', 'blockIds']);
+  static CitmArea fromReader(JsonTokenReader reader) =>
+      _$CitmAreaFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CitmAreaToWriter(this, writer);
 
-  static CitmArea decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    int? areaId;
-    List<int>? blockIds;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0:
-          areaId = reader.readInt();
-          break;
-        case 1:
-          reader.beginArray();
-          final list = <int>[];
-          while (reader.hasNext()) {
-            list.add(reader.readInt());
-          }
-          reader.endArray();
-          blockIds = list;
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    return CitmArea(areaId: areaId ?? 0, blockIds: blockIds ?? const []);
-  }
+  static CitmArea decodeFromReader(JsonTokenReader reader) =>
+      _$CitmAreaFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CitmAreaToWriter(this, writer);
 
   static CitmArea decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CitmAreaFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     int? areaId;
@@ -763,81 +482,33 @@ class CitmArea {
   }
 }
 
-Map<String, String> _readStringMap(JsonTokenReader reader) {
+Map<String, String> _decodeStringMap(Decoder decoder) {
   final map = <String, String>{};
-  reader.beginObject();
-  while (reader.hasNext()) {
-    final key = reader.nextName();
-    map[key] = reader.readString();
+  final keyed = decoder.keyed();
+  while (keyed.hasNextKey()) {
+    map[keyed.nextKey()] = keyed.readString();
   }
-  reader.endObject();
   return map;
 }
 
-Map<String, bool> _readBoolMap(JsonTokenReader reader) {
+Map<String, bool> _decodeBoolMap(Decoder decoder) {
   final map = <String, bool>{};
-  reader.beginObject();
-  while (reader.hasNext()) {
-    final key = reader.nextName();
-    map[key] = reader.readBool();
+  final keyed = decoder.keyed();
+  while (keyed.hasNextKey()) {
+    map[keyed.nextKey()] = keyed.readBool();
   }
-  reader.endObject();
   return map;
 }
 
-Map<String, CitmEvent> _readEventMap(JsonTokenReader reader) {
-  final map = <String, CitmEvent>{};
-  reader.beginObject();
-  while (reader.hasNext()) {
-    final key = reader.nextName();
-    map[key] = CitmEvent.decodeFromReader(reader);
+Map<String, T> _decodeObjectMap<T>(
+  Decoder decoder,
+  T Function(Decoder) decode,
+) {
+  final map = <String, T>{};
+  final keyed = decoder.keyed();
+  while (keyed.hasNextKey()) {
+    final key = keyed.nextKey();
+    map[key] = keyed.decodeValue(decode);
   }
-  reader.endObject();
   return map;
-}
-
-String? _readNullableString(JsonTokenReader reader) {
-  if (reader.peek() == JsonTokenType.nullValue) {
-    reader.readNull();
-    return null;
-  }
-  return reader.readString();
-}
-
-int? _readNullableInt(JsonTokenReader reader) {
-  if (reader.peek() == JsonTokenType.nullValue) {
-    reader.readNull();
-    return null;
-  }
-  return reader.readInt();
-}
-
-extension on Decoder {
-  Map<String, String> decodeStringMap() {
-    final map = <String, String>{};
-    final keyed = this.keyed();
-    while (keyed.hasNextKey()) {
-      map[keyed.nextKey()] = keyed.readString();
-    }
-    return map;
-  }
-
-  Map<String, bool> decodeBoolMap() {
-    final map = <String, bool>{};
-    final keyed = this.keyed();
-    while (keyed.hasNextKey()) {
-      map[keyed.nextKey()] = keyed.readBool();
-    }
-    return map;
-  }
-
-  Map<String, T> decodeObjectMap<T>(T Function(Decoder) decode) {
-    final map = <String, T>{};
-    final keyed = this.keyed();
-    while (keyed.hasNextKey()) {
-      final key = keyed.nextKey();
-      map[key] = decode(this);
-    }
-    return map;
-  }
 }

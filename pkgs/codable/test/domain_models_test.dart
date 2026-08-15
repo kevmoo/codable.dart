@@ -10,327 +10,28 @@
 // Strict assertion standard: package:checks only.
 
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
+import 'package:codable/codable.dart';
+import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/scaffolding.dart';
 
-// ============================================================================
-// Layer 2 Ecosystem Contracts & Interfaces (Standalone Verification Harness)
-// ============================================================================
-
-/// Base contract for domain objects that can be serialized.
-abstract interface class Encodable {
-  void encode(Encoder encoder);
-}
-
-/// Base contract for domain objects that can be deserialized.
-abstract interface class Decodable<T> {
-  // Static decode factory contract
-}
-
-/// Root decoding context container.
-abstract interface class Decoder {
-  Map<Symbol, Object?> get userInfo;
-  KeyedDecoder keyed();
-  MappedDecoder mapped();
-  UnkeyedDecoder unkeyed();
-  SingleValueDecoder singleValue();
-}
-
-/// Root encoding context container.
-abstract interface class Encoder {
-  Map<Symbol, Object?> get userInfo;
-  KeyedEncoder keyed();
-  UnkeyedEncoder unkeyed();
-  SingleValueEncoder singleValue();
-}
-
-/// Token types for JSON streaming.
-enum JsonTokenType {
-  beginObject,
-  endObject,
-  beginArray,
-  endArray,
-  name,
-  string,
-  number,
-  boolean,
-  nullValue,
-  endOfDocument,
-}
-
-/// Canonical serialization and deserialization exception.
-class CodableException implements Exception {
-  final String message;
-  final List<Object> path;
-
-  CodableException(this.message, {this.path = const []});
-
-  @override
-  String toString() =>
-      path.isEmpty
-          ? 'CodableException: $message'
-          : 'CodableException: $message at path $path';
-}
-
-/// Format-agnostic static key descriptor.
-final class StaticKey {
-  final String name;
-  final int index;
-  final Object? wireMetadata;
-
-  const StaticKey(this.name, this.index, [this.wireMetadata]);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StaticKey &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          index == other.index;
-
-  @override
-  int get hashCode => Object.hash(name, index);
-
-  @override
-  String toString() => 'StaticKey($name, index: $index)';
-}
-
-/// Pre-compiled key lookup options.
-class JsonKeyOptions {
-  final List<String> keys;
-  const JsonKeyOptions(this.keys);
-  factory JsonKeyOptions.fromKeys(List<String> keys) =>
-      JsonKeyOptions(List.unmodifiable(keys));
-
-  int selectKey(String key) => keys.indexOf(key);
-}
-
-/// Format-agnostic custom field normalization contract.
-abstract interface class CustomFieldDecoder<T> {
-  T decodeField(Decoder decoder);
-}
-
-/// Untagged structural / shape-based polymorphism contract.
-abstract interface class UnionDecoder<T> {
-  T decodeUnion(Decoder decoder);
-}
-
-/// Tagged polymorphic subtype discriminator contract.
-abstract interface class SuperDecodable<T> {
-  String get discriminatorKey;
-  Map<String, T Function(Decoder decoder)> get subtypes;
-}
-
-/// Sequential streaming keyed decoder.
-abstract interface class KeyedDecoder {
-  bool hasNextKey();
-  String nextKey();
-  int selectKeyIndex(JsonKeyOptions options);
-  int selectStringIndex(JsonKeyOptions options);
-  JsonTokenType peekType();
-
-  int readInt();
-  int? readNullableInt();
-  double readDouble();
-  double? readNullableDouble();
-  String readString();
-  String? readNullableString();
-  bool readBool();
-  bool? readNullableBool();
-  bool isNextNull();
-  void readNull();
-  void skipValue();
-
-  T decodeValue<T>(T Function(Decoder decoder) decoder);
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder);
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder);
-  List<int> decodeIntList();
-  List<double> decodeDoubleList();
-  List<String> decodeStringList();
-}
-
-/// Random-access mapped decoder.
-abstract interface class MappedDecoder {
-  bool containsKey(String key);
-  bool containsStaticKey(StaticKey key);
-  JsonTokenType peekType(String key);
-
-  int readInt(String key);
-  int readIntKey(StaticKey key);
-  int? readNullableInt(String key);
-  int? readNullableIntKey(StaticKey key);
-
-  double readDouble(String key);
-  double readDoubleKey(StaticKey key);
-  double? readNullableDouble(String key);
-  double? readNullableDoubleKey(StaticKey key);
-
-  String readString(String key);
-  String readStringKey(StaticKey key);
-  String? readNullableString(String key);
-  String? readNullableStringKey(StaticKey key);
-
-  bool readBool(String key);
-  bool readBoolKey(StaticKey key);
-  bool? readNullableBool(String key);
-  bool? readNullableBoolKey(StaticKey key);
-
-  bool isNull(String key);
-  bool isNullKey(StaticKey key);
-
-  T decodeKey<T>(String key, T Function(Decoder decoder) decoder);
-  T decodeStaticKey<T>(StaticKey key, T Function(Decoder decoder) decoder);
-  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder);
-  T? decodeNullableStaticKey<T>(
-    StaticKey key,
-    T Function(Decoder decoder) decoder,
-  );
-
-  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder);
-  List<T> decodeListStaticKey<T>(
-    StaticKey key,
-    T Function(Decoder decoder) decoder,
-  );
-
-  List<int> decodeIntList(String key);
-  List<int> decodeIntListKey(StaticKey key);
-
-  List<double> decodeDoubleList(String key);
-  List<double> decodeDoubleListKey(StaticKey key);
-
-  List<String> decodeStringList(String key);
-  List<String> decodeStringListKey(StaticKey key);
-}
-
-/// Sequential unkeyed array decoder.
-abstract interface class UnkeyedDecoder {
-  bool hasNext();
-  JsonTokenType peekType();
-
-  int readInt();
-  int? readNullableInt();
-  double readDouble();
-  double? readNullableDouble();
-  String readString();
-  String? readNullableString();
-  bool readBool();
-  bool? readNullableBool();
-  bool isNextNull();
-  void readNull();
-  void skipElement();
-
-  T decodeElement<T>(T Function(Decoder decoder) decoder);
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder);
-}
-
-/// Single scalar value decoder.
-abstract interface class SingleValueDecoder {
-  JsonTokenType peekType();
-  int readInt();
-  double readDouble();
-  String readString();
-  bool readBool();
-  bool isNull();
-  void readNull();
-  T decode<T>(T Function(Decoder decoder) decoder);
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder);
-}
-
-/// Keyed object encoder.
-abstract interface class KeyedEncoder {
-  void encodeInt(String key, int value);
-  void encodeIntKey(StaticKey key, int value);
-  void encodeDouble(String key, double value);
-  void encodeDoubleKey(StaticKey key, double value);
-  void encodeString(String key, String value);
-  void encodeStringKey(StaticKey key, String value);
-  void encodeBool(String key, bool value);
-  void encodeBoolKey(StaticKey key, bool value);
-  void encodeNull(String key);
-  void encodeNullKey(StaticKey key);
-
-  void encodeValue<T>(
-    String key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  );
-  void encodeValueKey<T>(
-    StaticKey key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  );
-  void encodeList<T>(
-    String key,
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  );
-  void encodeListKey<T>(
-    StaticKey key,
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  );
-
-  void encodeIntList(String key, List<int> values);
-  void encodeIntListKey(StaticKey key, List<int> values);
-  void encodeDoubleList(String key, List<double> values);
-  void encodeDoubleListKey(StaticKey key, List<double> values);
-  void encodeStringList(String key, List<String> values);
-  void encodeStringListKey(StaticKey key, List<String> values);
-}
-
-/// Unkeyed sequence encoder.
-abstract interface class UnkeyedEncoder {
-  void encodeInt(int value);
-  void encodeDouble(double value);
-  void encodeString(String value);
-  void encodeBool(bool value);
-  void encodeNull();
-  void encodeElement<T>(
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  );
-  void encodeList<T>(
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  );
-}
-
-/// Single-value scalar encoder.
-abstract interface class SingleValueEncoder {
-  void encodeInt(int value);
-  void encodeDouble(double value);
-  void encodeString(String value);
-  void encodeBool(bool value);
-  void encodeNull();
-  void encode<T>(T value, void Function(T value, Encoder encoder) encode);
-}
+part 'domain_models_test.g.dart';
 
 // ============================================================================
 // Concrete Mock JSON Driver & Test Container Implementations
 // ============================================================================
 
-JsonTokenType _typeOf(Object? value) {
-  if (value == null) return JsonTokenType.nullValue;
-  if (value is bool) return JsonTokenType.boolean;
-  if (value is num) return JsonTokenType.number;
-  if (value is String) return JsonTokenType.string;
-  if (value is List<Object?>) return JsonTokenType.beginArray;
-  if (value is Map<String, Object?>) return JsonTokenType.beginObject;
-  return JsonTokenType.string;
-}
-
 final class _TestDecoder implements Decoder {
   final Object? _data;
   @override
-  final Map<Symbol, Object?> userInfo;
+  final Map<Object, Object?> userInfo;
   _TestKeyedDecoder? _activeKeyed;
 
   _TestDecoder(this._data, {this.userInfo = const {}});
 
   @override
-  KeyedDecoder keyed() {
+  KeyedDecoder keyed({KeyOptions? options}) {
     final data = _data;
     if (data is Map<String, dynamic>) {
       final entries = data.entries.toList();
@@ -372,6 +73,15 @@ final class _TestDecoder implements Decoder {
     }
     return _TestSingleValueDecoder(_data, this);
   }
+
+  @override
+  KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
+
+  @override
+  UnkeyedDecoder unkeyedContainer() => unkeyed();
+
+  @override
+  SingleValueDecoder singleValueContainer() => singleValue();
 }
 
 final class _TestKeyedDecoder implements KeyedDecoder {
@@ -394,6 +104,9 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   bool hasNextKey() => _currentIndex + 1 < _entries.length;
 
   @override
+  bool hasNext() => hasNextKey();
+
+  @override
   String nextKey() {
     if (!hasNextKey()) {
       throw CodableException('No more keys available in KeyedDecoder');
@@ -403,20 +116,27 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  int selectKeyIndex(JsonKeyOptions options) {
+  String? peekKey() => hasNextKey() ? _entries[_currentIndex + 1].key : null;
+
+  @override
+  int selectKey(List<String> keys) {
     if (!hasNextKey()) return -1;
     _currentIndex++;
-    return options.selectKey(_entries[_currentIndex].key);
+    return keys.indexOf(_entries[_currentIndex].key);
   }
 
   @override
-  int selectStringIndex(JsonKeyOptions options) {
+  int selectKeyIndex(KeyOptions options) {
+    if (!hasNextKey()) return -1;
+    _currentIndex++;
+    return options.indexOf(_entries[_currentIndex].key);
+  }
+
+  @override
+  int selectStringIndex(KeyOptions options) {
     final str = readString();
-    return options.selectKey(str);
+    return options.indexOf(str);
   }
-
-  @override
-  JsonTokenType peekType() => _typeOf(_currentValue);
 
   @override
   int readInt() {
@@ -486,22 +206,25 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  void skipField() => skipValue();
+
+  @override
   void skipValue() {
     // Current value skipped
   }
 
   @override
-  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
+  T decodeValue<T>(DecoderCallback<T> decoder) =>
       decoder(_TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo));
 
   @override
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
     if (_currentValue == null) return null;
     return decodeValue(decoder);
   }
 
   @override
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
+  List<T> decodeList<T>(DecoderCallback<T> decoder) {
     final v = _currentValue;
     if (v is List<dynamic>) {
       return v
@@ -509,6 +232,12 @@ final class _TestKeyedDecoder implements KeyedDecoder {
           .toList();
     }
     throw CodableException('Expected List, found ${v.runtimeType}: $v');
+  }
+
+  @override
+  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
+    if (_currentValue == null) return null;
+    return decodeList(decoder);
   }
 
   @override
@@ -550,6 +279,38 @@ final class _TestKeyedDecoder implements KeyedDecoder {
     }
     throw CodableException('Expected List<String>, found ${v.runtimeType}: $v');
   }
+
+  @override
+  List<bool> decodeBoolList() {
+    final v = _currentValue;
+    if (v is List<dynamic>) {
+      return v.map((e) {
+        if (e is bool) return e;
+        throw CodableException('Expected bool element, found ${e.runtimeType}');
+      }).toList();
+    }
+    throw CodableException('Expected List<bool>, found ${v.runtimeType}: $v');
+  }
+
+  @override
+  Float64List decodeFloat64List() {
+    final v = _currentValue;
+    if (v is List<dynamic>) {
+      final list = Float64List(v.length);
+      for (var i = 0; i < v.length; i++) {
+        final e = v[i];
+        if (e is num) {
+          list[i] = e.toDouble();
+        } else {
+          throw CodableException(
+            'Expected num element, found ${e.runtimeType}',
+          );
+        }
+      }
+      return list;
+    }
+    throw CodableException('Expected Float64List, found ${v.runtimeType}: $v');
+  }
 }
 
 final class _TestMappedDecoder implements MappedDecoder {
@@ -563,9 +324,6 @@ final class _TestMappedDecoder implements MappedDecoder {
 
   @override
   bool containsStaticKey(StaticKey key) => _map.containsKey(key.name);
-
-  @override
-  JsonTokenType peekType(String key) => _typeOf(_map[key]);
 
   @override
   int readInt(String key) {
@@ -670,7 +428,7 @@ final class _TestMappedDecoder implements MappedDecoder {
   bool isNullKey(StaticKey key) => isNull(key.name);
 
   @override
-  T decodeKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T decodeKey<T>(String key, DecoderCallback<T> decoder) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
@@ -678,23 +436,21 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  T decodeStaticKey<T>(StaticKey key, T Function(Decoder decoder) decoder) =>
+  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
       decodeKey(key.name, decoder);
 
   @override
-  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return decodeKey(key, decoder);
   }
 
   @override
-  T? decodeNullableStaticKey<T>(
-    StaticKey key,
-    T Function(Decoder decoder) decoder,
-  ) => decodeNullableKey(key.name, decoder);
+  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
+      decodeNullableKey(key.name, decoder);
 
   @override
-  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder) {
+  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
@@ -710,10 +466,8 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  List<T> decodeListStaticKey<T>(
-    StaticKey key,
-    T Function(Decoder decoder) decoder,
-  ) => decodeListKey(key.name, decoder);
+  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
+      decodeListKey(key.name, decoder);
 
   @override
   List<int> decodeIntList(String key) {
@@ -750,6 +504,28 @@ final class _TestMappedDecoder implements MappedDecoder {
   List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
 
   @override
+  Float64List decodeFloat64List(String key) {
+    if (!_map.containsKey(key)) {
+      throw CodableException('Missing required key "$key" in MappedDecoder');
+    }
+    final v = _map[key];
+    if (v is List<dynamic>) {
+      final list = Float64List(v.length);
+      for (var i = 0; i < v.length; i++) {
+        list[i] = (v[i] as num).toDouble();
+      }
+      return list;
+    }
+    throw CodableException(
+      'Expected Float64List for key "$key", found ${v.runtimeType}',
+    );
+  }
+
+  @override
+  Float64List decodeFloat64ListKey(StaticKey key) =>
+      decodeFloat64List(key.name);
+
+  @override
   List<String> decodeStringList(String key) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
@@ -765,6 +541,23 @@ final class _TestMappedDecoder implements MappedDecoder {
 
   @override
   List<String> decodeStringListKey(StaticKey key) => decodeStringList(key.name);
+
+  @override
+  List<bool> decodeBoolList(String key) {
+    if (!_map.containsKey(key)) {
+      throw CodableException('Missing required key "$key" in MappedDecoder');
+    }
+    final v = _map[key];
+    if (v is List<dynamic>) {
+      return v.map((e) => e as bool).toList();
+    }
+    throw CodableException(
+      'Expected List<bool> for key "$key", found ${v.runtimeType}',
+    );
+  }
+
+  @override
+  List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
 }
 
 final class _TestUnkeyedDecoder implements UnkeyedDecoder {
@@ -776,12 +569,6 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool hasNext() => _index < _list.length;
-
-  @override
-  JsonTokenType peekType() {
-    if (!hasNext()) return JsonTokenType.endArray;
-    return _typeOf(_list[_index]);
-  }
 
   @override
   int readInt() {
@@ -876,20 +663,54 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T decodeElement<T>(T Function(Decoder decoder) decoder) {
+  T decodeElement<T>(DecoderCallback<T> decoder) {
     if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
     final v = _list[_index++];
     return decoder(_TestDecoder(v, userInfo: _rootDecoder.userInfo));
   }
 
   @override
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
     if (!hasNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
     }
     return decodeElement(decoder);
+  }
+
+  @override
+  List<int> decodeIntList() {
+    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    final v = _list[_index++];
+    if (v is List<dynamic>) {
+      return v.map((e) => e as int).toList();
+    }
+    throw CodableException('Expected List<int>, found ${v.runtimeType}');
+  }
+
+  @override
+  List<double> decodeDoubleList() {
+    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    final v = _list[_index++];
+    if (v is List<dynamic>) {
+      return v.map((e) => (e as num).toDouble()).toList();
+    }
+    throw CodableException('Expected List<double>, found ${v.runtimeType}');
+  }
+
+  @override
+  Float64List decodeFloat64List() {
+    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    final v = _list[_index++];
+    if (v is List<dynamic>) {
+      final list = Float64List(v.length);
+      for (var i = 0; i < v.length; i++) {
+        list[i] = (v[i] as num).toDouble();
+      }
+      return list;
+    }
+    throw CodableException('Expected Float64List, found ${v.runtimeType}');
   }
 }
 
@@ -900,15 +721,18 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   _TestSingleValueDecoder(this._value, this._rootDecoder);
 
   @override
-  JsonTokenType peekType() => _typeOf(_value);
-
-  @override
   int readInt() {
     final v = _value;
     if (v is int) return v;
     throw CodableException(
       'Expected int, found ${_value.runtimeType}: $_value',
     );
+  }
+
+  @override
+  int? readNullableInt() {
+    if (_value == null) return null;
+    return readInt();
   }
 
   @override
@@ -921,6 +745,12 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
+  double? readNullableDouble() {
+    if (_value == null) return null;
+    return readDouble();
+  }
+
+  @override
   String readString() {
     final v = _value;
     if (v is String) return v;
@@ -930,12 +760,24 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
+  String? readNullableString() {
+    if (_value == null) return null;
+    return readString();
+  }
+
+  @override
   bool readBool() {
     final v = _value;
     if (v is bool) return v;
     throw CodableException(
       'Expected bool, found ${_value.runtimeType}: $_value',
     );
+  }
+
+  @override
+  bool? readNullableBool() {
+    if (_value == null) return null;
+    return readBool();
   }
 
   @override
@@ -951,11 +793,11 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
-  T decode<T>(T Function(Decoder decoder) decoder) =>
+  T decode<T>(DecoderCallback<T> decoder) =>
       decoder(_TestDecoder(_value, userInfo: _rootDecoder.userInfo));
 
   @override
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullable<T>(DecoderCallback<T> decoder) {
     if (_value == null) return null;
     return decode(decoder);
   }
@@ -963,13 +805,13 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
 
 final class _TestEncoder implements Encoder {
   @override
-  final Map<Symbol, Object?> userInfo;
+  final Map<Object, Object?> userInfo;
   Object? output;
 
   _TestEncoder({this.userInfo = const {}});
 
   @override
-  KeyedEncoder keyed() {
+  KeyedEncoder keyed({KeyOptions? options}) {
     final enc = _TestKeyedEncoder(this);
     output = enc._map;
     return enc;
@@ -984,6 +826,15 @@ final class _TestEncoder implements Encoder {
 
   @override
   SingleValueEncoder singleValue() => _TestSingleValueEncoder(this);
+
+  @override
+  KeyedEncoder container({KeyOptions? options}) => keyed(options: options);
+
+  @override
+  UnkeyedEncoder unkeyedContainer() => unkeyed();
+
+  @override
+  SingleValueEncoder singleValueContainer() => singleValue();
 }
 
 final class _TestKeyedEncoder implements KeyedEncoder {
@@ -999,10 +850,24 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeIntKey(StaticKey key, int value) => _map[key.name] = value;
 
   @override
+  void encodeNullableInt(String key, int? value) => _map[key] = value;
+
+  @override
+  void encodeNullableIntKey(StaticKey key, int? value) =>
+      _map[key.name] = value;
+
+  @override
   void encodeDouble(String key, double value) => _map[key] = value;
 
   @override
   void encodeDoubleKey(StaticKey key, double value) => _map[key.name] = value;
+
+  @override
+  void encodeNullableDouble(String key, double? value) => _map[key] = value;
+
+  @override
+  void encodeNullableDoubleKey(StaticKey key, double? value) =>
+      _map[key.name] = value;
 
   @override
   void encodeString(String key, String value) => _map[key] = value;
@@ -1011,10 +876,24 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeStringKey(StaticKey key, String value) => _map[key.name] = value;
 
   @override
+  void encodeNullableString(String key, String? value) => _map[key] = value;
+
+  @override
+  void encodeNullableStringKey(StaticKey key, String? value) =>
+      _map[key.name] = value;
+
+  @override
   void encodeBool(String key, bool value) => _map[key] = value;
 
   @override
   void encodeBoolKey(StaticKey key, bool value) => _map[key.name] = value;
+
+  @override
+  void encodeNullableBool(String key, bool? value) => _map[key] = value;
+
+  @override
+  void encodeNullableBoolKey(StaticKey key, bool? value) =>
+      _map[key.name] = value;
 
   @override
   void encodeNull(String key) => _map[key] = null;
@@ -1023,28 +902,61 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeNullKey(StaticKey key) => _map[key.name] = null;
 
   @override
-  void encodeValue<T>(
-    String key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _map[key] = child.output;
   }
 
   @override
-  void encodeValueKey<T>(
+  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
+      encodeValue(key.name, value, encode);
+
+  @override
+  void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
+    if (value == null) {
+      encodeNull(key);
+    } else {
+      encodeValue(key, value, encode);
+    }
+  }
+
+  @override
+  void encodeNullableValueKey<T>(
     StaticKey key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) => encodeValue(key.name, value, encode);
+    T? value,
+    EncoderCallback<T> encode,
+  ) => encodeNullableValue(key.name, value, encode);
+
+  @override
+  void encodeEncodable(String key, Encodable value) {
+    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    _map[key] = child.output;
+  }
+
+  @override
+  void encodeEncodableKey(StaticKey key, Encodable value) =>
+      encodeEncodable(key.name, value);
+
+  @override
+  void encodeNullableEncodable(String key, Encodable? value) {
+    if (value == null) {
+      encodeNull(key);
+    } else {
+      encodeEncodable(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
+      encodeNullableEncodable(key.name, value);
 
   @override
   void encodeList<T>(
     String key,
     Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
+    EncoderCallback<T> encode,
   ) {
     final list = <dynamic>[];
     for (final el in elements) {
@@ -1059,7 +971,7 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeListKey<T>(
     StaticKey key,
     Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
+    EncoderCallback<T> encode,
   ) => encodeList(key.name, elements, encode);
 
   @override
@@ -1085,6 +997,14 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   @override
   void encodeStringListKey(StaticKey key, List<String> values) =>
       encodeStringList(key.name, values);
+
+  @override
+  void encodeBoolList(String key, List<bool> values) =>
+      _map[key] = List<bool>.from(values);
+
+  @override
+  void encodeBoolListKey(StaticKey key, List<bool> values) =>
+      encodeBoolList(key.name, values);
 }
 
 final class _TestUnkeyedEncoder implements UnkeyedEncoder {
@@ -1097,32 +1017,63 @@ final class _TestUnkeyedEncoder implements UnkeyedEncoder {
   void encodeInt(int value) => _list.add(value);
 
   @override
+  void encodeNullableInt(int? value) => _list.add(value);
+
+  @override
   void encodeDouble(double value) => _list.add(value);
+
+  @override
+  void encodeNullableDouble(double? value) => _list.add(value);
 
   @override
   void encodeString(String value) => _list.add(value);
 
   @override
+  void encodeNullableString(String? value) => _list.add(value);
+
+  @override
   void encodeBool(bool value) => _list.add(value);
+
+  @override
+  void encodeNullableBool(bool? value) => _list.add(value);
 
   @override
   void encodeNull() => _list.add(null);
 
   @override
-  void encodeElement<T>(
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeElement<T>(T value, EncoderCallback<T> encode) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _list.add(child.output);
   }
 
   @override
-  void encodeList<T>(
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullableElement<T>(T? value, EncoderCallback<T> encode) {
+    if (value == null) {
+      encodeNull();
+    } else {
+      encodeElement(value, encode);
+    }
+  }
+
+  @override
+  void encodeEncodable(Encodable value) {
+    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    _list.add(child.output);
+  }
+
+  @override
+  void encodeNullableEncodable(Encodable? value) {
+    if (value == null) {
+      encodeNull();
+    } else {
+      encodeEncodable(value);
+    }
+  }
+
+  @override
+  void encodeList<T>(Iterable<T> elements, EncoderCallback<T> encode) {
     for (final el in elements) {
       encodeElement(el, encode);
     }
@@ -1138,22 +1089,59 @@ final class _TestSingleValueEncoder implements SingleValueEncoder {
   void encodeInt(int value) => _rootEncoder.output = value;
 
   @override
+  void encodeNullableInt(int? value) => _rootEncoder.output = value;
+
+  @override
   void encodeDouble(double value) => _rootEncoder.output = value;
+
+  @override
+  void encodeNullableDouble(double? value) => _rootEncoder.output = value;
 
   @override
   void encodeString(String value) => _rootEncoder.output = value;
 
   @override
+  void encodeNullableString(String? value) => _rootEncoder.output = value;
+
+  @override
   void encodeBool(bool value) => _rootEncoder.output = value;
+
+  @override
+  void encodeNullableBool(bool? value) => _rootEncoder.output = value;
 
   @override
   void encodeNull() => _rootEncoder.output = null;
 
   @override
-  void encode<T>(T value, void Function(T value, Encoder encoder) encode) {
+  void encode<T>(T value, EncoderCallback<T> encode) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _rootEncoder.output = child.output;
+  }
+
+  @override
+  void encodeNullable<T>(T? value, EncoderCallback<T> encode) {
+    if (value == null) {
+      encodeNull();
+    } else {
+      this.encode(value, encode);
+    }
+  }
+
+  @override
+  void encodeEncodable(Encodable value) {
+    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    _rootEncoder.output = child.output;
+  }
+
+  @override
+  void encodeNullableEncodable(Encodable? value) {
+    if (value == null) {
+      encodeNull();
+    } else {
+      encodeEncodable(value);
+    }
   }
 }
 
@@ -1162,7 +1150,7 @@ abstract final class TestJsonDriver {
   static T decodeString<T>(
     String jsonString,
     T Function(Decoder decoder) decode, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final Object? parsed = jsonDecode(jsonString);
     return decode(_TestDecoder(parsed, userInfo: userInfo ?? const {}));
@@ -1171,7 +1159,7 @@ abstract final class TestJsonDriver {
   static T decodeBytes<T>(
     Uint8List bytes,
     T Function(Decoder decoder) decode, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final String jsonString = utf8.decode(bytes);
     return decodeString(jsonString, decode, userInfo: userInfo);
@@ -1179,7 +1167,7 @@ abstract final class TestJsonDriver {
 
   static String encodeToString(
     Encodable encodable, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final encoder = _TestEncoder(userInfo: userInfo ?? const {});
     encodable.encode(encoder);
@@ -1188,7 +1176,7 @@ abstract final class TestJsonDriver {
 
   static Uint8List encodeToBytes(
     Encodable encodable, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final str = encodeToString(encodable, userInfo: userInfo);
     return Uint8List.fromList(utf8.encode(str));
@@ -1197,7 +1185,7 @@ abstract final class TestJsonDriver {
   static String encodeWithToString<T>(
     T value,
     void Function(T value, Encoder encoder) encode, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final encoder = _TestEncoder(userInfo: userInfo ?? const {});
     encode(value, encoder);
@@ -1207,7 +1195,7 @@ abstract final class TestJsonDriver {
   static Uint8List encodeWithToBytes<T>(
     T value,
     void Function(T value, Encoder encoder) encode, {
-    Map<Symbol, Object?>? userInfo,
+    Map<Object, Object?>? userInfo,
   }) {
     final str = encodeWithToString(value, encode, userInfo: userInfo);
     return Uint8List.fromList(utf8.encode(str));
@@ -1219,13 +1207,29 @@ abstract final class TestJsonDriver {
 // ============================================================================
 
 /// Model 1: High-Throughput Primitive Model with Float Streaming and Key Aliasing.
-class Coordinate implements Decodable<Coordinate>, Encodable {
+@Codable()
+class Coordinate implements Encodable {
+  @CodableKey(aliases: ['lat'])
   final double latitude;
+
+  @CodableKey(aliases: ['lon'])
   final double longitude;
 
   const Coordinate({required this.latitude, required this.longitude});
 
+  static Coordinate fromReader(JsonTokenReader reader) =>
+      _$CoordinateFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CoordinateToWriter(this, writer);
+
+  static Coordinate decodeFromReader(JsonTokenReader reader) =>
+      _$CoordinateFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CoordinateToWriter(this, writer);
+
   static Coordinate decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      return _$CoordinateFromReader(decoder.reader);
+    }
     final keyed = decoder.keyed();
     double? lat;
     double? lon;
@@ -1291,24 +1295,48 @@ enum UserRole {
 class ZipCodeDecoder implements CustomFieldDecoder<String> {
   const ZipCodeDecoder();
 
+  String decodeFromReader(JsonTokenReader reader) {
+    if (reader.isNextNull()) {
+      reader.readNull();
+      return '';
+    }
+    final token = reader.peek();
+    if (token == JsonTokenType.number) {
+      return reader.readInt().toString();
+    }
+    return reader.readString();
+  }
+
+  void encodeToWriter(String value, JsonTokenWriter writer) {
+    final asInt = int.tryParse(value);
+    if (asInt != null) {
+      writer.writeInt(asInt);
+    } else {
+      writer.writeString(value);
+    }
+  }
+
   @override
   String decodeField(Decoder decoder) {
-    final single = decoder.singleValue();
-    final type = single.peekType();
-    if (type == JsonTokenType.number) {
-      return single.readInt().toString();
-    } else if (type == JsonTokenType.string) {
-      return single.readString();
+    if (decoder is JsonCodableDecoder) {
+      return decodeFromReader(decoder.reader);
     }
-    throw CodableException('Expected string or int for zip code, found $type');
+    final single = decoder.singleValue();
+    try {
+      return single.readString();
+    } catch (_) {
+      return single.readInt().toString();
+    }
   }
 }
 
 /// Model 2: Complex Domain Model with Enum, CustomFieldDecoder & Golden Mask validation.
-class UserProfile implements Decodable<UserProfile>, Encodable {
+@Codable()
+class UserProfile implements Encodable {
   final String id;
   final String email;
   final UserRole role;
+  @CodableKey(customDecoder: ZipCodeDecoder())
   final String zip;
   final List<String> tags;
 
@@ -1320,7 +1348,19 @@ class UserProfile implements Decodable<UserProfile>, Encodable {
     this.tags = const [],
   });
 
+  static UserProfile fromReader(JsonTokenReader reader) =>
+      _$UserProfileFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$UserProfileToWriter(this, writer);
+
+  static UserProfile decodeFromReader(JsonTokenReader reader) =>
+      _$UserProfileFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$UserProfileToWriter(this, writer);
+
   static UserProfile decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      return _$UserProfileFromReader(decoder.reader);
+    }
     final keyed = decoder.keyed();
     String? id;
     String? email;
@@ -1401,7 +1441,7 @@ class UserProfile implements Decodable<UserProfile>, Encodable {
 }
 
 /// Model 3: Tagged Polymorphic Hierarchy Base Class.
-abstract class Vehicle implements Decodable<Vehicle>, Encodable {
+abstract class Vehicle implements Encodable {
   final String type;
   final int maxSpeed;
 
@@ -1422,13 +1462,20 @@ abstract class Vehicle implements Decodable<Vehicle>, Encodable {
 }
 
 /// Concrete Subtype 1: Car.
+@Codable()
 class Car extends Vehicle {
   final int doors;
 
   const Car({required super.maxSpeed, required this.doors})
     : super(type: 'car');
 
+  static Car fromReader(JsonTokenReader reader) => _$CarFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CarToWriter(this, writer);
+
   static Car decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      return _$CarFromReader(decoder.reader);
+    }
     final keyed = decoder.keyed();
     int? maxSpeed;
     int? doors;
@@ -1476,13 +1523,21 @@ class Car extends Vehicle {
 }
 
 /// Concrete Subtype 2: Bicycle.
+@Codable()
 class Bicycle extends Vehicle {
   final bool hasBell;
 
   const Bicycle({required super.maxSpeed, required this.hasBell})
     : super(type: 'bicycle');
 
+  static Bicycle fromReader(JsonTokenReader reader) =>
+      _$BicycleFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$BicycleToWriter(this, writer);
+
   static Bicycle decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      return _$BicycleFromReader(decoder.reader);
+    }
     final keyed = decoder.keyed();
     int? maxSpeed;
     bool? hasBell;
@@ -1546,13 +1601,22 @@ class VehicleSuperDecodable implements SuperDecodable<Vehicle> {
 }
 
 /// Nested location model for pairwise testing.
+@Codable()
 class UserWithLocation implements Encodable {
   final UserProfile profile;
   final Coordinate location;
 
   const UserWithLocation({required this.profile, required this.location});
 
+  static UserWithLocation fromReader(JsonTokenReader reader) =>
+      _$UserWithLocationFromReader(reader);
+  void toWriter(JsonTokenWriter writer) =>
+      _$UserWithLocationToWriter(this, writer);
+
   static UserWithLocation decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      return _$UserWithLocationFromReader(decoder.reader);
+    }
     final keyed = decoder.keyed();
     UserProfile? profile;
     Coordinate? location;

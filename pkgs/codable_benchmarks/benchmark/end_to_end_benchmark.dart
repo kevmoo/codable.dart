@@ -115,6 +115,19 @@ class CodableCitmBenchmark extends BenchmarkBase {
   }
 }
 
+File _findBenchmarkDataFile(String relativePath) {
+  final candidate1 = File(relativePath);
+  if (candidate1.existsSync()) return candidate1;
+  final candidate2 = File('pkgs/codable_benchmarks/$relativePath');
+  if (candidate2.existsSync()) return candidate2;
+  final scriptDir = File.fromUri(Platform.script).parent;
+  final candidate3 = File('${scriptDir.path}/../$relativePath');
+  if (candidate3.existsSync()) return candidate3;
+  throw StateError(
+    'Benchmark data file not found: "$relativePath". Tried paths: "${candidate1.path}", "${candidate2.path}", "${candidate3.path}".',
+  );
+}
+
 void main() {
   print(
     '========================================================================',
@@ -137,22 +150,18 @@ void main() {
   CodableCoordinateBenchmark(coordsBytes).report();
 
   // 2. canada.json
-  final canadaFile = File('benchmark/data/canada.json');
-  if (canadaFile.existsSync()) {
-    print('\n[2] canada.json (GeoJSON Polygons / Double Arrays):');
-    final str = canadaFile.readAsStringSync();
-    final bytes = canadaFile.readAsBytesSync();
-    NativeCanadaBenchmark(str).report();
-    CodableCanadaBenchmark(bytes).report();
-  }
+  final canadaFile = _findBenchmarkDataFile('benchmark/data/canada.json');
+  print('\n[2] canada.json (GeoJSON Polygons / Double Arrays):');
+  final canadaStr = canadaFile.readAsStringSync();
+  final canadaBytes = canadaFile.readAsBytesSync();
+  NativeCanadaBenchmark(canadaStr).report();
+  CodableCanadaBenchmark(canadaBytes).report();
 
   // 3. citm_catalog.json
-  final citmFile = File('benchmark/data/citm_catalog.json');
-  if (citmFile.existsSync()) {
-    print('\n[3] citm_catalog.json (Relational Catalog / Nested Objects):');
-    final str = citmFile.readAsStringSync();
-    final bytes = citmFile.readAsBytesSync();
-    NativeCitmBenchmark(str).report();
-    CodableCitmBenchmark(bytes).report();
-  }
+  final citmFile = _findBenchmarkDataFile('benchmark/data/citm_catalog.json');
+  print('\n[3] citm_catalog.json (Relational Catalog / Nested Objects):');
+  final citmStr = citmFile.readAsStringSync();
+  final citmBytes = citmFile.readAsBytesSync();
+  NativeCitmBenchmark(citmStr).report();
+  CodableCitmBenchmark(citmBytes).report();
 }

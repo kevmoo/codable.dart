@@ -1,51 +1,35 @@
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-/// Highly optimized generated Coordinate model using O(1) KeyOptions indexing.
+part 'coordinate.g.dart';
+
+/// Generated Coordinate benchmark model with @Codable and key aliasing.
+@Codable()
 class Coordinate {
+  @CodableKey(aliases: ['lat'])
   final double latitude;
+
+  @CodableKey(aliases: ['lon'])
   final double longitude;
 
   const Coordinate({required this.latitude, required this.longitude});
 
-  static final _options = JsonKeyOptions.of([
-    'latitude',
-    'longitude',
-    'lat',
-    'lon',
-  ]);
+  static Coordinate fromReader(JsonTokenReader reader) =>
+      _$CoordinateFromReader(reader);
+  void toWriter(JsonTokenWriter writer) => _$CoordinateToWriter(this, writer);
 
-  static Coordinate decodeFromReader(JsonTokenReader reader) {
-    reader.beginObject();
-    double? lat;
-    double? lon;
-
-    while (reader.hasNext()) {
-      switch (reader.selectName(_options)) {
-        case 0: // latitude
-        case 2: // lat
-          lat = reader.readDouble();
-          break;
-        case 1: // longitude
-        case 3: // lon
-          lon = reader.readDouble();
-          break;
-        default:
-          reader.skipValue();
-          break;
-      }
-    }
-    reader.endObject();
-
-    if (lat == null || lon == null) {
-      throw CodableException('Missing required fields for Coordinate');
-    }
-    return Coordinate(latitude: lat, longitude: lon);
-  }
+  static Coordinate decodeFromReader(JsonTokenReader reader) =>
+      _$CoordinateFromReader(reader);
+  void encodeToWriter(JsonTokenWriter writer) =>
+      _$CoordinateToWriter(this, writer);
 
   static Coordinate decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
+      return _$CoordinateFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
     double? lat;
@@ -55,12 +39,12 @@ class Coordinate {
       switch (keyed.selectKeyIndex(
         KeyOptions(['latitude', 'longitude', 'lat', 'lon']),
       )) {
-        case 0: // latitude
-        case 2: // lat
+        case 0:
+        case 2:
           lat = keyed.readDouble();
           break;
-        case 1: // longitude
-        case 3: // lon
+        case 1:
+        case 3:
           lon = keyed.readDouble();
           break;
         default:
