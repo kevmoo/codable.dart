@@ -117,7 +117,6 @@ abstract interface class KeyedDecoder {
   Float64List decodeFloat64List();
 }
 
-
 /// In-memory or buffered random-access decoder supporting out-of-order lookups.
 abstract interface class MappedDecoder {
   /// Returns `true` if [key] is present in the container.

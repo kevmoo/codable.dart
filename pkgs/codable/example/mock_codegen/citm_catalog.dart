@@ -1,7 +1,6 @@
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-
 class CitmCatalog {
   final Map<String, String> areaNames;
   final Map<String, String> audienceSubCategoryNames;

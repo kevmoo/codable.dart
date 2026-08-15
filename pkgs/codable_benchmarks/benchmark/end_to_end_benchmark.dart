@@ -132,8 +132,6 @@ void main() {
   final coordsJson = '[$coordsList]';
   final coordsBytes = utf8.encode(coordsJson);
 
-
-
   print('\n[1] 10,000 Coordinates Deserialization:');
   NativeCoordinateBenchmark(coordsJson).report();
   CodableCoordinateBenchmark(coordsBytes).report();

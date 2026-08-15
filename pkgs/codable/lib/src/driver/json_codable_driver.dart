@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-
 import '../contracts/codable.dart';
 import '../contracts/decoder.dart';
 import '../contracts/encoder.dart';
@@ -10,7 +9,6 @@ import '../mock_sdk/json_key_options.dart';
 import '../mock_sdk/json_token_reader.dart';
 import '../mock_sdk/json_token_type.dart';
 import '../mock_sdk/json_token_writer.dart';
-
 
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
@@ -277,7 +275,6 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
 
   @override
   List<String> decodeStringList() {
-
     _ensureStarted();
     final list = <String>[];
     _reader.beginArray();

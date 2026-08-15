@@ -1,7 +1,6 @@
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-
 class CanadaFeatureCollection {
   final String type;
   final List<CanadaFeature> features;

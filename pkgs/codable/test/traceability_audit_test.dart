@@ -6,7 +6,6 @@ import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:codable/src/mock_sdk/json_utf8_codec.dart';
 import 'package:test/scaffolding.dart';
 
-
 void main() {
   group('SDK Atom Inventory & Traceability Audit Test Suite', () {
     // -------------------------------------------------------------------------

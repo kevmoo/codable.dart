@@ -1,7 +1,6 @@
 import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-
 /// Highly optimized generated Coordinate model using O(1) KeyOptions indexing.
 class Coordinate {
   final double latitude;

@@ -67,7 +67,6 @@ abstract interface class JsonTokenReader {
   /// Returns `true` if the next token is a null literal without advancing the cursor.
   bool isNextNull();
 
-
   /// Skips the entire next value (including nested objects and arrays).
   void skipValue();
 
@@ -326,7 +325,6 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @override
   bool isNextNull() => peek() == JsonTokenType.nullValue;
-
 
   @override
   void skipValue() {

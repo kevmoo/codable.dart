@@ -29,7 +29,6 @@ final class JsonKeyOptions {
     return JsonKeyOptions._(List.unmodifiable(keys), utf8Keys);
   }
 
-
   /// The number of registered keys in this options table.
   int get length => keys.length;
 

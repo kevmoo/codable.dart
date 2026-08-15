@@ -21,4 +21,3 @@ abstract interface class Decodable<T> {
   /// Decodes and returns an instance of [T] from the given [decoder].
   T decode(Decoder decoder);
 }
-
