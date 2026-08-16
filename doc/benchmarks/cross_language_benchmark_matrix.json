@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "CrossLanguageJsonSerializationBenchmarks",
-  "generated_at": "2026-08-15T19:14:56.041164Z",
+  "generated_at": "2026-08-16T14:38:40.910699Z",
   "host": {
     "hostname": "kevmoo.c.googlers.com",
     "cpu": "AMD EPYC 7B13 (64 logical cores)",
@@ -28,20 +28,20 @@
           "latency_ms": 3.4
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 326.94,
-          "latency_ms": 5.04
+          "throughput_mb_s": 341.62,
+          "latency_ms": 4.82
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 196.55,
-          "latency_ms": 8.38
+          "throughput_mb_s": 216.44,
+          "latency_ms": 7.61
         },
         "go_encoding_json_typed": {
           "throughput_mb_s": 84.76,
           "latency_ms": 19.43
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 315.21,
-          "latency_ms": 5.23
+          "throughput_mb_s": 332.48,
+          "latency_ms": 4.95
         }
       },
       "encode": {
@@ -58,16 +58,16 @@
           "latency_ms": 3.99
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 425.46,
-          "latency_ms": 3.87
+          "throughput_mb_s": 408.84,
+          "latency_ms": 4.03
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 545.25,
-          "latency_ms": 3.02
+          "throughput_mb_s": 542.67,
+          "latency_ms": 3.04
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 272.54,
-          "latency_ms": 6.04
+          "throughput_mb_s": 270.1,
+          "latency_ms": 6.1
         }
       }
     },
@@ -83,20 +83,20 @@
           "latency_ms": 8.65
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 154.09,
-          "latency_ms": 13.93
+          "throughput_mb_s": 152.24,
+          "latency_ms": 14.1
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 138.74,
-          "latency_ms": 15.47
+          "throughput_mb_s": 140.67,
+          "latency_ms": 15.26
         },
         "go_encoding_json_typed": {
           "throughput_mb_s": 54.48,
           "latency_ms": 39.4
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 86.21,
-          "latency_ms": 24.9
+          "throughput_mb_s": 87.07,
+          "latency_ms": 24.66
         }
       },
       "encode": {
@@ -113,16 +113,16 @@
           "latency_ms": 15.51
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 69.0,
-          "latency_ms": 31.11
+          "throughput_mb_s": 68.4,
+          "latency_ms": 31.38
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 72.75,
-          "latency_ms": 29.51
+          "throughput_mb_s": 73.12,
+          "latency_ms": 29.36
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 49.14,
-          "latency_ms": 43.69
+          "throughput_mb_s": 48.68,
+          "latency_ms": 44.1
         }
       }
     },
@@ -138,20 +138,20 @@
           "latency_ms": 1.4
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 227.53,
-          "latency_ms": 2.65
+          "throughput_mb_s": 232.9,
+          "latency_ms": 2.59
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 120.43,
-          "latency_ms": 5.0
+          "throughput_mb_s": 118.08,
+          "latency_ms": 5.1
         },
         "go_encoding_json_typed": {
           "throughput_mb_s": 94.43,
           "latency_ms": 6.38
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 236.56,
-          "latency_ms": 2.55
+          "throughput_mb_s": 237.98,
+          "latency_ms": 2.53
         }
       },
       "encode": {
@@ -168,16 +168,16 @@
           "latency_ms": 1.83
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 239.26,
-          "latency_ms": 2.52
+          "throughput_mb_s": 247.8,
+          "latency_ms": 2.43
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 334.25,
-          "latency_ms": 1.8
+          "throughput_mb_s": 348.47,
+          "latency_ms": 1.73
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 134.67,
-          "latency_ms": 4.47
+          "throughput_mb_s": 132.04,
+          "latency_ms": 4.56
         }
       }
     },
@@ -193,20 +193,20 @@
           "latency_ms": 0.002
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 201.27,
-          "latency_ms": 0.0026
+          "throughput_mb_s": 234.65,
+          "latency_ms": 0.0022
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 115.99,
-          "latency_ms": 0.0045
+          "throughput_mb_s": 117.11,
+          "latency_ms": 0.0044
         },
         "go_encoding_json_typed": {
           "throughput_mb_s": 65.65,
           "latency_ms": 0.0079
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 237.51,
-          "latency_ms": 0.0022
+          "throughput_mb_s": 203.81,
+          "latency_ms": 0.0026
         }
       },
       "encode": {
@@ -223,15 +223,15 @@
           "latency_ms": 0.0015
         },
         "dart_aot_package_codable": {
-          "throughput_mb_s": 262.02,
-          "latency_ms": 0.002
+          "throughput_mb_s": 275.75,
+          "latency_ms": 0.0019
         },
         "dart_aot_std_convert": {
-          "throughput_mb_s": 130.75,
-          "latency_ms": 0.004
+          "throughput_mb_s": 139.27,
+          "latency_ms": 0.0037
         },
         "dart_aot_stock_convert": {
-          "throughput_mb_s": 146.28,
+          "throughput_mb_s": 143.24,
           "latency_ms": 0.0036
         }
       }
