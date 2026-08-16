@@ -8,6 +8,10 @@ abstract interface class Decoder {
   /// Extensible context map for passing runtime dependency handles, options, or flags.
   Map<Object, Object?> get userInfo;
 
+  /// Exposes the underlying payload byte buffer for zero-allocation span operations,
+  /// or `null` if the decoder does not operate over a contiguous byte buffer.
+  Uint8List? get payload;
+
   /// Opens a streaming sequential keyed container for reading object fields.
   KeyedDecoder keyed({KeyOptions? options});
 
@@ -82,6 +86,12 @@ abstract interface class KeyedDecoder {
 
   /// Reads a nullable String value.
   String? readNullableString();
+
+  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
+  (int start, int end) readStringSpan();
+
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.
   bool readBool();
@@ -260,6 +270,12 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable String element.
   String? readNullableString();
 
+  /// Reads a non-nullable String element as a raw UTF-8 byte span `(start, end)`.
+  (int start, int end) readStringSpan();
+
+  /// Reads a nullable String element as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  (int start, int end)? readNullableStringSpan();
+
   /// Reads a non-nullable boolean element.
   bool readBool();
 
@@ -307,6 +323,12 @@ abstract interface class SingleValueDecoder {
 
   /// Reads a nullable String value.
   String? readNullableString();
+
+  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
+  (int start, int end) readStringSpan();
+
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.
   bool readBool();

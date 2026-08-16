@@ -28,6 +28,9 @@ final class _TestDecoder implements Decoder {
   final Map<Object, Object?> userInfo;
   _TestKeyedDecoder? _activeKeyed;
 
+  @override
+  Uint8List? get payload => null;
+
   _TestDecoder(this._data, {this.userInfo = const {}});
 
   @override
@@ -178,6 +181,19 @@ final class _TestKeyedDecoder implements KeyedDecoder {
     final v = _currentValue;
     if (v == null) return null;
     return readString();
+  }
+
+  @override
+  (int start, int end) readStringSpan() {
+    throw UnsupportedError(
+      'readStringSpan is not supported on _TestKeyedDecoder',
+    );
+  }
+
+  @override
+  (int start, int end)? readNullableStringSpan() {
+    if (isNextNull()) return null;
+    return readStringSpan();
   }
 
   @override
@@ -625,6 +641,19 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  (int start, int end) readStringSpan() {
+    throw UnsupportedError(
+      'readStringSpan is not supported on _TestUnkeyedDecoder',
+    );
+  }
+
+  @override
+  (int start, int end)? readNullableStringSpan() {
+    if (isNextNull()) return null;
+    return readStringSpan();
+  }
+
+  @override
   bool readBool() {
     if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
     final v = _list[_index++];
@@ -763,6 +792,19 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   String? readNullableString() {
     if (_value == null) return null;
     return readString();
+  }
+
+  @override
+  (int start, int end) readStringSpan() {
+    throw UnsupportedError(
+      'readStringSpan is not supported on _TestSingleValueDecoder',
+    );
+  }
+
+  @override
+  (int start, int end)? readNullableStringSpan() {
+    if (isNull()) return null;
+    return readStringSpan();
   }
 
   @override

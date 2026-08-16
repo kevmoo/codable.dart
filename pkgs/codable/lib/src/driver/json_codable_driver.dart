@@ -17,6 +17,9 @@ final class JsonCodableDecoder implements Decoder {
   /// Exposes the underlying pull-based token reader for direct, devirtualized decoding.
   JsonTokenReader get reader => _reader;
 
+  @override
+  Uint8List get payload => _reader.bytes;
+
   JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}});
 
   factory JsonCodableDecoder.fromBytes(
@@ -183,6 +186,22 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
       return null;
     }
     return readString();
+  }
+
+  @override
+  (int start, int end) readStringSpan() {
+    _ensureStarted();
+    return _reader.readStringSpan();
+  }
+
+  @override
+  (int start, int end)? readNullableStringSpan() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
   }
 
   @override
@@ -536,6 +555,22 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  (int start, int end) readStringSpan() {
+    _ensureStarted();
+    return _reader.readStringSpan();
+  }
+
+  @override
+  (int start, int end)? readNullableStringSpan() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
+  }
+
+  @override
   bool readBool() {
     _ensureStarted();
     return _reader.readBool();
@@ -629,6 +664,13 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
 
   @override
   String? readNullableString() => isNull() ? null : readString();
+
+  @override
+  (int start, int end) readStringSpan() => _reader.readStringSpan();
+
+  @override
+  (int start, int end)? readNullableStringSpan() =>
+      isNull() ? null : readStringSpan();
 
   @override
   bool readBool() => _reader.readBool();
