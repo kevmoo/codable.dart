@@ -197,17 +197,17 @@ extension type const _$CitmCatalogSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameAreaNames,
-    nameAudienceSubCategoryNames,
-    nameBlockNames,
-    nameEvents,
-    namePerformances,
-    nameSeatCategoryNames,
-    nameSubTopicNames,
-    nameSubjectNames,
-    nameTopicNames,
-    nameTopicSynced,
-    nameVenueNames,
+    _$CitmCatalogSchema.nameAreaNames,
+    _$CitmCatalogSchema.nameAudienceSubCategoryNames,
+    _$CitmCatalogSchema.nameBlockNames,
+    _$CitmCatalogSchema.nameEvents,
+    _$CitmCatalogSchema.namePerformances,
+    _$CitmCatalogSchema.nameSeatCategoryNames,
+    _$CitmCatalogSchema.nameSubTopicNames,
+    _$CitmCatalogSchema.nameSubjectNames,
+    _$CitmCatalogSchema.nameTopicNames,
+    _$CitmCatalogSchema.nameTopicSynced,
+    _$CitmCatalogSchema.nameVenueNames,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -615,14 +615,14 @@ extension type const _$CitmEventSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameDescription,
-    nameId,
-    nameLogo,
-    nameName,
-    nameSubTopicIds,
-    nameSubjectCode,
-    nameSubtitle,
-    nameTopicIds,
+    _$CitmEventSchema.nameDescription,
+    _$CitmEventSchema.nameId,
+    _$CitmEventSchema.nameLogo,
+    _$CitmEventSchema.nameName,
+    _$CitmEventSchema.nameSubTopicIds,
+    _$CitmEventSchema.nameSubjectCode,
+    _$CitmEventSchema.nameSubtitle,
+    _$CitmEventSchema.nameTopicIds,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -914,14 +914,14 @@ extension type const _$CitmPerformanceSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameEventId,
-    nameId,
-    nameLogo,
-    nameName,
-    namePrices,
-    nameSeatCategories,
-    nameStart,
-    nameVenueCode,
+    _$CitmPerformanceSchema.nameEventId,
+    _$CitmPerformanceSchema.nameId,
+    _$CitmPerformanceSchema.nameLogo,
+    _$CitmPerformanceSchema.nameName,
+    _$CitmPerformanceSchema.namePrices,
+    _$CitmPerformanceSchema.nameSeatCategories,
+    _$CitmPerformanceSchema.nameStart,
+    _$CitmPerformanceSchema.nameVenueCode,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -1210,9 +1210,9 @@ extension type const _$CitmPriceSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameAmount,
-    nameAudienceSubCategoryId,
-    nameSeatCategoryId,
+    _$CitmPriceSchema.nameAmount,
+    _$CitmPriceSchema.nameAudienceSubCategoryId,
+    _$CitmPriceSchema.nameSeatCategoryId,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -1380,8 +1380,8 @@ extension type const _$CitmSeatCategorySchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameAreas,
-    nameSeatCategoryId,
+    _$CitmSeatCategorySchema.nameAreas,
+    _$CitmSeatCategorySchema.nameSeatCategoryId,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -1522,8 +1522,8 @@ extension type const _$CitmAreaSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameAreaId,
-    nameBlockIds,
+    _$CitmAreaSchema.nameAreaId,
+    _$CitmAreaSchema.nameBlockIds,
   ]);
 
   // Bitmask Flags strictly for Required Fields

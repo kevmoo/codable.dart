@@ -38,8 +38,8 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameType,
-    nameFeatures,
+    _$CanadaFeatureCollectionSchema.nameType,
+    _$CanadaFeatureCollectionSchema.nameFeatures,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -194,9 +194,9 @@ extension type const _$CanadaFeatureSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameType,
-    nameProperties,
-    nameGeometry,
+    _$CanadaFeatureSchema.nameType,
+    _$CanadaFeatureSchema.nameProperties,
+    _$CanadaFeatureSchema.nameGeometry,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -343,7 +343,9 @@ extension type const _$CanadaPropertiesSchema(int _value) {
   static const int keyName = 0;
 
   // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [nameName]);
+  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+    _$CanadaPropertiesSchema.nameName,
+  ]);
 
   // Bitmask Flags strictly for Required Fields
   static const _$CanadaPropertiesSchema none = _$CanadaPropertiesSchema(0);
@@ -464,8 +466,8 @@ extension type const _$CanadaGeometrySchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameType,
-    nameCoordinates,
+    _$CanadaGeometrySchema.nameType,
+    _$CanadaGeometrySchema.nameCoordinates,
   ]);
 
   // Bitmask Flags strictly for Required Fields
