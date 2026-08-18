@@ -15,6 +15,10 @@ linter:
     - use_declaring_parameters
     - simple_directive_paths
     - unnecessary_ignore
+    # Blocked on https://github.com/dart-lang/source_gen/issues/821
+    # - unnecessary_type_name_in_constructor
+    # - use_primary_constructors
+
 
 
 
