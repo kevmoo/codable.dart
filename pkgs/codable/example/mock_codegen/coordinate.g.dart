@@ -47,10 +47,10 @@ extension type const _$CoordinateSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameLatitude,
-    aliasLatitudeLat,
-    nameLongitude,
-    aliasLongitudeLon,
+    _$CoordinateSchema.nameLatitude,
+    _$CoordinateSchema.aliasLatitudeLat,
+    _$CoordinateSchema.nameLongitude,
+    _$CoordinateSchema.aliasLongitudeLon,
   ]);
 
   // Bitmask Flags strictly for Required Fields

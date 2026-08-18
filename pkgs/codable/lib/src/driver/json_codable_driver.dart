@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import '../contracts/codable.dart';
@@ -6,11 +5,13 @@ import '../contracts/decoder.dart';
 import '../contracts/encoder.dart';
 import '../contracts/exceptions.dart';
 import '../contracts/static_key.dart';
+import '../substrate/substrate.dart';
 
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
 final class JsonCodableDecoder implements Decoder {
   final JsonTokenReader _reader;
+  final Uint8List? _bytes;
   @override
   final Map<Object, Object?> userInfo;
 
@@ -18,19 +19,31 @@ final class JsonCodableDecoder implements Decoder {
   JsonTokenReader get reader => _reader;
 
   @override
-  Uint8List get payload => _reader.bytes;
+  Uint8List? get payload {
+    if (_bytes != null) return _bytes;
+    final dynamic r = _reader;
+    try {
+      return r.bytes as Uint8List?;
+    } catch (_) {
+      return null;
+    }
+  }
 
-  JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}});
+  JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}})
+    : _bytes = null;
 
   factory JsonCodableDecoder.fromBytes(
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    return JsonCodableDecoder.fromReader(
+    return JsonCodableDecoder._(
       JsonTokenReader.fromBytes(bytes),
+      bytes,
       userInfo: userInfo,
     );
   }
+
+  JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) =>
@@ -191,7 +204,8 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   @override
   (int start, int end) readStringSpan() {
     _ensureStarted();
-    return _reader.readStringSpan();
+    final dynamic r = _reader;
+    return r.readStringSpan() as (int, int);
   }
 
   @override
@@ -557,7 +571,8 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   @override
   (int start, int end) readStringSpan() {
     _ensureStarted();
-    return _reader.readStringSpan();
+    final dynamic r = _reader;
+    return r.readStringSpan() as (int, int);
   }
 
   @override
@@ -666,7 +681,10 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   String? readNullableString() => isNull() ? null : readString();
 
   @override
-  (int start, int end) readStringSpan() => _reader.readStringSpan();
+  (int start, int end) readStringSpan() {
+    final dynamic r = _reader;
+    return r.readStringSpan() as (int, int);
+  }
 
   @override
   (int start, int end)? readNullableStringSpan() =>
@@ -690,6 +708,9 @@ final class JsonCodableEncoder implements Encoder {
   final JsonTokenWriter _writer;
   @override
   final Map<Object, Object?> userInfo;
+
+  /// Exposes the underlying push-based token writer.
+  JsonTokenWriter get writer => _writer;
 
   JsonCodableEncoder.fromWriter(this._writer, {this.userInfo = const {}});
 

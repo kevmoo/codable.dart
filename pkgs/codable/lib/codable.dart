@@ -1,7 +1,7 @@
 /// Next-generation high-performance zero-allocation serialization framework for Dart.
 library;
 
-import 'dart:convert';
+import 'src/substrate/substrate.dart';
 
 export 'dart:typed_data';
 export 'src/contracts/annotations.dart';
@@ -11,15 +11,7 @@ export 'src/contracts/decoder.dart';
 export 'src/contracts/encoder.dart';
 export 'src/contracts/exceptions.dart';
 export 'src/contracts/static_key.dart';
-export 'dart:convert'
-    show
-        JsonKeyOptions,
-        JsonTokenReader,
-        JsonTokenType,
-        JsonTokenWriter,
-        jsonUtf8,
-        jsonUtf8Decode,
-        jsonUtf8Encode;
+export 'src/substrate/substrate.dart';
 
 /// Extension on [JsonTokenReader] providing convenience utilities.
 extension JsonTokenReaderCodableExtension on JsonTokenReader {

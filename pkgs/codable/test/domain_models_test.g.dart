@@ -47,10 +47,10 @@ extension type const _$CoordinateSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameLatitude,
-    aliasLatitudeLat,
-    nameLongitude,
-    aliasLongitudeLon,
+    _$CoordinateSchema.nameLatitude,
+    _$CoordinateSchema.aliasLatitudeLat,
+    _$CoordinateSchema.nameLongitude,
+    _$CoordinateSchema.aliasLongitudeLon,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -200,11 +200,11 @@ extension type const _$UserProfileSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameId,
-    nameEmail,
-    nameRole,
-    nameZip,
-    nameTags,
+    _$UserProfileSchema.nameId,
+    _$UserProfileSchema.nameEmail,
+    _$UserProfileSchema.nameRole,
+    _$UserProfileSchema.nameZip,
+    _$UserProfileSchema.nameTags,
   ]);
 
   // Enum Options for role
@@ -413,8 +413,8 @@ extension type const _$CarSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameMaxSpeed,
-    nameDoors,
+    _$CarSchema.nameMaxSpeed,
+    _$CarSchema.nameDoors,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -548,8 +548,8 @@ extension type const _$BicycleSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameMaxSpeed,
-    nameHasBell,
+    _$BicycleSchema.nameMaxSpeed,
+    _$BicycleSchema.nameHasBell,
   ]);
 
   // Bitmask Flags strictly for Required Fields
@@ -685,8 +685,8 @@ extension type const _$UserWithLocationSchema(int _value) {
 
   // Pre-Compiled JsonKeyOptions
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    nameProfile,
-    nameLocation,
+    _$UserWithLocationSchema.nameProfile,
+    _$UserWithLocationSchema.nameLocation,
   ]);
 
   // Bitmask Flags strictly for Required Fields
