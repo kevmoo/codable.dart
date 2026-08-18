@@ -70,7 +70,97 @@ final class JsonCodableDecoder implements Decoder {
   SingleValueDecoder singleValueContainer() => singleValue();
 }
 
-final class _JsonCodableKeyedDecoder implements KeyedDecoder {
+mixin _JsonPrimitiveDecoderMixin {
+  JsonTokenReader get _reader;
+  void _ensureStarted();
+
+  bool isNextNull() {
+    _ensureStarted();
+    return _reader.peek() == JsonTokenType.nullValue;
+  }
+
+  void readNull() {
+    _ensureStarted();
+    _reader.readNull();
+  }
+
+  int readInt() {
+    _ensureStarted();
+    return _reader.readInt();
+  }
+
+  int? readNullableInt() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readInt();
+  }
+
+  double readDouble() {
+    _ensureStarted();
+    return _reader.readDouble();
+  }
+
+  double? readNullableDouble() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readDouble();
+  }
+
+  String readString() {
+    _ensureStarted();
+    return _reader.readString();
+  }
+
+  String? readNullableString() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readString();
+  }
+
+  (int start, int end) readStringSpan() {
+    _ensureStarted();
+    final dynamic r = _reader;
+    // ignore: avoid_dynamic_calls
+    return r.readStringSpan() as (int, int);
+  }
+
+  (int start, int end)? readNullableStringSpan() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
+  }
+
+  bool readBool() {
+    _ensureStarted();
+    return _reader.readBool();
+  }
+
+  bool? readNullableBool() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readBool();
+  }
+}
+
+final class _JsonCodableKeyedDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements KeyedDecoder {
+  @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
   bool _started = false;
@@ -81,6 +171,7 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
     KeyOptions? options,
   });
 
+  @override
   void _ensureStarted() {
     if (!_started) {
       _reader.beginObject();
@@ -140,100 +231,6 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   void skipValue() {
     _ensureStarted();
     _reader.skipValue();
-  }
-
-  @override
-  bool isNextNull() {
-    _ensureStarted();
-    return _reader.peek() == JsonTokenType.nullValue;
-  }
-
-  @override
-  void readNull() {
-    _ensureStarted();
-    _reader.readNull();
-  }
-
-  @override
-  int readInt() {
-    _ensureStarted();
-    return _reader.readInt();
-  }
-
-  @override
-  int? readNullableInt() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readInt();
-  }
-
-  @override
-  double readDouble() {
-    _ensureStarted();
-    return _reader.readDouble();
-  }
-
-  @override
-  double? readNullableDouble() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readDouble();
-  }
-
-  @override
-  String readString() {
-    _ensureStarted();
-    return _reader.readString();
-  }
-
-  @override
-  String? readNullableString() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readString();
-  }
-
-  @override
-  (int start, int end) readStringSpan() {
-    _ensureStarted();
-    final dynamic r = _reader;
-    // ignore: avoid_dynamic_calls
-    return r.readStringSpan() as (int, int);
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readStringSpan();
-  }
-
-  @override
-  bool readBool() {
-    _ensureStarted();
-    return _reader.readBool();
-  }
-
-  @override
-  bool? readNullableBool() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readBool();
   }
 
   @override
@@ -480,13 +477,17 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
 }
 
-final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
+final class _JsonCodableUnkeyedDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements UnkeyedDecoder {
+  @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
   bool _started = false;
 
   _JsonCodableUnkeyedDecoder(this._reader, this._rootDecoder);
 
+  @override
   void _ensureStarted() {
     if (!_started) {
       _reader.beginArray();
@@ -505,103 +506,9 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  bool isNextNull() {
-    _ensureStarted();
-    return _reader.peek() == JsonTokenType.nullValue;
-  }
-
-  @override
-  void readNull() {
-    _ensureStarted();
-    _reader.readNull();
-  }
-
-  @override
   void skipElement() {
     _ensureStarted();
     _reader.skipValue();
-  }
-
-  @override
-  int readInt() {
-    _ensureStarted();
-    return _reader.readInt();
-  }
-
-  @override
-  int? readNullableInt() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readInt();
-  }
-
-  @override
-  double readDouble() {
-    _ensureStarted();
-    return _reader.readDouble();
-  }
-
-  @override
-  double? readNullableDouble() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readDouble();
-  }
-
-  @override
-  String readString() {
-    _ensureStarted();
-    return _reader.readString();
-  }
-
-  @override
-  String? readNullableString() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readString();
-  }
-
-  @override
-  (int start, int end) readStringSpan() {
-    _ensureStarted();
-    final dynamic r = _reader;
-    // ignore: avoid_dynamic_calls
-    return r.readStringSpan() as (int, int);
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readStringSpan();
-  }
-
-  @override
-  bool readBool() {
-    _ensureStarted();
-    return _reader.readBool();
-  }
-
-  @override
-  bool? readNullableBool() {
-    _ensureStarted();
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readBool();
   }
 
   @override
@@ -653,52 +560,20 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 }
 
-final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
+final class _JsonCodableSingleValueDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements SingleValueDecoder {
+  @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
 
   _JsonCodableSingleValueDecoder(this._reader, this._rootDecoder);
 
   @override
-  bool isNull() => _reader.peek() == JsonTokenType.nullValue;
+  void _ensureStarted() {}
 
   @override
-  void readNull() => _reader.readNull();
-
-  @override
-  int readInt() => _reader.readInt();
-
-  @override
-  int? readNullableInt() => isNull() ? null : readInt();
-
-  @override
-  double readDouble() => _reader.readDouble();
-
-  @override
-  double? readNullableDouble() => isNull() ? null : readDouble();
-
-  @override
-  String readString() => _reader.readString();
-
-  @override
-  String? readNullableString() => isNull() ? null : readString();
-
-  @override
-  (int start, int end) readStringSpan() {
-    final dynamic r = _reader;
-    // ignore: avoid_dynamic_calls
-    return r.readStringSpan() as (int, int);
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() =>
-      isNull() ? null : readStringSpan();
-
-  @override
-  bool readBool() => _reader.readBool();
-
-  @override
-  bool? readNullableBool() => isNull() ? null : readBool();
+  bool isNull() => isNextNull();
 
   @override
   T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
