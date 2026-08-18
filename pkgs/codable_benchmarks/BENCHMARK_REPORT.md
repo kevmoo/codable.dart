@@ -12,9 +12,9 @@
 This report documents the performance milestones of Dart's next-generation serialization architecture (`package:codable` + `package:codable_generator`) compared to native `dart:convert` (`jsonDecode`), Rust (`serde_json`, `simdjson-rs`), Go (`sonic`, `jsoniter`, `encoding/json`), and C++ (`simdjson`).
 
 ### 🔑 Key Breakthrough Highlights
-* **`citm_catalog.json` (1.73 MB)**: Single-run latency dropped to **5.66 ms (305.3 MB/s)**, achieving **1.42x faster throughput than untyped native `jsonDecode`**, **2.69x faster throughput than fair typed native Dart**, and **3.18x faster than Go standard library `encoding/json`**.
-* **`canada.json` (2.25 MB)**: Single-run latency dropped to **11.29 ms (199.4 MB/s)**, achieving **2.17x faster throughput than untyped native `jsonDecode`**, **2.81x faster than fair typed native Dart**, and **3.39x faster than the initial pull-decoder prototype**.
-* **`10,000 Coordinates` (0.39 MB)**: Single-run latency dropped to **2.98 ms (130.7 MB/s)**, achieving **1.27x faster throughput than native `jsonDecode`**.
+* **`citm_catalog.json` (1.73 MB)**: Single-run latency dropped to **3.78 ms (456.3 MB/s)**, achieving **2.02x faster throughput than untyped native `jsonDecode`**, **4.02x faster throughput than fair typed native Dart**, and **4.75x faster than Go standard library `encoding/json`**.
+* **`canada.json` (2.25 MB)**: Single-run latency dropped to **9.32 ms (241.4 MB/s)**, achieving **2.48x faster throughput than untyped native `jsonDecode`**, **3.40x faster than fair typed native Dart**, and **4.11x faster than the initial pull-decoder prototype**.
+* **`10,000 Coordinates` (0.39 MB)**: Single-run latency dropped to **1.92 ms (202.6 MB/s)**, achieving **1.96x faster throughput than native `jsonDecode`**.
 
 ---
 
@@ -30,7 +30,8 @@ This report documents the performance milestones of Dart's next-generation seria
 | **Go sonic** (JIT Bytecode + AVX2, Typed) | **1.50 ms** | **1,151.5 MB/s** | 10.13x |
 | **Rust serde_json** (Monomorphized Typed) | **1.80 ms** | **959.6 MB/s** | 8.44x |
 | **Go jsoniter** (Inlined Pointer Scanning) | **3.20 ms** | **539.8 MB/s** | 4.75x |
-| **Dart Codable (Current: Fused + SWAR + Builder)** | **5.66 ms** | **305.3 MB/s** | **2.69x** |
+| **Dart Codable (Current: 16-Slot String Cache + Fused + SWAR)** | **3.78 ms** | **456.3 MB/s** | **4.02x** |
+| Dart Codable (Phase 3 Fused + SWAR Baseline) | 5.66 ms | 305.3 MB/s | 2.69x |
 | Dart Codable (Phase 2 SWAR Baseline) | 6.45 ms | 267.9 MB/s | 2.36x |
 | Dart Codable (Phase 1 Eisel-Lemire) | 7.83 ms | 220.7 MB/s | 1.94x |
 | Dart Native `jsonDecode` (Untyped DOM) | 8.06 ms | 214.3 MB/s | 1.89x |
@@ -51,7 +52,8 @@ This report documents the performance milestones of Dart's next-generation seria
 | **Go sonic** (JIT Bytecode + AVX2, Typed) | **2.50 ms** | **900.4 MB/s** | 12.69x |
 | **Rust serde_json** (Monomorphized Typed) | **4.20 ms** | **536.0 MB/s** | 7.55x |
 | **Go jsoniter** (Inlined Pointer Scanning) | **6.00 ms** | **375.2 MB/s** | 5.29x |
-| **Dart Codable (Current: Fused + Tuple Sizing)** | **11.29 ms** | **199.4 MB/s** | **2.81x** |
+| **Dart Codable (Current: 16-Slot String Cache + Fused + Tuple Sizing)** | **9.32 ms** | **241.4 MB/s** | **3.40x** |
+| Dart Codable (Phase 3 Fused + Tuple Sizing) | 11.29 ms | 199.4 MB/s | 2.81x |
 | Dart Codable (Phase 2 + Tuple Sizing) | 11.49 ms | 196.0 MB/s | 2.76x |
 | Dart Codable (Phase 2 SWAR Baseline) | 14.66 ms | 153.5 MB/s | 2.16x |
 | Dart Codable (Phase 1 Eisel-Lemire) | 15.50 ms | 145.3 MB/s | 2.05x |
@@ -69,7 +71,8 @@ This report documents the performance milestones of Dart's next-generation seria
 <!-- mdformat off(prevent table wrapping) -->
 | Engine / Strategy | Latency (ms) | Throughput (MB/s) | Speedup vs Native |
 | :--- | :---: | :---: | :---: |
-| **Dart Codable (Current: Delimiter-Fused + SWAR)** | **2.98 ms** | **130.7 MB/s** | **1.27x** |
+| **Dart Codable (Current: 16-Slot String Cache + Delimiter-Fused + SWAR)** | **1.92 ms** | **202.6 MB/s** | **1.96x** |
+| Dart Codable (Phase 3 Delimiter-Fused + SWAR) | 2.98 ms | 130.7 MB/s | 1.27x |
 | Dart Codable (Phase 2 SWAR Baseline) | 3.14 ms | 124.0 MB/s | 1.20x |
 | Dart Codable (Phase 1 Eisel-Lemire) | 3.41 ms | 114.3 MB/s | 1.11x |
 | Dart Native `jsonDecode` (Untyped DOM) | 3.79 ms | 102.9 MB/s | 1.00x |
@@ -87,8 +90,9 @@ This report documents the performance milestones of Dart's next-generation seria
 | **1. Phase 1: Eisel-Lemire Doubles** | 220.7 MB/s (7.83 ms) | 145.3 MB/s (15.5 ms) | 114.3 MB/s (3.41 ms) |
 | **2. Phase 2: 64-Bit SWAR Jump Tables** | 267.9 MB/s (6.45 ms) | 153.5 MB/s (14.7 ms) | 124.0 MB/s (3.14 ms) |
 | **3. Phase 2.5: Tuple Pre-Sizing** | 267.9 MB/s (6.45 ms) | 196.0 MB/s (11.5 ms) | 124.0 MB/s (3.14 ms) |
-| **4. Current: Delimiter-Fused + Builder** | **305.3 MB/s (5.66 ms)** | **199.4 MB/s (11.3 ms)** | **130.7 MB/s (2.98 ms)** |
-| **Total Improvement Arc** | **14.1x faster** | **3.39x faster** | **1.25x faster** |
+| **4. Phase 3: Delimiter-Fused + Builder** | 305.3 MB/s (5.66 ms) | 199.4 MB/s (11.3 ms) | 130.7 MB/s (2.98 ms) |
+| **5. Current: 16-Slot String Cache (`#VNG0N`)** | **456.3 MB/s (3.78 ms)** | **241.4 MB/s (9.32 ms)** | **202.6 MB/s (1.92 ms)** |
+| **Total Improvement Arc** | **21.7x faster** | **4.11x faster** | **1.94x faster** |
 <!-- mdformat on -->
 
 ---
