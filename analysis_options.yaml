@@ -5,3 +5,11 @@ analyzer:
     strict-casts: true
     strict-inference: true
     strict-raw-types: true
+
+linter:
+  rules:
+    - simple_directive_paths
+    - unnecessary_const_in_enum_constructor
+    - unnecessary_ignore
+
+
