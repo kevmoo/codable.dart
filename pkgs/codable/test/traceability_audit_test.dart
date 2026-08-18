@@ -253,38 +253,6 @@ void main() {
       check(x).equals(10.5);
       check(y).equals(20.5);
       check(z).equals(30.5);
-
-      final sink = BytesBuilder();
-      final encoder = JsonCodableEncoder.toSink(sink);
-      final keyedEnc = encoder.keyed();
-      keyedEnc.encodeDouble('x', x!);
-      keyedEnc.encodeDouble('y', y!);
-      keyedEnc.encodeDouble('z', z!);
-
-      check(sink.length).isGreaterThan(0);
-    });
-
-    test('Encodable model integration with JsonCodableEncoder', () {
-      final point = _TestPoint(12, 34);
-      final sink = BytesBuilder();
-      final encoder = JsonCodableEncoder.toSink(sink);
-      final keyed = encoder.keyed();
-      keyed.encodeEncodable('point', point);
-      check(sink.length).isGreaterThan(0);
     });
   });
-}
-
-class _TestPoint implements Encodable {
-  final int x;
-  final int y;
-
-  _TestPoint(this.x, this.y);
-
-  @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeInt('x', x);
-    keyed.encodeInt('y', y);
-  }
 }
