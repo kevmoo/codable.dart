@@ -188,6 +188,13 @@ final class DecoderGeneratorHelper {
     final schemaName = '_\$${model.className}Schema';
     final funcName = '_\$${model.className}FromReader';
 
+    _writeDecoderHeader(buffer, funcName);
+    _writeLocalVarDeclarations(buffer);
+    _writeSelectLoop(buffer, schemaName);
+    _writeDecoderReturn(buffer);
+  }
+
+  void _writeDecoderHeader(StringBuffer buffer, String funcName) {
     buffer.writeln(
       '// =============================================================================',
     );
@@ -200,28 +207,13 @@ final class DecoderGeneratorHelper {
     buffer.writeln('${model.className} $funcName(JsonTokenReader reader) {');
     buffer.writeln('  reader.beginObject();');
     buffer.writeln();
+  }
 
-    // Local variable declarations
+  void _writeLocalVarDeclarations(StringBuffer buffer) {
     for (final field in model.fields) {
       final typeStr = field.type.getDisplayString();
       if (field.hasDefaultValue && field.defaultValueCode != null) {
-        var defaultCode = field.defaultValueCode!;
-        if (defaultCode == 'const {}') {
-          final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
-          defaultCode = 'const <String, $valType>{};';
-        } else if (defaultCode == 'const []') {
-          final elemType =
-              field.elementType?.getDisplayString() ??
-              (field.type is InterfaceType &&
-                      (field.type as InterfaceType).typeArguments.isNotEmpty
-                  ? (field.type as InterfaceType).typeArguments.first
-                        .getDisplayString()
-                  : 'dynamic');
-          defaultCode = 'const <$elemType>[];';
-        }
-        if (defaultCode.endsWith(';')) {
-          defaultCode = defaultCode.substring(0, defaultCode.length - 1);
-        }
+        final defaultCode = _formatDefaultValue(field);
         buffer.writeln('  var ${field.name} = $defaultCode;');
       } else if (field.isNullable) {
         buffer.writeln('  $typeStr ${field.name};');
@@ -229,60 +221,38 @@ final class DecoderGeneratorHelper {
         buffer.writeln('  $typeStr? ${field.name};');
       }
     }
+  }
 
+  String _formatDefaultValue(FieldDescriptor field) {
+    var defaultCode = field.defaultValueCode!;
+    if (defaultCode == 'const {}') {
+      final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
+      defaultCode = 'const <String, $valType>{};';
+    } else if (defaultCode == 'const []') {
+      final elemType =
+          field.elementType?.getDisplayString() ??
+          (field.type is InterfaceType &&
+                  (field.type as InterfaceType).typeArguments.isNotEmpty
+              ? (field.type as InterfaceType).typeArguments.first
+                    .getDisplayString()
+              : 'dynamic');
+      defaultCode = 'const <$elemType>[];';
+    }
+    if (defaultCode.endsWith(';')) {
+      defaultCode = defaultCode.substring(0, defaultCode.length - 1);
+    }
+    return defaultCode;
+  }
+
+  void _writeSelectLoop(StringBuffer buffer, String schemaName) {
     buffer.writeln('  var seen = $schemaName.none;');
     buffer.writeln();
     buffer.writeln('  while (reader.hasNext()) {');
     buffer.writeln('    switch (reader.selectName($schemaName.options)) {');
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
-
     for (final field in nonIgnoredFields) {
-      final suffix = toSafeIdentifierSuffix(field.name);
-      buffer.writeln('      case $schemaName.key$suffix:');
-      for (var i = 0; i < field.aliases.length; i++) {
-        final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
-        buffer.writeln('      case $schemaName.aliasKey$suffix$aliasSuffix:');
-      }
-
-      if (field.participatesInGoldenMask) {
-        buffer.writeln(
-          '        if ((seen._value & '
-          '$schemaName.${field.name}._value) != 0) {',
-        );
-        buffer.writeln(
-          '          throw const CodableException('
-          "'Duplicate field \"${field.wireName}\"');",
-        );
-        buffer.writeln('        }');
-      }
-
-      // Nullable check
-      if (field.isNullable) {
-        buffer.writeln('        if (reader.isNextNull()) {');
-        buffer.writeln('          reader.readNull();');
-        buffer.writeln('          ${field.name} = null;');
-        buffer.writeln('        } else {');
-        _writeFieldRead(buffer, field, indent: '          ');
-        if (field.participatesInGoldenMask) {
-          buffer.writeln('          seen |= $schemaName.${field.name};');
-        }
-        buffer.writeln('        }');
-      } else {
-        if (field.category == TypeCategory.enumType) {
-          _writeEnumFieldRead(buffer, field, schemaName, indent: '        ');
-        } else {
-          buffer.writeln('        if (reader.isNextNull()) {');
-          buffer.writeln('          reader.readNull();');
-          buffer.writeln('        } else {');
-          _writeFieldRead(buffer, field, indent: '          ');
-          if (field.participatesInGoldenMask) {
-            buffer.writeln('          seen |= $schemaName.${field.name};');
-          }
-          buffer.writeln('        }');
-        }
-      }
-      buffer.writeln('        break;');
+      _writeFieldCase(buffer, field, schemaName);
     }
 
     buffer.writeln('      default:');
@@ -295,8 +265,59 @@ final class DecoderGeneratorHelper {
     buffer.writeln('  // Inlined fast-path check');
     buffer.writeln('  seen.validate();');
     buffer.writeln();
-    buffer.writeln('  return ${model.className}(');
+  }
 
+  void _writeFieldCase(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    String schemaName,
+  ) {
+    final suffix = toSafeIdentifierSuffix(field.name);
+    buffer.writeln('      case $schemaName.key$suffix:');
+    for (var i = 0; i < field.aliases.length; i++) {
+      final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+      buffer.writeln('      case $schemaName.aliasKey$suffix$aliasSuffix:');
+    }
+
+    if (field.participatesInGoldenMask) {
+      buffer.writeln(
+        '        if ((seen._value & '
+        '$schemaName.${field.name}._value) != 0) {',
+      );
+      buffer.writeln(
+        '          throw const CodableException('
+        "'Duplicate field \"${field.wireName}\"');",
+      );
+      buffer.writeln('        }');
+    }
+
+    if (field.isNullable) {
+      buffer.writeln('        if (reader.isNextNull()) {');
+      buffer.writeln('          reader.readNull();');
+      buffer.writeln('          ${field.name} = null;');
+      buffer.writeln('        } else {');
+      _writeFieldRead(buffer, field, indent: '          ');
+      if (field.participatesInGoldenMask) {
+        buffer.writeln('          seen |= $schemaName.${field.name};');
+      }
+      buffer.writeln('        }');
+    } else if (field.category == TypeCategory.enumType) {
+      _writeEnumFieldRead(buffer, field, schemaName, indent: '        ');
+    } else {
+      buffer.writeln('        if (reader.isNextNull()) {');
+      buffer.writeln('          reader.readNull();');
+      buffer.writeln('        } else {');
+      _writeFieldRead(buffer, field, indent: '          ');
+      if (field.participatesInGoldenMask) {
+        buffer.writeln('          seen |= $schemaName.${field.name};');
+      }
+      buffer.writeln('        }');
+    }
+    buffer.writeln('        break;');
+  }
+
+  void _writeDecoderReturn(StringBuffer buffer) {
+    buffer.writeln('  return ${model.className}(');
     for (final field in model.fields) {
       final isNullableOrHasDefault = field.isNullable || field.hasDefaultValue;
       final argValue = isNullableOrHasDefault ? field.name : '${field.name}!';
@@ -307,7 +328,6 @@ final class DecoderGeneratorHelper {
         buffer.writeln('    ${field.name}: $argValue,');
       }
     }
-
     buffer.writeln('  );');
     buffer.writeln('}');
   }

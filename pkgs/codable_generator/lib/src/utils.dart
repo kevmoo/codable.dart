@@ -23,20 +23,9 @@ String toSnakeCase(String name) {
   final buffer = StringBuffer();
   for (var i = 0; i < name.length; i++) {
     final char = name[i];
-    final isUpper = char.toUpperCase() == char && char.toLowerCase() != char;
-    if (isUpper) {
-      if (i > 0 && name[i - 1] != '_') {
-        final prevChar = name[i - 1];
-        final prevIsUpper =
-            prevChar.toUpperCase() == prevChar &&
-            prevChar.toLowerCase() != prevChar;
-        final nextIsLower =
-            i + 1 < name.length &&
-            name[i + 1].toLowerCase() == name[i + 1] &&
-            name[i + 1].toUpperCase() != name[i + 1];
-        if (!prevIsUpper || nextIsLower) {
-          buffer.write('_');
-        }
+    if (_isUpper(char)) {
+      if (_shouldPrependUnderscore(name, i)) {
+        buffer.write('_');
       }
       buffer.write(char.toLowerCase());
     } else {
@@ -44,6 +33,19 @@ String toSnakeCase(String name) {
     }
   }
   return buffer.toString();
+}
+
+bool _isUpper(String char) =>
+    char.toUpperCase() == char && char.toLowerCase() != char;
+
+bool _shouldPrependUnderscore(String name, int index) {
+  if (index == 0 || name[index - 1] == '_') return false;
+  final prevIsUpper = _isUpper(name[index - 1]);
+  final nextIsLower =
+      index + 1 < name.length &&
+      name[index + 1].toLowerCase() == name[index + 1] &&
+      name[index + 1].toUpperCase() != name[index + 1];
+  return !prevIsUpper || nextIsLower;
 }
 
 /// Converts camelCase or PascalCase identifier to kebab-case.
