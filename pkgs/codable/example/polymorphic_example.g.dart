@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'polymorphic_example.dart';
 
 // **************************************************************************
@@ -94,7 +96,7 @@ Car _$CarFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CarSchema.options)) {
       case _$CarSchema.keyMaxSpeed:
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
-          throw CodableException('Duplicate field "maxSpeed"');
+          throw const CodableException('Duplicate field "maxSpeed"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -105,7 +107,7 @@ Car _$CarFromReader(JsonTokenReader reader) {
         break;
       case _$CarSchema.keyDoors:
         if ((seen._value & _$CarSchema.doors._value) != 0) {
-          throw CodableException('Duplicate field "doors"');
+          throw const CodableException('Duplicate field "doors"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -231,7 +233,7 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$BicycleSchema.options)) {
       case _$BicycleSchema.keyMaxSpeed:
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
-          throw CodableException('Duplicate field "maxSpeed"');
+          throw const CodableException('Duplicate field "maxSpeed"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -242,7 +244,7 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
         break;
       case _$BicycleSchema.keyHasBell:
         if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
-          throw CodableException('Duplicate field "hasBell"');
+          throw const CodableException('Duplicate field "hasBell"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

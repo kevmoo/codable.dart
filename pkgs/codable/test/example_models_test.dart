@@ -156,7 +156,7 @@ void main() {
 
       final vehicles = <Vehicle>[];
       while (unkeyed.hasNext()) {
-        vehicles.add(unkeyed.decodeElement((Decoder d) => Vehicle.decode(d)));
+        vehicles.add(unkeyed.decodeElement(Vehicle.decode));
       }
 
       check(vehicles.length).equals(2);

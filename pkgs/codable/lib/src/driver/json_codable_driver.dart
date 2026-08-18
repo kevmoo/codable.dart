@@ -15,7 +15,8 @@ final class JsonCodableDecoder implements Decoder {
   @override
   final Map<Object, Object?> userInfo;
 
-  /// Exposes the underlying pull-based token reader for direct, devirtualized decoding.
+  /// Exposes the underlying pull-based token reader for direct, devirtualized
+  /// decoding.
   JsonTokenReader get reader => _reader;
 
   @override
@@ -23,6 +24,7 @@ final class JsonCodableDecoder implements Decoder {
     if (_bytes != null) return _bytes;
     final dynamic r = _reader;
     try {
+      // ignore: avoid_dynamic_calls
       return r.bytes as Uint8List?;
     } catch (_) {
       return null;
@@ -205,6 +207,7 @@ final class _JsonCodableKeyedDecoder implements KeyedDecoder {
   (int start, int end) readStringSpan() {
     _ensureStarted();
     final dynamic r = _reader;
+    // ignore: avoid_dynamic_calls
     return r.readStringSpan() as (int, int);
   }
 
@@ -572,6 +575,7 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   (int start, int end) readStringSpan() {
     _ensureStarted();
     final dynamic r = _reader;
+    // ignore: avoid_dynamic_calls
     return r.readStringSpan() as (int, int);
   }
 
@@ -683,6 +687,7 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   @override
   (int start, int end) readStringSpan() {
     final dynamic r = _reader;
+    // ignore: avoid_dynamic_calls
     return r.readStringSpan() as (int, int);
   }
 

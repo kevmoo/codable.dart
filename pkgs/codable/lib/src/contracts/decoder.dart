@@ -3,13 +3,16 @@ import 'dart:typed_data';
 import 'codable.dart';
 import 'static_key.dart';
 
-/// Top-level decoding context providing access to specialized decoding containers.
+/// Top-level decoding context providing access to specialized decoding
+/// containers.
 abstract interface class Decoder {
-  /// Extensible context map for passing runtime dependency handles, options, or flags.
+  /// Extensible context map for passing runtime dependency handles, options, or
+  /// flags.
   Map<Object, Object?> get userInfo;
 
-  /// Exposes the underlying payload byte buffer for zero-allocation span operations,
-  /// or `null` if the decoder does not operate over a contiguous byte buffer.
+  /// Exposes the underlying payload byte buffer for zero-allocation span
+  /// operations, or `null` if the decoder does not operate over a contiguous
+  /// byte buffer.
   Uint8List? get payload;
 
   /// Opens a streaming sequential keyed container for reading object fields.
@@ -39,16 +42,19 @@ abstract interface class KeyedDecoder {
   /// Returns `true` if more key-value pairs remain in the current object.
   bool hasNextKey();
 
-  /// Returns `true` if more key-value pairs remain in the current object (alias for [hasNextKey]).
+  /// Returns `true` if more key-value pairs remain in the current object (alias
+  /// for [hasNextKey]).
   bool hasNext();
 
   /// Reads and returns the next field key as a String.
   String nextKey();
 
-  /// Peeks at the upcoming field key without consuming it, or `null` if at the end of the object.
+  /// Peeks at the upcoming field key without consuming it, or `null` if at the
+  /// end of the object.
   String? peekKey();
 
-  /// Selects the index of the next key from pre-compiled [options], or -1 if unknown.
+  /// Selects the index of the next key from pre-compiled [options], or -1 if
+  /// unknown.
   int selectKeyIndex(KeyOptions options);
 
   /// Selects the index of the next key from a list of [keys], or -1 if unknown.
@@ -90,7 +96,8 @@ abstract interface class KeyedDecoder {
   /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or
+  /// `null` if null.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.
@@ -219,10 +226,12 @@ abstract interface class MappedDecoder {
   /// Decodes a double list associated with [key].
   List<double> decodeDoubleListKey(StaticKey key);
 
-  /// Decodes a double list associated with string [key] directly as an unboxed [Float64List].
+  /// Decodes a double list associated with string [key] directly as an unboxed
+  /// [Float64List].
   Float64List decodeFloat64List(String key);
 
-  /// Decodes a double list associated with [key] directly as an unboxed [Float64List].
+  /// Decodes a double list associated with [key] directly as an unboxed
+  /// [Float64List].
   Float64List decodeFloat64ListKey(StaticKey key);
 
   /// Decodes a String list associated with string [key].
@@ -270,10 +279,12 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable String element.
   String? readNullableString();
 
-  /// Reads a non-nullable String element as a raw UTF-8 byte span `(start, end)`.
+  /// Reads a non-nullable String element as a raw UTF-8 byte span
+  /// `(start, end)`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String element as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  /// Reads a nullable String element as a raw UTF-8 byte span `(start, end)`,
+  /// or `null` if null.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean element.
@@ -294,7 +305,8 @@ abstract interface class UnkeyedDecoder {
   /// Decodes a nested contiguous list of doubles.
   List<double> decodeDoubleList();
 
-  /// Decodes a nested contiguous list of doubles directly as an unboxed [Float64List].
+  /// Decodes a nested contiguous list of doubles directly as an unboxed
+  /// [Float64List].
   Float64List decodeFloat64List();
 }
 
@@ -327,7 +339,8 @@ abstract interface class SingleValueDecoder {
   /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or `null` if null.
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or
+  /// `null` if null.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.

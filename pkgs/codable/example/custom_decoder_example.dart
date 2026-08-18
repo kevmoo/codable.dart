@@ -8,8 +8,8 @@ import 'package:codable/codable.dart';
 
 part 'custom_decoder_example.g.dart';
 
-/// Custom field decoder normalizing timestamp representations (integer epoch milliseconds
-/// or ISO 8601 strings) into a standard [DateTime].
+/// Custom field decoder normalizing timestamp representations (integer epoch
+/// milliseconds or ISO 8601 strings) into a standard [DateTime].
 final class DateTimeEpochDecoder {
   const DateTimeEpochDecoder();
 
@@ -39,18 +39,6 @@ class DateTimeExample {
       _$DateTimeExampleToWriter(this, writer);
 }
 
-@Codable()
-class CustomResult {
-  final String name;
-  final int size;
-
-  const CustomResult(this.name, this.size);
-
-  static CustomResult fromReader(JsonTokenReader reader) =>
-      _$CustomResultFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CustomResultToWriter(this, writer);
-}
-
 void main() {
   // Parsing integer epoch timestamp
   final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
@@ -63,4 +51,9 @@ void main() {
   );
   final ex2 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json2));
   print('ISO timestamp: ${ex2.when}');
+
+  final builder = BytesBuilder();
+  final writer = JsonTokenWriter.toSink(builder);
+  ex1.toWriter(writer);
+  print('Serialized: ${utf8.decode(builder.toBytes())}');
 }

@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'domain_models_test.dart';
 
 // **************************************************************************
@@ -107,7 +109,7 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
       case _$CoordinateSchema.keyLatitude:
       case _$CoordinateSchema.aliasKeyLatitudeLat:
         if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
-          throw CodableException('Duplicate field "latitude"');
+          throw const CodableException('Duplicate field "latitude"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -119,7 +121,7 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
       case _$CoordinateSchema.keyLongitude:
       case _$CoordinateSchema.aliasKeyLongitudeLon:
         if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
-          throw CodableException('Duplicate field "longitude"');
+          throw const CodableException('Duplicate field "longitude"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -273,14 +275,14 @@ UserProfile _$UserProfileFromReader(JsonTokenReader reader) {
   String? email;
   UserRole? role;
   String? zip;
-  List<String> tags = const [];
+  var tags = const <String>[];
   var seen = _$UserProfileSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$UserProfileSchema.options)) {
       case _$UserProfileSchema.keyId:
         if ((seen._value & _$UserProfileSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -291,7 +293,7 @@ UserProfile _$UserProfileFromReader(JsonTokenReader reader) {
         break;
       case _$UserProfileSchema.keyEmail:
         if ((seen._value & _$UserProfileSchema.email._value) != 0) {
-          throw CodableException('Duplicate field "email"');
+          throw const CodableException('Duplicate field "email"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -302,7 +304,7 @@ UserProfile _$UserProfileFromReader(JsonTokenReader reader) {
         break;
       case _$UserProfileSchema.keyRole:
         if ((seen._value & _$UserProfileSchema.role._value) != 0) {
-          throw CodableException('Duplicate field "role"');
+          throw const CodableException('Duplicate field "role"');
         }
         // Zero-allocation enum matching
         final enumIndex = reader.selectString(
@@ -312,12 +314,12 @@ UserProfile _$UserProfileFromReader(JsonTokenReader reader) {
           role = UserRole.values[enumIndex];
           seen |= _$UserProfileSchema.role;
         } else {
-          throw CodableException('Unknown UserRole value');
+          throw const CodableException('Unknown UserRole value');
         }
         break;
       case _$UserProfileSchema.keyZip:
         if ((seen._value & _$UserProfileSchema.zip._value) != 0) {
-          throw CodableException('Duplicate field "zip"');
+          throw const CodableException('Duplicate field "zip"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -468,7 +470,7 @@ Car _$CarFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CarSchema.options)) {
       case _$CarSchema.keyMaxSpeed:
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
-          throw CodableException('Duplicate field "maxSpeed"');
+          throw const CodableException('Duplicate field "maxSpeed"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -479,7 +481,7 @@ Car _$CarFromReader(JsonTokenReader reader) {
         break;
       case _$CarSchema.keyDoors:
         if ((seen._value & _$CarSchema.doors._value) != 0) {
-          throw CodableException('Duplicate field "doors"');
+          throw const CodableException('Duplicate field "doors"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -605,7 +607,7 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$BicycleSchema.options)) {
       case _$BicycleSchema.keyMaxSpeed:
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
-          throw CodableException('Duplicate field "maxSpeed"');
+          throw const CodableException('Duplicate field "maxSpeed"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -616,7 +618,7 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
         break;
       case _$BicycleSchema.keyHasBell:
         if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
-          throw CodableException('Duplicate field "hasBell"');
+          throw const CodableException('Duplicate field "hasBell"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -746,7 +748,7 @@ UserWithLocation _$UserWithLocationFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$UserWithLocationSchema.options)) {
       case _$UserWithLocationSchema.keyProfile:
         if ((seen._value & _$UserWithLocationSchema.profile._value) != 0) {
-          throw CodableException('Duplicate field "profile"');
+          throw const CodableException('Duplicate field "profile"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -757,7 +759,7 @@ UserWithLocation _$UserWithLocationFromReader(JsonTokenReader reader) {
         break;
       case _$UserWithLocationSchema.keyLocation:
         if ((seen._value & _$UserWithLocationSchema.location._value) != 0) {
-          throw CodableException('Duplicate field "location"');
+          throw const CodableException('Duplicate field "location"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

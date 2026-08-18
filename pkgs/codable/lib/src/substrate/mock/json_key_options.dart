@@ -33,7 +33,8 @@ final class JsonKeyOptions {
   int get length => keys.length;
 
   /// Matches the byte span `[start, end)` in [source] against the pre-compiled
-  /// keys, returning the zero-based index of the matching key, or `-1` if unmatched.
+  /// keys, returning the zero-based index of the matching key, or `-1` if
+  /// unmatched.
   int selectKey(Uint8List source, int start, int end) {
     if (start < 0 || end > source.length || start > end) {
       return -1;

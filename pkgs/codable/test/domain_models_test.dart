@@ -9,6 +9,8 @@
 //
 // Strict assertion standard: package:checks only.
 
+// ignore_for_file: unreachable_from_main, lines_longer_than_80_chars
+
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
@@ -98,7 +100,7 @@ final class _TestKeyedDecoder implements KeyedDecoder {
 
   Object? get _currentValue {
     if (!_hasCurrent) {
-      throw CodableException('No current field selected in KeyedDecoder');
+      throw const CodableException('No current field selected in KeyedDecoder');
     }
     return _entries[_currentIndex].value;
   }
@@ -112,7 +114,7 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   @override
   String nextKey() {
     if (!hasNextKey()) {
-      throw CodableException('No more keys available in KeyedDecoder');
+      throw const CodableException('No more keys available in KeyedDecoder');
     }
     _currentIndex++;
     return _entries[_currentIndex].key;
@@ -588,7 +590,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   int readInt() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is int) return v;
     throw CodableException('Expected int, found ${v.runtimeType}: $v');
@@ -606,7 +610,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   double readDouble() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is num) return v.toDouble();
     throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
@@ -624,7 +630,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   String readString() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is String) return v;
     throw CodableException('Expected String, found ${v.runtimeType}: $v');
@@ -655,7 +663,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool readBool() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is bool) return v;
     throw CodableException('Expected bool, found ${v.runtimeType}: $v');
@@ -679,7 +689,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   void readNull() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v != null) {
       throw CodableException('Expected null, found ${v.runtimeType}: $v');
@@ -693,7 +705,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   T decodeElement<T>(DecoderCallback<T> decoder) {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     return decoder(_TestDecoder(v, userInfo: _rootDecoder.userInfo));
   }
@@ -710,7 +724,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<int> decodeIntList() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is List<dynamic>) {
       return v.map((e) => e as int).toList();
@@ -720,7 +736,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<double> decodeDoubleList() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is List<dynamic>) {
       return v.map((e) => (e as num).toDouble()).toList();
@@ -730,7 +748,9 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   Float64List decodeFloat64List() {
-    if (!hasNext()) throw CodableException('End of array in UnkeyedDecoder');
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
     final v = _list[_index++];
     if (v is List<dynamic>) {
       final list = Float64List(v.length);
@@ -1203,7 +1223,7 @@ abstract final class TestJsonDriver {
     T Function(Decoder decoder) decode, {
     Map<Object, Object?>? userInfo,
   }) {
-    final String jsonString = utf8.decode(bytes);
+    final jsonString = utf8.decode(bytes);
     return decodeString(jsonString, decode, userInfo: userInfo);
   }
 
@@ -1293,7 +1313,7 @@ class Coordinate implements Encodable {
     }
 
     if (lat == null || lon == null) {
-      throw CodableException('Missing required fields for Coordinate');
+      throw const CodableException('Missing required fields for Coordinate');
     }
     return Coordinate(latitude: lat, longitude: lon);
   }
@@ -1408,10 +1428,10 @@ class UserProfile implements Encodable {
     String? email;
     UserRole? role;
     String? zip;
-    List<String> tags = const [];
+    var tags = const <String>[];
 
-    int seen = 0;
-    const int goldenMask = 0x0F; // id(0x1) | email(0x2) | role(0x4) | zip(0x8)
+    var seen = 0;
+    const goldenMask = 0x0F; // id(0x1) | email(0x2) | role(0x4) | zip(0x8)
 
     while (keyed.hasNextKey()) {
       switch (keyed.nextKey()) {
@@ -1441,7 +1461,7 @@ class UserProfile implements Encodable {
     }
 
     if (seen != goldenMask) {
-      throw CodableException('Missing required fields for UserProfile');
+      throw const CodableException('Missing required fields for UserProfile');
     }
 
     return UserProfile(
@@ -1492,7 +1512,9 @@ abstract class Vehicle implements Encodable {
   static Vehicle decode(Decoder decoder) {
     final mapped = decoder.mapped();
     if (!mapped.containsKey('type')) {
-      throw CodableException('Missing discriminator key "type" for Vehicle');
+      throw const CodableException(
+        'Missing discriminator key "type" for Vehicle',
+      );
     }
     final type = mapped.readString('type');
     return switch (type) {
@@ -1539,7 +1561,7 @@ class Car extends Vehicle {
       }
     }
     if (maxSpeed == null || doors == null) {
-      throw CodableException('Missing required fields for Car');
+      throw const CodableException('Missing required fields for Car');
     }
     return Car(maxSpeed: maxSpeed, doors: doors);
   }
@@ -1601,7 +1623,7 @@ class Bicycle extends Vehicle {
       }
     }
     if (maxSpeed == null || hasBell == null) {
-      throw CodableException('Missing required fields for Bicycle');
+      throw const CodableException('Missing required fields for Bicycle');
     }
     return Bicycle(maxSpeed: maxSpeed, hasBell: hasBell);
   }
@@ -1677,7 +1699,7 @@ class UserWithLocation implements Encodable {
       }
     }
     if (profile == null || location == null) {
-      throw CodableException('Missing fields for UserWithLocation');
+      throw const CodableException('Missing fields for UserWithLocation');
     }
     return UserWithLocation(profile: profile, location: location);
   }
@@ -2301,7 +2323,7 @@ void main() {
 
           check(vehicle).isA<Car>();
           check((vehicle as Car).doors).equals(4);
-          check((vehicle).maxSpeed).equals(210);
+          check(vehicle.maxSpeed).equals(210);
         },
       );
 
@@ -2314,7 +2336,7 @@ void main() {
 
           check(vehicle).isA<Bicycle>();
           check((vehicle as Bicycle).hasBell).isTrue();
-          check((vehicle).maxSpeed).equals(32);
+          check(vehicle.maxSpeed).equals(32);
         },
       );
 

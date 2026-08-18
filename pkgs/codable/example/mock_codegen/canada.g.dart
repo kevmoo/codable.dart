@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'canada.dart';
 
 // **************************************************************************
@@ -87,14 +89,14 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromReader(
   reader.beginObject();
 
   String? type;
-  List<CanadaFeature> features = const [];
+  var features = const <CanadaFeature>[];
   var seen = _$CanadaFeatureCollectionSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$CanadaFeatureCollectionSchema.options)) {
       case _$CanadaFeatureCollectionSchema.keyType:
         if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
-          throw CodableException('Duplicate field "type"');
+          throw const CodableException('Duplicate field "type"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -262,7 +264,7 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CanadaFeatureSchema.options)) {
       case _$CanadaFeatureSchema.keyType:
         if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
-          throw CodableException('Duplicate field "type"');
+          throw const CodableException('Duplicate field "type"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -273,7 +275,7 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
         break;
       case _$CanadaFeatureSchema.keyProperties:
         if ((seen._value & _$CanadaFeatureSchema.properties._value) != 0) {
-          throw CodableException('Duplicate field "properties"');
+          throw const CodableException('Duplicate field "properties"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -284,7 +286,7 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
         break;
       case _$CanadaFeatureSchema.keyGeometry:
         if ((seen._value & _$CanadaFeatureSchema.geometry._value) != 0) {
-          throw CodableException('Duplicate field "geometry"');
+          throw const CodableException('Duplicate field "geometry"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -396,7 +398,7 @@ CanadaProperties _$CanadaPropertiesFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CanadaPropertiesSchema.options)) {
       case _$CanadaPropertiesSchema.keyName:
         if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
-          throw CodableException('Duplicate field "name"');
+          throw const CodableException('Duplicate field "name"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -509,14 +511,14 @@ CanadaGeometry _$CanadaGeometryFromReader(JsonTokenReader reader) {
   reader.beginObject();
 
   String? type;
-  List<List<Float64List>> coordinates = const [];
+  var coordinates = const <List<Float64List>>[];
   var seen = _$CanadaGeometrySchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$CanadaGeometrySchema.options)) {
       case _$CanadaGeometrySchema.keyType:
         if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
-          throw CodableException('Duplicate field "type"');
+          throw const CodableException('Duplicate field "type"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

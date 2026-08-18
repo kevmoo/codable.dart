@@ -31,4 +31,9 @@ void main() {
   final pair = CoordinatePair.fromReader(reader);
 
   print('Location: ${pair.location?[0]}, ${pair.location?[1]}');
+
+  final builder = BytesBuilder();
+  final writer = JsonTokenWriter.toSink(builder);
+  pair.toWriter(writer);
+  print('Serialized tuple: ${utf8.decode(builder.toBytes())}');
 }

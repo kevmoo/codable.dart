@@ -28,7 +28,8 @@ const List<double> _powersOfTen = [
   1e22,
 ];
 
-/// Parses a 64-bit signed integer directly from the UTF-8 byte span `[start, end)` in [source].
+/// Parses a 64-bit signed integer directly from the UTF-8 byte span
+/// `[start, end)` in [source].
 ///
 /// Throws [FormatException] if the byte span does not contain a valid integer,
 /// or [RangeError] if [radix] is outside the range 2..36.
@@ -50,7 +51,8 @@ int parseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
 /// Supports radix 2 through 36 (default 10) and handles signed 64-bit integers
 /// up to 19 digits (-9223372036854775808 to 9223372036854775807).
 ///
-/// Returns `null` if the byte span is invalid, empty, or contains non-digit characters.
+/// Returns `null` if the byte span is invalid, empty, or contains non-digit
+/// characters.
 int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   final r = radix ?? 10;
   if (r < 2 || r > 36) throw RangeError.range(r, 2, 36, 'radix');
@@ -207,7 +209,8 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   return negative ? -val : val;
 }
 
-/// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span `[start, end)` in [source].
+/// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span
+/// `[start, end)` in [source].
 ///
 /// Throws [FormatException] if the byte span does not match `true` or `false`.
 bool parseBoolUtf8(Uint8List source, int start, int end) {
@@ -222,7 +225,8 @@ bool parseBoolUtf8(Uint8List source, int start, int end) {
   return res;
 }
 
-/// Fast-path boolean matcher for the UTF-8 byte span `[start, end)` in [source].
+/// Fast-path boolean matcher for the UTF-8 byte span `[start, end)` in
+/// [source].
 ///
 /// Returns `true` for `true`, `false` for `false`, or `null` if unmatched.
 bool? tryParseBoolUtf8(Uint8List source, int start, int end) {
@@ -247,12 +251,13 @@ bool? tryParseBoolUtf8(Uint8List source, int start, int end) {
   return null;
 }
 
-/// Decodes the UTF-8 string slice `[start, end)` from [source] into a Dart [String].
+/// Decodes the UTF-8 string slice `[start, end)` from [source] into a Dart
+/// [String].
 ///
-/// If the byte span contains no escape characters (`isVerbatimUtf8` returns true),
-/// decodes the slice directly without intermediate buffers. Handles all standard
-/// JSON escape sequences (`\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`, `\uXXXX`),
-/// including surrogate pairs.
+/// If the byte span contains no escape characters (`isVerbatimUtf8` returns
+/// true), decodes the slice directly without intermediate buffers. Handles all
+/// standard JSON escape sequences (`\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`,
+/// `\t`, `\uXXXX`), including surrogate pairs.
 String decodeStringUtf8(
   Uint8List source,
   int start,
@@ -378,9 +383,11 @@ int _utf8SequenceLength(int firstByte) {
   return 1;
 }
 
-/// Direct byte-comparison of a UTF-8 byte span `[start, end)` against an [asciiString].
+/// Direct byte-comparison of a UTF-8 byte span `[start, end)` against an
+/// [asciiString].
 ///
-/// Returns `true` if the slice exactly matches the ASCII string, `false` otherwise.
+/// Returns `true` if the slice exactly matches the ASCII string, `false`
+/// otherwise.
 bool equalsAsciiUtf8(Uint8List source, int start, int end, String asciiString) {
   if (start < 0 || end > source.length || end - start != asciiString.length) {
     return false;
@@ -391,7 +398,8 @@ bool equalsAsciiUtf8(Uint8List source, int start, int end, String asciiString) {
   return true;
 }
 
-/// Checks if the UTF-8 byte span `[start, end)` in [source] matches the literal `null`.
+/// Checks if the UTF-8 byte span `[start, end)` in [source] matches the literal
+/// `null`.
 bool isNullUtf8(Uint8List source, int start, int end) {
   return (end - start == 4) &&
       start >= 0 &&
@@ -402,7 +410,8 @@ bool isNullUtf8(Uint8List source, int start, int end) {
       source[start + 3] == 108;
 }
 
-/// Checks whether the UTF-8 byte span `[start, end)` in [source] is verbatim (contains no `\` escapes).
+/// Checks whether the UTF-8 byte span `[start, end)` in [source] is verbatim
+/// (contains no `\` escapes).
 bool isVerbatimUtf8(Uint8List source, int start, int end) {
   if (start < 0 || end > source.length || start > end) return false;
   for (var i = start; i < end; i++) {

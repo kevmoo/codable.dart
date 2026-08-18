@@ -48,7 +48,8 @@ final class FieldDescriptor {
   /// Whether this parameter is named in the primary constructor.
   final bool isNamed;
 
-  /// Whether this parameter is required (non-optional positional or required named).
+  /// Whether this parameter is required (non-optional positional or required
+  /// named).
   final bool isRequired;
 
   /// Whether the field is nullable (`T?` or `dynamic`).

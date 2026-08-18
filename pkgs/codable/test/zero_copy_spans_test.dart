@@ -10,7 +10,8 @@ import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/test.dart';
 
-/// Lightweight 128-bit UUID parsed directly from UTF-8 byte spans without String allocations.
+/// Lightweight 128-bit UUID parsed directly from UTF-8 byte spans without
+/// String allocations.
 final class FastUuid {
   final int high;
   final int low;
@@ -101,10 +102,12 @@ void main() {
     });
 
     test(
-      'KeyedDecoder readStringSpan parses UUID and DateTime without String allocation',
+      'KeyedDecoder readStringSpan parses UUID and DateTime without String '
+      'allocation',
       () {
         const json =
-            '{"uuid": "550e8400-e29b-41d4-a716-446655440000", "created_at": "2026-08-16T21:30:00Z", "null_field": null}';
+            '{"uuid": "550e8400-e29b-41d4-a716-446655440000", '
+            '"created_at": "2026-08-16T21:30:00Z", "null_field": null}';
         final bytes = Uint8List.fromList(utf8.encode(json));
         final decoder = JsonCodableDecoder.fromBytes(bytes);
         final keyed = decoder.keyed();
@@ -144,7 +147,8 @@ void main() {
       },
       skip:
           !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK with readStringSpan patch'
+              ? 'readStringSpan is only supported in mock substrate or SDK '
+                  'with readStringSpan patch'
               : null,
     );
 
@@ -173,7 +177,8 @@ void main() {
       },
       skip:
           !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK with readStringSpan patch'
+              ? 'readStringSpan is only supported in mock substrate or SDK '
+                  'with readStringSpan patch'
               : null,
     );
 
@@ -191,7 +196,8 @@ void main() {
       },
       skip:
           !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK with readStringSpan patch'
+              ? 'readStringSpan is only supported in mock substrate or SDK '
+                  'with readStringSpan patch'
               : null,
     );
   });

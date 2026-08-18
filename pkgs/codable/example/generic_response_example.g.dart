@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'generic_response_example.dart';
 
 // **************************************************************************
@@ -97,7 +99,7 @@ Article _$ArticleFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$ArticleSchema.options)) {
       case _$ArticleSchema.keyId:
         if ((seen._value & _$ArticleSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -108,7 +110,7 @@ Article _$ArticleFromReader(JsonTokenReader reader) {
         break;
       case _$ArticleSchema.keyTitle:
         if ((seen._value & _$ArticleSchema.title._value) != 0) {
-          throw CodableException('Duplicate field "title"');
+          throw const CodableException('Duplicate field "title"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -233,7 +235,7 @@ User _$UserFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$UserSchema.options)) {
       case _$UserSchema.keyId:
         if ((seen._value & _$UserSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -244,7 +246,7 @@ User _$UserFromReader(JsonTokenReader reader) {
         break;
       case _$UserSchema.keyEmail:
         if ((seen._value & _$UserSchema.email._value) != 0) {
-          throw CodableException('Duplicate field "email"');
+          throw const CodableException('Duplicate field "email"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

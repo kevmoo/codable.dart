@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: unreachable_from_main
+
 import 'dart:convert';
 
 import 'package:codable/codable.dart';
@@ -44,21 +46,21 @@ sealed class Vehicle implements Encodable {
     }
 
     if (type == null || maxSpeed == null) {
-      throw CodableException('Missing required fields for Vehicle');
+      throw const CodableException('Missing required fields for Vehicle');
     }
 
     if (type == 'car') {
       if (doors == null) {
-        throw CodableException('Missing doors for Car');
+        throw const CodableException('Missing doors for Car');
       }
       return Car(maxSpeed: maxSpeed, doors: doors);
     } else if (type == 'bicycle') {
       if (hasBell == null) {
-        throw CodableException('Missing hasBell for Bicycle');
+        throw const CodableException('Missing hasBell for Bicycle');
       }
       return Bicycle(maxSpeed: maxSpeed, hasBell: hasBell);
     }
-    throw CodableException('Unknown vehicle type: \$type');
+    throw CodableException('Unknown vehicle type: $type');
   }
 }
 
@@ -113,10 +115,18 @@ void main() {
 
   final vehicles = <Vehicle>[];
   while (unkeyed.hasNext()) {
-    vehicles.add(unkeyed.decodeElement((Decoder d) => Vehicle.decode(d)));
+    vehicles.add(unkeyed.decodeElement(Vehicle.decode));
   }
 
   for (final v in vehicles) {
     print('Vehicle: ${v.runtimeType} (maxSpeed: ${v.maxSpeed})');
+    final builder = BytesBuilder();
+    final writer = JsonTokenWriter.toSink(builder);
+    if (v is Car) {
+      v.toWriter(writer);
+    } else if (v is Bicycle) {
+      v.toWriter(writer);
+    }
+    print('Serialized: ${utf8.decode(builder.toBytes())}');
   }
 }

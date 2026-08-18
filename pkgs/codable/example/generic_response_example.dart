@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: unreachable_from_main
+
 import 'dart:convert';
 
 import 'package:codable/codable.dart';
@@ -50,7 +52,7 @@ class BaseResponse<T> {
     }
 
     if (status == null || message == null || data == null) {
-      throw CodableException('Missing required fields for BaseResponse');
+      throw const CodableException('Missing required fields for BaseResponse');
     }
     return BaseResponse(status: status, message: message, data: data);
   }
@@ -105,4 +107,9 @@ void main() {
 
   print('Response: ${response.status} - ${response.message}');
   print('Article: ${response.data.title} by ${response.data.author?.email}');
+
+  final builder = BytesBuilder();
+  final writer = JsonTokenWriter.toSink(builder);
+  response.data.toWriter(writer);
+  print('Serialized article: ${utf8.decode(builder.toBytes())}');
 }
