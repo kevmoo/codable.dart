@@ -1,0 +1,16 @@
+targets:
+  $default:
+    sources:
+      - "lib/**"
+      - "benchmark/**"
+      - "test/**"
+      - "$package$"
+    builders:
+      codable_generator|codable:
+        generate_for:
+          - "benchmark/**"
+          - "test/**"
+      source_gen|combining_builder:
+        options:
+          ignore_for_file:
+            - lines_longer_than_80_chars
