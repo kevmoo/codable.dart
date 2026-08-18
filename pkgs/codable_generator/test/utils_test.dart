@@ -34,9 +34,8 @@ void main() {
     test('toScreamingSnakeCase converts identifiers', () {
       check(toScreamingSnakeCase('id')).equals('ID');
       check(toScreamingSnakeCase('userId')).equals('USER_ID');
-      check(
-        toScreamingSnakeCase('userProfileData'),
-      ).equals('USER_PROFILE_DATA');
+      check(toScreamingSnakeCase('userProfileData'))
+          .equals('USER_PROFILE_DATA');
     });
 
     test('applyFieldRename applies correct convention', () {
@@ -45,9 +44,8 @@ void main() {
       check(applyFieldRename(field, FieldRename.snake)).equals('created_at');
       check(applyFieldRename(field, FieldRename.kebab)).equals('created-at');
       check(applyFieldRename(field, FieldRename.pascal)).equals('CreatedAt');
-      check(
-        applyFieldRename(field, FieldRename.screamingSnake),
-      ).equals('CREATED_AT');
+      check(applyFieldRename(field, FieldRename.screamingSnake))
+          .equals('CREATED_AT');
     });
 
     test('encodeAsConstBytes encodes ASCII and UTF-8 strings', () {

@@ -215,7 +215,7 @@ final class DecoderGeneratorHelper {
               (field.type is InterfaceType &&
                       (field.type as InterfaceType).typeArguments.isNotEmpty
                   ? (field.type as InterfaceType).typeArguments.first
-                      .getDisplayString()
+                        .getDisplayString()
                   : 'dynamic');
           defaultCode = 'const <$elemType>[];';
         }

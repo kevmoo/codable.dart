@@ -49,52 +49,43 @@ void main() {
       );
 
       // 10 & 11: parseDouble & tryParseDouble
-      check(
-        JsonUtf8Decoder.parseDouble(doubleBytes, 0, doubleBytes.length),
-      ).equals(123.456);
-      check(
-        JsonUtf8Decoder.tryParseDouble(doubleBytes, 0, doubleBytes.length),
-      ).equals(123.456);
+      check(JsonUtf8Decoder.parseDouble(doubleBytes, 0, doubleBytes.length))
+          .equals(123.456);
+      check(JsonUtf8Decoder.tryParseDouble(doubleBytes, 0, doubleBytes.length))
+          .equals(123.456);
 
       // 12 & 13: parseInt & tryParseInt
-      check(
-        JsonUtf8Decoder.parseInt(intBytes, 0, intBytes.length),
-      ).equals(7890);
-      check(
-        JsonUtf8Decoder.tryParseInt(intBytes, 0, intBytes.length),
-      ).equals(7890);
+      check(JsonUtf8Decoder.parseInt(intBytes, 0, intBytes.length))
+          .equals(7890);
+      check(JsonUtf8Decoder.tryParseInt(intBytes, 0, intBytes.length))
+          .equals(7890);
 
       // 14 & 15: parseBool & tryParseBool
-      check(
-        JsonUtf8Decoder.parseBool(boolBytes, 0, boolBytes.length),
-      ).equals(true);
-      check(
-        JsonUtf8Decoder.tryParseBool(boolBytes, 0, boolBytes.length),
-      ).equals(true);
+      check(JsonUtf8Decoder.parseBool(boolBytes, 0, boolBytes.length))
+          .equals(true);
+      check(JsonUtf8Decoder.tryParseBool(boolBytes, 0, boolBytes.length))
+          .equals(true);
 
       // 16: isNull
       check(JsonUtf8Decoder.isNull(nullBytes, 0, nullBytes.length)).isTrue();
 
       // 17: equalsAscii
-      check(
-        JsonUtf8Decoder.equalsAscii(intBytes, 0, intBytes.length, '7890'),
-      ).isTrue();
+      check(JsonUtf8Decoder.equalsAscii(intBytes, 0, intBytes.length, '7890'))
+          .isTrue();
 
       // 18: matchKey & 39: JsonKeyOptions.of
       final keyOptions = JsonKeyOptions.of(['key', 'flag', 'other']);
       final keySlice = Uint8List.fromList(utf8.encode('flag'));
-      check(
-        JsonUtf8Decoder.matchKey(keySlice, 0, keySlice.length, keyOptions),
-      ).equals(1);
+      check(JsonUtf8Decoder.matchKey(keySlice, 0, keySlice.length, keyOptions))
+          .equals(1);
 
       // 19: isVerbatim
       check(JsonUtf8Decoder.isVerbatim(intBytes, 0, intBytes.length)).isTrue();
       check(JsonUtf8Decoder.isVerbatim(strBytes, 0, strBytes.length)).isFalse();
 
       // 20: decodeString
-      check(
-        JsonUtf8Decoder.decodeString(strBytes, 1, strBytes.length - 1),
-      ).equals('hello\nworld');
+      check(JsonUtf8Decoder.decodeString(strBytes, 1, strBytes.length - 1))
+          .equals('hello\nworld');
 
       // 21: skipValue
       final skippedEnd = JsonUtf8Decoder.skipValue(jsonPayload, 2);

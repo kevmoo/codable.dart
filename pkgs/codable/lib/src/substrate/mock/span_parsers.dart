@@ -196,8 +196,9 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
       i++;
     }
     if (!hasExpDigits) return null;
-    final factor =
-        exp < _powersOfTen.length ? _powersOfTen[exp] : math.pow(10, exp);
+    final factor = exp < _powersOfTen.length
+        ? _powersOfTen[exp]
+        : math.pow(10, exp);
     val = expNegative ? val / factor : val * factor;
   }
 

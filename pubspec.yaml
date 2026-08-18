@@ -1,6 +1,6 @@
 name: _codable_workspace
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.13.0
 publish_to: none
 
 workspace:

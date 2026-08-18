@@ -1788,23 +1788,20 @@ void main() {
     group('Tier 2: Boundary, Edge Cases & Error Handling', () {
       test('throws CodableException when latitude / lat is missing', () {
         const jsonStr = '{"longitude": -122.4194}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
 
       test('throws CodableException when longitude / lon is missing', () {
         const jsonStr = '{"latitude": 37.7749}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
 
       test('throws CodableException when empty object is provided', () {
         const jsonStr = '{}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
 
       test('decodes Coordinate when lon key appears before lat key', () {
@@ -1815,17 +1812,14 @@ void main() {
         check(coord.longitude).equals(-122.4194);
       });
 
-      test(
-        'skips unknown extra fields (altitude, accuracy, timestamp) cleanly',
-        () {
-          const jsonStr =
-              '{"altitude": 150.5, "accuracy": 5, "lat": 37.7749, "timestamp": 1690000000, "lon": -122.4194}';
-          final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+      test('skips unknown extra fields (altitude, accuracy, timestamp) cleanly', () {
+        const jsonStr =
+            '{"altitude": 150.5, "accuracy": 5, "lat": 37.7749, "timestamp": 1690000000, "lon": -122.4194}';
+        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
 
-          check(coord.latitude).equals(37.7749);
-          check(coord.longitude).equals(-122.4194);
-        },
-      );
+        check(coord.latitude).equals(37.7749);
+        check(coord.longitude).equals(-122.4194);
+      });
 
       test('decodes Coordinate with zero values (0.0, 0.0)', () {
         const jsonStr = '{"lat": 0.0, "lon": 0.0}';
@@ -1865,23 +1859,20 @@ void main() {
 
       test('throws CodableException when latitude value is string', () {
         const jsonStr = '{"lat": "37.7749", "lon": -122.4194}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
 
       test('throws CodableException when latitude value is null', () {
         const jsonStr = '{"lat": null, "lon": -122.4194}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
 
       test('throws CodableException when longitude value is boolean', () {
         const jsonStr = '{"lat": 37.7749, "lon": true}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Coordinate.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
+            .throws<CodableException>();
       });
     });
   });
@@ -1981,9 +1972,8 @@ void main() {
         check(decodedMap['email']).equals('grace@example.com');
         check(decodedMap['role']).equals('admin');
         check(decodedMap['zip']).equals('94105');
-        check(
-          (decodedMap['tags'] as List<dynamic>).cast<String>(),
-        ).deepEquals(['security', 'core']);
+        check((decodedMap['tags'] as List<dynamic>).cast<String>())
+            .deepEquals(['security', 'core']);
       });
 
       test('encodes UserProfile with empty tags omitting tags key', () {
@@ -2030,105 +2020,88 @@ void main() {
     group('Tier 2: Golden Mask Bitmask Validation & Error Handling', () {
       test('Golden Mask throws CodableException when id is missing', () {
         const jsonStr = '{"email": "a@b.com", "role": "admin", "zip": "90210"}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when email is missing', () {
         const jsonStr = '{"id": "usr_1", "role": "admin", "zip": "90210"}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when role is missing', () {
         const jsonStr = '{"id": "usr_1", "email": "a@b.com", "zip": "90210"}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when zip is missing', () {
         const jsonStr = '{"id": "usr_1", "email": "a@b.com", "role": "admin"}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
-      test(
-        'Golden Mask throws CodableException when multiple required fields are missing',
-        () {
-          const jsonStr = '{"id": "usr_1"}';
-          check(
-            () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-          ).throws<CodableException>();
-        },
-      );
+      test('Golden Mask throws CodableException when multiple required fields are missing', () {
+        const jsonStr = '{"id": "usr_1"}';
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
+      });
 
       test('Golden Mask throws CodableException on empty payload', () {
         const jsonStr = '{}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('throws CodableException for unknown UserRole string', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "superuser", "zip": "90210"}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for boolean zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": true}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for null zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": null}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for array zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": [90210]}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for object zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": {"code": 90210}}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, UserProfile.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
+            .throws<CodableException>();
       });
 
-      test(
-        'skips unknown extra keys (age, bio, preferences) while satisfying Golden Mask',
-        () {
-          const jsonStr =
-              '{"age": 30, "id": "usr_1", "bio": "engineer", "email": "a@b.com", "preferences": {"dark_mode": true}, "role": "member", "zip": 90210}';
-          final profile = TestJsonDriver.decodeString(
-            jsonStr,
-            UserProfile.decode,
-          );
+      test('skips unknown extra keys (age, bio, preferences) while satisfying Golden Mask', () {
+        const jsonStr =
+            '{"age": 30, "id": "usr_1", "bio": "engineer", "email": "a@b.com", "preferences": {"dark_mode": true}, "role": "member", "zip": 90210}';
+        final profile = TestJsonDriver.decodeString(
+          jsonStr,
+          UserProfile.decode,
+        );
 
-          check(profile.id).equals('usr_1');
-          check(profile.email).equals('a@b.com');
-          check(profile.role).equals(UserRole.member);
-          check(profile.zip).equals('90210');
-        },
-      );
+        check(profile.id).equals('usr_1');
+        check(profile.email).equals('a@b.com');
+        check(profile.role).equals(UserRole.member);
+        check(profile.zip).equals('90210');
+      });
 
       test(
         'decodes tags with special characters and multi-byte UTF-8 emojis',
@@ -2237,9 +2210,8 @@ void main() {
           const superDecodable = VehicleSuperDecodable();
 
           check(superDecodable.discriminatorKey).equals('type');
-          check(
-            superDecodable.subtypes.keys.toList(),
-          ).deepEquals(['car', 'bicycle']);
+          check(superDecodable.subtypes.keys.toList())
+              .deepEquals(['car', 'bicycle']);
         },
       );
     });
@@ -2249,9 +2221,8 @@ void main() {
         'Vehicle.decode throws CodableException for unknown type discriminator',
         () {
           const jsonStr = '{"type": "airplane", "maxSpeed": 900}';
-          check(
-            () => TestJsonDriver.decodeString(jsonStr, Vehicle.decode),
-          ).throws<CodableException>();
+          check(() => TestJsonDriver.decodeString(jsonStr, Vehicle.decode))
+              .throws<CodableException>();
         },
       );
 
@@ -2259,33 +2230,29 @@ void main() {
         'Vehicle.decode throws CodableException when discriminator is missing',
         () {
           const jsonStr = '{"maxSpeed": 100, "doors": 4}';
-          check(
-            () => TestJsonDriver.decodeString(jsonStr, Vehicle.decode),
-          ).throws<CodableException>();
+          check(() => TestJsonDriver.decodeString(jsonStr, Vehicle.decode))
+              .throws<CodableException>();
         },
       );
 
       test('Car.decode throws CodableException when doors is missing', () {
         const jsonStr = '{"type": "car", "maxSpeed": 150}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Car.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Car.decode))
+            .throws<CodableException>();
       });
 
       test('Car.decode throws CodableException when maxSpeed is missing', () {
         const jsonStr = '{"type": "car", "doors": 4}';
-        check(
-          () => TestJsonDriver.decodeString(jsonStr, Car.decode),
-        ).throws<CodableException>();
+        check(() => TestJsonDriver.decodeString(jsonStr, Car.decode))
+            .throws<CodableException>();
       });
 
       test(
         'Bicycle.decode throws CodableException when hasBell is missing',
         () {
           const jsonStr = '{"type": "bicycle", "maxSpeed": 25}';
-          check(
-            () => TestJsonDriver.decodeString(jsonStr, Bicycle.decode),
-          ).throws<CodableException>();
+          check(() => TestJsonDriver.decodeString(jsonStr, Bicycle.decode))
+              .throws<CodableException>();
         },
       );
 
@@ -2293,9 +2260,8 @@ void main() {
         'Bicycle.decode throws CodableException when maxSpeed is missing',
         () {
           const jsonStr = '{"type": "bicycle", "hasBell": true}';
-          check(
-            () => TestJsonDriver.decodeString(jsonStr, Bicycle.decode),
-          ).throws<CodableException>();
+          check(() => TestJsonDriver.decodeString(jsonStr, Bicycle.decode))
+              .throws<CodableException>();
         },
       );
 
@@ -2315,30 +2281,23 @@ void main() {
         check((vehicle as Car).doors).equals(4);
       });
 
-      test(
-        'decodes Car when type discriminator is last key (trailing discriminator)',
-        () {
-          const jsonStr = '{"maxSpeed": 210, "doors": 4, "type": "car"}';
-          final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+      test('decodes Car when type discriminator is last key (trailing discriminator)', () {
+        const jsonStr = '{"maxSpeed": 210, "doors": 4, "type": "car"}';
+        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
 
-          check(vehicle).isA<Car>();
-          check((vehicle as Car).doors).equals(4);
-          check(vehicle.maxSpeed).equals(210);
-        },
-      );
+        check(vehicle).isA<Car>();
+        check((vehicle as Car).doors).equals(4);
+        check(vehicle.maxSpeed).equals(210);
+      });
 
-      test(
-        'decodes Bicycle when type discriminator is last key (trailing discriminator)',
-        () {
-          const jsonStr =
-              '{"maxSpeed": 32, "hasBell": true, "type": "bicycle"}';
-          final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+      test('decodes Bicycle when type discriminator is last key (trailing discriminator)', () {
+        const jsonStr = '{"maxSpeed": 32, "hasBell": true, "type": "bicycle"}';
+        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
 
-          check(vehicle).isA<Bicycle>();
-          check((vehicle as Bicycle).hasBell).isTrue();
-          check(vehicle.maxSpeed).equals(32);
-        },
-      );
+        check(vehicle).isA<Bicycle>();
+        check((vehicle as Bicycle).hasBell).isTrue();
+        check(vehicle.maxSpeed).equals(32);
+      });
 
       test('skips unknown properties in Car payload cleanly', () {
         const jsonStr =
@@ -2413,28 +2372,25 @@ void main() {
     });
 
     group('UserProfile Roundtrips', () {
-      test(
-        'UserProfile bit-exact roundtrip with integer zip normalized to string',
-        () {
-          const rawJson =
-              '{"id": "usr_roundtrip_1", "email": "rt1@example.com", "role": "admin", "zip": 90210, "tags": ["a", "b"]}';
-          final profile = TestJsonDriver.decodeString(
-            rawJson,
-            UserProfile.decode,
-          );
+      test('UserProfile bit-exact roundtrip with integer zip normalized to string', () {
+        const rawJson =
+            '{"id": "usr_roundtrip_1", "email": "rt1@example.com", "role": "admin", "zip": 90210, "tags": ["a", "b"]}';
+        final profile = TestJsonDriver.decodeString(
+          rawJson,
+          UserProfile.decode,
+        );
 
-          check(profile.zip).equals('90210');
+        check(profile.zip).equals('90210');
 
-          final encodedBytes = TestJsonDriver.encodeToBytes(profile);
-          final reDecoded = TestJsonDriver.decodeBytes(
-            encodedBytes,
-            UserProfile.decode,
-          );
+        final encodedBytes = TestJsonDriver.encodeToBytes(profile);
+        final reDecoded = TestJsonDriver.decodeBytes(
+          encodedBytes,
+          UserProfile.decode,
+        );
 
-          check(reDecoded).equals(profile);
-          check(reDecoded.tags).deepEquals(profile.tags);
-        },
-      );
+        check(reDecoded).equals(profile);
+        check(reDecoded.tags).deepEquals(profile.tags);
+      });
 
       test(
         'UserProfile bit-exact roundtrip with string zip and empty tags',
@@ -2661,10 +2617,8 @@ void main() {
       ]);
     });
 
-    test(
-      'Polymorphic Vehicle list with mixed leading, middle, and trailing discriminators',
-      () {
-        const jsonStr = '''
+    test('Polymorphic Vehicle list with mixed leading, middle, and trailing discriminators', () {
+      const jsonStr = '''
 [
   {"type": "car", "maxSpeed": 200, "doors": 4},
   {"maxSpeed": 30, "type": "bicycle", "hasBell": true},
@@ -2672,26 +2626,25 @@ void main() {
   {"hasBell": false, "maxSpeed": 25, "type": "bicycle"}
 ]
 ''';
-        final fleet = TestJsonDriver.decodeString(jsonStr, (decoder) {
-          final unkeyed = decoder.unkeyed();
-          final result = <Vehicle>[];
-          while (unkeyed.hasNext()) {
-            result.add(unkeyed.decodeElement(Vehicle.decode));
-          }
-          return result;
-        });
+      final fleet = TestJsonDriver.decodeString(jsonStr, (decoder) {
+        final unkeyed = decoder.unkeyed();
+        final result = <Vehicle>[];
+        while (unkeyed.hasNext()) {
+          result.add(unkeyed.decodeElement(Vehicle.decode));
+        }
+        return result;
+      });
 
-        check(fleet.length).equals(4);
-        check(fleet[0]).isA<Car>();
-        check((fleet[0] as Car).doors).equals(4);
-        check(fleet[1]).isA<Bicycle>();
-        check((fleet[1] as Bicycle).hasBell).isTrue();
-        check(fleet[2]).isA<Car>();
-        check((fleet[2] as Car).doors).equals(2);
-        check(fleet[3]).isA<Bicycle>();
-        check((fleet[3] as Bicycle).hasBell).isFalse();
-      },
-    );
+      check(fleet.length).equals(4);
+      check(fleet[0]).isA<Car>();
+      check((fleet[0] as Car).doors).equals(4);
+      check(fleet[1]).isA<Bicycle>();
+      check((fleet[1] as Bicycle).hasBell).isTrue();
+      check(fleet[2]).isA<Car>();
+      check((fleet[2] as Car).doors).equals(2);
+      check(fleet[3]).isA<Bicycle>();
+      check((fleet[3] as Bicycle).hasBell).isFalse();
+    });
 
     test('UserProfile with userInfo context map propagation', () {
       const tenantSymbol = #tenantId;

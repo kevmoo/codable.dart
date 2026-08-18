@@ -87,48 +87,45 @@ void main() {
       check(model.allOptionsKeys).deepEquals(['x', 'y']);
     });
 
-    test(
-      'extracts named parameters, aliases, enums, tuples, and defaults for UserAccount',
-      () {
-        final model = visit('UserAccount');
-        check(model.className).equals('UserAccount');
-        check(model.fieldRename).equals(FieldRename.snake);
+    test('extracts named parameters, aliases, enums, tuples, and defaults for UserAccount', () {
+      final model = visit('UserAccount');
+      check(model.className).equals('UserAccount');
+      check(model.fieldRename).equals(FieldRename.snake);
 
-        final fieldsByName = {for (final f in model.fields) f.name: f};
-        check(fieldsByName.keys).contains('id');
-        check(fieldsByName.keys).contains('emailAddress');
-        check(fieldsByName.keys).contains('role');
-        check(fieldsByName.keys).contains('tags');
-        check(fieldsByName.keys).contains('location');
-        check(fieldsByName.keys).contains('internalId');
+      final fieldsByName = {for (final f in model.fields) f.name: f};
+      check(fieldsByName.keys).contains('id');
+      check(fieldsByName.keys).contains('emailAddress');
+      check(fieldsByName.keys).contains('role');
+      check(fieldsByName.keys).contains('tags');
+      check(fieldsByName.keys).contains('location');
+      check(fieldsByName.keys).contains('internalId');
 
-        final email = fieldsByName['emailAddress']!;
-        check(email.wireName).equals('email_address');
-        check(email.aliases).deepEquals(['email', 'contact_email']);
-        check(email.isRequired).isTrue();
-        check(email.participatesInGoldenMask).isTrue();
+      final email = fieldsByName['emailAddress']!;
+      check(email.wireName).equals('email_address');
+      check(email.aliases).deepEquals(['email', 'contact_email']);
+      check(email.isRequired).isTrue();
+      check(email.participatesInGoldenMask).isTrue();
 
-        final role = fieldsByName['role']!;
-        check(role.category).equals(TypeCategory.enumType);
-        check(
-          role.enumConstants,
-        ).isNotNull().deepEquals(['admin', 'member', 'guest']);
+      final role = fieldsByName['role']!;
+      check(role.category).equals(TypeCategory.enumType);
+      check(role.enumConstants)
+          .isNotNull()
+          .deepEquals(['admin', 'member', 'guest']);
 
-        final tags = fieldsByName['tags']!;
-        check(tags.hasDefaultValue).isTrue();
-        check(tags.participatesInGoldenMask).isFalse();
-        check(tags.reqBitIndex).isNull();
+      final tags = fieldsByName['tags']!;
+      check(tags.hasDefaultValue).isTrue();
+      check(tags.participatesInGoldenMask).isFalse();
+      check(tags.reqBitIndex).isNull();
 
-        final location = fieldsByName['location']!;
-        check(location.category).equals(TypeCategory.tuple);
-        check(location.tupleLength).equals(2);
-        check(location.isNullable).isTrue();
+      final location = fieldsByName['location']!;
+      check(location.category).equals(TypeCategory.tuple);
+      check(location.tupleLength).equals(2);
+      check(location.isNullable).isTrue();
 
-        final internalId = fieldsByName['internalId']!;
-        check(internalId.ignore).isTrue();
-        check(internalId.keyIndex).equals(-1);
-      },
-    );
+      final internalId = fieldsByName['internalId']!;
+      check(internalId.ignore).isTrue();
+      check(internalId.keyIndex).equals(-1);
+    });
 
     test('validates nested models in Enterprise', () {
       final model = visit('Enterprise');
@@ -181,14 +178,11 @@ void main() {
       check(scores.category).equals(TypeCategory.map);
     });
 
-    test(
-      'throws InvalidGenerationSourceError when required fields without defaults exceed 62',
-      () {
-        check(() => visit('HugeModel63'))
-            .throws<InvalidGenerationSourceError>()
-            .has((e) => e.message, 'message')
-            .contains('exceeds the maximum golden mask limit of 62');
-      },
-    );
+    test('throws InvalidGenerationSourceError when required fields without defaults exceed 62', () {
+      check(() => visit('HugeModel63'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('exceeds the maximum golden mask limit of 62');
+    });
   });
 }

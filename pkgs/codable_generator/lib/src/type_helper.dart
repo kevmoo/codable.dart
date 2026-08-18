@@ -106,12 +106,11 @@ final class TypeClassifier {
 
     final element = type.element;
     if (element is EnumElement) {
-      final constants =
-          element.fields
-              .where((f) => f.isEnumConstant)
-              .map((f) => f.name)
-              .whereType<String>()
-              .toList();
+      final constants = element.fields
+          .where((f) => f.isEnumConstant)
+          .map((f) => f.name)
+          .whereType<String>()
+          .toList();
       return (
         category: TypeCategory.enumType,
         elementType: null,
@@ -122,10 +121,9 @@ final class TypeClassifier {
     }
 
     if (type.isDartCoreList || (element != null && element.name == 'List')) {
-      final elemType =
-          type is InterfaceType && type.typeArguments.isNotEmpty
-              ? type.typeArguments.first
-              : null;
+      final elemType = type is InterfaceType && type.typeArguments.isNotEmpty
+          ? type.typeArguments.first
+          : null;
       return (
         category: TypeCategory.list,
         elementType: elemType,
@@ -136,10 +134,9 @@ final class TypeClassifier {
     }
 
     if (type.isDartCoreSet || (element != null && element.name == 'Set')) {
-      final elemType =
-          type is InterfaceType && type.typeArguments.isNotEmpty
-              ? type.typeArguments.first
-              : null;
+      final elemType = type is InterfaceType && type.typeArguments.isNotEmpty
+          ? type.typeArguments.first
+          : null;
       return (
         category: TypeCategory.set,
         elementType: elemType,
@@ -150,14 +147,12 @@ final class TypeClassifier {
     }
 
     if (type.isDartCoreMap || (element != null && element.name == 'Map')) {
-      final keyType =
-          type is InterfaceType && type.typeArguments.isNotEmpty
-              ? type.typeArguments[0]
-              : null;
-      final valType =
-          type is InterfaceType && type.typeArguments.length > 1
-              ? type.typeArguments[1]
-              : null;
+      final keyType = type is InterfaceType && type.typeArguments.isNotEmpty
+          ? type.typeArguments[0]
+          : null;
+      final valType = type is InterfaceType && type.typeArguments.length > 1
+          ? type.typeArguments[1]
+          : null;
       return (
         category: TypeCategory.map,
         elementType: null,
