@@ -4,9 +4,11 @@ library;
 import 'codable.dart';
 import 'static_key.dart';
 
-/// Top-level encoding context providing access to specialized encoding containers.
+/// Top-level encoding context providing access to specialized encoding
+/// containers.
 abstract interface class Encoder {
-  /// Extensible context map for passing runtime dependency handles, options, or flags.
+  /// Extensible context map for passing runtime dependency handles, options, or
+  /// flags.
   Map<Object, Object?> get userInfo;
 
   /// Opens a keyed container for writing object key-value pairs.

@@ -2,10 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: unreachable_from_main
+
 import 'dart:convert';
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'basic_example.g.dart';
 
@@ -51,19 +52,6 @@ class Person {
   static Person fromReader(JsonTokenReader reader) =>
       _$PersonFromReader(reader);
   void toWriter(JsonTokenWriter writer) => _$PersonToWriter(this, writer);
-
-  static Person decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) return fromReader(decoder.reader);
-    throw UnimplementedError();
-  }
-
-  void encode(Encoder encoder) {
-    if (encoder is JsonCodableEncoder) {
-      toWriter(encoder.writer);
-      return;
-    }
-    throw UnimplementedError();
-  }
 }
 
 @Codable()
@@ -124,7 +112,8 @@ void main() {
   final person = Person.fromReader(reader);
 
   print(
-    'Decoded Person: \${person.firstName} \${person.lastName}, orders: \${person.orders.length}',
+    'Decoded Person: \${person.firstName} \${person.lastName}, '
+    'orders: \${person.orders.length}',
   );
 
   final builder = BytesBuilder();

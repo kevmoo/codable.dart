@@ -1,4 +1,5 @@
-/// Next-generation high-performance zero-allocation serialization framework for Dart.
+/// Next-generation high-performance zero-allocation serialization framework for
+/// Dart.
 library;
 
 import 'src/substrate/substrate.dart';
@@ -15,7 +16,8 @@ export 'src/substrate/substrate.dart';
 
 /// Extension on [JsonTokenReader] providing convenience utilities.
 extension JsonTokenReaderCodableExtension on JsonTokenReader {
-  /// Returns `true` if the next token is a null literal without advancing the cursor.
+  /// Returns `true` if the next token is a null literal without advancing the
+  /// cursor.
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   bool isNextNull() => peek() == JsonTokenType.nullValue;

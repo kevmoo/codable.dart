@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'citm_catalog.dart';
 
 // **************************************************************************
@@ -228,17 +230,17 @@ extension type const _$CitmCatalogSchema(int _value) {
 CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
   reader.beginObject();
 
-  Map<String, String> areaNames = const {};
-  Map<String, String> audienceSubCategoryNames = const {};
-  Map<String, String> blockNames = const {};
-  Map<String, CitmEvent> events = const {};
-  List<CitmPerformance> performances = const [];
-  Map<String, String> seatCategoryNames = const {};
-  Map<String, String> subTopicNames = const {};
-  Map<String, String> subjectNames = const {};
-  Map<String, String> topicNames = const {};
-  Map<String, bool> topicSynced = const {};
-  Map<String, String> venueNames = const {};
+  var areaNames = const <String, String>{};
+  var audienceSubCategoryNames = const <String, String>{};
+  var blockNames = const <String, String>{};
+  var events = const <String, CitmEvent>{};
+  var performances = const <CitmPerformance>[];
+  var seatCategoryNames = const <String, String>{};
+  var subTopicNames = const <String, String>{};
+  var subjectNames = const <String, String>{};
+  var topicNames = const <String, String>{};
+  var topicSynced = const <String, bool>{};
+  var venueNames = const <String, String>{};
   var seen = _$CitmCatalogSchema.none;
 
   while (reader.hasNext()) {
@@ -251,7 +253,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           areaNames = map;
@@ -265,7 +267,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           audienceSubCategoryNames = map;
@@ -279,7 +281,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           blockNames = map;
@@ -293,7 +295,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, CitmEvent>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (_$CitmEventFromReader(reader));
+            map[k] = _$CitmEventFromReader(reader);
           }
           reader.endObject();
           events = map;
@@ -320,7 +322,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           seatCategoryNames = map;
@@ -334,7 +336,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           subTopicNames = map;
@@ -348,7 +350,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           subjectNames = map;
@@ -362,7 +364,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           topicNames = map;
@@ -376,7 +378,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, bool>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readBool());
+            map[k] = reader.readBool();
           }
           reader.endObject();
           topicSynced = map;
@@ -390,7 +392,7 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
           final map = <String, String>{};
           while (reader.hasNext()) {
             final k = reader.nextName();
-            map[k] = (reader.readString());
+            map[k] = reader.readString();
           }
           reader.endObject();
           venueNames = map;
@@ -672,10 +674,10 @@ CitmEvent _$CitmEventFromReader(JsonTokenReader reader) {
   int? id;
   String? logo;
   String? name;
-  List<int> subTopicIds = const [];
+  var subTopicIds = const <int>[];
   int? subjectCode;
   String? subtitle;
-  List<int> topicIds = const [];
+  var topicIds = const <int>[];
   var seen = _$CitmEventSchema.none;
 
   while (reader.hasNext()) {
@@ -690,7 +692,7 @@ CitmEvent _$CitmEventFromReader(JsonTokenReader reader) {
         break;
       case _$CitmEventSchema.keyId:
         if ((seen._value & _$CitmEventSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -709,7 +711,7 @@ CitmEvent _$CitmEventFromReader(JsonTokenReader reader) {
         break;
       case _$CitmEventSchema.keyName:
         if ((seen._value & _$CitmEventSchema.name._value) != 0) {
-          throw CodableException('Duplicate field "name"');
+          throw const CodableException('Duplicate field "name"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -989,8 +991,8 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
   int? id;
   String? logo;
   String? name;
-  List<CitmPrice> prices = const [];
-  List<CitmSeatCategory> seatCategories = const [];
+  var prices = const <CitmPrice>[];
+  var seatCategories = const <CitmSeatCategory>[];
   int? start;
   String? venueCode;
   var seen = _$CitmPerformanceSchema.none;
@@ -999,7 +1001,7 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CitmPerformanceSchema.options)) {
       case _$CitmPerformanceSchema.keyEventId:
         if ((seen._value & _$CitmPerformanceSchema.eventId._value) != 0) {
-          throw CodableException('Duplicate field "eventId"');
+          throw const CodableException('Duplicate field "eventId"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1010,7 +1012,7 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
         break;
       case _$CitmPerformanceSchema.keyId:
         if ((seen._value & _$CitmPerformanceSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1063,7 +1065,7 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
         break;
       case _$CitmPerformanceSchema.keyStart:
         if ((seen._value & _$CitmPerformanceSchema.start._value) != 0) {
-          throw CodableException('Duplicate field "start"');
+          throw const CodableException('Duplicate field "start"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1074,7 +1076,7 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
         break;
       case _$CitmPerformanceSchema.keyVenueCode:
         if ((seen._value & _$CitmPerformanceSchema.venueCode._value) != 0) {
-          throw CodableException('Duplicate field "venueCode"');
+          throw const CodableException('Duplicate field "venueCode"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1278,7 +1280,7 @@ CitmPrice _$CitmPriceFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$CitmPriceSchema.options)) {
       case _$CitmPriceSchema.keyAmount:
         if ((seen._value & _$CitmPriceSchema.amount._value) != 0) {
-          throw CodableException('Duplicate field "amount"');
+          throw const CodableException('Duplicate field "amount"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1290,7 +1292,9 @@ CitmPrice _$CitmPriceFromReader(JsonTokenReader reader) {
       case _$CitmPriceSchema.keyAudienceSubCategoryId:
         if ((seen._value & _$CitmPriceSchema.audienceSubCategoryId._value) !=
             0) {
-          throw CodableException('Duplicate field "audienceSubCategoryId"');
+          throw const CodableException(
+            'Duplicate field "audienceSubCategoryId"',
+          );
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1301,7 +1305,7 @@ CitmPrice _$CitmPriceFromReader(JsonTokenReader reader) {
         break;
       case _$CitmPriceSchema.keySeatCategoryId:
         if ((seen._value & _$CitmPriceSchema.seatCategoryId._value) != 0) {
-          throw CodableException('Duplicate field "seatCategoryId"');
+          throw const CodableException('Duplicate field "seatCategoryId"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1425,7 +1429,7 @@ extension type const _$CitmSeatCategorySchema(int _value) {
 CitmSeatCategory _$CitmSeatCategoryFromReader(JsonTokenReader reader) {
   reader.beginObject();
 
-  List<CitmArea> areas = const [];
+  var areas = const <CitmArea>[];
   int? seatCategoryId;
   var seen = _$CitmSeatCategorySchema.none;
 
@@ -1447,7 +1451,7 @@ CitmSeatCategory _$CitmSeatCategoryFromReader(JsonTokenReader reader) {
       case _$CitmSeatCategorySchema.keySeatCategoryId:
         if ((seen._value & _$CitmSeatCategorySchema.seatCategoryId._value) !=
             0) {
-          throw CodableException('Duplicate field "seatCategoryId"');
+          throw const CodableException('Duplicate field "seatCategoryId"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -1565,14 +1569,14 @@ CitmArea _$CitmAreaFromReader(JsonTokenReader reader) {
   reader.beginObject();
 
   int? areaId;
-  List<int> blockIds = const [];
+  var blockIds = const <int>[];
   var seen = _$CitmAreaSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$CitmAreaSchema.options)) {
       case _$CitmAreaSchema.keyAreaId:
         if ((seen._value & _$CitmAreaSchema.areaId._value) != 0) {
-          throw CodableException('Duplicate field "areaId"');
+          throw const CodableException('Duplicate field "areaId"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

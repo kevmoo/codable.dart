@@ -49,17 +49,17 @@ class CitmCatalog {
       return _$CitmCatalogFromReader(decoder.reader);
     }
     final keyed = decoder.keyed();
-    Map<String, String> areaNames = const {};
-    Map<String, String> audienceSubCategoryNames = const {};
-    Map<String, String> blockNames = const {};
-    Map<String, CitmEvent> events = const {};
-    List<CitmPerformance> performances = const [];
-    Map<String, String> seatCategoryNames = const {};
-    Map<String, String> subTopicNames = const {};
-    Map<String, String> subjectNames = const {};
-    Map<String, String> topicNames = const {};
-    Map<String, bool> topicSynced = const {};
-    Map<String, String> venueNames = const {};
+    var areaNames = const <String, String>{};
+    var audienceSubCategoryNames = const <String, String>{};
+    var blockNames = const <String, String>{};
+    var events = const <String, CitmEvent>{};
+    var performances = const <CitmPerformance>[];
+    var seatCategoryNames = const <String, String>{};
+    var subTopicNames = const <String, String>{};
+    var subjectNames = const <String, String>{};
+    var topicNames = const <String, String>{};
+    var topicSynced = const <String, bool>{};
+    var venueNames = const <String, String>{};
 
     while (keyed.hasNextKey()) {
       switch (keyed.selectKeyIndex(

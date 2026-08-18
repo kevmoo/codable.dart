@@ -68,7 +68,7 @@ Point _$PointFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$PointSchema.options)) {
       case _$PointSchema.keyX:
         if ((seen._value & _$PointSchema.x._value) != 0) {
-          throw CodableException('Duplicate field "x"');
+          throw const CodableException('Duplicate field "x"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -79,7 +79,7 @@ Point _$PointFromReader(JsonTokenReader reader) {
         break;
       case _$PointSchema.keyY:
         if ((seen._value & _$PointSchema.y._value) != 0) {
-          throw CodableException('Duplicate field "y"');
+          throw const CodableException('Duplicate field "y"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -242,16 +242,16 @@ UserAccount _$UserAccountFromReader(JsonTokenReader reader) {
   String? id;
   String? emailAddress;
   UserRole? role;
-  List<String> tags = const [];
+  var tags = const <String>[];
   Float64List? location;
-  String internalId = '';
+  var internalId = '';
   var seen = _$UserAccountSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$UserAccountSchema.options)) {
       case _$UserAccountSchema.keyId:
         if ((seen._value & _$UserAccountSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -264,7 +264,7 @@ UserAccount _$UserAccountFromReader(JsonTokenReader reader) {
       case _$UserAccountSchema.aliasKeyEmailAddressEmail:
       case _$UserAccountSchema.aliasKeyEmailAddressContactEmail:
         if ((seen._value & _$UserAccountSchema.emailAddress._value) != 0) {
-          throw CodableException('Duplicate field "email_address"');
+          throw const CodableException('Duplicate field "email_address"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -275,7 +275,7 @@ UserAccount _$UserAccountFromReader(JsonTokenReader reader) {
         break;
       case _$UserAccountSchema.keyRole:
         if ((seen._value & _$UserAccountSchema.role._value) != 0) {
-          throw CodableException('Duplicate field "role"');
+          throw const CodableException('Duplicate field "role"');
         }
         // Zero-allocation enum matching
         final enumIndex = reader.selectString(
@@ -285,7 +285,7 @@ UserAccount _$UserAccountFromReader(JsonTokenReader reader) {
           role = UserRole.values[enumIndex];
           seen |= _$UserAccountSchema.role;
         } else {
-          throw CodableException('Unknown UserRole value');
+          throw const CodableException('Unknown UserRole value');
         }
         break;
       case _$UserAccountSchema.keyTags:
@@ -455,7 +455,7 @@ Address _$AddressFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$AddressSchema.options)) {
       case _$AddressSchema.keyCity:
         if ((seen._value & _$AddressSchema.city._value) != 0) {
-          throw CodableException('Duplicate field "city"');
+          throw const CodableException('Duplicate field "city"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -466,7 +466,7 @@ Address _$AddressFromReader(JsonTokenReader reader) {
         break;
       case _$AddressSchema.keyStreet:
         if ((seen._value & _$AddressSchema.street._value) != 0) {
-          throw CodableException('Duplicate field "street"');
+          throw const CodableException('Duplicate field "street"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -632,16 +632,16 @@ Enterprise _$EnterpriseFromReader(JsonTokenReader reader) {
 
   String? name;
   Address? headquarter;
-  List<Address> branches = const [];
-  Set<String> categories = const {};
-  Map<String, int> headcountByDept = const {};
+  var branches = const <Address>[];
+  var categories = const <String>{};
+  var headcountByDept = const <String, int>{};
   var seen = _$EnterpriseSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$EnterpriseSchema.options)) {
       case _$EnterpriseSchema.keyName:
         if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
-          throw CodableException('Duplicate field "name"');
+          throw const CodableException('Duplicate field "name"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -652,7 +652,7 @@ Enterprise _$EnterpriseFromReader(JsonTokenReader reader) {
         break;
       case _$EnterpriseSchema.keyHeadquarter:
         if ((seen._value & _$EnterpriseSchema.headquarter._value) != 0) {
-          throw CodableException('Duplicate field "headquarter"');
+          throw const CodableException('Duplicate field "headquarter"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -835,7 +835,7 @@ UserProfileCustom _$UserProfileCustomFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$UserProfileCustomSchema.options)) {
       case _$UserProfileCustomSchema.keyId:
         if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
-          throw CodableException('Duplicate field "id"');
+          throw const CodableException('Duplicate field "id"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -846,7 +846,7 @@ UserProfileCustom _$UserProfileCustomFromReader(JsonTokenReader reader) {
         break;
       case _$UserProfileCustomSchema.keyZip:
         if ((seen._value & _$UserProfileCustomSchema.zip._value) != 0) {
-          throw CodableException('Duplicate field "zip"');
+          throw const CodableException('Duplicate field "zip"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -981,16 +981,16 @@ Team _$TeamFromReader(JsonTokenReader reader) {
   reader.beginObject();
 
   String? name;
-  List<UserRole> roles = const [];
-  Set<String?> nullableTags = const {};
-  Map<String, int?> scores = const {};
+  var roles = const <UserRole>[];
+  var nullableTags = const <String?>{};
+  var scores = const <String, int?>{};
   var seen = _$TeamSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$TeamSchema.options)) {
       case _$TeamSchema.keyName:
         if ((seen._value & _$TeamSchema.name._value) != 0) {
-          throw CodableException('Duplicate field "name"');
+          throw const CodableException('Duplicate field "name"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

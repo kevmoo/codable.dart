@@ -20,7 +20,8 @@ final class ModelVisitor {
   const ModelVisitor({TypeClassifier typeClassifier = const TypeClassifier()})
     : _typeClassifier = typeClassifier;
 
-  /// Inspects [element] and [annotation], returning a validated [ModelDescriptor].
+  /// Inspects [element] and [annotation], returning a validated
+  /// [ModelDescriptor].
   ModelDescriptor visitClass(ClassElement element, ConstantReader annotation) {
     final createEncoder = annotation.peek('createEncoder')?.boolValue ?? true;
     final createDecoder = annotation.peek('createDecoder')?.boolValue ?? true;
@@ -86,7 +87,8 @@ final class ModelVisitor {
       if (ignore && isRequired && !hasDefaultValue) {
         throw InvalidGenerationSourceError(
           'The parameter "${param.name}" is required but marked with '
-          '@CodableKey(ignore: true). Ignored parameters must have a default value or be optional.',
+          '@CodableKey(ignore: true). Ignored parameters must have a default '
+          'value or be optional.',
           element: param,
         );
       }

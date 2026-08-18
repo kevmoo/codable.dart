@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
@@ -187,7 +189,7 @@ void main() {
           location: loc,
         );
 
-        final bytes = _encodeObject((w) => user.toWriter(w));
+        final bytes = _encodeObject(user.toWriter);
         final roundtripped = UserAccount.fromReader(
           JsonTokenReader.fromBytes(bytes),
         );
@@ -227,7 +229,7 @@ void main() {
 
       test('roundtrips UserProfileCustom through encoder and decoder', () {
         const profile = UserProfileCustom(id: 'u3', zip: '10001');
-        final bytes = _encodeObject((w) => profile.toWriter(w));
+        final bytes = _encodeObject(profile.toWriter);
         final roundtripped = UserProfileCustom.fromReader(
           JsonTokenReader.fromBytes(bytes),
         );
@@ -246,7 +248,7 @@ void main() {
           scores: {'latency': 10, 'errors': null, 'qps': 50000},
         );
 
-        final bytes = _encodeObject((w) => team.toWriter(w));
+        final bytes = _encodeObject(team.toWriter);
         final roundtripped = Team.fromReader(JsonTokenReader.fromBytes(bytes));
 
         check(roundtripped.name).equals('Core Infra');
@@ -280,7 +282,7 @@ void main() {
           headcountByDept: {'engineering': 50000, 'sales': 20000},
         );
 
-        final bytes = _encodeObject((w) => enterprise.toWriter(w));
+        final bytes = _encodeObject(enterprise.toWriter);
         final roundtripped = Enterprise.fromReader(
           JsonTokenReader.fromBytes(bytes),
         );

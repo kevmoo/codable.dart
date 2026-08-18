@@ -28,7 +28,7 @@ class NativeCoordinateBenchmark extends BenchmarkBase {
 
   @override
   void run() {
-    int hash = 0;
+    var hash = 0;
     final list = jsonDecode(jsonStr) as List<dynamic>;
     for (var item in list) {
       final map = item as Map<String, dynamic>;
@@ -50,7 +50,7 @@ class CodableCoordinateBenchmark extends BenchmarkBase {
 
   @override
   void run() {
-    int hash = 0;
+    var hash = 0;
     final decoder = JsonCodableDecoder.fromBytes(bytes);
     final unkeyed = decoder.unkeyed();
     while (unkeyed.hasNext()) {
@@ -131,7 +131,8 @@ File _findBenchmarkDataFile(String relativePath) {
   final candidate3 = File('${scriptDir.path}/../$relativePath');
   if (candidate3.existsSync()) return candidate3;
   throw StateError(
-    'Benchmark data file not found: "$relativePath". Tried paths: "${candidate1.path}", "${candidate2.path}", "${candidate3.path}".',
+    'Benchmark data file not found: "$relativePath". Tried paths: '
+    '"${candidate1.path}", "${candidate2.path}", "${candidate3.path}".',
   );
 }
 

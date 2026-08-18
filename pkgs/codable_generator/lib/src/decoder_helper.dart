@@ -12,7 +12,8 @@ import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
-/// Emits the unified `_$ModelSchema` extension type and single-pass `_$ModelFromReader` decoder.
+/// Emits the unified `_$ModelSchema` extension type and single-pass
+/// `_$ModelFromReader` decoder.
 final class DecoderGeneratorHelper {
   final ModelDescriptor model;
 
@@ -57,7 +58,8 @@ final class DecoderGeneratorHelper {
       final suffix = toSafeIdentifierSuffix(field.name);
       final constBytes = encodeAsConstBytes(field.wireName);
       buffer.writeln(
-        '  static final Uint8List name${suffix}Bytes = Uint8List.fromList($constBytes);',
+        '  static final Uint8List name${suffix}Bytes = '
+        'Uint8List.fromList($constBytes);',
       );
     }
 
@@ -69,10 +71,12 @@ final class DecoderGeneratorHelper {
       for (var i = 0; i < field.aliases.length; i++) {
         final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
         buffer.writeln(
-          "  static const String alias$suffix$aliasSuffix = '${field.aliases[i]}';",
+          '  static const String alias$suffix$aliasSuffix = '
+          "'${field.aliases[i]}';",
         );
         buffer.writeln(
-          '  static const int aliasKey$suffix$aliasSuffix = ${field.aliasIndices[i]};',
+          '  static const int aliasKey$suffix$aliasSuffix = '
+          '${field.aliasIndices[i]};',
         );
       }
     }
@@ -106,7 +110,8 @@ final class DecoderGeneratorHelper {
         buffer.writeln();
         buffer.writeln('  // Enum Options for ${field.name}');
         buffer.writeln(
-          '  static final JsonKeyOptions ${field.name}EnumOptions = JsonKeyOptions.of(const [',
+          '  static final JsonKeyOptions ${field.name}EnumOptions = '
+          'JsonKeyOptions.of(const [',
         );
         for (final constant in field.enumConstants!) {
           buffer.writeln("    '$constant',");
@@ -120,10 +125,12 @@ final class DecoderGeneratorHelper {
     buffer.writeln('  static const $schemaName none = $schemaName(0);');
     for (final reqField in model.requiredFields) {
       buffer.writeln(
-        '  static const int _${reqField.name}Bit = 1 << ${reqField.reqBitIndex};',
+        '  static const int _${reqField.name}Bit = '
+        '1 << ${reqField.reqBitIndex};',
       );
       buffer.writeln(
-        '  static const $schemaName ${reqField.name} = $schemaName(_${reqField.name}Bit);',
+        '  static const $schemaName ${reqField.name} = '
+        '$schemaName(_${reqField.name}Bit);',
       );
     }
 
@@ -168,7 +175,8 @@ final class DecoderGeneratorHelper {
         buffer.writeln('    }');
       }
       buffer.writeln(
-        "    throw CodableException('Missing required fields for ${model.className}: \${missing.join(\", \")}');",
+        "    throw CodableException('Missing required fields for "
+        "${model.className}: \${missing.join(\", \")}');",
       );
       buffer.writeln('  }');
     }
@@ -196,26 +204,29 @@ final class DecoderGeneratorHelper {
     // Local variable declarations
     for (final field in model.fields) {
       final typeStr = field.type.getDisplayString();
-      if (field.ignore) {
-        if (field.hasDefaultValue && field.defaultValueCode != null) {
-          buffer.writeln(
-            '  $typeStr ${field.name} = ${field.defaultValueCode};',
-          );
-        } else if (field.isNullable) {
-          buffer.writeln('  $typeStr ${field.name};');
-        } else {
-          buffer.writeln('  $typeStr? ${field.name};');
+      if (field.hasDefaultValue && field.defaultValueCode != null) {
+        var defaultCode = field.defaultValueCode!;
+        if (defaultCode == 'const {}') {
+          final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
+          defaultCode = 'const <String, $valType>{};';
+        } else if (defaultCode == 'const []') {
+          final elemType =
+              field.elementType?.getDisplayString() ??
+              (field.type is InterfaceType &&
+                      (field.type as InterfaceType).typeArguments.isNotEmpty
+                  ? (field.type as InterfaceType).typeArguments.first
+                      .getDisplayString()
+                  : 'dynamic');
+          defaultCode = 'const <$elemType>[];';
         }
+        if (defaultCode.endsWith(';')) {
+          defaultCode = defaultCode.substring(0, defaultCode.length - 1);
+        }
+        buffer.writeln('  var ${field.name} = $defaultCode;');
+      } else if (field.isNullable) {
+        buffer.writeln('  $typeStr ${field.name};');
       } else {
-        if (field.hasDefaultValue && field.defaultValueCode != null) {
-          buffer.writeln(
-            '  $typeStr ${field.name} = ${field.defaultValueCode};',
-          );
-        } else if (field.isNullable) {
-          buffer.writeln('  $typeStr ${field.name};');
-        } else {
-          buffer.writeln('  $typeStr? ${field.name};');
-        }
+        buffer.writeln('  $typeStr? ${field.name};');
       }
     }
 
@@ -236,10 +247,12 @@ final class DecoderGeneratorHelper {
 
       if (field.participatesInGoldenMask) {
         buffer.writeln(
-          '        if ((seen._value & $schemaName.${field.name}._value) != 0) {',
+          '        if ((seen._value & '
+          '$schemaName.${field.name}._value) != 0) {',
         );
         buffer.writeln(
-          "          throw CodableException('Duplicate field \"${field.wireName}\"');",
+          '          throw const CodableException('
+          "'Duplicate field \"${field.wireName}\"');",
         );
         buffer.writeln('        }');
       }
@@ -310,7 +323,8 @@ final class DecoderGeneratorHelper {
         field.type.getDisplayString().replaceAll('?', '');
     buffer.writeln('$indent// Zero-allocation enum matching');
     buffer.writeln(
-      '${indent}final enumIndex = reader.selectString($schemaName.${field.name}EnumOptions);',
+      '${indent}final enumIndex = '
+      'reader.selectString($schemaName.${field.name}EnumOptions);',
     );
     buffer.writeln(
       '${indent}if (enumIndex >= 0 && enumIndex < $typeStr.values.length) {',
@@ -321,7 +335,7 @@ final class DecoderGeneratorHelper {
     }
     buffer.writeln('$indent} else {');
     buffer.writeln(
-      "$indent  throw CodableException('Unknown $typeStr value');",
+      "$indent  throw const CodableException('Unknown $typeStr value');",
     );
     buffer.writeln('$indent}');
   }
@@ -347,7 +361,8 @@ final class DecoderGeneratorHelper {
         _writeEnumFieldRead(buffer, field, schemaName, indent: indent);
       case TypeCategory.custom:
         buffer.writeln(
-          '$indent${field.name} = ${field.customDecoderCode}.decodeFromReader(reader);',
+          '$indent${field.name} = '
+          '${field.customDecoderCode}.decodeFromReader(reader);',
         );
       case TypeCategory.tuple:
         final tupleLen = field.tupleLength ?? 2;
@@ -367,7 +382,8 @@ final class DecoderGeneratorHelper {
         buffer.writeln('${indent}reader.endArray();');
         buffer.writeln('${indent}if (tupleIdx != $tupleLen) {');
         buffer.writeln(
-          "$indent  throw CodableException('Expected $tupleLen elements for tuple \"${field.wireName}\", got \$tupleIdx');",
+          "$indent  throw CodableException('Expected $tupleLen elements for "
+          "tuple \"${field.wireName}\", got \$tupleIdx');",
         );
         buffer.writeln('$indent}');
         buffer.writeln('$indent${field.name} = tuple;');
@@ -473,32 +489,33 @@ final class DecoderGeneratorHelper {
     String targetPrefix, {
     required String indent,
   }) {
+    final String expr;
     if (type == null) {
-      buffer.writeln('$indent$targetPrefix(reader.readString() as dynamic);');
-      return;
-    }
-    if (type.isDartCoreInt) {
-      buffer.writeln('$indent$targetPrefix(reader.readInt());');
+      expr = 'reader.readString() as dynamic';
+    } else if (type.isDartCoreInt) {
+      expr = 'reader.readInt()';
     } else if (type.isDartCoreDouble) {
-      buffer.writeln('$indent$targetPrefix(reader.readDouble());');
+      expr = 'reader.readDouble()';
     } else if (type.isDartCoreNum) {
-      buffer.writeln('$indent$targetPrefix(reader.readNum());');
+      expr = 'reader.readNum()';
     } else if (type.isDartCoreString) {
-      buffer.writeln('$indent$targetPrefix(reader.readString());');
+      expr = 'reader.readString()';
     } else if (type.isDartCoreBool) {
-      buffer.writeln('$indent$targetPrefix(reader.readBool());');
+      expr = 'reader.readBool()';
     } else if (type.element is EnumElement) {
       final enumName = type.element!.name;
-      buffer.writeln(
-        '$indent$targetPrefix($enumName.values.byName(reader.readString()));',
-      );
+      expr = '$enumName.values.byName(reader.readString())';
     } else if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
-      buffer.writeln(
-        '$indent$targetPrefix(_\$${type.element!.name}FromReader(reader));',
-      );
+      expr = '_\$${type.element!.name}FromReader(reader)';
     } else {
-      buffer.writeln('$indent$targetPrefix(reader.readString() as dynamic);');
+      expr = 'reader.readString() as dynamic';
+    }
+
+    if (targetPrefix.endsWith('=')) {
+      buffer.writeln('$indent$targetPrefix $expr;');
+    } else {
+      buffer.writeln('$indent$targetPrefix($expr);');
     }
   }
 }

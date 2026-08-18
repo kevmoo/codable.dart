@@ -67,7 +67,8 @@ String toScreamingSnakeCase(String name) {
   return toSnakeCase(name).toUpperCase();
 }
 
-/// Converts a field or wire name into a valid, safe PascalCase identifier suffix.
+/// Converts a field or wire name into a valid, safe PascalCase identifier
+/// suffix.
 String toSafeIdentifierSuffix(String name) {
   if (name.isEmpty) return 'Empty';
   final sanitized = name.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');

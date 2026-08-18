@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'coordinate.dart';
 
 // **************************************************************************
@@ -107,7 +109,7 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
       case _$CoordinateSchema.keyLatitude:
       case _$CoordinateSchema.aliasKeyLatitudeLat:
         if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
-          throw CodableException('Duplicate field "latitude"');
+          throw const CodableException('Duplicate field "latitude"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -119,7 +121,7 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
       case _$CoordinateSchema.keyLongitude:
       case _$CoordinateSchema.aliasKeyLongitudeLon:
         if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
-          throw CodableException('Duplicate field "longitude"');
+          throw const CodableException('Duplicate field "longitude"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

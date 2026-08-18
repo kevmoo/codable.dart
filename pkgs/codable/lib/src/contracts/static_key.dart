@@ -1,7 +1,8 @@
 /// Immutable key descriptor and key table definitions for indexed field access.
 library;
 
-/// Immutable descriptor for an object field key carrying name, index, and wire hints.
+/// Immutable descriptor for an object field key carrying name, index, and wire
+/// hints.
 final class StaticKey {
   /// The standard logical name of the key.
   final String name;
@@ -12,7 +13,8 @@ final class StaticKey {
   /// Optional format-specific wire metadata or alternative aliases.
   final Object? wireMetadata;
 
-  /// Creates a [StaticKey] with the given [name], [index], and optional [wireMetadata].
+  /// Creates a [StaticKey] with the given [name], [index], and optional
+  /// [wireMetadata].
   const StaticKey(this.name, this.index, [this.wireMetadata]);
 
   @override

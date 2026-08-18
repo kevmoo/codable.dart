@@ -58,7 +58,8 @@ final class CodableKey {
   });
 }
 
-/// Hints that a numeric list is a fixed-size coordinate tuple for pre-sized typed data allocation.
+/// Hints that a numeric list is a fixed-size coordinate tuple for pre-sized
+/// typed data allocation.
 @Target({TargetKind.field, TargetKind.parameter})
 final class CodableTuple {
   /// The expected fixed length of the tuple.

@@ -1,18 +1,22 @@
 /// Exception and diagnostic definitions for serialization errors.
 library;
 
-/// Canonical serialization and deserialization exception carrying structured path context.
+/// Canonical serialization and deserialization exception carrying structured
+/// path context.
 class CodableException implements Exception {
-  /// Human-readable explanation of the serialization or deserialization failure.
+  /// Human-readable explanation of the serialization or deserialization
+  /// failure.
   final String message;
 
-  /// Hierarchical token path leading to the failure site (e.g. `['users', 0, 'email']`).
+  /// Hierarchical token path leading to the failure site (e.g.
+  /// `['users', 0, 'email']`).
   final List<Object> path;
 
   /// Optional underlying cause (e.g. `FormatException`, `TypeError`).
   final Object? underlyingError;
 
-  /// Creates a [CodableException] with a [message], optional token [path], and [underlyingError].
+  /// Creates a [CodableException] with a [message], optional token [path], and
+  /// [underlyingError].
   const CodableException(
     this.message, {
     this.path = const [],
@@ -31,7 +35,8 @@ class CodableException implements Exception {
     required Object? actualValue,
     List<Object> path = const [],
   }) => CodableException(
-    'Expected value of type $expectedType but got ${actualValue.runtimeType} ($actualValue)',
+    'Expected value of type $expectedType but got ${actualValue.runtimeType} '
+    '($actualValue)',
     path: path,
   );
 
@@ -41,11 +46,13 @@ class CodableException implements Exception {
     required String subtypeValue,
     List<Object> path = const [],
   }) => CodableException(
-    'Unknown polymorphic subtype "$subtypeValue" for discriminator "$discriminatorKey"',
+    'Unknown polymorphic subtype "$subtypeValue" for discriminator '
+    '"$discriminatorKey"',
     path: [...path, discriminatorKey],
   );
 
-  /// Formats the hierarchical token path as a dot/bracket navigation string (e.g. `users[0].email`).
+  /// Formats the hierarchical token path as a dot/bracket navigation string
+  /// (e.g. `users[0].email`).
   String get formattedPath {
     if (path.isEmpty) return '';
     final buffer = StringBuffer();

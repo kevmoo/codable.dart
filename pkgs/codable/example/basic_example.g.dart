@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars
+
 part of 'basic_example.dart';
 
 // **************************************************************************
@@ -164,14 +166,14 @@ Person _$PersonFromReader(JsonTokenReader reader) {
   DateTime? dateOfBirth;
   String? middleName;
   DateTime? lastOrder;
-  List<Order> orders = const [];
+  var orders = const <Order>[];
   var seen = _$PersonSchema.none;
 
   while (reader.hasNext()) {
     switch (reader.selectName(_$PersonSchema.options)) {
       case _$PersonSchema.keyFirstName:
         if ((seen._value & _$PersonSchema.firstName._value) != 0) {
-          throw CodableException('Duplicate field "firstName"');
+          throw const CodableException('Duplicate field "firstName"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -182,7 +184,7 @@ Person _$PersonFromReader(JsonTokenReader reader) {
         break;
       case _$PersonSchema.keyLastName:
         if ((seen._value & _$PersonSchema.lastName._value) != 0) {
-          throw CodableException('Duplicate field "lastName"');
+          throw const CodableException('Duplicate field "lastName"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -194,7 +196,7 @@ Person _$PersonFromReader(JsonTokenReader reader) {
       case _$PersonSchema.keyDateOfBirth:
       case _$PersonSchema.aliasKeyDateOfBirthDob:
         if ((seen._value & _$PersonSchema.dateOfBirth._value) != 0) {
-          throw CodableException('Duplicate field "date-of-birth"');
+          throw const CodableException('Duplicate field "date-of-birth"');
         }
         if (reader.isNextNull()) {
           reader.readNull();
@@ -417,7 +419,7 @@ Order _$OrderFromReader(JsonTokenReader reader) {
     switch (reader.selectName(_$OrderSchema.options)) {
       case _$OrderSchema.keyDateUs:
         if ((seen._value & _$OrderSchema.dateUs._value) != 0) {
-          throw CodableException('Duplicate field "dateUs"');
+          throw const CodableException('Duplicate field "dateUs"');
         }
         if (reader.isNextNull()) {
           reader.readNull();

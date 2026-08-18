@@ -6,8 +6,9 @@ import 'dart:convert';
 
 import 'package:codable/codable.dart';
 
-/// Demonstrates parsing flattened collections out of deeply nested JSON structures
-/// directly from the token stream without intermediate Map allocations.
+/// Demonstrates parsing flattened collections out of deeply nested JSON
+/// structures directly from the token stream without intermediate Map
+/// allocations.
 class NestedValueExample {
   final List<String> nestedValues;
 
@@ -88,4 +89,9 @@ void main() {
   final example = NestedValueExample.fromReader(reader);
 
   print('Extracted items: ${example.nestedValues.join(', ')}');
+
+  final builder = BytesBuilder();
+  final writer = JsonTokenWriter.toSink(builder);
+  example.toWriter(writer);
+  print('Serialized root_items: ${utf8.decode(builder.toBytes())}');
 }

@@ -32,7 +32,7 @@ class CoordinateTelemetry {
     }
 
     if (lat == null || lon == null) {
-      throw CodableException('Missing required coordinates');
+      throw const CodableException('Missing required coordinates');
     }
     return CoordinateTelemetry(lat, lon);
   }
@@ -51,9 +51,7 @@ void main() {
 
   final points = <CoordinateTelemetry>[];
   while (unkeyed.hasNext()) {
-    points.add(
-      unkeyed.decodeElement((Decoder d) => CoordinateTelemetry.decode(d)),
-    );
+    points.add(unkeyed.decodeElement(CoordinateTelemetry.decode));
   }
 
   for (final p in points) {

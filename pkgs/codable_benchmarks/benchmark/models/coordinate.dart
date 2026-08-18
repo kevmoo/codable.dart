@@ -54,7 +54,7 @@ class Coordinate {
     }
 
     if (lat == null || lon == null) {
-      throw CodableException('Missing required fields for Coordinate');
+      throw const CodableException('Missing required fields for Coordinate');
     }
     return Coordinate(latitude: lat, longitude: lon);
   }
