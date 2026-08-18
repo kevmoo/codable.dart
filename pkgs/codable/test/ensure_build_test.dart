@@ -9,7 +9,6 @@ void main() {
   test(
     'ensure_build',
     () => expectBuildClean(
-      packageRelativeDirectory: 'pkgs/codable',
       gitDiffPathArguments: [
         ':!pkgs/codable/lib/src/substrate/substrate.dart',
         ':!pubspec.lock',
