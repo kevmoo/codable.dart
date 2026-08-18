@@ -21,106 +21,98 @@ const codableKeyTypeChecker = TypeChecker.fromRuntime(CodableKey);
 /// TypeChecker for [@CodableTuple].
 const codableTupleTypeChecker = TypeChecker.fromRuntime(CodableTuple);
 
+/// Result record for [TypeClassifier.classify].
+typedef TypeClassification = ({
+  TypeCategory category,
+  DartType? elementType,
+  DartType? mapKeyType,
+  DartType? mapValueType,
+  List<String>? enumConstants,
+});
+
 /// Classifies DartTypes into high-level [TypeCategory] for code generation.
 final class TypeClassifier {
   const TypeClassifier();
 
   /// Classifies [type] and returns all nested metadata.
-  ({
-    TypeCategory category,
-    DartType? elementType,
-    DartType? mapKeyType,
-    DartType? mapValueType,
-    List<String>? enumConstants,
-  })
-  classify(DartType type, {int? tupleLength, String? customDecoderCode}) {
+  TypeClassification classify(
+    DartType type, {
+    int? tupleLength,
+    String? customDecoderCode,
+  }) {
     if (customDecoderCode != null) {
-      return (
-        category: TypeCategory.custom,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
+      return _emptyClassification(TypeCategory.custom);
     }
 
     if (tupleLength != null && tupleLength > 0) {
-      return (
-        category: TypeCategory.tuple,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
+      return _emptyClassification(TypeCategory.tuple);
     }
 
-    if (type.isDartCoreInt) {
-      return (
-        category: TypeCategory.primitiveInt,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
-    if (type.isDartCoreDouble) {
-      return (
-        category: TypeCategory.primitiveDouble,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
-    if (type.isDartCoreNum) {
-      return (
-        category: TypeCategory.primitiveNum,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
-    if (type.isDartCoreString) {
-      return (
-        category: TypeCategory.primitiveString,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
-    if (type.isDartCoreBool) {
-      return (
-        category: TypeCategory.primitiveBool,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
+    final primitive = _classifyPrimitive(type);
+    if (primitive != null) {
+      return _emptyClassification(primitive);
     }
 
     final element = type.element;
-    if (element is EnumElement) {
-      final constants = element.fields
-          .where((f) => f.isEnumConstant)
-          .map((f) => f.name)
-          .whereType<String>()
-          .toList();
-      return (
-        category: TypeCategory.enumType,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: constants,
-      );
+    final enumClassification = _classifyEnum(element);
+    if (enumClassification != null) return enumClassification;
+
+    final collection = _classifyCollection(type, element);
+    if (collection != null) return collection;
+
+    final typedData = _classifyTypedData(element, tupleLength);
+    if (typedData != null) return typedData;
+
+    if (element != null && isCodableElement(element)) {
+      return _emptyClassification(TypeCategory.nestedCodable);
     }
 
-    if (type.isDartCoreList || (element != null && element.name == 'List')) {
+    return _emptyClassification(TypeCategory.unknown);
+  }
+
+  static TypeClassification _emptyClassification(TypeCategory category) => (
+    category: category,
+    elementType: null,
+    mapKeyType: null,
+    mapValueType: null,
+    enumConstants: null,
+  );
+
+  static TypeCategory? _classifyPrimitive(DartType type) {
+    if (type.isDartCoreInt) return TypeCategory.primitiveInt;
+    if (type.isDartCoreDouble) return TypeCategory.primitiveDouble;
+    if (type.isDartCoreNum) return TypeCategory.primitiveNum;
+    if (type.isDartCoreString) return TypeCategory.primitiveString;
+    if (type.isDartCoreBool) return TypeCategory.primitiveBool;
+    return null;
+  }
+
+  static TypeClassification? _classifyEnum(Element? element) {
+    if (element is! EnumElement) return null;
+    final constants = element.fields
+        .where((f) => f.isEnumConstant)
+        .map((f) => f.name)
+        .whereType<String>()
+        .toList();
+    return (
+      category: TypeCategory.enumType,
+      elementType: null,
+      mapKeyType: null,
+      mapValueType: null,
+      enumConstants: constants,
+    );
+  }
+
+  static TypeClassification? _classifyCollection(
+    DartType type,
+    Element? element,
+  ) =>
+      _classifyList(type, element) ??
+      _classifySet(type, element) ??
+      _classifyMap(type, element);
+
+  static TypeClassification? _classifyList(DartType type, Element? element) {
+    if (type.isDartCoreList || element?.name == 'List') {
       final elemType = type is InterfaceType && type.typeArguments.isNotEmpty
           ? type.typeArguments.first
           : null;
@@ -132,8 +124,11 @@ final class TypeClassifier {
         enumConstants: null,
       );
     }
+    return null;
+  }
 
-    if (type.isDartCoreSet || (element != null && element.name == 'Set')) {
+  static TypeClassification? _classifySet(DartType type, Element? element) {
+    if (type.isDartCoreSet || element?.name == 'Set') {
       final elemType = type is InterfaceType && type.typeArguments.isNotEmpty
           ? type.typeArguments.first
           : null;
@@ -145,8 +140,11 @@ final class TypeClassifier {
         enumConstants: null,
       );
     }
+    return null;
+  }
 
-    if (type.isDartCoreMap || (element != null && element.name == 'Map')) {
+  static TypeClassification? _classifyMap(DartType type, Element? element) {
+    if (type.isDartCoreMap || element?.name == 'Map') {
       final keyType = type is InterfaceType && type.typeArguments.isNotEmpty
           ? type.typeArguments[0]
           : null;
@@ -161,43 +159,22 @@ final class TypeClassifier {
         enumConstants: null,
       );
     }
+    return null;
+  }
 
-    // Typed data Float64List, Int32List, etc.
-    if (element != null &&
-        (element.name == 'Float64List' ||
-            element.name == 'Float32List' ||
-            element.name == 'Int32List' ||
-            element.name == 'Uint8List')) {
-      if (tupleLength != null) {
-        return (
-          category: TypeCategory.tuple,
-          elementType: null,
-          mapKeyType: null,
-          mapValueType: null,
-          enumConstants: null,
-        );
-      }
-      return (
-        category: TypeCategory.list,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
-    if (element != null && isCodableElement(element)) {
-      return (
-        category: TypeCategory.nestedCodable,
-        elementType: null,
-        mapKeyType: null,
-        mapValueType: null,
-        enumConstants: null,
-      );
-    }
-
+  static TypeClassification? _classifyTypedData(
+    Element? element,
+    int? tupleLength,
+  ) {
+    const typedDataNames = {
+      'Float64List',
+      'Float32List',
+      'Int32List',
+      'Uint8List',
+    };
+    if (element == null || !typedDataNames.contains(element.name)) return null;
     return (
-      category: TypeCategory.unknown,
+      category: tupleLength != null ? TypeCategory.tuple : TypeCategory.list,
       elementType: null,
       mapKeyType: null,
       mapValueType: null,
