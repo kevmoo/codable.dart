@@ -8,8 +8,13 @@ analyzer:
 
 linter:
   rules:
-    - simple_directive_paths
+    - empty_container_bodies
+    - initialize_in_field_declaration
     - unnecessary_const_in_enum_constructor
+    - unnecessary_primary_constructor_body
+    - use_declaring_parameters
+    - simple_directive_paths
     - unnecessary_ignore
+
 
 
