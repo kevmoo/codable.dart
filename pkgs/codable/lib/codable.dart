@@ -5,6 +5,7 @@ library;
 import 'src/substrate/substrate.dart';
 
 export 'dart:typed_data';
+
 export 'src/contracts/annotations.dart';
 export 'src/contracts/codable.dart';
 export 'src/contracts/custom_decoder.dart';

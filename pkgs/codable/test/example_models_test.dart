@@ -96,9 +96,8 @@ void main() {
     test('CustomDecoderExample: DateTimeEpochDecoder', () {
       final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
       final ex1 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json1));
-      check(
-        ex1.when,
-      ).equals(DateTime.fromMillisecondsSinceEpoch(1700000000000));
+      check(ex1.when)
+          .equals(DateTime.fromMillisecondsSinceEpoch(1700000000000));
 
       final json2 = Uint8List.fromList(
         utf8.encode('{"when": "2026-08-17T12:00:00.000Z"}'),

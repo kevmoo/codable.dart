@@ -145,11 +145,10 @@ void main() {
         check(createdAt).equals(DateTime.utc(2026, 8, 16, 21, 30, 0));
         check(nullSpan).isNull();
       },
-      skip:
-          !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK '
-                  'with readStringSpan patch'
-              : null,
+      skip: !isSpanSupported
+          ? 'readStringSpan is only supported in mock substrate or SDK '
+                'with readStringSpan patch'
+          : null,
     );
 
     test(
@@ -175,11 +174,10 @@ void main() {
         check(dates[1]).equals(DateTime.utc(2026, 8, 16, 13, 0, 0));
         check(dates[2]).isNull();
       },
-      skip:
-          !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK '
-                  'with readStringSpan patch'
-              : null,
+      skip: !isSpanSupported
+          ? 'readStringSpan is only supported in mock substrate or SDK '
+                'with readStringSpan patch'
+          : null,
     );
 
     test(
@@ -194,11 +192,10 @@ void main() {
         final dt = parseIso8601UtcSpan(decoder.payload!, start, end);
         check(dt).equals(DateTime.utc(2026, 8, 16, 15, 45, 0));
       },
-      skip:
-          !isSpanSupported
-              ? 'readStringSpan is only supported in mock substrate or SDK '
-                  'with readStringSpan patch'
-              : null,
+      skip: !isSpanSupported
+          ? 'readStringSpan is only supported in mock substrate or SDK '
+                'with readStringSpan patch'
+          : null,
     );
   });
 }

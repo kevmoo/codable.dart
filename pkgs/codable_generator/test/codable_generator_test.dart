@@ -67,9 +67,8 @@ void main() {
         final output = runGeneratorFor('Point');
 
         // Verify schema extension type
-        check(
-          output,
-        ).contains('extension type const _\$PointSchema(int _value)');
+        check(output)
+            .contains('extension type const _\$PointSchema(int _value)');
         check(output).contains("static const String nameX = 'x';");
         check(output).contains("static const String nameY = 'y';");
         check(output).contains('static const int keyX = 0;');
@@ -80,13 +79,11 @@ void main() {
         check(output).contains('nameX,');
         check(output).contains('nameY,');
         check(output).contains('static const int _xBit = 1 << 0;');
-        check(
-          output,
-        ).contains('static const _\$PointSchema x = _\$PointSchema(_xBit);');
+        check(output)
+            .contains('static const _\$PointSchema x = _\$PointSchema(_xBit);');
         check(output).contains('static const int _yBit = 1 << 1;');
-        check(
-          output,
-        ).contains('static const _\$PointSchema y = _\$PointSchema(_yBit);');
+        check(output)
+            .contains('static const _\$PointSchema y = _\$PointSchema(_yBit);');
         check(output).contains(
           'static const _\$PointSchema golden = _\$PointSchema(_xBit | _yBit);',
         );
@@ -95,14 +92,12 @@ void main() {
         check(output).contains('_throwMissingFields()');
 
         // Verify decoder
-        check(
-          output,
-        ).contains('Point _\$PointFromReader(JsonTokenReader reader)');
+        check(output)
+            .contains('Point _\$PointFromReader(JsonTokenReader reader)');
         check(output).contains('reader.beginObject();');
         check(output).contains('while (reader.hasNext())');
-        check(
-          output,
-        ).contains('switch (reader.selectName(_\$PointSchema.options))');
+        check(output)
+            .contains('switch (reader.selectName(_\$PointSchema.options))');
         check(output).contains('case _\$PointSchema.keyX:');
         check(output).contains('x = reader.readDouble();');
         check(output).contains('seen |= _\$PointSchema.x;');
@@ -117,70 +112,59 @@ void main() {
         check(output).contains(
           'void _\$PointToWriter(Point instance, JsonTokenWriter writer)',
         );
-        check(
-          output,
-        ).contains('writer.writeNameBytes(_\$PointSchema.nameXBytes);');
+        check(output)
+            .contains('writer.writeNameBytes(_\$PointSchema.nameXBytes);');
         check(output).contains('writer.writeDouble(instance.x);');
-        check(
-          output,
-        ).contains('writer.writeNameBytes(_\$PointSchema.nameYBytes);');
+        check(output)
+            .contains('writer.writeNameBytes(_\$PointSchema.nameYBytes);');
         check(output).contains('writer.writeDouble(instance.y);');
       },
     );
 
-    test(
-      'generates schema and handlers for enums, aliases, tuples, and field renaming',
-      () {
-        final output = runGeneratorFor('UserAccount');
+    test('generates schema and handlers for enums, aliases, tuples, and field renaming', () {
+      final output = runGeneratorFor('UserAccount');
 
-        // FieldRename.snake
-        check(
-          output,
-        ).contains("static const String nameEmailAddress = 'email_address';");
-        // Aliases in lowerCamelCase
-        check(
-          output,
-        ).contains("static const String aliasEmailAddressEmail = 'email';");
-        check(output).contains(
-          "static const String aliasEmailAddressContactEmail = 'contact_email';",
-        );
-        // Options referencing constants
-        check(output).contains('nameEmailAddress,');
-        check(output).contains('aliasEmailAddressEmail,');
-        check(output).contains('aliasEmailAddressContactEmail,');
-        // Zero-allocation enum options
-        check(output).contains(
-          'static final JsonKeyOptions roleEnumOptions = JsonKeyOptions.of(const [',
-        );
-        check(output).contains("'admin',");
-        check(output).contains("'member',");
-        check(output).contains("'guest',");
-        // Zero-allocation selectString for enums
-        check(output).contains(
-          'final enumIndex = reader.selectString(_\$UserAccountSchema.roleEnumOptions);',
-        );
-        // Tuple pre-sizing
-        check(output).contains('final tuple = Float64List(2);');
-        // Ignored field internalId not in schema options
-        check(output).not((s) => s.contains('nameInternalId'));
-        // Named constructor invocation with defaults
-        check(output).contains('id: id!,');
-        check(output).contains('emailAddress: emailAddress!,');
-        check(output).contains('role: role!,');
-        check(output).contains('tags: tags,');
-        check(output).contains('location: location,');
-        check(output).contains('internalId: internalId,');
-      },
-    );
+      // FieldRename.snake
+      check(output)
+          .contains("static const String nameEmailAddress = 'email_address';");
+      // Aliases in lowerCamelCase
+      check(output)
+          .contains("static const String aliasEmailAddressEmail = 'email';");
+      check(output).contains(
+        "static const String aliasEmailAddressContactEmail = 'contact_email';",
+      );
+      // Options referencing constants
+      check(output).contains('nameEmailAddress,');
+      check(output).contains('aliasEmailAddressEmail,');
+      check(output).contains('aliasEmailAddressContactEmail,');
+      // Zero-allocation enum options
+      check(output).contains(
+        'static final JsonKeyOptions roleEnumOptions = JsonKeyOptions.of(const [',
+      );
+      check(output).contains("'admin',");
+      check(output).contains("'member',");
+      check(output).contains("'guest',");
+      // Zero-allocation selectString for enums
+      check(output).contains(
+        'final enumIndex = reader.selectString(_\$UserAccountSchema.roleEnumOptions);',
+      );
+      // Tuple pre-sizing
+      check(output).contains('final tuple = Float64List(2);');
+      // Ignored field internalId not in schema options
+      check(output).not((s) => s.contains('nameInternalId'));
+      // Named constructor invocation with defaults
+      check(output).contains('id: id!,');
+      check(output).contains('emailAddress: emailAddress!,');
+      check(output).contains('role: role!,');
+      check(output).contains('tags: tags,');
+      check(output).contains('location: location,');
+      check(output).contains('internalId: internalId,');
+    });
 
-    test(
-      'throws InvalidGenerationSourceError when ignored parameter is required without default',
-      () {
-        check(
-          () => runGeneratorFor('InvalidIgnoredField'),
-        ).throws<InvalidGenerationSourceError>();
-      },
-    );
+    test('throws InvalidGenerationSourceError when ignored parameter is required without default', () {
+      check(() => runGeneratorFor('InvalidIgnoredField'))
+          .throws<InvalidGenerationSourceError>();
+    });
 
     test('supports nested @Codable domain classes and collection generics', () {
       final output = runGeneratorFor('Enterprise');
@@ -194,9 +178,8 @@ void main() {
       // Map of string to int
       check(output).contains('final map = <String, int>{};');
       // Nested encoder call
-      check(
-        output,
-      ).contains('_\$AddressToWriter(instance.headquarter, writer);');
+      check(output)
+          .contains('_\$AddressToWriter(instance.headquarter, writer);');
     });
 
     test('generates code for custom decoders via UserProfileCustom', () {
@@ -220,14 +203,11 @@ void main() {
       },
     );
 
-    test(
-      'throws InvalidGenerationSourceError when required fields exceed 62 limit',
-      () {
-        check(() => runGeneratorFor('HugeModel63'))
-            .throws<InvalidGenerationSourceError>()
-            .has((e) => e.message, 'message')
-            .contains('exceeds the maximum golden mask limit of 62');
-      },
-    );
+    test('throws InvalidGenerationSourceError when required fields exceed 62 limit', () {
+      check(() => runGeneratorFor('HugeModel63'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('exceeds the maximum golden mask limit of 62');
+    });
   });
 }

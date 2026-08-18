@@ -17,8 +17,7 @@ import 'utils.dart';
 final class ModelVisitor {
   final TypeClassifier _typeClassifier;
 
-  const ModelVisitor({TypeClassifier typeClassifier = const TypeClassifier()})
-    : _typeClassifier = typeClassifier;
+  const ModelVisitor({this._typeClassifier = const TypeClassifier()});
 
   /// Inspects [element] and [annotation], returning a validated
   /// [ModelDescriptor].
@@ -45,22 +44,24 @@ final class ModelVisitor {
 
       // Check annotations on parameter first, then on field
       final paramKeyAnnotation = codableKeyTypeChecker.firstAnnotationOf(param);
-      final fieldKeyAnnotation =
-          field != null ? codableKeyTypeChecker.firstAnnotationOf(field) : null;
+      final fieldKeyAnnotation = field != null
+          ? codableKeyTypeChecker.firstAnnotationOf(field)
+          : null;
       final keyAnnotation = paramKeyAnnotation ?? fieldKeyAnnotation;
-      final keyReader =
-          keyAnnotation != null ? ConstantReader(keyAnnotation) : null;
+      final keyReader = keyAnnotation != null
+          ? ConstantReader(keyAnnotation)
+          : null;
 
       final paramTupleAnnotation = codableTupleTypeChecker.firstAnnotationOf(
         param,
       );
-      final fieldTupleAnnotation =
-          field != null
-              ? codableTupleTypeChecker.firstAnnotationOf(field)
-              : null;
+      final fieldTupleAnnotation = field != null
+          ? codableTupleTypeChecker.firstAnnotationOf(field)
+          : null;
       final tupleAnnotation = paramTupleAnnotation ?? fieldTupleAnnotation;
-      final tupleReader =
-          tupleAnnotation != null ? ConstantReader(tupleAnnotation) : null;
+      final tupleReader = tupleAnnotation != null
+          ? ConstantReader(tupleAnnotation)
+          : null;
 
       final customName = keyReader?.peek('name')?.stringValue;
       final aliases =
@@ -73,12 +74,15 @@ final class ModelVisitor {
           const <String>[];
       final ignore = keyReader?.peek('ignore')?.boolValue ?? false;
       final customDecoderCode = _extractCustomDecoder(keyReader);
-      final customDefaultValue =
-          keyReader?.peek('defaultValue')?.literalValue?.toString();
+      final customDefaultValue = keyReader
+          ?.peek('defaultValue')
+          ?.literalValue
+          ?.toString();
       final tupleLength = tupleReader?.peek('length')?.intValue;
 
-      final defaultValueCode =
-          param.hasDefaultValue ? param.defaultValueCode : customDefaultValue;
+      final defaultValueCode = param.hasDefaultValue
+          ? param.defaultValueCode
+          : customDefaultValue;
       final hasDefaultValue =
           param.hasDefaultValue || customDefaultValue != null;
       final isRequired = param.isRequired;
@@ -128,10 +132,9 @@ final class ModelVisitor {
     }
 
     // Required fields participating in golden mask (P0.1)
-    final requiredFields =
-        rawFields
-            .where((f) => !f.ignore && f.isRequired && !f.hasDefaultValue)
-            .toList();
+    final requiredFields = rawFields
+        .where((f) => !f.ignore && f.isRequired && !f.hasDefaultValue)
+        .toList();
 
     // P0.1 Fail-Fast 62-Bit Limit
     if (requiredFields.length > 62) {
@@ -218,8 +221,9 @@ final class ModelVisitor {
       );
     }
 
-    final processedRequiredFields =
-        processedFields.where((f) => f.participatesInGoldenMask).toList();
+    final processedRequiredFields = processedFields
+        .where((f) => f.participatesInGoldenMask)
+        .toList();
 
     return ModelDescriptor(
       element: element,
@@ -256,8 +260,9 @@ final class ModelVisitor {
     final revivable = customDecoderReader.revive();
     final typeName = customDecoderReader.objectValue.type?.getDisplayString();
     if (typeName != null) {
-      final accessor =
-          revivable.accessor.isEmpty ? '' : '.${revivable.accessor}';
+      final accessor = revivable.accessor.isEmpty
+          ? ''
+          : '.${revivable.accessor}';
       return 'const $typeName$accessor()';
     }
 

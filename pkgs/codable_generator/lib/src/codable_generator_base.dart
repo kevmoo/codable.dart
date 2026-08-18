@@ -17,8 +17,7 @@ import 'model_visitor.dart';
 class CodableGenerator extends GeneratorForAnnotation<Codable> {
   final ModelVisitor _visitor;
 
-  const CodableGenerator({ModelVisitor visitor = const ModelVisitor()})
-    : _visitor = visitor;
+  const CodableGenerator({this._visitor = const ModelVisitor()});
 
   @override
   String generateForAnnotatedElement(
