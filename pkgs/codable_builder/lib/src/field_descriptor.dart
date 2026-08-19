@@ -8,7 +8,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:codable/codable.dart';
 
-/// Categories of types supported by `package:codable_generator`.
+/// Categories of types supported by `package:codable_builder`.
 enum TypeCategory {
   primitiveInt,
   primitiveDouble,

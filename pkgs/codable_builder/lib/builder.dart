@@ -5,7 +5,7 @@
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
-import 'src/codable_generator_base.dart';
+import 'src/codable_builder_base.dart';
 
 /// Builder factory for [CodableGenerator].
 Builder codableBuilder(BuilderOptions options) =>

@@ -1,0 +1,31 @@
+{
+  "id": 1024859,
+  "uuid": "d8a1c97e-4b2a-4c28-98e3-cf7e1823901a",
+  "name": "Kevin Moore",
+  "email": "kevmoo@example.com",
+  "isActive": true,
+  "balance": 9482.55,
+  "age": 42,
+  "roles": [
+    "admin",
+    "developer",
+    "maintainer"
+  ],
+  "metadata": {
+    "loginCount": 182,
+    "lastLogin": "2026-08-07T21:00:00Z",
+    "location": {
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "city": "San Francisco",
+      "country": "US"
+    }
+  },
+  "tags": [
+    "dart",
+    "rust",
+    "go",
+    "json",
+    "benchmark"
+  ]
+}

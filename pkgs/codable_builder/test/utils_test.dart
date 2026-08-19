@@ -4,7 +4,7 @@
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable_generator/codable_generator.dart';
+import 'package:codable_builder/codable_builder.dart';
 import 'package:test/test.dart';
 
 void main() {

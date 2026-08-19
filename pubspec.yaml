@@ -5,5 +5,5 @@ publish_to: none
 
 workspace:
   - pkgs/codable
-  - pkgs/codable_generator
+  - pkgs/codable_builder
   - pkgs/codable_benchmarks

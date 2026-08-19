@@ -69,10 +69,50 @@ abstract interface class JsonTokenReader {
 }
 
 final class _MockJsonTokenReader implements JsonTokenReader {
+  static const int _stringCacheSize = 16;
+  static const int _stringCacheMask = 15;
+  static const int _maxCachedStringLength = 64;
+
   final Uint8List _bytes;
   int _offset = 0;
+  final List<String?> _stringCache = List<String?>.filled(
+    _stringCacheSize,
+    null,
+  );
 
   _MockJsonTokenReader(this._bytes);
+
+  String _decodeCachedString(int start, int end) {
+    final len = end - start;
+    if (len == 0) return '';
+    if (len > _maxCachedStringLength) {
+      return decodeStringUtf8(_bytes, start, end);
+    }
+
+    var h = len;
+    for (var i = start; i < end; i++) {
+      h = (h * 31 + _bytes[i]) & 0x3fffffff;
+    }
+    final slot = h & _stringCacheMask;
+    final cached = _stringCache[slot];
+    if (cached != null && cached.length == len) {
+      var match = true;
+      for (var i = 0; i < len; i++) {
+        final b = _bytes[start + i];
+        if (b > 0x7F || b != cached.codeUnitAt(i)) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        return cached;
+      }
+    }
+
+    final s = decodeStringUtf8(_bytes, start, end);
+    _stringCache[slot] = s;
+    return s;
+  }
 
   @override
   Uint8List get bytes => _bytes;
@@ -220,7 +260,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   String nextName() {
     final (start, end) = _scanStringSpan();
     _consumeColon();
-    return decodeStringUtf8(_bytes, start, end);
+    return _decodeCachedString(start, end);
   }
 
   @override
@@ -241,7 +281,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   String readString() {
     final (start, end) = _scanStringSpan();
     _consumeTrailingComma();
-    return decodeStringUtf8(_bytes, start, end);
+    return _decodeCachedString(start, end);
   }
 
   (int, int) _scanValueSpan() {

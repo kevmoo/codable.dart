@@ -12,7 +12,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable_generator/codable_generator.dart';
+import 'package:codable_builder/codable_builder.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
@@ -23,7 +23,7 @@ void main() {
 
   setUpAll(() async {
     final candidate1 = File(
-      'pkgs/codable_generator/test/fixtures/test_models.dart',
+      'pkgs/codable_builder/test/fixtures/test_models.dart',
     );
     final candidate2 = File('test/fixtures/test_models.dart');
     final fixtureFile = candidate1.existsSync() ? candidate1 : candidate2;

@@ -1,7 +1,7 @@
 targets:
   $default:
     builders:
-      codable_generator|codable:
+      codable_builder|codable:
         enabled: true
       source_gen|combining_builder:
         options:
@@ -10,7 +10,7 @@ targets:
 
 builders:
   codable:
-    import: "package:codable_generator/builder.dart"
+    import: "package:codable_builder/builder.dart"
     builder_factories: ["codableBuilder"]
     build_extensions: {".dart": [".codable.g.part"]}
     auto_apply: dependents
