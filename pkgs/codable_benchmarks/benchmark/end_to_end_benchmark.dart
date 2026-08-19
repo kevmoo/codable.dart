@@ -1,36 +1,37 @@
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
+import 'package:codable_benchmarks/codable_benchmarks.dart';
 
 import 'models/canada.dart';
 import 'models/citm_catalog.dart';
 import 'models/coordinate.dart';
 
-int blackholeSink = 0;
-
-@pragma('vm:never-inline')
-void consumeBlackBox(Object? value) {
-  blackholeSink ^= value.hashCode;
-}
-
 // =============================================================================
 // 1. Coordinate List (10,000 Items)
 // =============================================================================
 
-class NativeCoordinateBenchmark extends BenchmarkBase {
+final class NativeCoordinateBenchmark extends Benchmark {
   final String jsonStr;
 
-  NativeCoordinateBenchmark(this.jsonStr)
-    : super('Native Coordinate (jsonDecode + Map)'.padRight(42));
+  NativeCoordinateBenchmark(this.jsonStr, int payloadBytes)
+    : super(
+        'Native Coordinate (jsonDecode + Map)',
+        category: 'Coordinates (10k items)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
+  dynamic run() {
     var hash = 0;
     final list = jsonDecode(jsonStr) as List<dynamic>;
-    for (var item in list) {
+    for (final item in list) {
       final map = item as Map<String, dynamic>;
       final c = Coordinate(
         latitude: (map['latitude'] ?? map['lat']) as double,
@@ -38,87 +39,99 @@ class NativeCoordinateBenchmark extends BenchmarkBase {
       );
       hash ^= c.hashCode;
     }
-    consumeBlackBox(hash);
+    return hash;
   }
 }
 
-class CodableCoordinateBenchmark extends BenchmarkBase {
+final class CodableCoordinateBenchmark extends Benchmark {
   final Uint8List bytes;
 
-  CodableCoordinateBenchmark(this.bytes)
-    : super('Codable Coordinate (Mock Codegen)     '.padRight(42));
+  CodableCoordinateBenchmark(this.bytes, int payloadBytes)
+    : super(
+        'Codable Coordinate (Mock Codegen)',
+        category: 'Coordinates (10k items)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
+  dynamic run() {
     var hash = 0;
     final decoder = JsonCodableDecoder.fromBytes(bytes);
     final unkeyed = decoder.unkeyed();
     while (unkeyed.hasNext()) {
       hash ^= Coordinate.decode(decoder).hashCode;
     }
-    consumeBlackBox(hash);
+    return hash;
   }
 }
 
 // =============================================================================
-// 2. canada.json (536 KB GeoJSON - Coordinate Arrays & Float Operations)
+// 2. canada.json (2.25 MB GeoJSON - Coordinate Arrays & Float Operations)
 // =============================================================================
 
-class NativeCanadaBenchmark extends BenchmarkBase {
+final class NativeCanadaBenchmark extends Benchmark {
   final String jsonStr;
 
-  NativeCanadaBenchmark(this.jsonStr)
-    : super('Native canada.json (jsonDecode -> Map)'.padRight(42));
+  NativeCanadaBenchmark(this.jsonStr, int payloadBytes)
+    : super(
+        'Native canada.json (jsonDecode -> Map)',
+        category: 'canada.json (GeoJSON)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
-    final dynamic obj = jsonDecode(jsonStr);
-    consumeBlackBox(obj);
-  }
+  dynamic run() => jsonDecode(jsonStr);
 }
 
-class CodableCanadaBenchmark extends BenchmarkBase {
+final class CodableCanadaBenchmark extends Benchmark {
   final Uint8List bytes;
 
-  CodableCanadaBenchmark(this.bytes)
-    : super('Codable canada.json (Mock Codegen DOM) '.padRight(42));
+  CodableCanadaBenchmark(this.bytes, int payloadBytes)
+    : super(
+        'Codable canada.json (Mock Codegen DOM)',
+        category: 'canada.json (GeoJSON)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
+  dynamic run() {
     final decoder = JsonCodableDecoder.fromBytes(bytes);
-    final fc = CanadaFeatureCollection.decode(decoder);
-    consumeBlackBox(fc);
+    return CanadaFeatureCollection.decode(decoder);
   }
 }
 
 // =============================================================================
-// 3. citm_catalog.json (1.7 MB - Deeply Nested Objects, Strings, Maps)
+// 3. citm_catalog.json (1.73 MB - Deeply Nested Objects, Strings, Maps)
 // =============================================================================
 
-class NativeCitmBenchmark extends BenchmarkBase {
+final class NativeCitmBenchmark extends Benchmark {
   final String jsonStr;
 
-  NativeCitmBenchmark(this.jsonStr)
-    : super('Native citm_catalog (jsonDecode -> Map)'.padRight(42));
+  NativeCitmBenchmark(this.jsonStr, int payloadBytes)
+    : super(
+        'Native citm_catalog (jsonDecode -> Map)',
+        category: 'citm_catalog.json (Relational)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
-    final dynamic obj = jsonDecode(jsonStr);
-    consumeBlackBox(obj);
-  }
+  dynamic run() => jsonDecode(jsonStr);
 }
 
-class CodableCitmBenchmark extends BenchmarkBase {
+final class CodableCitmBenchmark extends Benchmark {
   final Uint8List bytes;
 
-  CodableCitmBenchmark(this.bytes)
-    : super('Codable citm_catalog (Mock Codegen DOM)'.padRight(42));
+  CodableCitmBenchmark(this.bytes, int payloadBytes)
+    : super(
+        'Codable citm_catalog (Mock Codegen DOM)',
+        category: 'citm_catalog.json (Relational)',
+        payloadBytes: payloadBytes,
+      );
 
   @override
-  void run() {
+  dynamic run() {
     final decoder = JsonCodableDecoder.fromBytes(bytes);
-    final catalog = CitmCatalog.decode(decoder);
-    consumeBlackBox(catalog);
+    return CitmCatalog.decode(decoder);
   }
 }
 
@@ -136,14 +149,29 @@ File _findBenchmarkDataFile(String relativePath) {
   );
 }
 
-void main() {
-  print(
-    '========================================================================',
+void main(List<String> args) {
+  String? outputPath;
+  for (final arg in args) {
+    if (arg.startsWith('--output=')) {
+      outputPath = arg.substring('--output='.length);
+    }
+  }
+
+  // Default output path if not specified
+  outputPath ??= 'benchmark/results/current_run.json';
+
+  final runner = BenchmarkRunner(
+    config: BenchmarkConfig(
+      targetSampleMicros: 20000,
+      warmupSamples: 3,
+      sampleRuns: 10,
+      outputPath: outputPath,
+    ),
   );
-  print('End-to-End Serialization Throughput Benchmark');
-  print(
-    '========================================================================',
-  );
+
+  print('=' * 72);
+  print('End-to-End Serialization Throughput Benchmark (In-Tree Harness)');
+  print('${'=' * 72}\n');
 
   // 1. Coordinates (10,000 points)
   final coordsList = List.generate(
@@ -152,24 +180,32 @@ void main() {
   ).join(',');
   final coordsJson = '[$coordsList]';
   final coordsBytes = utf8.encode(coordsJson);
+  final coordsPayloadBytes = coordsBytes.length;
 
-  print('\n[1] 10,000 Coordinates Deserialization:');
-  NativeCoordinateBenchmark(coordsJson).report();
-  CodableCoordinateBenchmark(coordsBytes).report();
+  print('[1] 10,000 Coordinates Deserialization (390 KB):');
+  runner.add(NativeCoordinateBenchmark(coordsJson, coordsPayloadBytes));
+  runner.add(CodableCoordinateBenchmark(coordsBytes, coordsPayloadBytes));
 
   // 2. canada.json
   final canadaFile = _findBenchmarkDataFile('benchmark/data/canada.json');
-  print('\n[2] canada.json (GeoJSON Polygons / Double Arrays):');
   final canadaStr = canadaFile.readAsStringSync();
   final canadaBytes = canadaFile.readAsBytesSync();
-  NativeCanadaBenchmark(canadaStr).report();
-  CodableCanadaBenchmark(canadaBytes).report();
+  final canadaPayloadBytes = canadaBytes.length;
+
+  print('\n[2] canada.json (GeoJSON Polygons / 2.25 MB):');
+  runner.add(NativeCanadaBenchmark(canadaStr, canadaPayloadBytes));
+  runner.add(CodableCanadaBenchmark(canadaBytes, canadaPayloadBytes));
 
   // 3. citm_catalog.json
   final citmFile = _findBenchmarkDataFile('benchmark/data/citm_catalog.json');
-  print('\n[3] citm_catalog.json (Relational Catalog / Nested Objects):');
   final citmStr = citmFile.readAsStringSync();
   final citmBytes = citmFile.readAsBytesSync();
-  NativeCitmBenchmark(citmStr).report();
-  CodableCitmBenchmark(citmBytes).report();
+  final citmPayloadBytes = citmBytes.length;
+
+  print('\n[3] citm_catalog.json (Relational Catalog / 1.73 MB):');
+  runner.add(NativeCitmBenchmark(citmStr, citmPayloadBytes));
+  runner.add(CodableCitmBenchmark(citmBytes, citmPayloadBytes));
+
+  print('\nRunning benchmarks with multi-sample auto-calibration...\n');
+  runner.runSuite(suiteName: 'End-to-End Serialization Benchmarks');
 }

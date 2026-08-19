@@ -9,7 +9,6 @@ environment:
 resolution: workspace
 
 dependencies:
-  benchmark_harness: ^2.3.1
   codable: ^0.1.0-dev
 
 dev_dependencies:
