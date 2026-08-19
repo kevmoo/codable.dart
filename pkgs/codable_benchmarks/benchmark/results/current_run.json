@@ -1,0 +1,239 @@
+{
+  "suite_name": "End-to-End Serialization Benchmarks",
+  "timestamp": "2026-08-19T00:10:01.758146Z",
+  "environment": {
+    "os": "linux",
+    "dart_sdk_version": "3.14.0-111.0.dev",
+    "platform": "aot_product"
+  },
+  "results": [
+    {
+      "name": "Native Coordinate (jsonDecode + Map)",
+      "category": "Coordinates (10k items)",
+      "payload_bytes": 390001,
+      "timestamp": "2026-08-19T00:10:00.124988Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 5568.47,
+        "median_us": 5649.17,
+        "min_us": 3602.0,
+        "max_us": 8614.33,
+        "std_dev_us": 1753.66,
+        "cv": 0.3149,
+        "confidence_interval_95": [
+          4481.54,
+          6655.4
+        ],
+        "throughput_mb_s": 69.04,
+        "throughput_mib_s": 65.84
+      },
+      "raw_samples_us": [
+        6032.0,
+        3602.0,
+        8614.333333333334,
+        6971.666666666667,
+        7496.0,
+        3681.0,
+        5857.333333333333,
+        3898.3333333333335,
+        5441.0,
+        4091.0
+      ]
+    },
+    {
+      "name": "Codable Coordinate (Mock Codegen)",
+      "category": "Coordinates (10k items)",
+      "payload_bytes": 390001,
+      "timestamp": "2026-08-19T00:10:00.333786Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 2005.8,
+        "median_us": 1999.29,
+        "min_us": 1971.71,
+        "max_us": 2070.29,
+        "std_dev_us": 30.95,
+        "cv": 0.0154,
+        "confidence_interval_95": [
+          1986.62,
+          2024.98
+        ],
+        "throughput_mb_s": 195.07,
+        "throughput_mib_s": 186.03
+      },
+      "raw_samples_us": [
+        2008.0,
+        2070.285714285714,
+        1971.7142857142858,
+        2045.0,
+        1990.5714285714287,
+        1987.5714285714287,
+        1985.7142857142858,
+        2012.4285714285713,
+        2008.142857142857,
+        1978.5714285714287
+      ]
+    },
+    {
+      "name": "Native canada.json (jsonDecode -> Map)",
+      "category": "canada.json (GeoJSON)",
+      "payload_bytes": 2251051,
+      "timestamp": "2026-08-19T00:10:00.703556Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 26185.0,
+        "median_us": 26382.5,
+        "min_us": 22355.0,
+        "max_us": 30222.0,
+        "std_dev_us": 3465.57,
+        "cv": 0.1323,
+        "confidence_interval_95": [
+          24037.02,
+          28332.98
+        ],
+        "throughput_mb_s": 85.32,
+        "throughput_mib_s": 81.37
+      },
+      "raw_samples_us": [
+        22463.0,
+        29213.0,
+        24119.0,
+        29617.0,
+        22653.0,
+        29404.0,
+        22355.0,
+        28646.0,
+        23158.0,
+        30222.0
+      ]
+    },
+    {
+      "name": "Codable canada.json (Mock Codegen DOM)",
+      "category": "canada.json (GeoJSON)",
+      "payload_bytes": 2251051,
+      "timestamp": "2026-08-19T00:10:01.095970Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 9226.2,
+        "median_us": 9260.5,
+        "min_us": 8771.0,
+        "max_us": 9738.33,
+        "std_dev_us": 335.53,
+        "cv": 0.0364,
+        "confidence_interval_95": [
+          9018.24,
+          9434.16
+        ],
+        "throughput_mb_s": 243.08,
+        "throughput_mib_s": 231.82
+      },
+      "raw_samples_us": [
+        9604.333333333334,
+        8785.333333333334,
+        9187.0,
+        9472.333333333334,
+        9738.333333333334,
+        8771.0,
+        9311.333333333334,
+        9315.333333333334,
+        9209.666666666666,
+        8867.333333333334
+      ]
+    },
+    {
+      "name": "Native citm_catalog (jsonDecode -> Map)",
+      "category": "citm_catalog.json (Relational)",
+      "payload_bytes": 1727204,
+      "timestamp": "2026-08-19T00:10:01.445723Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 8137.87,
+        "median_us": 8098.83,
+        "min_us": 7194.67,
+        "max_us": 9838.33,
+        "std_dev_us": 1002.0,
+        "cv": 0.1231,
+        "confidence_interval_95": [
+          7516.82,
+          8758.91
+        ],
+        "throughput_mb_s": 213.27,
+        "throughput_mib_s": 203.39
+      },
+      "raw_samples_us": [
+        7194.666666666667,
+        8464.666666666666,
+        8078.0,
+        7226.0,
+        9838.333333333334,
+        8165.0,
+        7224.0,
+        8119.666666666667,
+        9791.666666666666,
+        7276.666666666667
+      ]
+    },
+    {
+      "name": "Codable citm_catalog (Mock Codegen DOM)",
+      "category": "citm_catalog.json (Relational)",
+      "payload_bytes": 1727204,
+      "timestamp": "2026-08-19T00:10:01.758113Z",
+      "environment": {
+        "os": "linux",
+        "dart_sdk_version": "3.14.0-111.0.dev",
+        "platform": "aot_product"
+      },
+      "metrics": {
+        "samples_count": 10,
+        "mean_us": 3666.4,
+        "median_us": 3667.67,
+        "min_us": 3634.0,
+        "max_us": 3707.17,
+        "std_dev_us": 24.05,
+        "cv": 0.0066,
+        "confidence_interval_95": [
+          3651.5,
+          3681.3
+        ],
+        "throughput_mb_s": 470.93,
+        "throughput_mib_s": 449.11
+      },
+      "raw_samples_us": [
+        3640.6666666666665,
+        3642.0,
+        3675.3333333333335,
+        3707.1666666666665,
+        3634.0,
+        3652.8333333333335,
+        3684.0,
+        3683.6666666666665,
+        3660.0,
+        3684.3333333333335
+      ]
+    }
+  ]
+}
