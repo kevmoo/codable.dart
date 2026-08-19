@@ -2,7 +2,7 @@
 
 **Host Hardware**: `kevmoo.c.googlers.com` (AMD EPYC 7B13, 64 logical cores, 117.9 GB RAM, Linux 6.18.14-1rodete4-amd64)  
 **Audit Version**: `3.0-native-sdk-verified` (`2026-08-15T18:15:00Z`)  
-**Target Codebases**: [`pkgs/codable`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable), [`pkgs/codable_generator`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable_generator), [`pkgs/codable_benchmarks`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable_benchmarks)  
+**Target Codebases**: [`pkgs/codable`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable), [`pkgs/codable_builder`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable_builder), [`pkgs/codable_benchmarks`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/pkgs/codable_benchmarks)  
 **SDK Substrate**: Custom `dart-sdk` (`json-utf8-kernels` commit `8bbcad750cb` with native C++ `JsonTokenWriter`, `JsonTokenReader`, and `JsonKeyOptions`)  
 **Raw Telemetry JSON**: [`doc/benchmarks/cross_language_benchmark_matrix.json`](file:///usr/local/google/home/kevmoo/github/kevmoo/_codable.dart-sdk-integration/doc/benchmarks/cross_language_benchmark_matrix.json) & [`json_compare_bench/results.json`](file:///usr/local/google/home/kevmoo/github/kevmoo/json_compare_bench/results.json)
 

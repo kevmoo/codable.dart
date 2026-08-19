@@ -1,5 +1,5 @@
-name: codable_generator
-description: High-performance single-pass streaming serializer code generator for package:codable.
+name: codable_builder
+description: High-performance single-pass streaming serializer code builder for package:codable.
 version: 0.1.0-dev
 publish_to: none
 

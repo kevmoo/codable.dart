@@ -5,9 +5,9 @@ import 'dart:typed_data';
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
-import 'models/canada.dart';
-import 'models/citm_catalog.dart';
-import 'models/coordinate.dart';
+import 'models/codable/canada.dart';
+import 'models/codable/citm_catalog.dart';
+import 'models/codable/coordinate.dart';
 
 int blackholeSink = 0;
 

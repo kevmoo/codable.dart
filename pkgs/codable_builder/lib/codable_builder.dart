@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-export 'src/codable_generator_base.dart';
+export 'src/codable_builder_base.dart';
 export 'src/decoder_helper.dart';
 export 'src/encoder_helper.dart';
 export 'src/field_descriptor.dart';

@@ -11,9 +11,9 @@ import 'package:codable/codable.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/test.dart';
 
-import '../benchmark/models/canada.dart';
-import '../benchmark/models/citm_catalog.dart';
-import '../benchmark/models/coordinate.dart';
+import '../benchmark/models/codable/canada.dart';
+import '../benchmark/models/codable/citm_catalog.dart';
+import '../benchmark/models/codable/coordinate.dart';
 
 File _findDataFile(String relativePath) {
   final candidate1 = File(relativePath);

@@ -6,7 +6,11 @@ targets:
       - "test/**"
       - "$package$"
     builders:
-      codable_generator|codable:
+      codable_builder|codable:
+        generate_for:
+          - "benchmark/**"
+          - "test/**"
+      json_serializable:
         generate_for:
           - "benchmark/**"
           - "test/**"
