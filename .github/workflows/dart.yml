@@ -34,4 +34,4 @@ jobs:
         run: dart analyze --fatal-infos
 
       - name: Run tests
-        run: dart test pkgs/codable pkgs/codable_generator pkgs/codable_benchmarks
+        run: dart test pkgs/codable pkgs/codable_builder pkgs/codable_benchmarks
