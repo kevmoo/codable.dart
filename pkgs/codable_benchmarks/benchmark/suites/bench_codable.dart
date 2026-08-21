@@ -8,7 +8,6 @@ import 'dart:convert';
 
 import 'package:args/args.dart';
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 import '../data/embedded_datasets.dart';
 import '../models/codable/canada.dart';

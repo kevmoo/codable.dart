@@ -3,11 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/test.dart';
 
 /// Lightweight 128-bit UUID parsed directly from UTF-8 byte spans without

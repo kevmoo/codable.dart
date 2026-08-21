@@ -4,11 +4,9 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/test.dart';
 
 import '../benchmark/models/codable/canada.dart' as c_can;

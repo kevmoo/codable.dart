@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 import 'package:test/scaffolding.dart';
 
 void main() {

@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'coordinate.g.dart';
 
