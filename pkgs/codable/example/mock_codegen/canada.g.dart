@@ -1,64 +1,133 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'canada.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
-// 1. Unified Schema Descriptor for CanadaFeatureCollection
+// 1. Unified Schema Descriptor for CanadaProperties
 // =============================================================================
-extension type const _$CanadaFeatureCollectionSchema(int _value) {
+extension type const _$CanadaPropertiesSchema(int _value) {
   // String Name Constants
-  static const String nameType = 'type';
-  static const String nameFeatures = 'features';
+  static const String nameName = 'name';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameTypeBytes = Uint8List.fromList(const [
-    116,
-    121,
-    112,
-    101,
-  ]);
-  static final Uint8List nameFeaturesBytes = Uint8List.fromList(const [
-    102,
-    101,
-    97,
-    116,
-    117,
-    114,
-    101,
-    115,
-  ]);
+  // Key Indices for selectKeyIndex()
+  static const int keyName = 0;
 
-  // Key Indices for selectName()
-  static const int keyType = 0;
-  static const int keyFeatures = 1;
-
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    _$CanadaFeatureCollectionSchema.nameType,
-    _$CanadaFeatureCollectionSchema.nameFeatures,
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CanadaPropertiesSchema.nameName,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
-  static const _$CanadaFeatureCollectionSchema none =
-      _$CanadaFeatureCollectionSchema(0);
-  static const int _typeBit = 1 << 0;
-  static const _$CanadaFeatureCollectionSchema type =
-      _$CanadaFeatureCollectionSchema(_typeBit);
+  static const _$CanadaPropertiesSchema none = _$CanadaPropertiesSchema(0);
+  static const int _nameBit = 1 << 0;
+  static const _$CanadaPropertiesSchema name = _$CanadaPropertiesSchema(
+    _nameBit,
+  );
 
-  // Composite Golden Mask for Required Fields
-  static const _$CanadaFeatureCollectionSchema golden =
-      _$CanadaFeatureCollectionSchema(_typeBit);
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CanadaPropertiesSchema golden = _$CanadaPropertiesSchema(
+    _nameBit,
+  );
 
   @pragma('vm:prefer-inline')
-  _$CanadaFeatureCollectionSchema operator |(
-    _$CanadaFeatureCollectionSchema other,
-  ) => _$CanadaFeatureCollectionSchema(_value | other._value);
+  _$CanadaPropertiesSchema operator |(_$CanadaPropertiesSchema other) =>
+      _$CanadaPropertiesSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _nameBit) == 0) {
+      missing.add(nameName);
+    }
+    throw CodableException(
+      'Missing required fields for CanadaProperties: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Universal Keyed Deserializer for CanadaProperties
+// =============================================================================
+CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CanadaPropertiesSchema.keyOptions);
+
+  String? name;
+  var seen = _$CanadaPropertiesSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CanadaPropertiesSchema.keyOptions)) {
+      case _$CanadaPropertiesSchema.keyName:
+        if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
+          throw const CodableException('Duplicate field "name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          name = keyed.readString();
+          seen |= _$CanadaPropertiesSchema.name;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CanadaProperties(name: name!);
+}
+
+// =============================================================================
+// 3. Universal Serializer for CanadaProperties
+// =============================================================================
+void _$CanadaPropertiesToEncoder(CanadaProperties instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CanadaGeometry
+// =============================================================================
+extension type const _$CanadaGeometrySchema(int _value) {
+  // String Name Constants
+  static const String nameType = 'type';
+  static const String nameCoordinates = 'coordinates';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyType = 0;
+  static const int keyCoordinates = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CanadaGeometrySchema.nameType,
+    _$CanadaGeometrySchema.nameCoordinates,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CanadaGeometrySchema none = _$CanadaGeometrySchema(0);
+  static const int _typeBit = 1 << 0;
+  static const _$CanadaGeometrySchema type = _$CanadaGeometrySchema(_typeBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CanadaGeometrySchema golden = _$CanadaGeometrySchema(_typeBit);
+
+  @pragma('vm:prefer-inline')
+  _$CanadaGeometrySchema operator |(_$CanadaGeometrySchema other) =>
+      _$CanadaGeometrySchema(_value | other._value);
 
   /// Validates required fields in 1 CPU test instruction on the fast path.
   @pragma('vm:prefer-inline')
@@ -75,79 +144,66 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
       missing.add(nameType);
     }
     throw CodableException(
-      'Missing required fields for CanadaFeatureCollection: ${missing.join(", ")}',
+      'Missing required fields for CanadaGeometry: ${missing.join(", ")}',
     );
   }
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for CanadaFeatureCollection
+// 2. Universal Keyed Deserializer for CanadaGeometry
 // =============================================================================
-CanadaFeatureCollection _$CanadaFeatureCollectionFromReader(
-  JsonTokenReader reader,
-) {
-  reader.beginObject();
+CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CanadaGeometrySchema.keyOptions);
 
   String? type;
-  var features = const <CanadaFeature>[];
-  var seen = _$CanadaFeatureCollectionSchema.none;
+  var coordinates = const <List<Float64List>>[];
+  var seen = _$CanadaGeometrySchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CanadaFeatureCollectionSchema.options)) {
-      case _$CanadaFeatureCollectionSchema.keyType:
-        if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CanadaGeometrySchema.keyOptions)) {
+      case _$CanadaGeometrySchema.keyType:
+        if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          type = reader.readString();
-          seen |= _$CanadaFeatureCollectionSchema.type;
+          type = keyed.readString();
+          seen |= _$CanadaGeometrySchema.type;
         }
         break;
-      case _$CanadaFeatureCollectionSchema.keyFeatures:
-        if (reader.isNextNull()) {
-          reader.readNull();
+      case _$CanadaGeometrySchema.keyCoordinates:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          reader.beginArray();
-          final list = <CanadaFeature>[];
-          while (reader.hasNext()) {
-            list.add(_$CanadaFeatureFromReader(reader));
-          }
-          reader.endArray();
-          features = list;
+          coordinates = keyed.decodeValue(
+            const CanadaCoordinatesDecoder().decode,
+          );
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
 
-  return CanadaFeatureCollection(type: type!, features: features);
+  return CanadaGeometry(type: type!, coordinates: coordinates);
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for CanadaFeatureCollection
+// 3. Universal Serializer for CanadaGeometry
 // =============================================================================
-void _$CanadaFeatureCollectionToWriter(
-  CanadaFeatureCollection instance,
-  JsonTokenWriter writer,
-) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CanadaFeatureCollectionSchema.nameTypeBytes);
-  writer.writeString(instance.type);
-  writer.writeNameBytes(_$CanadaFeatureCollectionSchema.nameFeaturesBytes);
-  writer.beginArray();
-  for (final item in instance.features) {
-    _$CanadaFeatureToWriter(item, writer);
-  }
-  writer.endArray();
-  writer.endObject();
+void _$CanadaGeometryToEncoder(CanadaGeometry instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
+  keyed.encodeValue(
+    _$CanadaGeometrySchema.nameCoordinates,
+    instance.coordinates,
+    (v, e) => const CanadaCoordinatesDecoder().encodeToEncoder(v, e),
+  );
 }
 
 // =============================================================================
@@ -159,47 +215,18 @@ extension type const _$CanadaFeatureSchema(int _value) {
   static const String nameProperties = 'properties';
   static const String nameGeometry = 'geometry';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameTypeBytes = Uint8List.fromList(const [
-    116,
-    121,
-    112,
-    101,
-  ]);
-  static final Uint8List namePropertiesBytes = Uint8List.fromList(const [
-    112,
-    114,
-    111,
-    112,
-    101,
-    114,
-    116,
-    105,
-    101,
-    115,
-  ]);
-  static final Uint8List nameGeometryBytes = Uint8List.fromList(const [
-    103,
-    101,
-    111,
-    109,
-    101,
-    116,
-    114,
-    121,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyType = 0;
   static const int keyProperties = 1;
   static const int keyGeometry = 2;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$CanadaFeatureSchema.nameType,
     _$CanadaFeatureSchema.nameProperties,
     _$CanadaFeatureSchema.nameGeometry,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$CanadaFeatureSchema none = _$CanadaFeatureSchema(0);
@@ -214,7 +241,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
     _geometryBit,
   );
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$CanadaFeatureSchema golden = _$CanadaFeatureSchema(
     _typeBit | _propertiesBit | _geometryBit,
   );
@@ -250,26 +277,26 @@ extension type const _$CanadaFeatureSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for CanadaFeature
+// 2. Universal Keyed Deserializer for CanadaFeature
 // =============================================================================
-CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CanadaFeatureSchema.keyOptions);
 
   String? type;
   CanadaProperties? properties;
   CanadaGeometry? geometry;
   var seen = _$CanadaFeatureSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CanadaFeatureSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CanadaFeatureSchema.keyOptions)) {
       case _$CanadaFeatureSchema.keyType:
         if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          type = reader.readString();
+          type = keyed.readString();
           seen |= _$CanadaFeatureSchema.type;
         }
         break;
@@ -277,10 +304,10 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
         if ((seen._value & _$CanadaFeatureSchema.properties._value) != 0) {
           throw const CodableException('Duplicate field "properties"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          properties = _$CanadaPropertiesFromReader(reader);
+          properties = keyed.decodeValue(_$CanadaPropertiesFromDecoder);
           seen |= _$CanadaFeatureSchema.properties;
         }
         break;
@@ -288,19 +315,18 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
         if ((seen._value & _$CanadaFeatureSchema.geometry._value) != 0) {
           throw const CodableException('Duplicate field "geometry"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          geometry = _$CanadaGeometryFromReader(reader);
+          geometry = keyed.decodeValue(_$CanadaGeometryFromDecoder);
           seen |= _$CanadaFeatureSchema.geometry;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -313,176 +339,57 @@ CanadaFeature _$CanadaFeatureFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for CanadaFeature
+// 3. Universal Serializer for CanadaFeature
 // =============================================================================
-void _$CanadaFeatureToWriter(CanadaFeature instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CanadaFeatureSchema.nameTypeBytes);
-  writer.writeString(instance.type);
-  writer.writeNameBytes(_$CanadaFeatureSchema.namePropertiesBytes);
-  _$CanadaPropertiesToWriter(instance.properties, writer);
-  writer.writeNameBytes(_$CanadaFeatureSchema.nameGeometryBytes);
-  _$CanadaGeometryToWriter(instance.geometry, writer);
-  writer.endObject();
-}
-
-// =============================================================================
-// 1. Unified Schema Descriptor for CanadaProperties
-// =============================================================================
-extension type const _$CanadaPropertiesSchema(int _value) {
-  // String Name Constants
-  static const String nameName = 'name';
-
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameNameBytes = Uint8List.fromList(const [
-    110,
-    97,
-    109,
-    101,
-  ]);
-
-  // Key Indices for selectName()
-  static const int keyName = 0;
-
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    _$CanadaPropertiesSchema.nameName,
-  ]);
-
-  // Bitmask Flags strictly for Required Fields
-  static const _$CanadaPropertiesSchema none = _$CanadaPropertiesSchema(0);
-  static const int _nameBit = 1 << 0;
-  static const _$CanadaPropertiesSchema name = _$CanadaPropertiesSchema(
-    _nameBit,
+void _$CanadaFeatureToEncoder(CanadaFeature instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
+  keyed.encodeValue(
+    _$CanadaFeatureSchema.nameProperties,
+    instance.properties,
+    _$CanadaPropertiesToEncoder,
   );
-
-  // Composite Golden Mask for Required Fields
-  static const _$CanadaPropertiesSchema golden = _$CanadaPropertiesSchema(
-    _nameBit,
+  keyed.encodeValue(
+    _$CanadaFeatureSchema.nameGeometry,
+    instance.geometry,
+    _$CanadaGeometryToEncoder,
   );
-
-  @pragma('vm:prefer-inline')
-  _$CanadaPropertiesSchema operator |(_$CanadaPropertiesSchema other) =>
-      _$CanadaPropertiesSchema(_value | other._value);
-
-  /// Validates required fields in 1 CPU test instruction on the fast path.
-  @pragma('vm:prefer-inline')
-  void validate() {
-    if ((_value & golden._value) != golden._value) {
-      _throwMissingFields();
-    }
-  }
-
-  /// Out-of-line cold diagnostic reporting
-  void _throwMissingFields() {
-    final missing = <String>[];
-    if ((_value & _nameBit) == 0) {
-      missing.add(nameName);
-    }
-    throw CodableException(
-      'Missing required fields for CanadaProperties: ${missing.join(", ")}',
-    );
-  }
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for CanadaProperties
+// 1. Unified Schema Descriptor for CanadaFeatureCollection
 // =============================================================================
-CanadaProperties _$CanadaPropertiesFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? name;
-  var seen = _$CanadaPropertiesSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CanadaPropertiesSchema.options)) {
-      case _$CanadaPropertiesSchema.keyName:
-        if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          name = reader.readString();
-          seen |= _$CanadaPropertiesSchema.name;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return CanadaProperties(name: name!);
-}
-
-// =============================================================================
-// 3. Single-Pass Streaming Serializer for CanadaProperties
-// =============================================================================
-void _$CanadaPropertiesToWriter(
-  CanadaProperties instance,
-  JsonTokenWriter writer,
-) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CanadaPropertiesSchema.nameNameBytes);
-  writer.writeString(instance.name);
-  writer.endObject();
-}
-
-// =============================================================================
-// 1. Unified Schema Descriptor for CanadaGeometry
-// =============================================================================
-extension type const _$CanadaGeometrySchema(int _value) {
+extension type const _$CanadaFeatureCollectionSchema(int _value) {
   // String Name Constants
   static const String nameType = 'type';
-  static const String nameCoordinates = 'coordinates';
+  static const String nameFeatures = 'features';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameTypeBytes = Uint8List.fromList(const [
-    116,
-    121,
-    112,
-    101,
-  ]);
-  static final Uint8List nameCoordinatesBytes = Uint8List.fromList(const [
-    99,
-    111,
-    111,
-    114,
-    100,
-    105,
-    110,
-    97,
-    116,
-    101,
-    115,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyType = 0;
-  static const int keyCoordinates = 1;
+  static const int keyFeatures = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
-    _$CanadaGeometrySchema.nameType,
-    _$CanadaGeometrySchema.nameCoordinates,
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CanadaFeatureCollectionSchema.nameType,
+    _$CanadaFeatureCollectionSchema.nameFeatures,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
-  static const _$CanadaGeometrySchema none = _$CanadaGeometrySchema(0);
+  static const _$CanadaFeatureCollectionSchema none =
+      _$CanadaFeatureCollectionSchema(0);
   static const int _typeBit = 1 << 0;
-  static const _$CanadaGeometrySchema type = _$CanadaGeometrySchema(_typeBit);
+  static const _$CanadaFeatureCollectionSchema type =
+      _$CanadaFeatureCollectionSchema(_typeBit);
 
-  // Composite Golden Mask for Required Fields
-  static const _$CanadaGeometrySchema golden = _$CanadaGeometrySchema(_typeBit);
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CanadaFeatureCollectionSchema golden =
+      _$CanadaFeatureCollectionSchema(_typeBit);
 
   @pragma('vm:prefer-inline')
-  _$CanadaGeometrySchema operator |(_$CanadaGeometrySchema other) =>
-      _$CanadaGeometrySchema(_value | other._value);
+  _$CanadaFeatureCollectionSchema operator |(
+    _$CanadaFeatureCollectionSchema other,
+  ) => _$CanadaFeatureCollectionSchema(_value | other._value);
 
   /// Validates required fields in 1 CPU test instruction on the fast path.
   @pragma('vm:prefer-inline')
@@ -499,64 +406,67 @@ extension type const _$CanadaGeometrySchema(int _value) {
       missing.add(nameType);
     }
     throw CodableException(
-      'Missing required fields for CanadaGeometry: ${missing.join(", ")}',
+      'Missing required fields for CanadaFeatureCollection: ${missing.join(", ")}',
     );
   }
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for CanadaGeometry
+// 2. Universal Keyed Deserializer for CanadaFeatureCollection
 // =============================================================================
-CanadaGeometry _$CanadaGeometryFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(
+    options: _$CanadaFeatureCollectionSchema.keyOptions,
+  );
 
   String? type;
-  var coordinates = const <List<Float64List>>[];
-  var seen = _$CanadaGeometrySchema.none;
+  var features = const <CanadaFeature>[];
+  var seen = _$CanadaFeatureCollectionSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CanadaGeometrySchema.options)) {
-      case _$CanadaGeometrySchema.keyType:
-        if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CanadaFeatureCollectionSchema.keyOptions)) {
+      case _$CanadaFeatureCollectionSchema.keyType:
+        if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          type = reader.readString();
-          seen |= _$CanadaGeometrySchema.type;
+          type = keyed.readString();
+          seen |= _$CanadaFeatureCollectionSchema.type;
         }
         break;
-      case _$CanadaGeometrySchema.keyCoordinates:
-        if (reader.isNextNull()) {
-          reader.readNull();
+      case _$CanadaFeatureCollectionSchema.keyFeatures:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          coordinates = const CanadaCoordinatesDecoder().decodeFromReader(
-            reader,
-          );
+          features = keyed.decodeList(_$CanadaFeatureFromDecoder);
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
 
-  return CanadaGeometry(type: type!, coordinates: coordinates);
+  return CanadaFeatureCollection(type: type!, features: features);
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for CanadaGeometry
+// 3. Universal Serializer for CanadaFeatureCollection
 // =============================================================================
-void _$CanadaGeometryToWriter(CanadaGeometry instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CanadaGeometrySchema.nameTypeBytes);
-  writer.writeString(instance.type);
-  writer.writeNameBytes(_$CanadaGeometrySchema.nameCoordinatesBytes);
-  const CanadaCoordinatesDecoder().encodeToWriter(instance.coordinates, writer);
-  writer.endObject();
+void _$CanadaFeatureCollectionToEncoder(
+  CanadaFeatureCollection instance,
+  Encoder encoder,
+) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
+  keyed.encodeList(
+    _$CanadaFeatureCollectionSchema.nameFeatures,
+    instance.features,
+    _$CanadaFeatureToEncoder,
+  );
 }

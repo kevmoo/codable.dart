@@ -7,7 +7,7 @@
 import 'dart:convert';
 
 import 'package:args/args.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 import '../data/embedded_datasets.dart';
 import '../models/codable/canada.dart';
@@ -261,54 +261,40 @@ BenchResult runBenchmark(
         case 'coordinates':
           final list = preDecodedModel as List<Coordinate>;
           benchmarkWork = () {
-            final builder = BytesBuilder(copy: false);
-            final writer = JsonTokenWriter.toSink(builder);
-            writer.beginArray();
-            for (var i = 0; i < list.length; i++) {
-              list[i].toWriter(writer);
-            }
-            writer.endArray();
-            final outBytes = builder.toBytes();
+            final outBytes = JsonCodableEncoder.toBytes((e) {
+              final unkeyed = e.unkeyed();
+              for (var i = 0; i < list.length; i++) {
+                unkeyed.encodeEncodable(list[i]);
+              }
+            });
             consumeBlackBox(outBytes);
           };
           break;
         case 'canada':
           final model = preDecodedModel as CanadaFeatureCollection;
           benchmarkWork = () {
-            final builder = BytesBuilder(copy: false);
-            final writer = JsonTokenWriter.toSink(builder);
-            model.toWriter(writer);
-            final outBytes = builder.toBytes();
+            final outBytes = JsonCodableEncoder.toBytes(model.encode);
             consumeBlackBox(outBytes);
           };
           break;
         case 'citm_catalog':
           final model = preDecodedModel as CitmCatalog;
           benchmarkWork = () {
-            final builder = BytesBuilder(copy: false);
-            final writer = JsonTokenWriter.toSink(builder);
-            model.toWriter(writer);
-            final outBytes = builder.toBytes();
+            final outBytes = JsonCodableEncoder.toBytes(model.encode);
             consumeBlackBox(outBytes);
           };
           break;
         case 'small':
           final model = preDecodedModel as SmallDocument;
           benchmarkWork = () {
-            final builder = BytesBuilder(copy: false);
-            final writer = JsonTokenWriter.toSink(builder);
-            model.toWriter(writer);
-            final outBytes = builder.toBytes();
+            final outBytes = JsonCodableEncoder.toBytes(model.encode);
             consumeBlackBox(outBytes);
           };
           break;
         case 'twitter':
           final model = preDecodedModel as TwitterResponse;
           benchmarkWork = () {
-            final builder = BytesBuilder(copy: false);
-            final writer = JsonTokenWriter.toSink(builder);
-            model.toWriter(writer);
-            final outBytes = builder.toBytes();
+            final outBytes = JsonCodableEncoder.toBytes(model.encode);
             consumeBlackBox(outBytes);
           };
           break;

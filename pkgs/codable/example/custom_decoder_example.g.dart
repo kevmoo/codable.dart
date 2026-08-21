@@ -1,12 +1,8 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'custom_decoder_example.dart';
-
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
 
 // =============================================================================
 // 1. Unified Schema Descriptor for DateTimeExample
@@ -15,28 +11,21 @@ extension type const _$DateTimeExampleSchema(int _value) {
   // String Name Constants
   static const String nameWhen = 'when';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameWhenBytes = Uint8List.fromList(const [
-    119,
-    104,
-    101,
-    110,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyWhen = 0;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$DateTimeExampleSchema.nameWhen,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$DateTimeExampleSchema none = _$DateTimeExampleSchema(0);
   static const int _whenBit = 1 << 0;
   static const _$DateTimeExampleSchema when = _$DateTimeExampleSchema(_whenBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$DateTimeExampleSchema golden = _$DateTimeExampleSchema(
     _whenBit,
   );
@@ -66,33 +55,32 @@ extension type const _$DateTimeExampleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for DateTimeExample
+// 2. Universal Keyed Deserializer for DateTimeExample
 // =============================================================================
-DateTimeExample _$DateTimeExampleFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+DateTimeExample _$DateTimeExampleFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$DateTimeExampleSchema.keyOptions);
 
   DateTime? when;
   var seen = _$DateTimeExampleSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$DateTimeExampleSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$DateTimeExampleSchema.keyOptions)) {
       case _$DateTimeExampleSchema.keyWhen:
         if ((seen._value & _$DateTimeExampleSchema.when._value) != 0) {
           throw const CodableException('Duplicate field "when"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          when = const DateTimeEpochDecoder().decodeFromReader(reader);
+          when = keyed.decodeValue(const DateTimeEpochDecoder().decode);
           seen |= _$DateTimeExampleSchema.when;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -101,14 +89,13 @@ DateTimeExample _$DateTimeExampleFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for DateTimeExample
+// 3. Universal Serializer for DateTimeExample
 // =============================================================================
-void _$DateTimeExampleToWriter(
-  DateTimeExample instance,
-  JsonTokenWriter writer,
-) {
-  writer.beginObject();
-  writer.writeNameBytes(_$DateTimeExampleSchema.nameWhenBytes);
-  const DateTimeEpochDecoder().encodeToWriter(instance.when, writer);
-  writer.endObject();
+void _$DateTimeExampleToEncoder(DateTimeExample instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeValue(
+    _$DateTimeExampleSchema.nameWhen,
+    instance.when,
+    (v, e) => const DateTimeEpochDecoder().encodeToEncoder(v, e),
+  );
 }

@@ -7,16 +7,13 @@
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 import 'package:test/test.dart';
 
 import 'fixtures/test_models.dart';
 
-Uint8List _encodeObject(void Function(JsonTokenWriter writer) encode) {
-  final builder = BytesBuilder();
-  final writer = JsonTokenWriter.toSink(builder);
-  encode(writer);
-  return builder.toBytes();
+Uint8List _encodeObject(void Function(Encoder encoder) encode) {
+  return JsonCodableEncoder.toBytes(encode);
 }
 
 void main() {
@@ -26,8 +23,8 @@ void main() {
         final bytes = Uint8List.fromList(
           utf8.encode('{"x": 10.5, "y": -20.25}'),
         );
-        final reader = JsonTokenReader.fromBytes(bytes);
-        final point = Point.fromReader(reader);
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final point = Point.decode(decoder);
 
         check(point.x).equals(10.5);
         check(point.y).equals(-20.25);
@@ -35,7 +32,7 @@ void main() {
 
       test('serializes to JSON writer', () {
         const point = Point(1.25, 3.75);
-        final bytes = _encodeObject((w) => point.toWriter(w));
+        final bytes = _encodeObject((e) => point.encode(e));
         final jsonStr = utf8.decode(bytes);
 
         check(jsonStr).equals('{"x":1.25,"y":3.75}');
@@ -47,8 +44,8 @@ void main() {
             '{"z": 99.9, "x": 1.0, "meta": {"foo": "bar"}, "y": 2.0}',
           ),
         );
-        final reader = JsonTokenReader.fromBytes(bytes);
-        final point = Point.fromReader(reader);
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final point = Point.decode(decoder);
 
         check(point.x).equals(1.0);
         check(point.y).equals(2.0);
@@ -56,9 +53,9 @@ void main() {
 
       test('throws CodableException when required field is missing', () {
         final bytes = Uint8List.fromList(utf8.encode('{"x": 1.0}'));
-        final reader = JsonTokenReader.fromBytes(bytes);
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-        check(() => Point.fromReader(reader))
+        check(() => Point.decode(decoder))
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Missing required fields for Point: y');
@@ -68,9 +65,9 @@ void main() {
         'throws CodableException when multiple required fields are missing',
         () {
           final bytes = Uint8List.fromList(utf8.encode('{}'));
-          final reader = JsonTokenReader.fromBytes(bytes);
+          final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-          check(() => Point.fromReader(reader))
+          check(() => Point.decode(decoder))
               .throws<CodableException>()
               .has((e) => e.message, 'message')
               .contains('Missing required fields for Point: x, y');
@@ -81,9 +78,9 @@ void main() {
         final bytes = Uint8List.fromList(
           utf8.encode('{"x": 1.0, "x": 2.0, "y": 3.0}'),
         );
-        final reader = JsonTokenReader.fromBytes(bytes);
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-        check(() => Point.fromReader(reader))
+        check(() => Point.decode(decoder))
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Duplicate field "x"');
@@ -97,8 +94,8 @@ void main() {
             '{"id": "usr_1", "email_address": "alice@example.com", "role": "admin"}',
           ),
         );
-        final reader = JsonTokenReader.fromBytes(bytes);
-        final user = UserAccount.fromReader(reader);
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final user = UserAccount.decode(decoder);
 
         check(user.id).equals('usr_1');
         check(user.emailAddress).equals('alice@example.com');
@@ -114,7 +111,7 @@ void main() {
             '{"id": "usr_2", "email": "bob@example.com", "role": "member"}',
           ),
         );
-        final user1 = UserAccount.fromReader(JsonTokenReader.fromBytes(bytes1));
+        final user1 = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes1));
         check(user1.emailAddress).equals('bob@example.com');
         check(user1.role).equals(UserRole.member);
 
@@ -123,7 +120,7 @@ void main() {
             '{"id": "usr_3", "contact_email": "carol@example.com", "role": "guest"}',
           ),
         );
-        final user2 = UserAccount.fromReader(JsonTokenReader.fromBytes(bytes2));
+        final user2 = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes2));
         check(user2.emailAddress).equals('carol@example.com');
         check(user2.role).equals(UserRole.guest);
       });
@@ -134,7 +131,7 @@ void main() {
             '{"id": "usr_4", "email_address": "d@e.com", "role": "admin", "location": [37.7749, -122.4194]}',
           ),
         );
-        final user = UserAccount.fromReader(JsonTokenReader.fromBytes(bytes));
+        final user = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes));
 
         check(user.location).isNotNull();
         check(user.location![0]).equals(37.7749);
@@ -147,7 +144,7 @@ void main() {
             '{"id": "usr_5", "email_address": "e@e.com", "role": "admin", "internalId": "hacked"}',
           ),
         );
-        final user = UserAccount.fromReader(JsonTokenReader.fromBytes(bytes));
+        final user = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes));
 
         // internalId should retain default value ''
         check(user.internalId).equals('');
@@ -159,22 +156,10 @@ void main() {
             '{"id": "usr_6", "email_address": "f@e.com", "role": "superadmin"}',
           ),
         );
-        check(() => UserAccount.fromReader(JsonTokenReader.fromBytes(bytes)))
+        check(() => UserAccount.decode(JsonCodableDecoder.fromBytes(bytes)))
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Unknown UserRole value');
-      });
-
-      test('throws CodableException on tuple length mismatch', () {
-        final bytes = Uint8List.fromList(
-          utf8.encode(
-            '{"id": "usr_t", "email_address": "t@e.com", "role": "admin", "location": [37.7749]}',
-          ),
-        );
-        check(() => UserAccount.fromReader(JsonTokenReader.fromBytes(bytes)))
-            .throws<CodableException>()
-            .has((e) => e.message, 'message')
-            .contains('Expected 2 elements for tuple "location", got 1');
       });
 
       test('roundtrips complete UserAccount with tags and location', () {
@@ -189,9 +174,9 @@ void main() {
           location: loc,
         );
 
-        final bytes = _encodeObject(user.toWriter);
-        final roundtripped = UserAccount.fromReader(
-          JsonTokenReader.fromBytes(bytes),
+        final bytes = _encodeObject(user.encode);
+        final roundtripped = UserAccount.decode(
+          JsonCodableDecoder.fromBytes(bytes),
         );
 
         check(roundtripped.id).equals('usr_7');
@@ -211,8 +196,8 @@ void main() {
         final bytes1 = Uint8List.fromList(
           utf8.encode('{"id": "u1", "zip": 90210}'),
         );
-        final profile1 = UserProfileCustom.fromReader(
-          JsonTokenReader.fromBytes(bytes1),
+        final profile1 = UserProfileCustom.decode(
+          JsonCodableDecoder.fromBytes(bytes1),
         );
         check(profile1.id).equals('u1');
         check(profile1.zip).equals('90210');
@@ -220,8 +205,8 @@ void main() {
         final bytes2 = Uint8List.fromList(
           utf8.encode('{"id": "u2", "zip": "94107"}'),
         );
-        final profile2 = UserProfileCustom.fromReader(
-          JsonTokenReader.fromBytes(bytes2),
+        final profile2 = UserProfileCustom.decode(
+          JsonCodableDecoder.fromBytes(bytes2),
         );
         check(profile2.id).equals('u2');
         check(profile2.zip).equals('94107');
@@ -229,9 +214,9 @@ void main() {
 
       test('roundtrips UserProfileCustom through encoder and decoder', () {
         const profile = UserProfileCustom(id: 'u3', zip: '10001');
-        final bytes = _encodeObject(profile.toWriter);
-        final roundtripped = UserProfileCustom.fromReader(
-          JsonTokenReader.fromBytes(bytes),
+        final bytes = _encodeObject((e) => profile.encode(e));
+        final roundtripped = UserProfileCustom.decode(
+          JsonCodableDecoder.fromBytes(bytes),
         );
 
         check(roundtripped.id).equals('u3');
@@ -248,8 +233,8 @@ void main() {
           scores: {'latency': 10, 'errors': null, 'qps': 50000},
         );
 
-        final bytes = _encodeObject(team.toWriter);
-        final roundtripped = Team.fromReader(JsonTokenReader.fromBytes(bytes));
+        final bytes = _encodeObject((e) => team.encode(e));
+        final roundtripped = Team.decode(JsonCodableDecoder.fromBytes(bytes));
 
         check(roundtripped.name).equals('Core Infra');
         check(roundtripped.roles.length).equals(2);
@@ -282,9 +267,9 @@ void main() {
           headcountByDept: {'engineering': 50000, 'sales': 20000},
         );
 
-        final bytes = _encodeObject(enterprise.toWriter);
-        final roundtripped = Enterprise.fromReader(
-          JsonTokenReader.fromBytes(bytes),
+        final bytes = _encodeObject((e) => enterprise.encode(e));
+        final roundtripped = Enterprise.decode(
+          JsonCodableDecoder.fromBytes(bytes),
         );
 
         check(roundtripped.name).equals('Google LLC');

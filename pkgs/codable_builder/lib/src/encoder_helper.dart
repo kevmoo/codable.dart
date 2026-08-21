@@ -12,7 +12,7 @@ import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
-/// Emits the single-pass `_$ModelToWriter` streaming serializer.
+/// Emits the format-agnostic `_$ModelToEncoder` serializer.
 final class EncoderGeneratorHelper {
   final ModelDescriptor model;
 
@@ -24,140 +24,269 @@ final class EncoderGeneratorHelper {
 
     final buffer = StringBuffer();
     final schemaName = '_\$${model.className}Schema';
-    final funcName = '_\$${model.className}ToWriter';
+    final funcName = '_\$${model.className}ToEncoder';
 
     buffer.writeln(
       '// =============================================================================',
     );
-    buffer.writeln(
-      '// 3. Single-Pass Streaming Serializer for ${model.className}',
-    );
+    buffer.writeln('// 3. Universal Serializer for ${model.className}');
     buffer.writeln(
       '// =============================================================================',
     );
     buffer.writeln(
-      'void $funcName(${model.className} instance, JsonTokenWriter writer) {',
+      'void $funcName(${model.className} instance, Encoder encoder) {',
     );
-    buffer.writeln('  writer.beginObject();');
+    buffer.writeln('  final keyed = encoder.keyed();');
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
 
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
       final fieldAccess = 'instance.${field.name}';
+      final keyExpr = '$schemaName.name$suffix';
 
       if (field.isNullable) {
         buffer.writeln('  if ($fieldAccess != null) {');
-        buffer.writeln(
-          '    writer.writeNameBytes($schemaName.name${suffix}Bytes);',
+        _writeFieldEncode(
+          buffer,
+          field,
+          keyExpr,
+          '$fieldAccess!',
+          indent: '    ',
         );
-        _writeValue(buffer, field, '$fieldAccess!', indent: '    ');
         buffer.writeln('  }');
       } else {
-        buffer.writeln(
-          '  writer.writeNameBytes($schemaName.name${suffix}Bytes);',
-        );
-        _writeValue(buffer, field, fieldAccess, indent: '  ');
+        _writeFieldEncode(buffer, field, keyExpr, fieldAccess, indent: '  ');
       }
     }
 
-    buffer.writeln('  writer.endObject();');
     buffer.writeln('}');
     return buffer.toString();
   }
 
-  void _writeValue(
+  void _writeFieldEncode(
     StringBuffer buffer,
     FieldDescriptor field,
+    String keyExpr,
     String access, {
     required String indent,
   }) {
     switch (field.category) {
       case TypeCategory.primitiveInt:
-        buffer.writeln('${indent}writer.writeInt($access);');
+        buffer.writeln('${indent}keyed.encodeInt($keyExpr, $access);');
       case TypeCategory.primitiveDouble:
-        buffer.writeln('${indent}writer.writeDouble($access);');
+        buffer.writeln('${indent}keyed.encodeDouble($keyExpr, $access);');
       case TypeCategory.primitiveNum:
         buffer.writeln('${indent}if ($access is int) {');
-        buffer.writeln('$indent  writer.writeInt($access as int);');
+        buffer.writeln('$indent  keyed.encodeInt($keyExpr, $access as int);');
         buffer.writeln('$indent} else {');
-        buffer.writeln('$indent  writer.writeDouble($access.toDouble());');
+        buffer.writeln(
+          '$indent  keyed.encodeDouble($keyExpr, $access.toDouble());',
+        );
         buffer.writeln('$indent}');
       case TypeCategory.primitiveString:
-        buffer.writeln('${indent}writer.writeString($access);');
+        buffer.writeln('${indent}keyed.encodeString($keyExpr, $access);');
       case TypeCategory.primitiveBool:
-        buffer.writeln('${indent}writer.writeBool($access);');
+        buffer.writeln('${indent}keyed.encodeBool($keyExpr, $access);');
       case TypeCategory.enumType:
-        buffer.writeln('${indent}writer.writeString($access.name);');
+        buffer.writeln('${indent}keyed.encodeString($keyExpr, $access.name);');
       case TypeCategory.custom:
         final decoder = field.customDecoderCode;
-        buffer.writeln('$indent$decoder.encodeToWriter($access, writer);');
-
+        buffer.writeln(
+          '${indent}keyed.encodeValue($keyExpr, $access, '
+          '(v, e) => $decoder.encodeToEncoder(v, e));',
+        );
       case TypeCategory.tuple:
         final tupleLen = field.tupleLength ?? 2;
-        buffer.writeln('${indent}writer.beginArray();');
-        for (var i = 0; i < tupleLen; i++) {
-          buffer.writeln('${indent}writer.writeDouble($access[$i]);');
-        }
-        buffer.writeln('${indent}writer.endArray();');
+        buffer.writeln(
+          '${indent}keyed.encodeList<double>($keyExpr, '
+          'List.generate($tupleLen, (i) => $access[i]), '
+          '(v, e) => e.singleValue().encodeDouble(v));',
+        );
       case TypeCategory.list:
-        _writeListEncode(buffer, field, access, indent: indent);
+        _writeListEncode(buffer, field, keyExpr, access, indent: indent);
       case TypeCategory.set:
-        _writeSetEncode(buffer, field, access, indent: indent);
+        _writeSetEncode(buffer, field, keyExpr, access, indent: indent);
       case TypeCategory.map:
-        _writeMapEncode(buffer, field, access, indent: indent);
+        _writeMapEncode(buffer, field, keyExpr, access, indent: indent);
       case TypeCategory.nestedCodable:
         final nestedName = field.type.element!.name;
-        buffer.writeln('${indent}_\$${nestedName}ToWriter($access, writer);');
+        buffer.writeln(
+          '${indent}keyed.encodeValue('
+          '$keyExpr, $access, _\$${nestedName}ToEncoder);',
+        );
       case TypeCategory.unknown:
-        buffer.writeln('${indent}writer.writeString($access.toString());');
+        buffer.writeln(
+          '${indent}keyed.encodeString($keyExpr, $access.toString());',
+        );
     }
   }
 
   void _writeListEncode(
     StringBuffer buffer,
     FieldDescriptor field,
+    String keyExpr,
     String access, {
     required String indent,
   }) {
-    buffer.writeln('${indent}writer.beginArray();');
-    buffer.writeln('${indent}for (final item in $access) {');
-    _writeElementEncode(buffer, field.elementType, 'item', indent: '$indent  ');
-    buffer.writeln('$indent}');
-    buffer.writeln('${indent}writer.endArray();');
+    final elemType = field.elementType;
+    final isNullable = elemType?.isNullableType ?? false;
+    if (elemType != null && elemType.isDartCoreInt && !isNullable) {
+      buffer.writeln('${indent}keyed.encodeIntList($keyExpr, $access);');
+    } else if (elemType != null &&
+        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        !isNullable) {
+      buffer.writeln(
+        '${indent}keyed.encodeDoubleList($keyExpr, '
+        '$access.map((e) => e.toDouble()).toList());',
+      );
+    } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
+      buffer.writeln('${indent}keyed.encodeStringList($keyExpr, $access);');
+    } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
+      buffer.writeln('${indent}keyed.encodeBoolList($keyExpr, $access);');
+    } else if (elemType != null &&
+        elemType.element != null &&
+        const TypeClassifier().isCodableElement(elemType.element!)) {
+      final nestedName = elemType.element!.name;
+      buffer.writeln(
+        '${indent}keyed.encodeList('
+        '$keyExpr, $access, _\$${nestedName}ToEncoder);',
+      );
+    } else {
+      buffer.writeln(
+        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+      );
+      _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
+      buffer.writeln('$indent});');
+    }
   }
 
   void _writeSetEncode(
     StringBuffer buffer,
     FieldDescriptor field,
+    String keyExpr,
     String access, {
     required String indent,
   }) {
-    buffer.writeln('${indent}writer.beginArray();');
-    buffer.writeln('${indent}for (final item in $access) {');
-    _writeElementEncode(buffer, field.elementType, 'item', indent: '$indent  ');
-    buffer.writeln('$indent}');
-    buffer.writeln('${indent}writer.endArray();');
+    final elemType = field.elementType;
+    final isNullable = elemType?.isNullableType ?? false;
+    if (elemType != null && elemType.isDartCoreInt && !isNullable) {
+      buffer.writeln(
+        '${indent}keyed.encodeIntList($keyExpr, $access.toList());',
+      );
+    } else if (elemType != null &&
+        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        !isNullable) {
+      buffer.writeln(
+        '${indent}keyed.encodeDoubleList($keyExpr, '
+        '$access.map((e) => e.toDouble()).toList());',
+      );
+    } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
+      buffer.writeln(
+        '${indent}keyed.encodeStringList($keyExpr, $access.toList());',
+      );
+    } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
+      buffer.writeln(
+        '${indent}keyed.encodeBoolList($keyExpr, $access.toList());',
+      );
+    } else {
+      buffer.writeln(
+        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+      );
+      _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
+      buffer.writeln('$indent});');
+    }
   }
 
   void _writeMapEncode(
     StringBuffer buffer,
     FieldDescriptor field,
+    String keyExpr,
     String access, {
     required String indent,
   }) {
-    buffer.writeln('${indent}writer.beginObject();');
-    buffer.writeln('${indent}for (final entry in $access.entries) {');
-    buffer.writeln('$indent  final value = entry.value;');
-    buffer.writeln('$indent  writer.writeName(entry.key);');
-    _writeElementEncode(
+    buffer.writeln('${indent}keyed.encodeValue($keyExpr, $access, (map, e) {');
+    buffer.writeln('$indent  final k = e.keyed();');
+    buffer.writeln('$indent  for (final entry in map.entries) {');
+    _writeMapValueEncode(
       buffer,
       field.mapValueType,
-      'value',
-      indent: '$indent  ',
+      'entry.key',
+      'entry.value',
+      indent: '$indent    ',
     );
-    buffer.writeln('$indent}');
-    buffer.writeln('${indent}writer.endObject();');
+    buffer.writeln('$indent  }');
+    buffer.writeln('$indent});');
+  }
+
+  void _writeMapValueEncode(
+    StringBuffer buffer,
+    DartType? type,
+    String keyAccess,
+    String itemAccess, {
+    required String indent,
+  }) {
+    if (type == null) {
+      buffer.writeln(
+        '${indent}k.encodeString($keyAccess, $itemAccess.toString());',
+      );
+      return;
+    }
+    final isNullable = type.isNullableType;
+    if (type.isDartCoreString) {
+      if (isNullable) {
+        buffer.writeln(
+          '${indent}k.encodeNullableString($keyAccess, $itemAccess);',
+        );
+      } else {
+        buffer.writeln('${indent}k.encodeString($keyAccess, $itemAccess);');
+      }
+    } else if (type.isDartCoreInt) {
+      if (isNullable) {
+        buffer.writeln(
+          '${indent}k.encodeNullableInt($keyAccess, $itemAccess);',
+        );
+      } else {
+        buffer.writeln('${indent}k.encodeInt($keyAccess, $itemAccess);');
+      }
+    } else if (type.isDartCoreDouble || type.isDartCoreNum) {
+      if (isNullable) {
+        buffer.writeln(
+          '${indent}k.encodeNullableDouble('
+          '$keyAccess, $itemAccess?.toDouble());',
+        );
+      } else {
+        buffer.writeln(
+          '${indent}k.encodeDouble($keyAccess, $itemAccess.toDouble());',
+        );
+      }
+    } else if (type.isDartCoreBool) {
+      if (isNullable) {
+        buffer.writeln(
+          '${indent}k.encodeNullableBool($keyAccess, $itemAccess);',
+        );
+      } else {
+        buffer.writeln('${indent}k.encodeBool($keyAccess, $itemAccess);');
+      }
+    } else if (type.element != null &&
+        const TypeClassifier().isCodableElement(type.element!)) {
+      final nestedName = type.element!.name;
+      if (isNullable) {
+        buffer.writeln(
+          '${indent}k.encodeNullableValue('
+          '$keyAccess, $itemAccess, _\$${nestedName}ToEncoder);',
+        );
+      } else {
+        buffer.writeln(
+          '${indent}k.encodeValue('
+          '$keyAccess, $itemAccess, _\$${nestedName}ToEncoder);',
+        );
+      }
+    } else {
+      buffer.writeln(
+        '${indent}k.encodeString($keyAccess, $itemAccess.toString());',
+      );
+    }
   }
 
   void _writeElementEncode(
@@ -167,13 +296,15 @@ final class EncoderGeneratorHelper {
     required String indent,
   }) {
     if (type == null) {
-      buffer.writeln('${indent}writer.writeString($itemAccess.toString());');
+      buffer.writeln(
+        '${indent}e.singleValue().encodeString($itemAccess.toString());',
+      );
       return;
     }
 
     if (type.isNullableType) {
       buffer.writeln('${indent}if ($itemAccess == null) {');
-      buffer.writeln('$indent  writer.writeNull();');
+      buffer.writeln('$indent  e.singleValue().encodeNull();');
       buffer.writeln('$indent} else {');
       _writeNonNullElementEncode(buffer, type, itemAccess, indent: '$indent  ');
       buffer.writeln('$indent}');
@@ -189,28 +320,34 @@ final class EncoderGeneratorHelper {
     required String indent,
   }) {
     if (type.isDartCoreInt) {
-      buffer.writeln('${indent}writer.writeInt($itemAccess);');
+      buffer.writeln('${indent}e.singleValue().encodeInt($itemAccess);');
     } else if (type.isDartCoreDouble) {
-      buffer.writeln('${indent}writer.writeDouble($itemAccess);');
+      buffer.writeln('${indent}e.singleValue().encodeDouble($itemAccess);');
     } else if (type.isDartCoreNum) {
       buffer.writeln('${indent}if ($itemAccess is int) {');
-      buffer.writeln('$indent  writer.writeInt($itemAccess as int);');
+      buffer.writeln('$indent  e.singleValue().encodeInt($itemAccess as int);');
       buffer.writeln('$indent} else {');
-      buffer.writeln('$indent  writer.writeDouble($itemAccess.toDouble());');
+      buffer.writeln(
+        '$indent  e.singleValue().encodeDouble($itemAccess.toDouble());',
+      );
       buffer.writeln('$indent}');
     } else if (type.isDartCoreString) {
-      buffer.writeln('${indent}writer.writeString($itemAccess);');
+      buffer.writeln('${indent}e.singleValue().encodeString($itemAccess);');
     } else if (type.isDartCoreBool) {
-      buffer.writeln('${indent}writer.writeBool($itemAccess);');
+      buffer.writeln('${indent}e.singleValue().encodeBool($itemAccess);');
     } else if (type.element is EnumElement) {
-      buffer.writeln('${indent}writer.writeString($itemAccess.name);');
+      buffer.writeln(
+        '${indent}e.singleValue().encodeString($itemAccess.name);',
+      );
     } else if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       buffer.writeln(
-        '${indent}_\$${type.element!.name}ToWriter($itemAccess, writer);',
+        '${indent}_\$${type.element!.name}ToEncoder($itemAccess, e);',
       );
     } else {
-      buffer.writeln('${indent}writer.writeString($itemAccess.toString());');
+      buffer.writeln(
+        '${indent}e.singleValue().encodeString($itemAccess.toString());',
+      );
     }
   }
 }

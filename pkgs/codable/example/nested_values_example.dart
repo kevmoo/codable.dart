@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 /// Demonstrates parsing flattened collections out of deeply nested JSON
 /// structures directly from the token stream without intermediate Map

@@ -1,12 +1,8 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'coordinate.dart';
-
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
 
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
@@ -16,30 +12,7 @@ extension type const _$CoordinateSchema(int _value) {
   static const String nameLatitude = 'latitude';
   static const String nameLongitude = 'longitude';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameLatitudeBytes = Uint8List.fromList(const [
-    108,
-    97,
-    116,
-    105,
-    116,
-    117,
-    100,
-    101,
-  ]);
-  static final Uint8List nameLongitudeBytes = Uint8List.fromList(const [
-    108,
-    111,
-    110,
-    103,
-    105,
-    116,
-    117,
-    100,
-    101,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
   static const String aliasLatitudeLat = 'lat';
   static const int aliasKeyLatitudeLat = 1;
@@ -47,13 +20,14 @@ extension type const _$CoordinateSchema(int _value) {
   static const String aliasLongitudeLon = 'lon';
   static const int aliasKeyLongitudeLon = 3;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$CoordinateSchema.nameLatitude,
     _$CoordinateSchema.aliasLatitudeLat,
     _$CoordinateSchema.nameLongitude,
     _$CoordinateSchema.aliasLongitudeLon,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$CoordinateSchema none = _$CoordinateSchema(0);
@@ -62,7 +36,7 @@ extension type const _$CoordinateSchema(int _value) {
   static const int _longitudeBit = 1 << 1;
   static const _$CoordinateSchema longitude = _$CoordinateSchema(_longitudeBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$CoordinateSchema golden = _$CoordinateSchema(
     _latitudeBit | _longitudeBit,
   );
@@ -95,26 +69,26 @@ extension type const _$CoordinateSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Coordinate
+// 2. Universal Keyed Deserializer for Coordinate
 // =============================================================================
-Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+Coordinate _$CoordinateFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CoordinateSchema.keyOptions);
 
   double? latitude;
   double? longitude;
   var seen = _$CoordinateSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CoordinateSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
       case _$CoordinateSchema.keyLatitude:
       case _$CoordinateSchema.aliasKeyLatitudeLat:
         if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
           throw const CodableException('Duplicate field "latitude"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          latitude = reader.readDouble();
+          latitude = keyed.readDouble();
           seen |= _$CoordinateSchema.latitude;
         }
         break;
@@ -123,19 +97,18 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
         if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
           throw const CodableException('Duplicate field "longitude"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          longitude = reader.readDouble();
+          longitude = keyed.readDouble();
           seen |= _$CoordinateSchema.longitude;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -144,13 +117,10 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Coordinate
+// 3. Universal Serializer for Coordinate
 // =============================================================================
-void _$CoordinateToWriter(Coordinate instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CoordinateSchema.nameLatitudeBytes);
-  writer.writeDouble(instance.latitude);
-  writer.writeNameBytes(_$CoordinateSchema.nameLongitudeBytes);
-  writer.writeDouble(instance.longitude);
-  writer.endObject();
+void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
 }

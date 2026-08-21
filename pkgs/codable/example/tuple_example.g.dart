@@ -1,12 +1,8 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'tuple_example.dart';
-
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
 
 // =============================================================================
 // 1. Unified Schema Descriptor for CoordinatePair
@@ -15,25 +11,14 @@ extension type const _$CoordinatePairSchema(int _value) {
   // String Name Constants
   static const String nameLocation = 'location';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameLocationBytes = Uint8List.fromList(const [
-    108,
-    111,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyLocation = 0;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$CoordinatePairSchema.nameLocation,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$CoordinatePairSchema none = _$CoordinatePairSchema(0);
@@ -48,46 +33,29 @@ extension type const _$CoordinatePairSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for CoordinatePair
+// 2. Universal Keyed Deserializer for CoordinatePair
 // =============================================================================
-CoordinatePair _$CoordinatePairFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CoordinatePairSchema.keyOptions);
 
   Float64List? location;
   var seen = _$CoordinatePairSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CoordinatePairSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CoordinatePairSchema.keyOptions)) {
       case _$CoordinatePairSchema.keyLocation:
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
           location = null;
         } else {
-          reader.beginArray();
-          final tuple = Float64List(2);
-          var tupleIdx = 0;
-          while (reader.hasNext()) {
-            if (tupleIdx < 2) {
-              tuple[tupleIdx++] = reader.readDouble();
-            } else {
-              reader.skipValue();
-            }
-          }
-          reader.endArray();
-          if (tupleIdx != 2) {
-            throw CodableException(
-              'Expected 2 elements for tuple "location", got $tupleIdx',
-            );
-          }
-          location = tuple;
+          location = keyed.decodeFloat64List();
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -96,16 +64,15 @@ CoordinatePair _$CoordinatePairFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for CoordinatePair
+// 3. Universal Serializer for CoordinatePair
 // =============================================================================
-void _$CoordinatePairToWriter(CoordinatePair instance, JsonTokenWriter writer) {
-  writer.beginObject();
+void _$CoordinatePairToEncoder(CoordinatePair instance, Encoder encoder) {
+  final keyed = encoder.keyed();
   if (instance.location != null) {
-    writer.writeNameBytes(_$CoordinatePairSchema.nameLocationBytes);
-    writer.beginArray();
-    writer.writeDouble(instance.location![0]);
-    writer.writeDouble(instance.location![1]);
-    writer.endArray();
+    keyed.encodeList<double>(
+      _$CoordinatePairSchema.nameLocation,
+      List.generate(2, (i) => instance.location![i]),
+      (v, e) => e.singleValue().encodeDouble(v),
+    );
   }
-  writer.endObject();
 }

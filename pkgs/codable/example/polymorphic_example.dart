@@ -6,7 +6,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 part 'polymorphic_example.g.dart';
 
@@ -69,16 +69,9 @@ class Car extends Vehicle {
 
   const Car({required super.maxSpeed, required this.doors});
 
-  static Car fromReader(JsonTokenReader reader) => _$CarFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CarToWriter(this, writer);
-
+  static Car decode(Decoder decoder) => _$CarFromDecoder(decoder);
   @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeString('type', 'car');
-    keyed.encodeInt('maxSpeed', maxSpeed);
-    keyed.encodeInt('doors', doors);
-  }
+  void encode(Encoder encoder) => _$CarToEncoder(this, encoder);
 }
 
 @Codable()
@@ -87,17 +80,9 @@ class Bicycle extends Vehicle {
 
   const Bicycle({required super.maxSpeed, required this.hasBell});
 
-  static Bicycle fromReader(JsonTokenReader reader) =>
-      _$BicycleFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$BicycleToWriter(this, writer);
-
+  static Bicycle decode(Decoder decoder) => _$BicycleFromDecoder(decoder);
   @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeString('type', 'bicycle');
-    keyed.encodeInt('maxSpeed', maxSpeed);
-    keyed.encodeBool('hasBell', hasBell);
-  }
+  void encode(Encoder encoder) => _$BicycleToEncoder(this, encoder);
 }
 
 void main() {
@@ -119,13 +104,7 @@ void main() {
 
   for (final v in vehicles) {
     print('Vehicle: ${v.runtimeType} (maxSpeed: ${v.maxSpeed})');
-    final builder = BytesBuilder();
-    final writer = JsonTokenWriter.toSink(builder);
-    if (v is Car) {
-      v.toWriter(writer);
-    } else if (v is Bicycle) {
-      v.toWriter(writer);
-    }
-    print('Serialized: ${utf8.decode(builder.toBytes())}');
+    final outBytes = JsonCodableEncoder.toBytes(v.encode);
+    print('Serialized: ${utf8.decode(outBytes)}');
   }
 }

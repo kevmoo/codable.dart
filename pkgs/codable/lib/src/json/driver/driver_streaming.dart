@@ -3,10 +3,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../contracts/codable.dart';
-import '../contracts/decoder.dart';
-import '../contracts/exceptions.dart';
-import '../contracts/static_key.dart';
+import '../../contracts/codable.dart';
+import '../../contracts/decoder.dart';
+import '../../contracts/encoder.dart';
+import '../../contracts/exceptions.dart';
+import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 
 /// Concrete high-performance driver connecting `package:codable` contracts
@@ -644,4 +645,511 @@ final class _JsonCodableSingleValueDecoder
   @override
   T? decodeNullable<T>(DecoderCallback<T> decoder) =>
       isNull() ? null : decode(decoder);
+}
+
+/// Concrete high-performance streaming JSON encoder connecting
+/// `package:codable` contracts directly to `JsonTokenWriter`.
+final class JsonCodableEncoder implements Encoder {
+  final JsonTokenWriter _writer;
+  @override
+  final Map<Object, Object?> userInfo;
+  _JsonCodableKeyedEncoder? _activeKeyed;
+  _JsonCodableUnkeyedEncoder? _activeUnkeyed;
+
+  JsonCodableEncoder(this._writer, {this.userInfo = const {}});
+
+  /// Encodes a value to a newly allocated UTF-8 byte buffer.
+  static Uint8List toBytes(
+    void Function(Encoder encoder) encode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final builder = BytesBuilder(copy: false);
+    final writer = JsonTokenWriter.toSink(builder);
+    final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
+    encode(encoder);
+    encoder._finish();
+    return builder.takeBytes();
+  }
+
+  /// Encodes a value to a JSON String.
+  static String encode(
+    void Function(Encoder encoder) encode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final bytes = toBytes(encode, userInfo: userInfo);
+    return utf8.decode(bytes);
+  }
+
+  void _finish() {
+    _activeKeyed?._close();
+    _activeKeyed = null;
+    _activeUnkeyed?._close();
+    _activeUnkeyed = null;
+  }
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options}) {
+    _activeKeyed = _JsonCodableKeyedEncoder(this, _writer);
+    return _activeKeyed!;
+  }
+
+  @override
+  UnkeyedEncoder unkeyed() {
+    _activeUnkeyed = _JsonCodableUnkeyedEncoder(this, _writer);
+    return _activeUnkeyed!;
+  }
+
+  @override
+  SingleValueEncoder singleValue() =>
+      _JsonCodableSingleValueEncoder(this, _writer);
+
+  @override
+  KeyedEncoder container({KeyOptions? options}) => keyed(options: options);
+
+  @override
+  UnkeyedEncoder unkeyedContainer() => unkeyed();
+
+  @override
+  SingleValueEncoder singleValueContainer() => singleValue();
+}
+
+final class _JsonCodableKeyedEncoder implements KeyedEncoder {
+  final JsonCodableEncoder _rootEncoder;
+  final JsonTokenWriter _writer;
+  bool _closed = false;
+
+  _JsonCodableKeyedEncoder(this._rootEncoder, this._writer) {
+    _writer.beginObject();
+  }
+
+  void _close() {
+    if (!_closed) {
+      _writer.endObject();
+      _closed = true;
+    }
+  }
+
+  @override
+  void encodeInt(String key, int value) {
+    _writer.writeName(key);
+    _writer.writeInt(value);
+  }
+
+  @override
+  void encodeIntKey(StaticKey key, int value) => encodeInt(key.name, value);
+
+  @override
+  void encodeNullableInt(String key, int? value) {
+    if (value != null) {
+      encodeInt(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableIntKey(StaticKey key, int? value) =>
+      encodeNullableInt(key.name, value);
+
+  @override
+  void encodeDouble(String key, double value) {
+    _writer.writeName(key);
+    _writer.writeDouble(value);
+  }
+
+  @override
+  void encodeDoubleKey(StaticKey key, double value) =>
+      encodeDouble(key.name, value);
+
+  @override
+  void encodeNullableDouble(String key, double? value) {
+    if (value != null) {
+      encodeDouble(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableDoubleKey(StaticKey key, double? value) =>
+      encodeNullableDouble(key.name, value);
+
+  @override
+  void encodeString(String key, String value) {
+    _writer.writeName(key);
+    _writer.writeString(value);
+  }
+
+  @override
+  void encodeStringKey(StaticKey key, String value) =>
+      encodeString(key.name, value);
+
+  @override
+  void encodeNullableString(String key, String? value) {
+    if (value != null) {
+      encodeString(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableStringKey(StaticKey key, String? value) =>
+      encodeNullableString(key.name, value);
+
+  @override
+  void encodeBool(String key, bool value) {
+    _writer.writeName(key);
+    _writer.writeBool(value);
+  }
+
+  @override
+  void encodeBoolKey(StaticKey key, bool value) => encodeBool(key.name, value);
+
+  @override
+  void encodeNullableBool(String key, bool? value) {
+    if (value != null) {
+      encodeBool(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableBoolKey(StaticKey key, bool? value) =>
+      encodeNullableBool(key.name, value);
+
+  @override
+  void encodeNull(String key) {
+    _writer.writeName(key);
+    _writer.writeNull();
+  }
+
+  @override
+  void encodeNullKey(StaticKey key) => encodeNull(key.name);
+
+  @override
+  void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
+    _writer.writeName(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encode(value, child);
+    child._finish();
+  }
+
+  @override
+  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
+      encodeValue(key.name, value, encode);
+
+  @override
+  void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
+    if (value != null) {
+      encodeValue(key, value, encode);
+    }
+  }
+
+  @override
+  void encodeNullableValueKey<T>(
+    StaticKey key,
+    T? value,
+    EncoderCallback<T> encode,
+  ) => encodeNullableValue(key.name, value, encode);
+
+  @override
+  void encodeEncodable(String key, Encodable value) {
+    _writer.writeName(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    child._finish();
+  }
+
+  @override
+  void encodeEncodableKey(StaticKey key, Encodable value) =>
+      encodeEncodable(key.name, value);
+
+  @override
+  void encodeNullableEncodable(String key, Encodable? value) {
+    if (value != null) {
+      encodeEncodable(key, value);
+    }
+  }
+
+  @override
+  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
+      encodeNullableEncodable(key.name, value);
+
+  @override
+  void encodeList<T>(
+    String key,
+    Iterable<T> elements,
+    EncoderCallback<T> encode,
+  ) {
+    _writer.writeName(key);
+    _writer.beginArray();
+    for (final e in elements) {
+      final child = JsonCodableEncoder(
+        _writer,
+        userInfo: _rootEncoder.userInfo,
+      );
+      encode(e, child);
+      child._finish();
+    }
+    _writer.endArray();
+  }
+
+  @override
+  void encodeListKey<T>(
+    StaticKey key,
+    Iterable<T> elements,
+    EncoderCallback<T> encode,
+  ) => encodeList(key.name, elements, encode);
+
+  @override
+  void encodeIntList(String key, List<int> values) {
+    _writer.writeName(key);
+    _writer.beginArray();
+    for (final v in values) {
+      _writer.writeInt(v);
+    }
+    _writer.endArray();
+  }
+
+  @override
+  void encodeIntListKey(StaticKey key, List<int> values) =>
+      encodeIntList(key.name, values);
+
+  @override
+  void encodeDoubleList(String key, List<double> values) {
+    _writer.writeName(key);
+    _writer.beginArray();
+    for (final v in values) {
+      _writer.writeDouble(v);
+    }
+    _writer.endArray();
+  }
+
+  @override
+  void encodeDoubleListKey(StaticKey key, List<double> values) =>
+      encodeDoubleList(key.name, values);
+
+  @override
+  void encodeStringList(String key, List<String> values) {
+    _writer.writeName(key);
+    _writer.beginArray();
+    for (final v in values) {
+      _writer.writeString(v);
+    }
+    _writer.endArray();
+  }
+
+  @override
+  void encodeStringListKey(StaticKey key, List<String> values) =>
+      encodeStringList(key.name, values);
+
+  @override
+  void encodeBoolList(String key, List<bool> values) {
+    _writer.writeName(key);
+    _writer.beginArray();
+    for (final v in values) {
+      _writer.writeBool(v);
+    }
+    _writer.endArray();
+  }
+
+  @override
+  void encodeBoolListKey(StaticKey key, List<bool> values) =>
+      encodeBoolList(key.name, values);
+}
+
+final class _JsonCodableUnkeyedEncoder implements UnkeyedEncoder {
+  final JsonCodableEncoder _rootEncoder;
+  final JsonTokenWriter _writer;
+  bool _closed = false;
+
+  _JsonCodableUnkeyedEncoder(this._rootEncoder, this._writer) {
+    _writer.beginArray();
+  }
+
+  void _close() {
+    if (!_closed) {
+      _writer.endArray();
+      _closed = true;
+    }
+  }
+
+  @override
+  void encodeInt(int value) => _writer.writeInt(value);
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeInt(value);
+    }
+  }
+
+  @override
+  void encodeDouble(double value) => _writer.writeDouble(value);
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeDouble(value);
+    }
+  }
+
+  @override
+  void encodeString(String value) => _writer.writeString(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(value);
+    }
+  }
+
+  @override
+  void encodeBool(bool value) => _writer.writeBool(value);
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeBool(value);
+    }
+  }
+
+  @override
+  void encodeNull() => _writer.writeNull();
+
+  @override
+  void encodeElement<T>(T value, EncoderCallback<T> encode) {
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encode(value, child);
+    child._finish();
+  }
+
+  @override
+  void encodeNullableElement<T>(T? value, EncoderCallback<T> encode) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      encodeElement(value, encode);
+    }
+  }
+
+  @override
+  void encodeList<T>(Iterable<T> elements, EncoderCallback<T> encode) {
+    for (final e in elements) {
+      encodeElement(e, encode);
+    }
+  }
+
+  @override
+  void encodeEncodable(Encodable value) {
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    child._finish();
+  }
+
+  @override
+  void encodeNullableEncodable(Encodable? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      encodeEncodable(value);
+    }
+  }
+}
+
+final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
+  final JsonCodableEncoder _rootEncoder;
+  final JsonTokenWriter _writer;
+
+  _JsonCodableSingleValueEncoder(this._rootEncoder, this._writer);
+
+  @override
+  void encodeInt(int value) => _writer.writeInt(value);
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeInt(value);
+    }
+  }
+
+  @override
+  void encodeDouble(double value) => _writer.writeDouble(value);
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeDouble(value);
+    }
+  }
+
+  @override
+  void encodeString(String value) => _writer.writeString(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(value);
+    }
+  }
+
+  @override
+  void encodeBool(bool value) => _writer.writeBool(value);
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeBool(value);
+    }
+  }
+
+  @override
+  void encodeNull() => _writer.writeNull();
+
+  @override
+  void encode<T>(T value, EncoderCallback<T> encode) {
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encode(value, child);
+    child._finish();
+  }
+
+  @override
+  void encodeNullable<T>(T? value, EncoderCallback<T> encode) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      final child = JsonCodableEncoder(
+        _writer,
+        userInfo: _rootEncoder.userInfo,
+      );
+      encode(value, child);
+      child._finish();
+    }
+  }
+
+  @override
+  void encodeEncodable(Encodable value) {
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    child._finish();
+  }
+
+  @override
+  void encodeNullableEncodable(Encodable? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      encodeEncodable(value);
+    }
+  }
 }

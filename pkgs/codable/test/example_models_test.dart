@@ -5,7 +5,7 @@
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 import 'package:test/test.dart';
 
 import '../example/basic_example.dart';
@@ -39,8 +39,8 @@ void main() {
       ''';
 
       final bytes = Uint8List.fromList(utf8.encode(json));
-      final reader = JsonTokenReader.fromBytes(bytes);
-      final person = Person.fromReader(reader);
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final person = Person.decode(decoder);
 
       check(person.firstName).equals('Alice');
       check(person.lastName).equals('Smith');
@@ -49,13 +49,10 @@ void main() {
       check(person.orders.first.isRushed).equals(true);
       check(person.orders.first.item?.itemNumber).equals(101);
 
-      final builder = BytesBuilder();
-      final writer = JsonTokenWriter.toSink(builder);
-      person.toWriter(writer);
-      final outputBytes = builder.toBytes();
+      final outputBytes = JsonCodableEncoder.toBytes(person.encode);
 
-      final roundtripped = Person.fromReader(
-        JsonTokenReader.fromBytes(outputBytes),
+      final roundtripped = Person.decode(
+        JsonCodableDecoder.fromBytes(outputBytes),
       );
       check(roundtripped.firstName).equals('Alice');
       check(roundtripped.lastName).equals('Smith');
@@ -80,10 +77,7 @@ void main() {
 
       final bytes = Uint8List.fromList(utf8.encode(json));
       final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final response = BaseResponse.decode(
-        decoder,
-        (Decoder d) => Article.fromReader((d as JsonCodableDecoder).reader),
-      );
+      final response = BaseResponse.decode(decoder, Article.decode);
 
       check(response.status).equals(200);
       check(response.message).equals('OK');
@@ -94,14 +88,14 @@ void main() {
 
     test('CustomDecoderExample: DateTimeEpochDecoder', () {
       final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
-      final ex1 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json1));
+      final ex1 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json1));
       check(ex1.when)
           .equals(DateTime.fromMillisecondsSinceEpoch(1700000000000));
 
       final json2 = Uint8List.fromList(
         utf8.encode('{"when": "2026-08-17T12:00:00.000Z"}'),
       );
-      final ex2 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json2));
+      final ex2 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json2));
       check(ex2.when).equals(DateTime.parse('2026-08-17T12:00:00.000Z'));
     });
 
@@ -132,8 +126,8 @@ void main() {
       final json = Uint8List.fromList(
         utf8.encode('{"location": [37.7749, -122.4194]}'),
       );
-      final reader = JsonTokenReader.fromBytes(json);
-      final pair = CoordinatePair.fromReader(reader);
+      final decoder = JsonCodableDecoder.fromBytes(json);
+      final pair = CoordinatePair.decode(decoder);
 
       check(pair.location).isNotNull();
       check(pair.location![0]).equals(37.7749);

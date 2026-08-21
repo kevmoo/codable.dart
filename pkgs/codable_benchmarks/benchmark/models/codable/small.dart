@@ -20,13 +20,9 @@ class SmallLocation {
     required this.country,
   });
 
-  static SmallLocation fromReader(JsonTokenReader reader) =>
-      _$SmallLocationFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$SmallLocationToWriter(this, writer);
-
   static SmallLocation decode(Decoder decoder) =>
       _$SmallLocationFromDecoder(decoder);
+  void encode(Encoder encoder) => _$SmallLocationToEncoder(this, encoder);
 }
 
 @Codable()
@@ -41,13 +37,9 @@ class SmallMetadata {
     required this.location,
   });
 
-  static SmallMetadata fromReader(JsonTokenReader reader) =>
-      _$SmallMetadataFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$SmallMetadataToWriter(this, writer);
-
   static SmallMetadata decode(Decoder decoder) =>
       _$SmallMetadataFromDecoder(decoder);
+  void encode(Encoder encoder) => _$SmallMetadataToEncoder(this, encoder);
 }
 
 @Codable()
@@ -76,11 +68,7 @@ class SmallDocument {
     required this.tags,
   });
 
-  static SmallDocument fromReader(JsonTokenReader reader) =>
-      _$SmallDocumentFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$SmallDocumentToWriter(this, writer);
-
   static SmallDocument decode(Decoder decoder) =>
       _$SmallDocumentFromDecoder(decoder);
+  void encode(Encoder encoder) => _$SmallDocumentToEncoder(this, encoder);
 }

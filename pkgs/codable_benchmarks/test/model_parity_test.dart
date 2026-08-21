@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 import 'package:test/test.dart';
 
 import '../benchmark/models/codable/canada.dart' as c_can;

@@ -13,10 +13,15 @@ class Coordinate {
 
   const Coordinate({required this.latitude, required this.longitude});
 
-  factory Coordinate.fromJson(Map<String, dynamic> json) => Coordinate(
-    latitude: ((json['latitude'] ?? json['lat']) as num).toDouble(),
-    longitude: ((json['longitude'] ?? json['lon']) as num).toDouble(),
-  );
+  factory Coordinate.fromJson(Map<String, dynamic> json) {
+    if (json.containsKey('lat') || json.containsKey('lon')) {
+      return Coordinate(
+        latitude: ((json['latitude'] ?? json['lat']) as num).toDouble(),
+        longitude: ((json['longitude'] ?? json['lon']) as num).toDouble(),
+      );
+    }
+    return _$CoordinateFromJson(json);
+  }
 
   Map<String, dynamic> toJson() => _$CoordinateToJson(this);
 }
