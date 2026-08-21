@@ -263,7 +263,6 @@ UserProfile _$UserProfileFromDecoder(Decoder decoder) {
           );
           if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
             role = UserRole.values[enumIndex];
-            seen |= _$UserProfileSchema.role;
           } else {
             throw const CodableException('Unknown UserRole value');
           }

@@ -377,10 +377,6 @@ final class DecoderGeneratorHelper {
       '${indent}if (enumIndex >= 0 && enumIndex < $typeStr.values.length) {',
     );
     buffer.writeln('$indent  ${field.name} = $typeStr.values[enumIndex];');
-    if (field.participatesInGoldenMask) {
-      final schemaName = '_\$${model.className}Schema';
-      buffer.writeln('$indent  seen |= $schemaName.${field.name};');
-    }
     buffer.writeln('$indent} else {');
     buffer.writeln(
       "$indent  throw const CodableException('Unknown $typeStr value');",
