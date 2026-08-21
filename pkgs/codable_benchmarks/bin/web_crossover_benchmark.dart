@@ -5,10 +5,10 @@ import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:codable/src/driver/json_codable_driver.dart';
 
 import '../benchmark/data/embedded_datasets.dart';
-import '../benchmark/models/codable/small.dart';
-import '../benchmark/models/codable/coordinate.dart';
-import '../benchmark/models/codable/citm_catalog.dart';
 import '../benchmark/models/codable/canada.dart';
+import '../benchmark/models/codable/citm_catalog.dart';
+import '../benchmark/models/codable/coordinate.dart';
+import '../benchmark/models/codable/small.dart';
 
 int blackholeSink = 0;
 
