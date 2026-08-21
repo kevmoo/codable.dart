@@ -297,13 +297,25 @@ await instance.invokeMain(...scriptArgs);
   }
 
   if (outputJson != null) {
+    Map<String, dynamic> mergedTargets = {};
+    final jsonFile = File(outputJson);
+    if (jsonFile.existsSync()) {
+      try {
+        final decoded = jsonDecode(jsonFile.readAsStringSync());
+        if (decoded is Map && decoded['targets'] is Map) {
+          mergedTargets = Map<String, dynamic>.from(decoded['targets'] as Map);
+        }
+      } catch (_) {}
+    }
+    mergedTargets.addAll(allTargetJson);
+
     final combinedJson = {
       'stock_dart_path': stockDart,
       'new_dart_path': newDart,
       'generated_at': DateTime.now().toUtc().toIso8601String(),
-      'targets': allTargetJson,
+      'targets': mergedTargets,
     };
-    File(outputJson).writeAsStringSync(
+    jsonFile.writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(combinedJson),
     );
     print('💾 Saved JSON results to: $outputJson');
