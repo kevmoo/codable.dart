@@ -727,7 +727,9 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   bool isNull() => _val == null;
 
   @override
-  T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+  T decode<T>(DecoderCallback<T> decoder) => decoder(
+    JsonCodableDecoder._(_val, null, userInfo: _rootDecoder.userInfo),
+  );
 
   @override
   T? decodeNullable<T>(DecoderCallback<T> decoder) =>

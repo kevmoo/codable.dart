@@ -406,9 +406,9 @@ final class DecoderGeneratorHelper {
       final enumName = elemType.element!.name;
       if (isNullable) {
         buffer.writeln(
-          '$indent${field.name} = keyed.decodeList('
-          '(d) => d.singleValue().isNull() ? null : '
-          '$enumName.values.byName(d.singleValue().readString()));',
+          '$indent${field.name} = keyed.decodeList((d) { '
+          'final v = d.singleValue().readNullableString(); '
+          'return v == null ? null : $enumName.values.byName(v); });',
         );
       } else {
         buffer.writeln(
@@ -421,9 +421,10 @@ final class DecoderGeneratorHelper {
       final nestedName = elemType.element!.name;
       if (isNullable) {
         buffer.writeln(
-          '$indent${field.name} = keyed.decodeList('
-          '(d) => d.singleValue().isNull() ? null : '
-          '_\$${nestedName}FromDecoder(d));',
+          '$indent${field.name} = keyed.decodeList((d) { '
+          'if (d.singleValue().isNull()) { '
+          'd.singleValue().readNull(); return null; } '
+          'return _\$${nestedName}FromDecoder(d); });',
         );
       } else {
         buffer.writeln(
@@ -508,9 +509,9 @@ final class DecoderGeneratorHelper {
     } else if (elemType != null && elemType.element is EnumElement) {
       final enumName = elemType.element!.name;
       buffer.writeln(
-        '$indent${field.name} = keyed.decodeList('
-        '(d) => d.singleValue().readNullableString() == null ? null : '
-        '$enumName.values.byName(d.singleValue().readString())).toSet();',
+        '$indent${field.name} = keyed.decodeList((d) { '
+        'final v = d.singleValue().readNullableString(); '
+        'return v == null ? null : $enumName.values.byName(v); }).toSet();',
       );
     } else {
       buffer.writeln(

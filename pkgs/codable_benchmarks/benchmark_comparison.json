@@ -1,7 +1,7 @@
 {
   "stock_dart_path": "/usr/local/google/home/kevmoo/github/flutter/bin/cache/dart-sdk/bin/dart",
   "new_dart_path": "/usr/local/google/home/kevmoo/.local/share/dart-sdk-json-utf8-kernels/dart-sdk/bin/dart",
-  "generated_at": "2026-08-21T01:34:27.965359Z",
+  "generated_at": "2026-08-21T05:37:06.732619Z",
   "targets": {
     "aot": {
       "tier1_old_dart_json_serial": [
@@ -9,136 +9,136 @@
           "dataset": "coordinates",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 3.87,
-          "throughput_mb_s": 104.52
+          "latency_ms": 3.544,
+          "throughput_mb_s": 114.13
         },
         {
           "dataset": "coordinates",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 0.55,
-          "throughput_mb_s": 735.56
+          "latency_ms": 0.553,
+          "throughput_mb_s": 730.86
         },
         {
           "dataset": "coordinates",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 10.686,
-          "throughput_mb_s": 37.85
+          "latency_ms": 10.441,
+          "throughput_mb_s": 38.74
         },
         {
           "dataset": "canada",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 34.748,
-          "throughput_mb_s": 61.78
+          "latency_ms": 33.965,
+          "throughput_mb_s": 63.2
         },
         {
           "dataset": "canada",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 9.273,
-          "throughput_mb_s": 231.52
+          "latency_ms": 8.601,
+          "throughput_mb_s": 249.58
         },
         {
           "dataset": "canada",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 48.282,
-          "throughput_mb_s": 44.46
+          "latency_ms": 47.309,
+          "throughput_mb_s": 45.38
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 5.806,
-          "throughput_mb_s": 283.72
+          "latency_ms": 5.845,
+          "throughput_mb_s": 281.8
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 1.198,
-          "throughput_mb_s": 1375.41
+          "latency_ms": 1.192,
+          "throughput_mb_s": 1381.48
         },
         {
           "dataset": "citm_catalog",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 9.73,
-          "throughput_mb_s": 169.29
+          "latency_ms": 9.66,
+          "throughput_mb_s": 170.51
         },
         {
           "dataset": "small",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
-          "latency_ms": 0.004,
-          "throughput_mb_s": 130.18
+          "latency_ms": 0.008,
+          "throughput_mb_s": 64.44
         },
         {
           "dataset": "small",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.001,
-          "throughput_mb_s": 918.89
+          "throughput_mb_s": 619.89
         },
         {
           "dataset": "small",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
-          "latency_ms": 0.017,
-          "throughput_mb_s": 30.39
+          "latency_ms": 0.01,
+          "throughput_mb_s": 51.15
         },
         {
           "dataset": "twitter",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 2.861,
-          "throughput_mb_s": 210.52
+          "latency_ms": 2.947,
+          "throughput_mb_s": 204.35
         },
         {
           "dataset": "twitter",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 0.291,
-          "throughput_mb_s": 2070.33
+          "latency_ms": 0.327,
+          "throughput_mb_s": 1842.22
         },
         {
           "dataset": "twitter",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 6.647,
-          "throughput_mb_s": 90.6
+          "latency_ms": 6.373,
+          "throughput_mb_s": 94.5
         }
       ],
       "tier2_new_dart_json_serial": [
@@ -146,136 +146,136 @@
           "dataset": "coordinates",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 3.743,
-          "throughput_mb_s": 108.07
+          "latency_ms": 3.788,
+          "throughput_mb_s": 106.78
         },
         {
           "dataset": "coordinates",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 0.567,
-          "throughput_mb_s": 713.45
+          "latency_ms": 0.602,
+          "throughput_mb_s": 671.75
         },
         {
           "dataset": "coordinates",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 4.895,
-          "throughput_mb_s": 82.64
+          "latency_ms": 4.58,
+          "throughput_mb_s": 88.32
         },
         {
           "dataset": "canada",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 28.188,
-          "throughput_mb_s": 76.16
+          "latency_ms": 26.61,
+          "throughput_mb_s": 80.67
         },
         {
           "dataset": "canada",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 8.827,
-          "throughput_mb_s": 243.22
+          "latency_ms": 9.071,
+          "throughput_mb_s": 236.65
         },
         {
           "dataset": "canada",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 32.418,
-          "throughput_mb_s": 66.22
+          "latency_ms": 32.72,
+          "throughput_mb_s": 65.61
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 5.84,
-          "throughput_mb_s": 282.05
+          "latency_ms": 5.981,
+          "throughput_mb_s": 275.43
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 1.264,
-          "throughput_mb_s": 1303.36
+          "latency_ms": 1.336,
+          "throughput_mb_s": 1232.74
         },
         {
           "dataset": "citm_catalog",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 6.357,
-          "throughput_mb_s": 259.11
+          "latency_ms": 6.299,
+          "throughput_mb_s": 261.5
         },
         {
           "dataset": "small",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.003,
-          "throughput_mb_s": 200.27
+          "throughput_mb_s": 194.29
         },
         {
           "dataset": "small",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.0,
-          "throughput_mb_s": 1115.8
+          "throughput_mb_s": 1131.97
         },
         {
           "dataset": "small",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.005,
-          "throughput_mb_s": 106.27
+          "throughput_mb_s": 108.48
         },
         {
           "dataset": "twitter",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 2.832,
-          "throughput_mb_s": 212.68
+          "latency_ms": 2.85,
+          "throughput_mb_s": 211.34
         },
         {
           "dataset": "twitter",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 0.308,
-          "throughput_mb_s": 1956.23
+          "latency_ms": 0.36,
+          "throughput_mb_s": 1674.24
         },
         {
           "dataset": "twitter",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 3.691,
-          "throughput_mb_s": 163.17
+          "latency_ms": 3.754,
+          "throughput_mb_s": 160.45
         }
       ],
       "tier3_new_dart_codable": [
@@ -283,136 +283,136 @@
           "dataset": "coordinates",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 2.838,
-          "throughput_mb_s": 142.51
+          "latency_ms": 2.777,
+          "throughput_mb_s": 145.65
         },
         {
           "dataset": "coordinates",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 2.813,
-          "throughput_mb_s": 143.79
+          "latency_ms": 2.776,
+          "throughput_mb_s": 145.72
         },
         {
           "dataset": "coordinates",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 17.979,
-          "throughput_mb_s": 22.5
+          "latency_ms": 18.259,
+          "throughput_mb_s": 22.15
         },
         {
           "dataset": "canada",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 12.04,
-          "throughput_mb_s": 178.31
+          "latency_ms": 12.5,
+          "throughput_mb_s": 171.75
         },
         {
           "dataset": "canada",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 12.856,
-          "throughput_mb_s": 166.98
+          "latency_ms": 12.665,
+          "throughput_mb_s": 169.5
         },
         {
           "dataset": "canada",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 75.052,
-          "throughput_mb_s": 28.6
+          "latency_ms": 74.383,
+          "throughput_mb_s": 28.86
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 4.643,
-          "throughput_mb_s": 354.77
+          "latency_ms": 4.612,
+          "throughput_mb_s": 357.15
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 4.854,
-          "throughput_mb_s": 339.34
+          "latency_ms": 4.618,
+          "throughput_mb_s": 356.72
         },
         {
           "dataset": "citm_catalog",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 16.455,
-          "throughput_mb_s": 100.1
+          "latency_ms": 16.76,
+          "throughput_mb_s": 98.28
         },
         {
           "dataset": "small",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
-          "latency_ms": 0.005,
-          "throughput_mb_s": 114.02
+          "latency_ms": 0.003,
+          "throughput_mb_s": 160.71
         },
         {
           "dataset": "small",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.004,
-          "throughput_mb_s": 130.18
+          "throughput_mb_s": 148.77
         },
         {
           "dataset": "small",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
-          "latency_ms": 0.011,
-          "throughput_mb_s": 45.68
+          "latency_ms": 0.009,
+          "throughput_mb_s": 57.73
         },
         {
           "dataset": "twitter",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 4.695,
-          "throughput_mb_s": 128.28
+          "latency_ms": 5.834,
+          "throughput_mb_s": 103.23
         },
         {
           "dataset": "twitter",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 5.314,
-          "throughput_mb_s": 113.34
+          "latency_ms": 5.074,
+          "throughput_mb_s": 118.69
         },
         {
           "dataset": "twitter",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 10.064,
-          "throughput_mb_s": 59.84
+          "latency_ms": 10.236,
+          "throughput_mb_s": 58.84
         }
       ]
     },
@@ -422,106 +422,106 @@
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "decode",
-          "latency_ms": 4.24,
-          "throughput_mb_s": 95.4
+          "latency_ms": 4.052,
+          "throughput_mb_s": 99.83
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "decode_literal",
-          "latency_ms": 0.704,
-          "throughput_mb_s": 574.59
+          "latency_ms": 0.608,
+          "throughput_mb_s": 665.31
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "encode",
-          "latency_ms": 8.804,
-          "throughput_mb_s": 45.95
+          "latency_ms": 8.764,
+          "throughput_mb_s": 46.16
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "decode",
-          "latency_ms": 36.92,
-          "throughput_mb_s": 58.15
+          "latency_ms": 30.76,
+          "throughput_mb_s": 69.79
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "decode_literal",
-          "latency_ms": 20.02,
-          "throughput_mb_s": 107.23
+          "latency_ms": 15.14,
+          "throughput_mb_s": 141.79
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "encode",
-          "latency_ms": 38.72,
-          "throughput_mb_s": 55.44
+          "latency_ms": 35.16,
+          "throughput_mb_s": 61.06
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "decode",
-          "latency_ms": 9.72,
-          "throughput_mb_s": 169.46
+          "latency_ms": 8.54,
+          "throughput_mb_s": 192.88
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "decode_literal",
-          "latency_ms": 2.96,
-          "throughput_mb_s": 556.48
+          "latency_ms": 2.7,
+          "throughput_mb_s": 610.07
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "encode",
-          "latency_ms": 11.1,
-          "throughput_mb_s": 148.4
+          "latency_ms": 10.98,
+          "throughput_mb_s": 150.02
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "small",
           "mode": "decode",
+          "latency_ms": 0.0,
+          "throughput_mb_s": 99999.0
+        },
+        {
+          "engine": "dart_json_serializable",
+          "dataset": "small",
+          "mode": "decode_literal",
+          "latency_ms": 0.0,
+          "throughput_mb_s": 99999.0
+        },
+        {
+          "engine": "dart_json_serializable",
+          "dataset": "small",
+          "mode": "encode",
           "latency_ms": 0.02,
           "throughput_mb_s": 26.04
         },
         {
           "engine": "dart_json_serializable",
-          "dataset": "small",
-          "mode": "decode_literal",
-          "latency_ms": 0.0,
-          "throughput_mb_s": 99999.0
-        },
-        {
-          "engine": "dart_json_serializable",
-          "dataset": "small",
-          "mode": "encode",
-          "latency_ms": 0.0,
-          "throughput_mb_s": 99999.0
-        },
-        {
-          "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "decode",
-          "latency_ms": 3.92,
-          "throughput_mb_s": 153.64
+          "latency_ms": 3.66,
+          "throughput_mb_s": 164.55
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "decode_literal",
-          "latency_ms": 0.54,
-          "throughput_mb_s": 1115.29
+          "latency_ms": 0.52,
+          "throughput_mb_s": 1158.19
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "encode",
-          "latency_ms": 5.32,
-          "throughput_mb_s": 113.21
+          "latency_ms": 5.66,
+          "throughput_mb_s": 106.41
         }
       ],
       "tier2_new_dart_json_serial": [
@@ -529,64 +529,64 @@
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "decode",
-          "latency_ms": 20.064,
-          "throughput_mb_s": 20.16
+          "latency_ms": 19.98,
+          "throughput_mb_s": 20.25
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "decode_literal",
-          "latency_ms": 0.584,
-          "throughput_mb_s": 692.66
+          "latency_ms": 0.6,
+          "throughput_mb_s": 674.19
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "coordinates",
           "mode": "encode",
-          "latency_ms": 7.964,
-          "throughput_mb_s": 50.79
+          "latency_ms": 7.416,
+          "throughput_mb_s": 54.55
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "decode",
-          "latency_ms": 99.4,
-          "throughput_mb_s": 21.6
+          "latency_ms": 97.32,
+          "throughput_mb_s": 22.06
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "decode_literal",
-          "latency_ms": 19.7,
-          "throughput_mb_s": 108.97
+          "latency_ms": 15.98,
+          "throughput_mb_s": 134.34
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "canada",
           "mode": "encode",
-          "latency_ms": 35.74,
-          "throughput_mb_s": 60.07
+          "latency_ms": 34.32,
+          "throughput_mb_s": 62.55
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "decode",
-          "latency_ms": 29.1,
-          "throughput_mb_s": 56.6
+          "latency_ms": 27.58,
+          "throughput_mb_s": 59.72
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "decode_literal",
-          "latency_ms": 3.4,
-          "throughput_mb_s": 484.47
+          "latency_ms": 3.12,
+          "throughput_mb_s": 527.95
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "citm_catalog",
           "mode": "encode",
-          "latency_ms": 9.2,
-          "throughput_mb_s": 179.04
+          "latency_ms": 8.4,
+          "throughput_mb_s": 196.09
         },
         {
           "engine": "dart_json_serializable",
@@ -599,36 +599,36 @@
           "engine": "dart_json_serializable",
           "dataset": "small",
           "mode": "decode_literal",
-          "latency_ms": 0.0,
-          "throughput_mb_s": 99999.0
+          "latency_ms": 0.02,
+          "throughput_mb_s": 26.04
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "small",
           "mode": "encode",
-          "latency_ms": 0.0,
-          "throughput_mb_s": 99999.0
+          "latency_ms": 0.02,
+          "throughput_mb_s": 26.04
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "decode",
-          "latency_ms": 13.56,
-          "throughput_mb_s": 44.41
+          "latency_ms": 13.5,
+          "throughput_mb_s": 44.61
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "decode_literal",
-          "latency_ms": 1.14,
-          "throughput_mb_s": 528.3
+          "latency_ms": 0.68,
+          "throughput_mb_s": 885.67
         },
         {
           "engine": "dart_json_serializable",
           "dataset": "twitter",
           "mode": "encode",
-          "latency_ms": 8.82,
-          "throughput_mb_s": 68.28
+          "latency_ms": 8.72,
+          "throughput_mb_s": 69.07
         }
       ],
       "tier3_new_dart_codable": [
@@ -636,64 +636,64 @@
           "engine": "dart_codable_streaming",
           "dataset": "coordinates",
           "mode": "decode",
-          "latency_ms": 5.976,
-          "throughput_mb_s": 67.69
+          "latency_ms": 7.452,
+          "throughput_mb_s": 54.28
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "coordinates",
           "mode": "decode_literal",
-          "latency_ms": 5.584,
-          "throughput_mb_s": 72.44
+          "latency_ms": 7.432,
+          "throughput_mb_s": 54.43
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "coordinates",
           "mode": "encode",
-          "latency_ms": 30.956,
-          "throughput_mb_s": 13.07
+          "latency_ms": 31.416,
+          "throughput_mb_s": 12.88
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "canada",
           "mode": "decode",
-          "latency_ms": 36.48,
-          "throughput_mb_s": 58.85
+          "latency_ms": 31.12,
+          "throughput_mb_s": 68.98
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "canada",
           "mode": "decode_literal",
-          "latency_ms": 37.3,
-          "throughput_mb_s": 57.55
+          "latency_ms": 29.04,
+          "throughput_mb_s": 73.92
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "canada",
           "mode": "encode",
-          "latency_ms": 199.36,
-          "throughput_mb_s": 10.77
+          "latency_ms": 180.86,
+          "throughput_mb_s": 11.87
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "citm_catalog",
           "mode": "decode",
-          "latency_ms": 11.82,
-          "throughput_mb_s": 139.36
+          "latency_ms": 13.74,
+          "throughput_mb_s": 119.88
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "citm_catalog",
           "mode": "decode_literal",
-          "latency_ms": 11.2,
-          "throughput_mb_s": 147.07
+          "latency_ms": 13.5,
+          "throughput_mb_s": 122.01
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "citm_catalog",
           "mode": "encode",
-          "latency_ms": 34.14,
-          "throughput_mb_s": 48.25
+          "latency_ms": 35.38,
+          "throughput_mb_s": 46.56
         },
         {
           "engine": "dart_codable_streaming",
@@ -720,22 +720,22 @@
           "engine": "dart_codable_streaming",
           "dataset": "twitter",
           "mode": "decode",
-          "latency_ms": 5.68,
-          "throughput_mb_s": 106.03
+          "latency_ms": 5.44,
+          "throughput_mb_s": 110.71
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "twitter",
           "mode": "decode_literal",
-          "latency_ms": 4.98,
-          "throughput_mb_s": 120.94
+          "latency_ms": 5.3,
+          "throughput_mb_s": 113.63
         },
         {
           "engine": "dart_codable_streaming",
           "dataset": "twitter",
           "mode": "encode",
-          "latency_ms": 19.16,
-          "throughput_mb_s": 31.43
+          "latency_ms": 17.7,
+          "throughput_mb_s": 34.03
         }
       ]
     },
@@ -745,234 +745,97 @@
           "dataset": "coordinates",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 3.588,
-          "throughput_mb_s": 112.74
+          "latency_ms": 3.561,
+          "throughput_mb_s": 113.58
         },
         {
           "dataset": "coordinates",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 1.177,
-          "throughput_mb_s": 343.65
+          "latency_ms": 1.138,
+          "throughput_mb_s": 355.61
         },
         {
           "dataset": "coordinates",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 10.868,
-          "throughput_mb_s": 37.22
+          "latency_ms": 10.547,
+          "throughput_mb_s": 38.35
         },
         {
           "dataset": "canada",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 39.744,
-          "throughput_mb_s": 54.01
+          "latency_ms": 38.932,
+          "throughput_mb_s": 55.14
         },
         {
           "dataset": "canada",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 13.946,
-          "throughput_mb_s": 153.93
+          "latency_ms": 14.229,
+          "throughput_mb_s": 150.87
         },
         {
           "dataset": "canada",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 52.969,
-          "throughput_mb_s": 40.53
+          "latency_ms": 52.541,
+          "throughput_mb_s": 40.86
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 5.818,
-          "throughput_mb_s": 283.12
+          "latency_ms": 6.21,
+          "throughput_mb_s": 265.24
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 1.949,
-          "throughput_mb_s": 845.19
+          "latency_ms": 2.057,
+          "throughput_mb_s": 800.93
         },
         {
           "dataset": "citm_catalog",
           "mode": "encode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 9.534,
-          "throughput_mb_s": 172.78
+          "latency_ms": 9.001,
+          "throughput_mb_s": 183.01
         },
         {
           "dataset": "small",
           "mode": "decode",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.004,
-          "throughput_mb_s": 139.47
+          "throughput_mb_s": 139.23
         },
         {
           "dataset": "small",
           "mode": "decode_literal",
           "engine": "old_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 546,
-          "latency_ms": 0.001,
-          "throughput_mb_s": 503.91
-        },
-        {
-          "dataset": "small",
-          "mode": "encode",
-          "engine": "old_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 546,
-          "latency_ms": 0.006,
-          "throughput_mb_s": 91.89
-        },
-        {
-          "dataset": "twitter",
-          "mode": "decode",
-          "engine": "old_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 631514,
-          "latency_ms": 3.228,
-          "throughput_mb_s": 186.55
-        },
-        {
-          "dataset": "twitter",
-          "mode": "decode_literal",
-          "engine": "old_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 631514,
-          "latency_ms": 0.506,
-          "throughput_mb_s": 1190.39
-        },
-        {
-          "dataset": "twitter",
-          "mode": "encode",
-          "engine": "old_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 631514,
-          "latency_ms": 6.052,
-          "throughput_mb_s": 99.52
-        }
-      ],
-      "tier2_new_dart_json_serial": [
-        {
-          "dataset": "coordinates",
-          "mode": "decode",
-          "engine": "new_dart_json_serial",
-          "iterations": 150,
-          "file_bytes": 424161,
-          "latency_ms": 3.827,
-          "throughput_mb_s": 105.71
-        },
-        {
-          "dataset": "coordinates",
-          "mode": "decode_literal",
-          "engine": "new_dart_json_serial",
-          "iterations": 150,
-          "file_bytes": 424161,
-          "latency_ms": 1.108,
-          "throughput_mb_s": 364.99
-        },
-        {
-          "dataset": "coordinates",
-          "mode": "encode",
-          "engine": "new_dart_json_serial",
-          "iterations": 150,
-          "file_bytes": 424161,
-          "latency_ms": 5.689,
-          "throughput_mb_s": 71.11
-        },
-        {
-          "dataset": "canada",
-          "mode": "decode",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 2251051,
-          "latency_ms": 38.748,
-          "throughput_mb_s": 55.4
-        },
-        {
-          "dataset": "canada",
-          "mode": "decode_literal",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 2251051,
-          "latency_ms": 14.396,
-          "throughput_mb_s": 149.12
-        },
-        {
-          "dataset": "canada",
-          "mode": "encode",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 2251051,
-          "latency_ms": 43.479,
-          "throughput_mb_s": 49.37
-        },
-        {
-          "dataset": "citm_catalog",
-          "mode": "decode",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 1727204,
-          "latency_ms": 6.049,
-          "throughput_mb_s": 272.33
-        },
-        {
-          "dataset": "citm_catalog",
-          "mode": "decode_literal",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 1727204,
-          "latency_ms": 1.841,
-          "throughput_mb_s": 894.48
-        },
-        {
-          "dataset": "citm_catalog",
-          "mode": "encode",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 1727204,
-          "latency_ms": 6.629,
-          "throughput_mb_s": 248.46
-        },
-        {
-          "dataset": "small",
-          "mode": "decode",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
-          "file_bytes": 546,
-          "latency_ms": 0.004,
-          "throughput_mb_s": 138.24
-        },
-        {
-          "dataset": "small",
-          "mode": "decode_literal",
-          "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.001,
           "throughput_mb_s": 520.71
@@ -980,38 +843,175 @@
         {
           "dataset": "small",
           "mode": "encode",
+          "engine": "old_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 546,
+          "latency_ms": 0.006,
+          "throughput_mb_s": 91.67
+        },
+        {
+          "dataset": "twitter",
+          "mode": "decode",
+          "engine": "old_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 631514,
+          "latency_ms": 3.118,
+          "throughput_mb_s": 193.14
+        },
+        {
+          "dataset": "twitter",
+          "mode": "decode_literal",
+          "engine": "old_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 631514,
+          "latency_ms": 0.513,
+          "throughput_mb_s": 1173.12
+        },
+        {
+          "dataset": "twitter",
+          "mode": "encode",
+          "engine": "old_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 631514,
+          "latency_ms": 5.922,
+          "throughput_mb_s": 101.7
+        }
+      ],
+      "tier2_new_dart_json_serial": [
+        {
+          "dataset": "coordinates",
+          "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 250,
+          "file_bytes": 424161,
+          "latency_ms": 3.525,
+          "throughput_mb_s": 114.75
+        },
+        {
+          "dataset": "coordinates",
+          "mode": "decode_literal",
+          "engine": "new_dart_json_serial",
+          "iterations": 250,
+          "file_bytes": 424161,
+          "latency_ms": 1.093,
+          "throughput_mb_s": 370.19
+        },
+        {
+          "dataset": "coordinates",
+          "mode": "encode",
+          "engine": "new_dart_json_serial",
+          "iterations": 250,
+          "file_bytes": 424161,
+          "latency_ms": 5.426,
+          "throughput_mb_s": 74.55
+        },
+        {
+          "dataset": "canada",
+          "mode": "decode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 2251051,
+          "latency_ms": 38.608,
+          "throughput_mb_s": 55.6
+        },
+        {
+          "dataset": "canada",
+          "mode": "decode_literal",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 2251051,
+          "latency_ms": 13.997,
+          "throughput_mb_s": 153.38
+        },
+        {
+          "dataset": "canada",
+          "mode": "encode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 2251051,
+          "latency_ms": 43.532,
+          "throughput_mb_s": 49.31
+        },
+        {
+          "dataset": "citm_catalog",
+          "mode": "decode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 1727204,
+          "latency_ms": 6.039,
+          "throughput_mb_s": 272.75
+        },
+        {
+          "dataset": "citm_catalog",
+          "mode": "decode_literal",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 1727204,
+          "latency_ms": 1.987,
+          "throughput_mb_s": 829.1
+        },
+        {
+          "dataset": "citm_catalog",
+          "mode": "encode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 1727204,
+          "latency_ms": 6.518,
+          "throughput_mb_s": 252.71
+        },
+        {
+          "dataset": "small",
+          "mode": "decode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 546,
+          "latency_ms": 0.004,
+          "throughput_mb_s": 139.97
+        },
+        {
+          "dataset": "small",
+          "mode": "decode_literal",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
+          "file_bytes": 546,
+          "latency_ms": 0.001,
+          "throughput_mb_s": 542.4
+        },
+        {
+          "dataset": "small",
+          "mode": "encode",
+          "engine": "new_dart_json_serial",
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.014,
-          "throughput_mb_s": 36.76
+          "throughput_mb_s": 36.36
         },
         {
           "dataset": "twitter",
           "mode": "decode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 3.119,
-          "throughput_mb_s": 193.07
+          "latency_ms": 3.132,
+          "throughput_mb_s": 192.3
         },
         {
           "dataset": "twitter",
           "mode": "decode_literal",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 0.458,
-          "throughput_mb_s": 1316.12
+          "latency_ms": 0.452,
+          "throughput_mb_s": 1333.91
         },
         {
           "dataset": "twitter",
           "mode": "encode",
           "engine": "new_dart_json_serial",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 3.986,
-          "throughput_mb_s": 151.11
+          "latency_ms": 3.956,
+          "throughput_mb_s": 152.26
         }
       ],
       "tier3_new_dart_codable": [
@@ -1019,136 +1019,136 @@
           "dataset": "coordinates",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 7.272,
-          "throughput_mb_s": 55.62
+          "latency_ms": 7.886,
+          "throughput_mb_s": 51.29
         },
         {
           "dataset": "coordinates",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 7.123,
-          "throughput_mb_s": 56.79
+          "latency_ms": 7.771,
+          "throughput_mb_s": 52.05
         },
         {
           "dataset": "coordinates",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 150,
+          "iterations": 250,
           "file_bytes": 424161,
-          "latency_ms": 12.598,
-          "throughput_mb_s": 32.11
+          "latency_ms": 12.214,
+          "throughput_mb_s": 33.12
         },
         {
           "dataset": "canada",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 42.81,
-          "throughput_mb_s": 50.15
+          "latency_ms": 43.274,
+          "throughput_mb_s": 49.61
         },
         {
           "dataset": "canada",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 44.224,
-          "throughput_mb_s": 48.54
+          "latency_ms": 43.632,
+          "throughput_mb_s": 49.2
         },
         {
           "dataset": "canada",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 2251051,
-          "latency_ms": 83.276,
-          "throughput_mb_s": 25.78
+          "latency_ms": 80.562,
+          "throughput_mb_s": 26.65
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 19.726,
-          "throughput_mb_s": 83.5
+          "latency_ms": 20.502,
+          "throughput_mb_s": 80.34
         },
         {
           "dataset": "citm_catalog",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 19.985,
-          "throughput_mb_s": 82.42
+          "latency_ms": 20.195,
+          "throughput_mb_s": 81.56
         },
         {
           "dataset": "citm_catalog",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 1727204,
-          "latency_ms": 11.863,
-          "throughput_mb_s": 138.85
+          "latency_ms": 11.698,
+          "throughput_mb_s": 140.81
         },
         {
           "dataset": "small",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.007,
-          "throughput_mb_s": 70.05
+          "throughput_mb_s": 69.99
         },
         {
           "dataset": "small",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
-          "latency_ms": 0.007,
-          "throughput_mb_s": 74.39
+          "latency_ms": 0.009,
+          "throughput_mb_s": 57.09
         },
         {
           "dataset": "small",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 546,
           "latency_ms": 0.008,
-          "throughput_mb_s": 64.28
+          "throughput_mb_s": 67.98
         },
         {
           "dataset": "twitter",
           "mode": "decode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 10.011,
-          "throughput_mb_s": 60.16
+          "latency_ms": 9.445,
+          "throughput_mb_s": 63.77
         },
         {
           "dataset": "twitter",
           "mode": "decode_literal",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 9.544,
-          "throughput_mb_s": 63.1
+          "latency_ms": 9.511,
+          "throughput_mb_s": 63.33
         },
         {
           "dataset": "twitter",
           "mode": "encode",
           "engine": "new_dart_codable",
-          "iterations": 30,
+          "iterations": 50,
           "file_bytes": 631514,
-          "latency_ms": 7.06,
-          "throughput_mb_s": 85.31
+          "latency_ms": 6.686,
+          "throughput_mb_s": 90.08
         }
       ]
     }

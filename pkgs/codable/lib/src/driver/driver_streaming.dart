@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../contracts/codable.dart';
@@ -43,6 +44,14 @@ final class JsonCodableDecoder implements Decoder {
       bytes,
       userInfo: userInfo,
     );
+  }
+
+  factory JsonCodableDecoder.fromString(
+    String source, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final bytes = Uint8List.fromList(utf8.encode(source));
+    return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
   }
 
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
@@ -332,9 +341,50 @@ final class _JsonCodableKeyedDecoder
 
 final class _JsonCodableMappedDecoder implements MappedDecoder {
   final JsonCodableDecoder _rootDecoder;
-  final Map<String, Object?> _map = {};
+  late final Map<String, Object?> _map;
 
-  _JsonCodableMappedDecoder(this._rootDecoder);
+  _JsonCodableMappedDecoder(this._rootDecoder) {
+    _map = _readObject(_rootDecoder._reader);
+  }
+
+  static Map<String, Object?> _readObject(JsonTokenReader reader) {
+    reader.beginObject();
+    final map = <String, Object?>{};
+    while (reader.hasNext()) {
+      final key = reader.nextName();
+      map[key] = _readValue(reader);
+    }
+    reader.endObject();
+    return map;
+  }
+
+  static Object? _readValue(JsonTokenReader reader) {
+    final type = reader.peek();
+    switch (type) {
+      case JsonTokenType.nullValue:
+        reader.readNull();
+        return null;
+      case JsonTokenType.boolean:
+        return reader.readBool();
+      case JsonTokenType.number:
+        return reader.readDouble();
+      case JsonTokenType.string:
+        return reader.readString();
+      case JsonTokenType.beginObject:
+        return _readObject(reader);
+      case JsonTokenType.beginArray:
+        reader.beginArray();
+        final list = <Object?>[];
+        while (reader.hasNext()) {
+          list.add(_readValue(reader));
+        }
+        reader.endArray();
+        return list;
+      default:
+        reader.skipValue();
+        return null;
+    }
+  }
 
   @override
   bool containsKey(String key) => _map.containsKey(key);
@@ -351,7 +401,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   @override
   int readInt(String key) {
     final v = _map[key];
-    if (v is int) return v;
+    if (v is num) return v.toInt();
     throw CodableException('Expected int for $key, found $v');
   }
 
@@ -416,16 +466,24 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
 
   @override
-  T decodeKey<T>(String key, DecoderCallback<T> decoder) =>
-      decoder(_rootDecoder);
+  T decodeKey<T>(String key, DecoderCallback<T> decoder) {
+    final v = _map[key];
+    if (v == null) {
+      throw CodableException('Missing required key $key in mapped decoder');
+    }
+    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
+  }
 
   @override
   T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
       decodeKey(key.name, decoder);
 
   @override
-  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) =>
-      isNull(key) ? null : decodeKey(key, decoder);
+  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
+    final v = _map[key];
+    if (v == null) return null;
+    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
+  }
 
   @override
   T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
@@ -435,9 +493,11 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
     final v = _map[key];
     if (v is List) {
-      return v.map((e) => decoder(_rootDecoder)).toList();
+      return v
+          .map((e) => decoder(JsonCodableDecoder.fromString(jsonEncode(e))))
+          .toList();
     }
-    throw CodableException('Expected list for $key');
+    throw CodableException('Expected list for $key, found $v');
   }
 
   @override

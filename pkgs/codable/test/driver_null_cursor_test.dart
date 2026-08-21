@@ -60,5 +60,34 @@ void main() {
 
       check(keyed.hasNextKey()).isFalse();
     });
+
+    test('SingleValueDecoder.decode properly scopes nested single value', () {
+      final jsonBytes = Uint8List.fromList(utf8.encode('{"inner": "hello"}'));
+      final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
+      final single = decoder.singleValue();
+
+      final result = single.decode((d) {
+        final keyed = d.keyed();
+        check(keyed.hasNextKey()).isTrue();
+        check(keyed.nextKey()).equals('inner');
+        return keyed.readString();
+      });
+
+      check(result).equals('hello');
+    });
+
+    test('MappedDecoder supports random-access keys and nested lists', () {
+      final jsonBytes = Uint8List.fromList(
+        utf8.encode('{"name": "test", "count": 42, "items": ["a", "b"]}'),
+      );
+      final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
+      final mapped = decoder.mapped();
+
+      check(mapped.containsKey('name')).isTrue();
+      check(mapped.containsKey('missing')).isFalse();
+      check(mapped.readString('name')).equals('test');
+      check(mapped.readInt('count')).equals(42);
+      check(mapped.decodeStringList('items')).deepEquals(['a', 'b']);
+    });
   });
 }
