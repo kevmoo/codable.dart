@@ -6,7 +6,7 @@ targets:
       - "test/**"
       - "$package$"
     builders:
-      codable_generator|codable:
+      codable_builder|codable:
         generate_for:
           - "example/**"
           - "test/**"
@@ -14,3 +14,6 @@ targets:
         options:
           ignore_for_file:
             - lines_longer_than_80_chars
+            - unnecessary_lambdas
+            - deprecated_member_use
+            - unused_element
