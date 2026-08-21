@@ -13,10 +13,9 @@ class TwitterMetadata {
 
   const TwitterMetadata({this.resultType = '', this.isoLanguageCode = ''});
 
-  static TwitterMetadata fromReader(JsonTokenReader reader) =>
-      _$TwitterMetadataFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterMetadataToWriter(this, writer);
+  static TwitterMetadata decode(Decoder decoder) =>
+      _$TwitterMetadataFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterMetadataToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -35,10 +34,9 @@ class TwitterUserMention {
     this.indices = const [],
   });
 
-  static TwitterUserMention fromReader(JsonTokenReader reader) =>
-      _$TwitterUserMentionFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterUserMentionToWriter(this, writer);
+  static TwitterUserMention decode(Decoder decoder) =>
+      _$TwitterUserMentionFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterUserMentionToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -55,9 +53,8 @@ class TwitterUrl {
     this.indices = const [],
   });
 
-  static TwitterUrl fromReader(JsonTokenReader reader) =>
-      _$TwitterUrlFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$TwitterUrlToWriter(this, writer);
+  static TwitterUrl decode(Decoder decoder) => _$TwitterUrlFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterUrlToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -66,10 +63,9 @@ class TwitterEntitiesUrls {
 
   const TwitterEntitiesUrls({this.urls = const []});
 
-  static TwitterEntitiesUrls fromReader(JsonTokenReader reader) =>
-      _$TwitterEntitiesUrlsFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterEntitiesUrlsToWriter(this, writer);
+  static TwitterEntitiesUrls decode(Decoder decoder) =>
+      _$TwitterEntitiesUrlsFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterEntitiesUrlsToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -79,10 +75,9 @@ class TwitterUserEntities {
 
   const TwitterUserEntities({this.url, this.description});
 
-  static TwitterUserEntities fromReader(JsonTokenReader reader) =>
-      _$TwitterUserEntitiesFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterUserEntitiesToWriter(this, writer);
+  static TwitterUserEntities decode(Decoder decoder) =>
+      _$TwitterUserEntitiesFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterUserEntitiesToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -92,10 +87,9 @@ class TwitterEntities {
 
   const TwitterEntities({this.urls = const [], this.userMentions = const []});
 
-  static TwitterEntities fromReader(JsonTokenReader reader) =>
-      _$TwitterEntitiesFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterEntitiesToWriter(this, writer);
+  static TwitterEntities decode(Decoder decoder) =>
+      _$TwitterEntitiesFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterEntitiesToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -184,9 +178,9 @@ class TwitterUser {
     this.notifications = false,
   });
 
-  static TwitterUser fromReader(JsonTokenReader reader) =>
-      _$TwitterUserFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$TwitterUserToWriter(this, writer);
+  static TwitterUser decode(Decoder decoder) =>
+      _$TwitterUserFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterUserToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -237,10 +231,9 @@ class TwitterStatus {
     this.retweetedStatus,
   });
 
-  static TwitterStatus fromReader(JsonTokenReader reader) =>
-      _$TwitterStatusFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterStatusToWriter(this, writer);
+  static TwitterStatus decode(Decoder decoder) =>
+      _$TwitterStatusFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterStatusToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -267,10 +260,10 @@ class TwitterSearchMetadata {
     this.sinceIdStr = '0',
   });
 
-  static TwitterSearchMetadata fromReader(JsonTokenReader reader) =>
-      _$TwitterSearchMetadataFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterSearchMetadataToWriter(this, writer);
+  static TwitterSearchMetadata decode(Decoder decoder) =>
+      _$TwitterSearchMetadataFromDecoder(decoder);
+  void encode(Encoder encoder) =>
+      _$TwitterSearchMetadataToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -283,11 +276,7 @@ class TwitterResponse {
     required this.searchMetadata,
   });
 
-  static TwitterResponse fromReader(JsonTokenReader reader) =>
-      _$TwitterResponseFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$TwitterResponseToWriter(this, writer);
-
   static TwitterResponse decode(Decoder decoder) =>
       _$TwitterResponseFromDecoder(decoder);
+  void encode(Encoder encoder) => _$TwitterResponseToEncoder(this, encoder);
 }

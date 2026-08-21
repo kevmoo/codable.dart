@@ -9,12 +9,12 @@
 //
 // Strict assertion standard: package:checks only.
 
-// ignore_for_file: unreachable_from_main, lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars
 
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 import 'package:test/scaffolding.dart';
 
 part 'domain_models_test.g.dart';
@@ -1278,51 +1278,10 @@ class Coordinate implements Encodable {
 
   const Coordinate({required this.latitude, required this.longitude});
 
-  static Coordinate fromReader(JsonTokenReader reader) =>
-      _$CoordinateFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CoordinateToWriter(this, writer);
-
-  static Coordinate decodeFromReader(JsonTokenReader reader) =>
-      _$CoordinateFromReader(reader);
-  void encodeToWriter(JsonTokenWriter writer) =>
-      _$CoordinateToWriter(this, writer);
-
-  static Coordinate decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CoordinateFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    double? lat;
-    double? lon;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'latitude':
-        case 'lat':
-          lat = keyed.readDouble();
-          break;
-        case 'longitude':
-        case 'lon':
-          lon = keyed.readDouble();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-
-    if (lat == null || lon == null) {
-      throw const CodableException('Missing required fields for Coordinate');
-    }
-    return Coordinate(latitude: lat, longitude: lon);
-  }
+  static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
 
   @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeDouble('latitude', latitude);
-    keyed.encodeDouble('longitude', longitude);
-  }
+  void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
 
   @override
   bool operator ==(Object other) =>
@@ -1353,41 +1312,24 @@ enum UserRole {
 }
 
 /// Custom field decoder normalizing zip codes from int (90210) or string ("90210").
-class ZipCodeDecoder implements CustomFieldDecoder<String> {
+class ZipCodeDecoder {
   const ZipCodeDecoder();
 
-  String decodeFromReader(JsonTokenReader reader) {
-    if (reader.isNextNull()) {
-      reader.readNull();
+  String decode(Decoder decoder) {
+    final single = decoder.singleValue();
+    if (single.isNull()) {
+      single.readNull();
       return '';
     }
-    final token = reader.peek();
-    if (token == JsonTokenType.number) {
-      return reader.readInt().toString();
-    }
-    return reader.readString();
-  }
-
-  void encodeToWriter(String value, JsonTokenWriter writer) {
-    final asInt = int.tryParse(value);
-    if (asInt != null) {
-      writer.writeInt(asInt);
-    } else {
-      writer.writeString(value);
-    }
-  }
-
-  @override
-  String decodeField(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return decodeFromReader(decoder.reader);
-    }
-    final single = decoder.singleValue();
     try {
       return single.readString();
     } catch (_) {
       return single.readInt().toString();
     }
+  }
+
+  void encodeToEncoder(String value, Encoder encoder) {
+    encoder.singleValue().encodeString(value);
   }
 }
 
@@ -1409,68 +1351,8 @@ class UserProfile implements Encodable {
     this.tags = const [],
   });
 
-  static UserProfile fromReader(JsonTokenReader reader) =>
-      _$UserProfileFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$UserProfileToWriter(this, writer);
-
-  static UserProfile decodeFromReader(JsonTokenReader reader) =>
-      _$UserProfileFromReader(reader);
-  void encodeToWriter(JsonTokenWriter writer) =>
-      _$UserProfileToWriter(this, writer);
-
-  static UserProfile decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$UserProfileFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    String? id;
-    String? email;
-    UserRole? role;
-    String? zip;
-    var tags = const <String>[];
-
-    var seen = 0;
-    const goldenMask = 0x0F; // id(0x1) | email(0x2) | role(0x4) | zip(0x8)
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'id':
-          id = keyed.readString();
-          seen |= 0x01;
-          break;
-        case 'email':
-          email = keyed.readString();
-          seen |= 0x02;
-          break;
-        case 'role':
-          role = UserRole.fromString(keyed.readString());
-          seen |= 0x04;
-          break;
-        case 'zip':
-          zip = const ZipCodeDecoder().decodeField(decoder);
-          seen |= 0x08;
-          break;
-        case 'tags':
-          tags = keyed.decodeStringList();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-
-    if (seen != goldenMask) {
-      throw const CodableException('Missing required fields for UserProfile');
-    }
-
-    return UserProfile(
-      id: id!,
-      email: email!,
-      role: role!,
-      zip: zip!,
-      tags: tags,
-    );
-  }
+  static UserProfile decode(Decoder decoder) =>
+      _$UserProfileFromDecoder(decoder);
 
   @override
   void encode(Encoder encoder) {
@@ -1532,45 +1414,14 @@ class Car extends Vehicle {
   const Car({required super.maxSpeed, required this.doors})
     : super(type: 'car');
 
-  static Car fromReader(JsonTokenReader reader) => _$CarFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CarToWriter(this, writer);
-
-  static Car decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CarFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    int? maxSpeed;
-    int? doors;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'type':
-          keyed.readString(); // Consume discriminator
-          break;
-        case 'maxSpeed':
-          maxSpeed = keyed.readInt();
-          break;
-        case 'doors':
-          doors = keyed.readInt();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-    if (maxSpeed == null || doors == null) {
-      throw const CodableException('Missing required fields for Car');
-    }
-    return Car(maxSpeed: maxSpeed, doors: doors);
-  }
+  static Car decode(Decoder decoder) => _$CarFromDecoder(decoder);
 
   @override
   void encode(Encoder encoder) {
     final keyed = encoder.keyed();
     keyed.encodeString('type', type);
-    keyed.encodeInt('maxSpeed', maxSpeed);
-    keyed.encodeInt('doors', doors);
+    keyed.encodeInt(_$CarSchema.nameMaxSpeed, maxSpeed);
+    keyed.encodeInt(_$CarSchema.nameDoors, doors);
   }
 
   @override
@@ -1593,46 +1444,14 @@ class Bicycle extends Vehicle {
   const Bicycle({required super.maxSpeed, required this.hasBell})
     : super(type: 'bicycle');
 
-  static Bicycle fromReader(JsonTokenReader reader) =>
-      _$BicycleFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$BicycleToWriter(this, writer);
-
-  static Bicycle decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$BicycleFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    int? maxSpeed;
-    bool? hasBell;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'type':
-          keyed.readString();
-          break;
-        case 'maxSpeed':
-          maxSpeed = keyed.readInt();
-          break;
-        case 'hasBell':
-          hasBell = keyed.readBool();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-    if (maxSpeed == null || hasBell == null) {
-      throw const CodableException('Missing required fields for Bicycle');
-    }
-    return Bicycle(maxSpeed: maxSpeed, hasBell: hasBell);
-  }
+  static Bicycle decode(Decoder decoder) => _$BicycleFromDecoder(decoder);
 
   @override
   void encode(Encoder encoder) {
     final keyed = encoder.keyed();
     keyed.encodeString('type', type);
-    keyed.encodeInt('maxSpeed', maxSpeed);
-    keyed.encodeBool('hasBell', hasBell);
+    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, maxSpeed);
+    keyed.encodeBool(_$BicycleSchema.nameHasBell, hasBell);
   }
 
   @override
@@ -1671,44 +1490,11 @@ class UserWithLocation implements Encodable {
 
   const UserWithLocation({required this.profile, required this.location});
 
-  static UserWithLocation fromReader(JsonTokenReader reader) =>
-      _$UserWithLocationFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$UserWithLocationToWriter(this, writer);
-
-  static UserWithLocation decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$UserWithLocationFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    UserProfile? profile;
-    Coordinate? location;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.nextKey()) {
-        case 'profile':
-          profile = keyed.decodeValue(UserProfile.decode);
-          break;
-        case 'location':
-          location = keyed.decodeValue(Coordinate.decode);
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-    if (profile == null || location == null) {
-      throw const CodableException('Missing fields for UserWithLocation');
-    }
-    return UserWithLocation(profile: profile, location: location);
-  }
+  static UserWithLocation decode(Decoder decoder) =>
+      _$UserWithLocationFromDecoder(decoder);
 
   @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeValue('profile', profile, (p, e) => p.encode(e));
-    keyed.encodeValue('location', location, (l, e) => l.encode(e));
-  }
+  void encode(Encoder encoder) => _$UserWithLocationToEncoder(this, encoder);
 
   @override
   bool operator ==(Object other) =>

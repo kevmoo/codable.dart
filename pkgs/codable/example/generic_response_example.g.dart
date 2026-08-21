@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'generic_response_example.dart';
 
@@ -17,35 +17,18 @@ extension type const _$ArticleSchema(int _value) {
   static const String nameTitle = 'title';
   static const String nameAuthor = 'author';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameIdBytes = Uint8List.fromList(const [105, 100]);
-  static final Uint8List nameTitleBytes = Uint8List.fromList(const [
-    116,
-    105,
-    116,
-    108,
-    101,
-  ]);
-  static final Uint8List nameAuthorBytes = Uint8List.fromList(const [
-    97,
-    117,
-    116,
-    104,
-    111,
-    114,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyTitle = 1;
   static const int keyAuthor = 2;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$ArticleSchema.nameId,
     _$ArticleSchema.nameTitle,
     _$ArticleSchema.nameAuthor,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$ArticleSchema none = _$ArticleSchema(0);
@@ -54,7 +37,7 @@ extension type const _$ArticleSchema(int _value) {
   static const int _titleBit = 1 << 1;
   static const _$ArticleSchema title = _$ArticleSchema(_titleBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$ArticleSchema golden = _$ArticleSchema(_idBit | _titleBit);
 
   @pragma('vm:prefer-inline')
@@ -85,26 +68,26 @@ extension type const _$ArticleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Article
+// 2. Universal Keyed Deserializer for Article
 // =============================================================================
-Article _$ArticleFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+Article _$ArticleFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$ArticleSchema.keyOptions);
 
   int? id;
   String? title;
   User? author;
   var seen = _$ArticleSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$ArticleSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$ArticleSchema.keyOptions)) {
       case _$ArticleSchema.keyId:
         if ((seen._value & _$ArticleSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          id = reader.readInt();
+          id = keyed.readInt();
           seen |= _$ArticleSchema.id;
         }
         break;
@@ -112,27 +95,26 @@ Article _$ArticleFromReader(JsonTokenReader reader) {
         if ((seen._value & _$ArticleSchema.title._value) != 0) {
           throw const CodableException('Duplicate field "title"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          title = reader.readString();
+          title = keyed.readString();
           seen |= _$ArticleSchema.title;
         }
         break;
       case _$ArticleSchema.keyAuthor:
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
           author = null;
         } else {
-          author = _$UserFromReader(reader);
+          author = keyed.decodeValue(_$UserFromDecoder);
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -141,19 +123,19 @@ Article _$ArticleFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Article
+// 3. Universal Serializer for Article
 // =============================================================================
-void _$ArticleToWriter(Article instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$ArticleSchema.nameIdBytes);
-  writer.writeInt(instance.id);
-  writer.writeNameBytes(_$ArticleSchema.nameTitleBytes);
-  writer.writeString(instance.title);
+void _$ArticleToEncoder(Article instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
+  keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
   if (instance.author != null) {
-    writer.writeNameBytes(_$ArticleSchema.nameAuthorBytes);
-    _$UserToWriter(instance.author!, writer);
+    keyed.encodeValue(
+      _$ArticleSchema.nameAuthor,
+      instance.author!,
+      _$UserToEncoder,
+    );
   }
-  writer.endObject();
 }
 
 // =============================================================================
@@ -164,25 +146,16 @@ extension type const _$UserSchema(int _value) {
   static const String nameId = 'id';
   static const String nameEmail = 'email';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameIdBytes = Uint8List.fromList(const [105, 100]);
-  static final Uint8List nameEmailBytes = Uint8List.fromList(const [
-    101,
-    109,
-    97,
-    105,
-    108,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyEmail = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$UserSchema.nameId,
     _$UserSchema.nameEmail,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$UserSchema none = _$UserSchema(0);
@@ -191,7 +164,7 @@ extension type const _$UserSchema(int _value) {
   static const int _emailBit = 1 << 1;
   static const _$UserSchema email = _$UserSchema(_emailBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$UserSchema golden = _$UserSchema(_idBit | _emailBit);
 
   @pragma('vm:prefer-inline')
@@ -222,25 +195,25 @@ extension type const _$UserSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for User
+// 2. Universal Keyed Deserializer for User
 // =============================================================================
-User _$UserFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+User _$UserFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$UserSchema.keyOptions);
 
   int? id;
   String? email;
   var seen = _$UserSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$UserSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$UserSchema.keyOptions)) {
       case _$UserSchema.keyId:
         if ((seen._value & _$UserSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          id = reader.readInt();
+          id = keyed.readInt();
           seen |= _$UserSchema.id;
         }
         break;
@@ -248,19 +221,18 @@ User _$UserFromReader(JsonTokenReader reader) {
         if ((seen._value & _$UserSchema.email._value) != 0) {
           throw const CodableException('Duplicate field "email"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          email = reader.readString();
+          email = keyed.readString();
           seen |= _$UserSchema.email;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -269,13 +241,10 @@ User _$UserFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for User
+// 3. Universal Serializer for User
 // =============================================================================
-void _$UserToWriter(User instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$UserSchema.nameIdBytes);
-  writer.writeInt(instance.id);
-  writer.writeNameBytes(_$UserSchema.nameEmailBytes);
-  writer.writeString(instance.email);
-  writer.endObject();
+void _$UserToEncoder(User instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeInt(_$UserSchema.nameId, instance.id);
+  keyed.encodeString(_$UserSchema.nameEmail, instance.email);
 }

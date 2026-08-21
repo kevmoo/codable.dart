@@ -13,9 +13,8 @@ final class Point {
 
   const Point(this.x, this.y);
 
-  static Point fromReader(JsonTokenReader reader) => _$PointFromReader(reader);
   static Point decode(Decoder decoder) => _$PointFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) => _$PointToWriter(this, writer);
+  void encode(Encoder encoder) => _$PointToEncoder(this, encoder);
 }
 
 enum UserRole { admin, member, guest }
@@ -38,11 +37,9 @@ final class UserAccount {
     @CodableKey(ignore: true) this.internalId = '',
   });
 
-  static UserAccount fromReader(JsonTokenReader reader) =>
-      _$UserAccountFromReader(reader);
   static UserAccount decode(Decoder decoder) =>
       _$UserAccountFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) => _$UserAccountToWriter(this, writer);
+  void encode(Encoder encoder) => _$UserAccountToEncoder(this, encoder);
 }
 
 @Codable()
@@ -58,10 +55,8 @@ final class Address {
   final String street;
   const Address({required this.city, required this.street});
 
-  static Address fromReader(JsonTokenReader reader) =>
-      _$AddressFromReader(reader);
   static Address decode(Decoder decoder) => _$AddressFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) => _$AddressToWriter(this, writer);
+  void encode(Encoder encoder) => _$AddressToEncoder(this, encoder);
 }
 
 @Codable()
@@ -80,26 +75,12 @@ final class Enterprise {
     this.headcountByDept = const {},
   });
 
-  static Enterprise fromReader(JsonTokenReader reader) =>
-      _$EnterpriseFromReader(reader);
   static Enterprise decode(Decoder decoder) => _$EnterpriseFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) => _$EnterpriseToWriter(this, writer);
+  void encode(Encoder encoder) => _$EnterpriseToEncoder(this, encoder);
 }
 
 final class ZipCodeDecoder {
   const ZipCodeDecoder();
-
-  String decodeFromReader(JsonTokenReader reader) {
-    if (reader.isNextNull()) {
-      reader.readNull();
-      return '';
-    }
-    final token = reader.peek();
-    if (token == JsonTokenType.number) {
-      return reader.readInt().toString();
-    }
-    return reader.readString();
-  }
 
   String decode(Decoder decoder) {
     final sv = decoder.singleValue();
@@ -107,16 +88,15 @@ final class ZipCodeDecoder {
       sv.readNull();
       return '';
     }
-    return sv.readString();
+    try {
+      return sv.readString();
+    } catch (_) {
+      return sv.readInt().toString();
+    }
   }
 
-  void encodeToWriter(String value, JsonTokenWriter writer) {
-    final asInt = int.tryParse(value);
-    if (asInt != null) {
-      writer.writeInt(asInt);
-    } else {
-      writer.writeString(value);
-    }
+  void encodeToEncoder(String value, Encoder encoder) {
+    encoder.singleValue().encodeString(value);
   }
 }
 
@@ -128,12 +108,9 @@ final class UserProfileCustom {
 
   const UserProfileCustom({required this.id, required this.zip});
 
-  static UserProfileCustom fromReader(JsonTokenReader reader) =>
-      _$UserProfileCustomFromReader(reader);
   static UserProfileCustom decode(Decoder decoder) =>
       _$UserProfileCustomFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) =>
-      _$UserProfileCustomToWriter(this, writer);
+  void encode(Encoder encoder) => _$UserProfileCustomToEncoder(this, encoder);
 }
 
 @Codable()
@@ -150,9 +127,8 @@ final class Team {
     this.scores = const {},
   });
 
-  static Team fromReader(JsonTokenReader reader) => _$TeamFromReader(reader);
   static Team decode(Decoder decoder) => _$TeamFromDecoder(decoder);
-  void toWriter(JsonTokenWriter writer) => _$TeamToWriter(this, writer);
+  void encode(Encoder encoder) => _$TeamToEncoder(this, encoder);
 }
 
 @Codable()

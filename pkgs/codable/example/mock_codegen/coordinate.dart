@@ -17,52 +17,8 @@ class Coordinate {
 
   const Coordinate({required this.latitude, required this.longitude});
 
-  static Coordinate fromReader(JsonTokenReader reader) =>
-      _$CoordinateFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CoordinateToWriter(this, writer);
-
-  static Coordinate decodeFromReader(JsonTokenReader reader) =>
-      _$CoordinateFromReader(reader);
-  void encodeToWriter(JsonTokenWriter writer) =>
-      _$CoordinateToWriter(this, writer);
-
-  static Coordinate decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CoordinateFromReader(decoder.reader);
-    }
-    final keyed = decoder.keyed();
-    double? lat;
-    double? lon;
-
-    while (keyed.hasNextKey()) {
-      switch (keyed.selectKeyIndex(
-        KeyOptions(['latitude', 'longitude', 'lat', 'lon']),
-      )) {
-        case 0:
-        case 2:
-          lat = keyed.readDouble();
-          break;
-        case 1:
-        case 3:
-          lon = keyed.readDouble();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-
-    if (lat == null || lon == null) {
-      throw const CodableException('Missing required fields for Coordinate');
-    }
-    return Coordinate(latitude: lat, longitude: lon);
-  }
-
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeDouble('latitude', latitude);
-    keyed.encodeDouble('longitude', longitude);
-  }
+  static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
 
   @override
   int get hashCode => Object.hash(latitude, longitude);

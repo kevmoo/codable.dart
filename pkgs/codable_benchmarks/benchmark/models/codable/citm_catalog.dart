@@ -34,12 +34,9 @@ class CitmCatalog {
     this.venueNames = const {},
   });
 
-  static CitmCatalog fromReader(JsonTokenReader reader) =>
-      _$CitmCatalogFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CitmCatalogToWriter(this, writer);
-
   static CitmCatalog decode(Decoder decoder) =>
       _$CitmCatalogFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmCatalogToEncoder(this, encoder);
 }
 
 @Codable()
@@ -64,11 +61,8 @@ class CitmEvent {
     this.topicIds = const [],
   });
 
-  static CitmEvent fromReader(JsonTokenReader reader) =>
-      _$CitmEventFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CitmEventToWriter(this, writer);
-
   static CitmEvent decode(Decoder decoder) => _$CitmEventFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmEventToEncoder(this, encoder);
 }
 
 @Codable()
@@ -93,13 +87,9 @@ class CitmPerformance {
     required this.venueCode,
   });
 
-  static CitmPerformance fromReader(JsonTokenReader reader) =>
-      _$CitmPerformanceFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CitmPerformanceToWriter(this, writer);
-
   static CitmPerformance decode(Decoder decoder) =>
       _$CitmPerformanceFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmPerformanceToEncoder(this, encoder);
 }
 
 @Codable()
@@ -114,11 +104,8 @@ class CitmPrice {
     required this.seatCategoryId,
   });
 
-  static CitmPrice fromReader(JsonTokenReader reader) =>
-      _$CitmPriceFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CitmPriceToWriter(this, writer);
-
   static CitmPrice decode(Decoder decoder) => _$CitmPriceFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmPriceToEncoder(this, encoder);
 }
 
 @Codable()
@@ -128,13 +115,9 @@ class CitmSeatCategory {
 
   const CitmSeatCategory({this.areas = const [], required this.seatCategoryId});
 
-  static CitmSeatCategory fromReader(JsonTokenReader reader) =>
-      _$CitmSeatCategoryFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CitmSeatCategoryToWriter(this, writer);
-
   static CitmSeatCategory decode(Decoder decoder) =>
       _$CitmSeatCategoryFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmSeatCategoryToEncoder(this, encoder);
 }
 
 @Codable()
@@ -144,9 +127,6 @@ class CitmArea {
 
   const CitmArea({required this.areaId, this.blockIds = const []});
 
-  static CitmArea fromReader(JsonTokenReader reader) =>
-      _$CitmAreaFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$CitmAreaToWriter(this, writer);
-
   static CitmArea decode(Decoder decoder) => _$CitmAreaFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CitmAreaToEncoder(this, encoder);
 }

@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 part 'tuple_example.g.dart';
 
@@ -17,23 +17,20 @@ class CoordinatePair {
 
   const CoordinatePair({this.location});
 
-  static CoordinatePair fromReader(JsonTokenReader reader) =>
-      _$CoordinatePairFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CoordinatePairToWriter(this, writer);
+  static CoordinatePair decode(Decoder decoder) =>
+      _$CoordinatePairFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CoordinatePairToEncoder(this, encoder);
 }
 
 void main() {
   final json = Uint8List.fromList(
     utf8.encode('{"location": [37.7749, -122.4194]}'),
   );
-  final reader = JsonTokenReader.fromBytes(json);
-  final pair = CoordinatePair.fromReader(reader);
+  final decoder = JsonCodableDecoder.fromBytes(json);
+  final pair = CoordinatePair.decode(decoder);
 
   print('Location: ${pair.location?[0]}, ${pair.location?[1]}');
 
-  final builder = BytesBuilder();
-  final writer = JsonTokenWriter.toSink(builder);
-  pair.toWriter(writer);
-  print('Serialized tuple: ${utf8.decode(builder.toBytes())}');
+  final outBytes = JsonCodableEncoder.toBytes(pair.encode);
+  print('Serialized tuple: ${utf8.decode(outBytes)}');
 }

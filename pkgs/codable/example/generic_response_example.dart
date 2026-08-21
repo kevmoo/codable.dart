@@ -6,7 +6,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 part 'generic_response_example.g.dart';
 
@@ -42,7 +42,7 @@ class BaseResponse<T> {
           message = keyed.readString();
           break;
         case 'data':
-          data = decodeData(decoder);
+          data = keyed.decodeValue(decodeData);
           break;
         default:
           keyed.skipValue();
@@ -65,9 +65,8 @@ class Article {
 
   const Article({required this.id, required this.title, this.author});
 
-  static Article fromReader(JsonTokenReader reader) =>
-      _$ArticleFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$ArticleToWriter(this, writer);
+  static Article decode(Decoder decoder) => _$ArticleFromDecoder(decoder);
+  void encode(Encoder encoder) => _$ArticleToEncoder(this, encoder);
 }
 
 @Codable()
@@ -77,8 +76,8 @@ class User {
 
   const User({required this.id, required this.email});
 
-  static User fromReader(JsonTokenReader reader) => _$UserFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$UserToWriter(this, writer);
+  static User decode(Decoder decoder) => _$UserFromDecoder(decoder);
+  void encode(Encoder encoder) => _$UserToEncoder(this, encoder);
 }
 
 void main() {
@@ -99,16 +98,11 @@ void main() {
 
   final bytes = Uint8List.fromList(utf8.encode(json));
   final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final response = BaseResponse.decode(
-    decoder,
-    (Decoder d) => Article.fromReader((d as JsonCodableDecoder).reader),
-  );
+  final response = BaseResponse.decode(decoder, Article.decode);
 
   print('Response: ${response.status} - ${response.message}');
   print('Article: ${response.data.title} by ${response.data.author?.email}');
 
-  final builder = BytesBuilder();
-  final writer = JsonTokenWriter.toSink(builder);
-  response.data.toWriter(writer);
-  print('Serialized article: ${utf8.decode(builder.toBytes())}');
+  final outBytes = JsonCodableEncoder.toBytes(response.data.encode);
+  print('Serialized article: ${utf8.decode(outBytes)}');
 }

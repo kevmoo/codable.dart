@@ -9,28 +9,6 @@ part 'canada.g.dart';
 final class CanadaCoordinatesDecoder {
   const CanadaCoordinatesDecoder();
 
-  List<List<List<double>>> decodeFromReader(JsonTokenReader reader) {
-    final coords = <List<List<double>>>[];
-    reader.beginArray();
-    while (reader.hasNext()) {
-      final poly = <List<double>>[];
-      reader.beginArray();
-      while (reader.hasNext()) {
-        reader.beginArray();
-        final ring = <double>[];
-        while (reader.hasNext()) {
-          ring.add(reader.readDouble());
-        }
-        reader.endArray();
-        poly.add(ring);
-      }
-      reader.endArray();
-      coords.add(poly);
-    }
-    reader.endArray();
-    return coords;
-  }
-
   List<List<List<double>>> decode(Decoder decoder) {
     final unkeyed = decoder.unkeyed();
     final coords = <List<List<double>>>[];
@@ -45,23 +23,21 @@ final class CanadaCoordinatesDecoder {
     return coords;
   }
 
-  void encodeToWriter(
-    List<List<List<double>>> coordinates,
-    JsonTokenWriter writer,
-  ) {
-    writer.beginArray();
+  void encodeToEncoder(List<List<List<double>>> coordinates, Encoder encoder) {
+    final unkeyed = encoder.unkeyed();
     for (final poly in coordinates) {
-      writer.beginArray();
-      for (final ring in poly) {
-        writer.beginArray();
-        for (final pt in ring) {
-          writer.writeDouble(pt);
+      unkeyed.encodeElement(poly, (polyList, e1) {
+        final u1 = e1.unkeyed();
+        for (final ring in polyList) {
+          u1.encodeElement(ring, (ringList, e2) {
+            final u2 = e2.unkeyed();
+            for (final pt in ringList) {
+              u2.encodeDouble(pt);
+            }
+          });
         }
-        writer.endArray();
-      }
-      writer.endArray();
+      });
     }
-    writer.endArray();
   }
 }
 
@@ -71,13 +47,9 @@ class CanadaProperties {
 
   const CanadaProperties({this.name = ''});
 
-  static CanadaProperties fromReader(JsonTokenReader reader) =>
-      _$CanadaPropertiesFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CanadaPropertiesToWriter(this, writer);
-
   static CanadaProperties decode(Decoder decoder) =>
       _$CanadaPropertiesFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CanadaPropertiesToEncoder(this, encoder);
 }
 
 @Codable()
@@ -88,13 +60,9 @@ class CanadaGeometry {
 
   const CanadaGeometry({required this.type, this.coordinates = const []});
 
-  static CanadaGeometry fromReader(JsonTokenReader reader) =>
-      _$CanadaGeometryFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CanadaGeometryToWriter(this, writer);
-
   static CanadaGeometry decode(Decoder decoder) =>
       _$CanadaGeometryFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CanadaGeometryToEncoder(this, encoder);
 }
 
 @Codable()
@@ -109,13 +77,9 @@ class CanadaFeature {
     required this.geometry,
   });
 
-  static CanadaFeature fromReader(JsonTokenReader reader) =>
-      _$CanadaFeatureFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CanadaFeatureToWriter(this, writer);
-
   static CanadaFeature decode(Decoder decoder) =>
       _$CanadaFeatureFromDecoder(decoder);
+  void encode(Encoder encoder) => _$CanadaFeatureToEncoder(this, encoder);
 }
 
 @Codable()
@@ -125,11 +89,8 @@ class CanadaFeatureCollection {
 
   const CanadaFeatureCollection({required this.type, this.features = const []});
 
-  static CanadaFeatureCollection fromReader(JsonTokenReader reader) =>
-      _$CanadaFeatureCollectionFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$CanadaFeatureCollectionToWriter(this, writer);
-
   static CanadaFeatureCollection decode(Decoder decoder) =>
       _$CanadaFeatureCollectionFromDecoder(decoder);
+  void encode(Encoder encoder) =>
+      _$CanadaFeatureCollectionToEncoder(this, encoder);
 }

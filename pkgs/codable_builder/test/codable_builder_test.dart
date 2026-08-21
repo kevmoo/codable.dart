@@ -75,7 +75,7 @@ void main() {
         check(output).contains('static const int keyY = 1;');
         check(
           output,
-        ).contains('static final JsonKeyOptions options = JsonKeyOptions.of');
+        ).contains('static final KeyOptions options = KeyOptions.of(const [');
         check(output).contains('nameX,');
         check(output).contains('nameY,');
         check(output).contains('static const int _xBit = 1 << 0;');
@@ -91,33 +91,34 @@ void main() {
         check(output).contains('void validate()');
         check(output).contains('_throwMissingFields()');
 
-        // Verify decoder
-        check(output)
-            .contains('Point _\$PointFromReader(JsonTokenReader reader)');
-        check(output).contains('reader.beginObject();');
-        check(output).contains('while (reader.hasNext())');
-        check(output)
-            .contains('switch (reader.selectName(_\$PointSchema.options))');
+        // Verify universal decoder
+        check(output).contains('Point _\$PointFromDecoder(Decoder decoder)');
+        check(output).contains(
+          'final keyed = decoder.keyed(options: _\$PointSchema.keyOptions);',
+        );
+        check(output).contains('while (keyed.hasNextKey())');
+        check(
+          output,
+        ).contains('switch (keyed.selectKeyIndex(_\$PointSchema.keyOptions))');
         check(output).contains('case _\$PointSchema.keyX:');
-        check(output).contains('x = reader.readDouble();');
+        check(output).contains('x = keyed.readDouble();');
         check(output).contains('seen |= _\$PointSchema.x;');
         check(output).contains('case _\$PointSchema.keyY:');
-        check(output).contains('y = reader.readDouble();');
+        check(output).contains('y = keyed.readDouble();');
         check(output).contains('seen |= _\$PointSchema.y;');
         check(output).contains('seen.validate();');
         // Positional constructor call
         check(output).contains('return Point(\n    x!,\n    y!,\n  );');
 
-        // Verify encoder
-        check(output).contains(
-          'void _\$PointToWriter(Point instance, JsonTokenWriter writer)',
-        );
+        // Verify universal encoder
+        check(
+          output,
+        ).contains('void _\$PointToEncoder(Point instance, Encoder encoder)');
+        check(output).contains('final keyed = encoder.keyed();');
         check(output)
-            .contains('writer.writeNameBytes(_\$PointSchema.nameXBytes);');
-        check(output).contains('writer.writeDouble(instance.x);');
+            .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
         check(output)
-            .contains('writer.writeNameBytes(_\$PointSchema.nameYBytes);');
-        check(output).contains('writer.writeDouble(instance.y);');
+            .contains('keyed.encodeDouble(_\$PointSchema.nameY, instance.y);');
       },
     );
 
@@ -139,17 +140,17 @@ void main() {
       check(output).contains('aliasEmailAddressContactEmail,');
       // Zero-allocation enum options
       check(output).contains(
-        'static final JsonKeyOptions roleEnumOptions = JsonKeyOptions.of(const [',
+        'static final KeyOptions roleEnumOptions = KeyOptions.of(const [',
       );
       check(output).contains("'admin',");
       check(output).contains("'member',");
       check(output).contains("'guest',");
-      // Zero-allocation selectString for enums
+      // Keyed selectStringIndex for enums
       check(output).contains(
-        'final enumIndex = reader.selectString(_\$UserAccountSchema.roleEnumOptions);',
+        'final enumIndex = keyed.selectStringIndex(_\$UserAccountSchema.roleKeyOptions);',
       );
-      // Tuple pre-sizing
-      check(output).contains('final tuple = Float64List(2);');
+      // Tuple decode
+      check(output).contains('location = keyed.decodeFloat64List();');
       // Ignored field internalId not in schema options
       check(output).not((s) => s.contains('nameInternalId'));
       // Named constructor invocation with defaults
@@ -170,38 +171,42 @@ void main() {
       final output = runGeneratorFor('Enterprise');
 
       // Nested decoder call
-      check(output).contains('headquarter = _\$AddressFromReader(reader);');
-      // List of nested codable
-      check(output).contains('_\$AddressFromReader(reader)');
-      // Set of string
-      check(output).contains('final set = <String>{};');
-      // Map of string to int
-      check(output).contains('final map = <String, int>{};');
-      // Nested encoder call
       check(output)
-          .contains('_\$AddressToWriter(instance.headquarter, writer);');
+          .contains('headquarter = keyed.decodeValue(_\$AddressFromDecoder);');
+      // List of nested codable
+      check(output)
+          .contains('branches = keyed.decodeList(_\$AddressFromDecoder);');
+      // Set of string
+      check(output).contains('categories = keyed.decodeStringList().toSet();');
+      // Map of string to int
+      check(output).contains('headcountByDept = keyed.decodeValue((d) {');
+      // Nested encoder call
+      check(output).contains(
+        'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, _\$AddressToEncoder);',
+      );
     });
 
     test('generates code for custom decoders via UserProfileCustom', () {
       final output = runGeneratorFor('UserProfileCustom');
 
-      check(output).contains('const ZipCodeDecoder().decodeFromReader(reader)');
-      check(
-        output,
-      ).contains('const ZipCodeDecoder().encodeToWriter(instance.zip, writer)');
+      check(output)
+          .contains('zip = keyed.decodeValue(const ZipCodeDecoder().decode);');
+      check(output).contains(
+        'keyed.encodeValue(_\$UserProfileCustomSchema.nameZip, instance.zip, (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e));',
+      );
     });
 
-    test(
-      'generates code for enum collections and nullable collections in Team',
-      () {
-        final output = runGeneratorFor('Team');
+    test('generates code for enum collections and nullable collections in Team', () {
+      final output = runGeneratorFor('Team');
 
-        check(output).contains('UserRole.values.byName(reader.readString())');
-        check(output).contains('final set = <String?>{};');
-        check(output).contains('final map = <String, int?>{};');
-        check(output).contains('writer.writeString(item.name);');
-      },
-    );
+      check(output)
+          .contains('UserRole.values.byName(d.singleValue().readString())');
+      check(output).contains('nullableTags = keyed.decodeList<String?>');
+      check(output).contains('scores = keyed.decodeValue((d) {');
+      check(output).contains(
+        'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, (item, e) {',
+      );
+    });
 
     test('throws InvalidGenerationSourceError when required fields exceed 62 limit', () {
       check(() => runGeneratorFor('HugeModel63'))

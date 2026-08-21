@@ -6,18 +6,18 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 part 'basic_example.g.dart';
 
 final class DateTimeIsoDecoder {
   const DateTimeIsoDecoder();
 
-  DateTime decodeFromReader(JsonTokenReader reader) =>
-      DateTime.parse(reader.readString());
+  DateTime decode(Decoder decoder) =>
+      DateTime.parse(decoder.singleValue().readString());
 
-  void encodeToWriter(DateTime value, JsonTokenWriter writer) =>
-      writer.writeString(value.toIso8601String());
+  void encodeToEncoder(DateTime value, Encoder encoder) =>
+      encoder.singleValue().encodeString(value.toIso8601String());
 }
 
 /// Standard model demonstrating primary constructors, custom wire keys,
@@ -49,9 +49,8 @@ class Person {
     this.orders = const [],
   });
 
-  static Person fromReader(JsonTokenReader reader) =>
-      _$PersonFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$PersonToWriter(this, writer);
+  static Person decode(Decoder decoder) => _$PersonFromDecoder(decoder);
+  void encode(Encoder encoder) => _$PersonToEncoder(this, encoder);
 }
 
 @Codable()
@@ -72,8 +71,8 @@ class Order {
     this.prepTimeMs,
   });
 
-  static Order fromReader(JsonTokenReader reader) => _$OrderFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$OrderToWriter(this, writer);
+  static Order decode(Decoder decoder) => _$OrderFromDecoder(decoder);
+  void encode(Encoder encoder) => _$OrderToEncoder(this, encoder);
 }
 
 @Codable()
@@ -84,8 +83,8 @@ class Item {
 
   const Item({this.count, this.itemNumber, this.isRushed});
 
-  static Item fromReader(JsonTokenReader reader) => _$ItemFromReader(reader);
-  void toWriter(JsonTokenWriter writer) => _$ItemToWriter(this, writer);
+  static Item decode(Decoder decoder) => _$ItemFromDecoder(decoder);
+  void encode(Encoder encoder) => _$ItemToEncoder(this, encoder);
 }
 
 void main() {
@@ -108,16 +107,14 @@ void main() {
   ''';
 
   final bytes = Uint8List.fromList(utf8.encode(json));
-  final reader = JsonTokenReader.fromBytes(bytes);
-  final person = Person.fromReader(reader);
+  final decoder = JsonCodableDecoder.fromBytes(bytes);
+  final person = Person.decode(decoder);
 
   print(
-    'Decoded Person: \${person.firstName} \${person.lastName}, '
-    'orders: \${person.orders.length}',
+    'Decoded Person: ${person.firstName} ${person.lastName}, '
+    'orders: ${person.orders.length}',
   );
 
-  final builder = BytesBuilder();
-  final writer = JsonTokenWriter.toSink(builder);
-  person.toWriter(writer);
-  print('Encoded JSON: \${utf8.decode(builder.toBytes())}');
+  final outBytes = JsonCodableEncoder.toBytes(person.encode);
+  print('Encoded JSON: ${utf8.decode(outBytes)}');
 }

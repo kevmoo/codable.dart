@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'polymorphic_example.dart';
 
@@ -16,34 +16,16 @@ extension type const _$CarSchema(int _value) {
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameDoors = 'doors';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameMaxSpeedBytes = Uint8List.fromList(const [
-    109,
-    97,
-    120,
-    83,
-    112,
-    101,
-    101,
-    100,
-  ]);
-  static final Uint8List nameDoorsBytes = Uint8List.fromList(const [
-    100,
-    111,
-    111,
-    114,
-    115,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
   static const int keyDoors = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$CarSchema.nameMaxSpeed,
     _$CarSchema.nameDoors,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$CarSchema none = _$CarSchema(0);
@@ -52,7 +34,7 @@ extension type const _$CarSchema(int _value) {
   static const int _doorsBit = 1 << 1;
   static const _$CarSchema doors = _$CarSchema(_doorsBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$CarSchema golden = _$CarSchema(_maxSpeedBit | _doorsBit);
 
   @pragma('vm:prefer-inline')
@@ -83,25 +65,25 @@ extension type const _$CarSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Car
+// 2. Universal Keyed Deserializer for Car
 // =============================================================================
-Car _$CarFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+Car _$CarFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$CarSchema.keyOptions);
 
   int? maxSpeed;
   int? doors;
   var seen = _$CarSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$CarSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
       case _$CarSchema.keyMaxSpeed:
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          maxSpeed = reader.readInt();
+          maxSpeed = keyed.readInt();
           seen |= _$CarSchema.maxSpeed;
         }
         break;
@@ -109,19 +91,18 @@ Car _$CarFromReader(JsonTokenReader reader) {
         if ((seen._value & _$CarSchema.doors._value) != 0) {
           throw const CodableException('Duplicate field "doors"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          doors = reader.readInt();
+          doors = keyed.readInt();
           seen |= _$CarSchema.doors;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -130,15 +111,12 @@ Car _$CarFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Car
+// 3. Universal Serializer for Car
 // =============================================================================
-void _$CarToWriter(Car instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$CarSchema.nameMaxSpeedBytes);
-  writer.writeInt(instance.maxSpeed);
-  writer.writeNameBytes(_$CarSchema.nameDoorsBytes);
-  writer.writeInt(instance.doors);
-  writer.endObject();
+void _$CarToEncoder(Car instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+  keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
 }
 
 // =============================================================================
@@ -149,36 +127,16 @@ extension type const _$BicycleSchema(int _value) {
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameHasBell = 'hasBell';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameMaxSpeedBytes = Uint8List.fromList(const [
-    109,
-    97,
-    120,
-    83,
-    112,
-    101,
-    101,
-    100,
-  ]);
-  static final Uint8List nameHasBellBytes = Uint8List.fromList(const [
-    104,
-    97,
-    115,
-    66,
-    101,
-    108,
-    108,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
   static const int keyHasBell = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$BicycleSchema.nameMaxSpeed,
     _$BicycleSchema.nameHasBell,
   ]);
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$BicycleSchema none = _$BicycleSchema(0);
@@ -187,7 +145,7 @@ extension type const _$BicycleSchema(int _value) {
   static const int _hasBellBit = 1 << 1;
   static const _$BicycleSchema hasBell = _$BicycleSchema(_hasBellBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$BicycleSchema golden = _$BicycleSchema(
     _maxSpeedBit | _hasBellBit,
   );
@@ -220,25 +178,25 @@ extension type const _$BicycleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Bicycle
+// 2. Universal Keyed Deserializer for Bicycle
 // =============================================================================
-Bicycle _$BicycleFromReader(JsonTokenReader reader) {
-  reader.beginObject();
+Bicycle _$BicycleFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed(options: _$BicycleSchema.keyOptions);
 
   int? maxSpeed;
   bool? hasBell;
   var seen = _$BicycleSchema.none;
 
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$BicycleSchema.options)) {
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
       case _$BicycleSchema.keyMaxSpeed:
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          maxSpeed = reader.readInt();
+          maxSpeed = keyed.readInt();
           seen |= _$BicycleSchema.maxSpeed;
         }
         break;
@@ -246,19 +204,18 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
         if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
           throw const CodableException('Duplicate field "hasBell"');
         }
-        if (reader.isNextNull()) {
-          reader.readNull();
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          hasBell = reader.readBool();
+          hasBell = keyed.readBool();
           seen |= _$BicycleSchema.hasBell;
         }
         break;
       default:
-        reader.skipValue();
+        keyed.skipValue();
         break;
     }
   }
-  reader.endObject();
 
   // Inlined fast-path check
   seen.validate();
@@ -267,13 +224,10 @@ Bicycle _$BicycleFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Bicycle
+// 3. Universal Serializer for Bicycle
 // =============================================================================
-void _$BicycleToWriter(Bicycle instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$BicycleSchema.nameMaxSpeedBytes);
-  writer.writeInt(instance.maxSpeed);
-  writer.writeNameBytes(_$BicycleSchema.nameHasBellBytes);
-  writer.writeBool(instance.hasBell);
-  writer.endObject();
+void _$BicycleToEncoder(Bicycle instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+  keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
 }

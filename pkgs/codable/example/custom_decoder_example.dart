@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 part 'custom_decoder_example.g.dart';
 
@@ -13,16 +13,25 @@ part 'custom_decoder_example.g.dart';
 final class DateTimeEpochDecoder {
   const DateTimeEpochDecoder();
 
-  DateTime decodeFromReader(JsonTokenReader reader) {
-    final token = reader.peek();
-    if (token == JsonTokenType.number) {
-      return DateTime.fromMillisecondsSinceEpoch(reader.readInt());
+  DateTime decode(Decoder decoder) {
+    if (decoder is JsonCodableDecoder) {
+      final token = decoder.reader.peek();
+      if (token == JsonTokenType.number) {
+        return DateTime.fromMillisecondsSinceEpoch(decoder.reader.readInt());
+      }
+      return DateTime.parse(decoder.reader.readString());
     }
-    return DateTime.parse(reader.readString());
+    final sv = decoder.singleValue();
+    final str = sv.readString();
+    final asInt = int.tryParse(str);
+    if (asInt != null) {
+      return DateTime.fromMillisecondsSinceEpoch(asInt);
+    }
+    return DateTime.parse(str);
   }
 
-  void encodeToWriter(DateTime value, JsonTokenWriter writer) {
-    writer.writeInt(value.millisecondsSinceEpoch);
+  void encodeToEncoder(DateTime value, Encoder encoder) {
+    encoder.singleValue().encodeInt(value.millisecondsSinceEpoch);
   }
 }
 
@@ -33,27 +42,24 @@ class DateTimeExample {
 
   const DateTimeExample(this.when);
 
-  static DateTimeExample fromReader(JsonTokenReader reader) =>
-      _$DateTimeExampleFromReader(reader);
-  void toWriter(JsonTokenWriter writer) =>
-      _$DateTimeExampleToWriter(this, writer);
+  static DateTimeExample decode(Decoder decoder) =>
+      _$DateTimeExampleFromDecoder(decoder);
+  void encode(Encoder encoder) => _$DateTimeExampleToEncoder(this, encoder);
 }
 
 void main() {
   // Parsing integer epoch timestamp
   final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
-  final ex1 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json1));
+  final ex1 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json1));
   print('Epoch timestamp: ${ex1.when}');
 
   // Parsing ISO 8601 string timestamp
   final json2 = Uint8List.fromList(
     utf8.encode('{"when": "2026-08-17T12:00:00.000Z"}'),
   );
-  final ex2 = DateTimeExample.fromReader(JsonTokenReader.fromBytes(json2));
+  final ex2 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json2));
   print('ISO timestamp: ${ex2.when}');
 
-  final builder = BytesBuilder();
-  final writer = JsonTokenWriter.toSink(builder);
-  ex1.toWriter(writer);
-  print('Serialized: ${utf8.decode(builder.toBytes())}');
+  final outBytes = JsonCodableEncoder.toBytes(ex1.encode);
+  print('Serialized: ${utf8.decode(outBytes)}');
 }

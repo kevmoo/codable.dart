@@ -1,8 +1,10 @@
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 /// Next-generation high-performance zero-allocation serialization framework for
 /// Dart.
 library;
-
-import 'src/substrate/substrate.dart';
 
 export 'dart:typed_data';
 
@@ -13,14 +15,3 @@ export 'src/contracts/decoder.dart';
 export 'src/contracts/encoder.dart';
 export 'src/contracts/exceptions.dart';
 export 'src/contracts/static_key.dart';
-export 'src/driver/json_codable_driver.dart';
-export 'src/substrate/substrate.dart';
-
-/// Extension on [JsonTokenReader] providing convenience utilities.
-extension JsonTokenReaderCodableExtension on JsonTokenReader {
-  /// Returns `true` if the next token is a null literal without advancing the
-  /// cursor.
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  bool isNextNull() => peek() == JsonTokenType.nullValue;
-}

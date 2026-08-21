@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
+import 'package:codable/codable_json.dart';
 
 import 'models/codable/canada.dart';
 import 'models/codable/citm_catalog.dart';

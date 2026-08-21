@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 
 /// Demonstrates high-throughput, zero-allocation streaming deserialization
 /// directly over UTF-8 bytes without intermediate Map DOM allocations.

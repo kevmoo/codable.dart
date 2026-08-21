@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
+
 part of 'test_models.dart';
 
 // =============================================================================
@@ -10,23 +12,16 @@ extension type const _$PointSchema(int _value) {
   static const String nameX = 'x';
   static const String nameY = 'y';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameXBytes = Uint8List.fromList(const [120]);
-  static final Uint8List nameYBytes = Uint8List.fromList(const [121]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyX = 0;
   static const int keyY = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$PointSchema.nameX,
     _$PointSchema.nameY,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$PointSchema none = _$PointSchema(0);
@@ -35,7 +30,7 @@ extension type const _$PointSchema(int _value) {
   static const int _yBit = 1 << 1;
   static const _$PointSchema y = _$PointSchema(_yBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$PointSchema golden = _$PointSchema(_xBit | _yBit);
 
   @pragma('vm:prefer-inline')
@@ -66,57 +61,10 @@ extension type const _$PointSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Point
-// =============================================================================
-Point _$PointFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  double? x;
-  double? y;
-  var seen = _$PointSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$PointSchema.options)) {
-      case _$PointSchema.keyX:
-        if ((seen._value & _$PointSchema.x._value) != 0) {
-          throw const CodableException('Duplicate field "x"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          x = reader.readDouble();
-          seen |= _$PointSchema.x;
-        }
-        break;
-      case _$PointSchema.keyY:
-        if ((seen._value & _$PointSchema.y._value) != 0) {
-          throw const CodableException('Duplicate field "y"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          y = reader.readDouble();
-          seen |= _$PointSchema.y;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Point(x!, y!);
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for Point
+// 2. Universal Keyed Deserializer for Point
 // =============================================================================
 Point _$PointFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$PointSchema.keyOptions);
 
   double? x;
   double? y;
@@ -159,15 +107,12 @@ Point _$PointFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Point
+// 3. Universal Serializer for Point
 // =============================================================================
-void _$PointToWriter(Point instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$PointSchema.nameXBytes);
-  writer.writeDouble(instance.x);
-  writer.writeNameBytes(_$PointSchema.nameYBytes);
-  writer.writeDouble(instance.y);
-  writer.endObject();
+void _$PointToEncoder(Point instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeDouble(_$PointSchema.nameX, instance.x);
+  keyed.encodeDouble(_$PointSchema.nameY, instance.y);
 }
 
 // =============================================================================
@@ -181,47 +126,7 @@ extension type const _$UserAccountSchema(int _value) {
   static const String nameTags = 'tags';
   static const String nameLocation = 'location';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameIdBytes = Uint8List.fromList(const [105, 100]);
-  static final Uint8List nameEmailAddressBytes = Uint8List.fromList(const [
-    101,
-    109,
-    97,
-    105,
-    108,
-    95,
-    97,
-    100,
-    100,
-    114,
-    101,
-    115,
-    115,
-  ]);
-  static final Uint8List nameRoleBytes = Uint8List.fromList(const [
-    114,
-    111,
-    108,
-    101,
-  ]);
-  static final Uint8List nameTagsBytes = Uint8List.fromList(const [
-    116,
-    97,
-    103,
-    115,
-  ]);
-  static final Uint8List nameLocationBytes = Uint8List.fromList(const [
-    108,
-    111,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyEmailAddress = 1;
   static const String aliasEmailAddressEmail = 'email';
@@ -232,8 +137,8 @@ extension type const _$UserAccountSchema(int _value) {
   static const int keyTags = 5;
   static const int keyLocation = 6;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$UserAccountSchema.nameId,
     _$UserAccountSchema.nameEmailAddress,
     _$UserAccountSchema.aliasEmailAddressEmail,
@@ -242,21 +147,15 @@ extension type const _$UserAccountSchema(int _value) {
     _$UserAccountSchema.nameTags,
     _$UserAccountSchema.nameLocation,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Enum Options for role
-  static final JsonKeyOptions roleEnumOptions = JsonKeyOptions.of(const [
+  static final KeyOptions roleEnumOptions = KeyOptions.of(const [
     'admin',
     'member',
     'guest',
   ]);
-  static final KeyOptions roleKeyOptions = KeyOptions(
-    roleEnumOptions.keys,
-    compiled: roleEnumOptions,
-  );
+  static final KeyOptions roleKeyOptions = roleEnumOptions;
 
   // Bitmask Flags strictly for Required Fields
   static const _$UserAccountSchema none = _$UserAccountSchema(0);
@@ -269,7 +168,7 @@ extension type const _$UserAccountSchema(int _value) {
   static const int _roleBit = 1 << 2;
   static const _$UserAccountSchema role = _$UserAccountSchema(_roleBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$UserAccountSchema golden = _$UserAccountSchema(
     _idBit | _emailAddressBit | _roleBit,
   );
@@ -305,122 +204,10 @@ extension type const _$UserAccountSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for UserAccount
-// =============================================================================
-UserAccount _$UserAccountFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? id;
-  String? emailAddress;
-  UserRole? role;
-  var tags = const <String>[];
-  Float64List? location;
-  var internalId = '';
-  var seen = _$UserAccountSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$UserAccountSchema.options)) {
-      case _$UserAccountSchema.keyId:
-        if ((seen._value & _$UserAccountSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          id = reader.readString();
-          seen |= _$UserAccountSchema.id;
-        }
-        break;
-      case _$UserAccountSchema.keyEmailAddress:
-      case _$UserAccountSchema.aliasKeyEmailAddressEmail:
-      case _$UserAccountSchema.aliasKeyEmailAddressContactEmail:
-        if ((seen._value & _$UserAccountSchema.emailAddress._value) != 0) {
-          throw const CodableException('Duplicate field "email_address"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          emailAddress = reader.readString();
-          seen |= _$UserAccountSchema.emailAddress;
-        }
-        break;
-      case _$UserAccountSchema.keyRole:
-        if ((seen._value & _$UserAccountSchema.role._value) != 0) {
-          throw const CodableException('Duplicate field "role"');
-        }
-        // Zero-allocation enum matching
-        final enumIndex = reader.selectString(
-          _$UserAccountSchema.roleEnumOptions,
-        );
-        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-          role = UserRole.values[enumIndex];
-          seen |= _$UserAccountSchema.role;
-        } else {
-          throw const CodableException('Unknown UserRole value');
-        }
-        break;
-      case _$UserAccountSchema.keyTags:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginArray();
-          final list = <String>[];
-          while (reader.hasNext()) {
-            list.add(reader.readString());
-          }
-          reader.endArray();
-          tags = list;
-        }
-        break;
-      case _$UserAccountSchema.keyLocation:
-        if (reader.isNextNull()) {
-          reader.readNull();
-          location = null;
-        } else {
-          reader.beginArray();
-          final tuple = Float64List(2);
-          var tupleIdx = 0;
-          while (reader.hasNext()) {
-            if (tupleIdx < 2) {
-              tuple[tupleIdx++] = reader.readDouble();
-            } else {
-              reader.skipValue();
-            }
-          }
-          reader.endArray();
-          if (tupleIdx != 2) {
-            throw CodableException(
-              'Expected 2 elements for tuple "location", got $tupleIdx',
-            );
-          }
-          location = tuple;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return UserAccount(
-    id: id!,
-    emailAddress: emailAddress!,
-    role: role!,
-    tags: tags,
-    location: location,
-    internalId: internalId,
-  );
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for UserAccount
+// 2. Universal Keyed Deserializer for UserAccount
 // =============================================================================
 UserAccount _$UserAccountFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$UserAccountSchema.keyOptions);
 
   String? id;
   String? emailAddress;
@@ -460,15 +247,19 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserAccountSchema.role._value) != 0) {
           throw const CodableException('Duplicate field "role"');
         }
-        // Zero-allocation enum matching
-        final enumIndex = keyed.selectStringIndex(
-          _$UserAccountSchema.roleKeyOptions,
-        );
-        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-          role = UserRole.values[enumIndex];
-          seen |= _$UserAccountSchema.role;
+        if (keyed.isNextNull()) {
+          keyed.readNull();
         } else {
-          throw const CodableException('Unknown UserRole value');
+          final enumIndex = keyed.selectStringIndex(
+            _$UserAccountSchema.roleKeyOptions,
+          );
+          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+            role = UserRole.values[enumIndex];
+            seen |= _$UserAccountSchema.role;
+          } else {
+            throw const CodableException('Unknown UserRole value');
+          }
+          seen |= _$UserAccountSchema.role;
         }
         break;
       case _$UserAccountSchema.keyTags:
@@ -506,30 +297,24 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for UserAccount
+// 3. Universal Serializer for UserAccount
 // =============================================================================
-void _$UserAccountToWriter(UserAccount instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$UserAccountSchema.nameIdBytes);
-  writer.writeString(instance.id);
-  writer.writeNameBytes(_$UserAccountSchema.nameEmailAddressBytes);
-  writer.writeString(instance.emailAddress);
-  writer.writeNameBytes(_$UserAccountSchema.nameRoleBytes);
-  writer.writeString(instance.role.name);
-  writer.writeNameBytes(_$UserAccountSchema.nameTagsBytes);
-  writer.beginArray();
-  for (final item in instance.tags) {
-    writer.writeString(item);
-  }
-  writer.endArray();
+void _$UserAccountToEncoder(UserAccount instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
+  keyed.encodeString(
+    _$UserAccountSchema.nameEmailAddress,
+    instance.emailAddress,
+  );
+  keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
+  keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
   if (instance.location != null) {
-    writer.writeNameBytes(_$UserAccountSchema.nameLocationBytes);
-    writer.beginArray();
-    writer.writeDouble(instance.location![0]);
-    writer.writeDouble(instance.location![1]);
-    writer.endArray();
+    keyed.encodeList<double>(
+      _$UserAccountSchema.nameLocation,
+      List.generate(2, (i) => instance.location![i]),
+      (v, e) => e.singleValue().encodeDouble(v),
+    );
   }
-  writer.endObject();
 }
 
 // =============================================================================
@@ -540,35 +325,16 @@ extension type const _$AddressSchema(int _value) {
   static const String nameCity = 'city';
   static const String nameStreet = 'street';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameCityBytes = Uint8List.fromList(const [
-    99,
-    105,
-    116,
-    121,
-  ]);
-  static final Uint8List nameStreetBytes = Uint8List.fromList(const [
-    115,
-    116,
-    114,
-    101,
-    101,
-    116,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyCity = 0;
   static const int keyStreet = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$AddressSchema.nameCity,
     _$AddressSchema.nameStreet,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$AddressSchema none = _$AddressSchema(0);
@@ -577,7 +343,7 @@ extension type const _$AddressSchema(int _value) {
   static const int _streetBit = 1 << 1;
   static const _$AddressSchema street = _$AddressSchema(_streetBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$AddressSchema golden = _$AddressSchema(_cityBit | _streetBit);
 
   @pragma('vm:prefer-inline')
@@ -608,57 +374,10 @@ extension type const _$AddressSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Address
-// =============================================================================
-Address _$AddressFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? city;
-  String? street;
-  var seen = _$AddressSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$AddressSchema.options)) {
-      case _$AddressSchema.keyCity:
-        if ((seen._value & _$AddressSchema.city._value) != 0) {
-          throw const CodableException('Duplicate field "city"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          city = reader.readString();
-          seen |= _$AddressSchema.city;
-        }
-        break;
-      case _$AddressSchema.keyStreet:
-        if ((seen._value & _$AddressSchema.street._value) != 0) {
-          throw const CodableException('Duplicate field "street"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          street = reader.readString();
-          seen |= _$AddressSchema.street;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Address(city: city!, street: street!);
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for Address
+// 2. Universal Keyed Deserializer for Address
 // =============================================================================
 Address _$AddressFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$AddressSchema.keyOptions);
 
   String? city;
   String? street;
@@ -701,15 +420,12 @@ Address _$AddressFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Address
+// 3. Universal Serializer for Address
 // =============================================================================
-void _$AddressToWriter(Address instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$AddressSchema.nameCityBytes);
-  writer.writeString(instance.city);
-  writer.writeNameBytes(_$AddressSchema.nameStreetBytes);
-  writer.writeString(instance.street);
-  writer.endObject();
+void _$AddressToEncoder(Address instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$AddressSchema.nameCity, instance.city);
+  keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
 }
 
 // =============================================================================
@@ -723,85 +439,22 @@ extension type const _$EnterpriseSchema(int _value) {
   static const String nameCategories = 'categories';
   static const String nameHeadcountByDept = 'headcountByDept';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameNameBytes = Uint8List.fromList(const [
-    110,
-    97,
-    109,
-    101,
-  ]);
-  static final Uint8List nameHeadquarterBytes = Uint8List.fromList(const [
-    104,
-    101,
-    97,
-    100,
-    113,
-    117,
-    97,
-    114,
-    116,
-    101,
-    114,
-  ]);
-  static final Uint8List nameBranchesBytes = Uint8List.fromList(const [
-    98,
-    114,
-    97,
-    110,
-    99,
-    104,
-    101,
-    115,
-  ]);
-  static final Uint8List nameCategoriesBytes = Uint8List.fromList(const [
-    99,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    105,
-    101,
-    115,
-  ]);
-  static final Uint8List nameHeadcountByDeptBytes = Uint8List.fromList(const [
-    104,
-    101,
-    97,
-    100,
-    99,
-    111,
-    117,
-    110,
-    116,
-    66,
-    121,
-    68,
-    101,
-    112,
-    116,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyName = 0;
   static const int keyHeadquarter = 1;
   static const int keyBranches = 2;
   static const int keyCategories = 3;
   static const int keyHeadcountByDept = 4;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$EnterpriseSchema.nameName,
     _$EnterpriseSchema.nameHeadquarter,
     _$EnterpriseSchema.nameBranches,
     _$EnterpriseSchema.nameCategories,
     _$EnterpriseSchema.nameHeadcountByDept,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$EnterpriseSchema none = _$EnterpriseSchema(0);
@@ -812,7 +465,7 @@ extension type const _$EnterpriseSchema(int _value) {
     _headquarterBit,
   );
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$EnterpriseSchema golden = _$EnterpriseSchema(
     _nameBit | _headquarterBit,
   );
@@ -845,106 +498,10 @@ extension type const _$EnterpriseSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Enterprise
-// =============================================================================
-Enterprise _$EnterpriseFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? name;
-  Address? headquarter;
-  var branches = const <Address>[];
-  var categories = const <String>{};
-  var headcountByDept = const <String, int>{};
-  var seen = _$EnterpriseSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$EnterpriseSchema.options)) {
-      case _$EnterpriseSchema.keyName:
-        if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          name = reader.readString();
-          seen |= _$EnterpriseSchema.name;
-        }
-        break;
-      case _$EnterpriseSchema.keyHeadquarter:
-        if ((seen._value & _$EnterpriseSchema.headquarter._value) != 0) {
-          throw const CodableException('Duplicate field "headquarter"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          headquarter = _$AddressFromReader(reader);
-          seen |= _$EnterpriseSchema.headquarter;
-        }
-        break;
-      case _$EnterpriseSchema.keyBranches:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginArray();
-          final list = <Address>[];
-          while (reader.hasNext()) {
-            list.add(_$AddressFromReader(reader));
-          }
-          reader.endArray();
-          branches = list;
-        }
-        break;
-      case _$EnterpriseSchema.keyCategories:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginArray();
-          final set = <String>{};
-          while (reader.hasNext()) {
-            set.add(reader.readString());
-          }
-          reader.endArray();
-          categories = set;
-        }
-        break;
-      case _$EnterpriseSchema.keyHeadcountByDept:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginObject();
-          final map = <String, int>{};
-          while (reader.hasNext()) {
-            final k = reader.nextName();
-            map[k] = reader.readInt();
-          }
-          reader.endObject();
-          headcountByDept = map;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Enterprise(
-    name: name!,
-    headquarter: headquarter!,
-    branches: branches,
-    categories: categories,
-    headcountByDept: headcountByDept,
-  );
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for Enterprise
+// 2. Universal Keyed Deserializer for Enterprise
 // =============================================================================
 Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$EnterpriseSchema.keyOptions);
 
   String? name;
   Address? headquarter;
@@ -1025,35 +582,35 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Enterprise
+// 3. Universal Serializer for Enterprise
 // =============================================================================
-void _$EnterpriseToWriter(Enterprise instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$EnterpriseSchema.nameNameBytes);
-  writer.writeString(instance.name);
-  writer.writeNameBytes(_$EnterpriseSchema.nameHeadquarterBytes);
-  _$AddressToWriter(instance.headquarter, writer);
-  writer.writeNameBytes(_$EnterpriseSchema.nameBranchesBytes);
-  writer.beginArray();
-  for (final item in instance.branches) {
-    _$AddressToWriter(item, writer);
-  }
-  writer.endArray();
-  writer.writeNameBytes(_$EnterpriseSchema.nameCategoriesBytes);
-  writer.beginArray();
-  for (final item in instance.categories) {
-    writer.writeString(item);
-  }
-  writer.endArray();
-  writer.writeNameBytes(_$EnterpriseSchema.nameHeadcountByDeptBytes);
-  writer.beginObject();
-  for (final entry in instance.headcountByDept.entries) {
-    final value = entry.value;
-    writer.writeName(entry.key);
-    writer.writeInt(value);
-  }
-  writer.endObject();
-  writer.endObject();
+void _$EnterpriseToEncoder(Enterprise instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
+  keyed.encodeValue(
+    _$EnterpriseSchema.nameHeadquarter,
+    instance.headquarter,
+    _$AddressToEncoder,
+  );
+  keyed.encodeList(
+    _$EnterpriseSchema.nameBranches,
+    instance.branches,
+    _$AddressToEncoder,
+  );
+  keyed.encodeStringList(
+    _$EnterpriseSchema.nameCategories,
+    instance.categories.toList(),
+  );
+  keyed.encodeValue(
+    _$EnterpriseSchema.nameHeadcountByDept,
+    instance.headcountByDept,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    },
+  );
 }
 
 // =============================================================================
@@ -1064,27 +621,16 @@ extension type const _$UserProfileCustomSchema(int _value) {
   static const String nameId = 'id';
   static const String nameZip = 'zip';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameIdBytes = Uint8List.fromList(const [105, 100]);
-  static final Uint8List nameZipBytes = Uint8List.fromList(const [
-    122,
-    105,
-    112,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyZip = 1;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$UserProfileCustomSchema.nameId,
     _$UserProfileCustomSchema.nameZip,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$UserProfileCustomSchema none = _$UserProfileCustomSchema(0);
@@ -1095,7 +641,7 @@ extension type const _$UserProfileCustomSchema(int _value) {
     _zipBit,
   );
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$UserProfileCustomSchema golden = _$UserProfileCustomSchema(
     _idBit | _zipBit,
   );
@@ -1128,57 +674,10 @@ extension type const _$UserProfileCustomSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for UserProfileCustom
-// =============================================================================
-UserProfileCustom _$UserProfileCustomFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? id;
-  String? zip;
-  var seen = _$UserProfileCustomSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$UserProfileCustomSchema.options)) {
-      case _$UserProfileCustomSchema.keyId:
-        if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          id = reader.readString();
-          seen |= _$UserProfileCustomSchema.id;
-        }
-        break;
-      case _$UserProfileCustomSchema.keyZip:
-        if ((seen._value & _$UserProfileCustomSchema.zip._value) != 0) {
-          throw const CodableException('Duplicate field "zip"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          zip = const ZipCodeDecoder().decodeFromReader(reader);
-          seen |= _$UserProfileCustomSchema.zip;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return UserProfileCustom(id: id!, zip: zip!);
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for UserProfileCustom
+// 2. Universal Keyed Deserializer for UserProfileCustom
 // =============================================================================
 UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$UserProfileCustomSchema.keyOptions);
 
   String? id;
   String? zip;
@@ -1221,18 +720,16 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for UserProfileCustom
+// 3. Universal Serializer for UserProfileCustom
 // =============================================================================
-void _$UserProfileCustomToWriter(
-  UserProfileCustom instance,
-  JsonTokenWriter writer,
-) {
-  writer.beginObject();
-  writer.writeNameBytes(_$UserProfileCustomSchema.nameIdBytes);
-  writer.writeString(instance.id);
-  writer.writeNameBytes(_$UserProfileCustomSchema.nameZipBytes);
-  const ZipCodeDecoder().encodeToWriter(instance.zip, writer);
-  writer.endObject();
+void _$UserProfileCustomToEncoder(UserProfileCustom instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
+  keyed.encodeValue(
+    _$UserProfileCustomSchema.nameZip,
+    instance.zip,
+    (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e),
+  );
 }
 
 // =============================================================================
@@ -1245,67 +742,27 @@ extension type const _$TeamSchema(int _value) {
   static const String nameNullableTags = 'nullableTags';
   static const String nameScores = 'scores';
 
-  // Pre-Encoded UTF-8 Wire Bytes
-  static final Uint8List nameNameBytes = Uint8List.fromList(const [
-    110,
-    97,
-    109,
-    101,
-  ]);
-  static final Uint8List nameRolesBytes = Uint8List.fromList(const [
-    114,
-    111,
-    108,
-    101,
-    115,
-  ]);
-  static final Uint8List nameNullableTagsBytes = Uint8List.fromList(const [
-    110,
-    117,
-    108,
-    108,
-    97,
-    98,
-    108,
-    101,
-    84,
-    97,
-    103,
-    115,
-  ]);
-  static final Uint8List nameScoresBytes = Uint8List.fromList(const [
-    115,
-    99,
-    111,
-    114,
-    101,
-    115,
-  ]);
-
-  // Key Indices for selectName()
+  // Key Indices for selectKeyIndex()
   static const int keyName = 0;
   static const int keyRoles = 1;
   static const int keyNullableTags = 2;
   static const int keyScores = 3;
 
-  // Pre-Compiled JsonKeyOptions
-  static final JsonKeyOptions options = JsonKeyOptions.of(const [
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
     _$TeamSchema.nameName,
     _$TeamSchema.nameRoles,
     _$TeamSchema.nameNullableTags,
     _$TeamSchema.nameScores,
   ]);
-  static final KeyOptions keyOptions = KeyOptions(
-    options.keys,
-    compiled: options,
-  );
+  static final KeyOptions keyOptions = options;
 
   // Bitmask Flags strictly for Required Fields
   static const _$TeamSchema none = _$TeamSchema(0);
   static const int _nameBit = 1 << 0;
   static const _$TeamSchema name = _$TeamSchema(_nameBit);
 
-  // Composite Golden Mask for Required Fields
+  // Combined Golden Bitmask for fast single-instruction check
   static const _$TeamSchema golden = _$TeamSchema(_nameBit);
 
   @pragma('vm:prefer-inline')
@@ -1333,103 +790,10 @@ extension type const _$TeamSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Single-Pass Streaming Deserializer for Team
-// =============================================================================
-Team _$TeamFromReader(JsonTokenReader reader) {
-  reader.beginObject();
-
-  String? name;
-  var roles = const <UserRole>[];
-  var nullableTags = const <String?>{};
-  var scores = const <String, int?>{};
-  var seen = _$TeamSchema.none;
-
-  while (reader.hasNext()) {
-    switch (reader.selectName(_$TeamSchema.options)) {
-      case _$TeamSchema.keyName:
-        if ((seen._value & _$TeamSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          name = reader.readString();
-          seen |= _$TeamSchema.name;
-        }
-        break;
-      case _$TeamSchema.keyRoles:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginArray();
-          final list = <UserRole>[];
-          while (reader.hasNext()) {
-            list.add(UserRole.values.byName(reader.readString()));
-          }
-          reader.endArray();
-          roles = list;
-        }
-        break;
-      case _$TeamSchema.keyNullableTags:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginArray();
-          final set = <String?>{};
-          while (reader.hasNext()) {
-            if (reader.isNextNull()) {
-              reader.readNull();
-              set.add(null as String?);
-            } else {
-              set.add(reader.readString());
-            }
-          }
-          reader.endArray();
-          nullableTags = set;
-        }
-        break;
-      case _$TeamSchema.keyScores:
-        if (reader.isNextNull()) {
-          reader.readNull();
-        } else {
-          reader.beginObject();
-          final map = <String, int?>{};
-          while (reader.hasNext()) {
-            final k = reader.nextName();
-            if (reader.isNextNull()) {
-              reader.readNull();
-              map[k] = null as int?;
-            } else {
-              map[k] = reader.readInt();
-            }
-          }
-          reader.endObject();
-          scores = map;
-        }
-        break;
-      default:
-        reader.skipValue();
-        break;
-    }
-  }
-  reader.endObject();
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Team(
-    name: name!,
-    roles: roles,
-    nullableTags: nullableTags,
-    scores: scores,
-  );
-}
-
-// =============================================================================
-// 3. Universal Keyed Deserializer for Team
+// 2. Universal Keyed Deserializer for Team
 // =============================================================================
 Team _$TeamFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed();
+  final keyed = decoder.keyed(options: _$TeamSchema.keyOptions);
 
   String? name;
   var roles = const <UserRole>[];
@@ -1506,39 +870,28 @@ Team _$TeamFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
-// 3. Single-Pass Streaming Serializer for Team
+// 3. Universal Serializer for Team
 // =============================================================================
-void _$TeamToWriter(Team instance, JsonTokenWriter writer) {
-  writer.beginObject();
-  writer.writeNameBytes(_$TeamSchema.nameNameBytes);
-  writer.writeString(instance.name);
-  writer.writeNameBytes(_$TeamSchema.nameRolesBytes);
-  writer.beginArray();
-  for (final item in instance.roles) {
-    writer.writeString(item.name);
-  }
-  writer.endArray();
-  writer.writeNameBytes(_$TeamSchema.nameNullableTagsBytes);
-  writer.beginArray();
-  for (final item in instance.nullableTags) {
+void _$TeamToEncoder(Team instance, Encoder encoder) {
+  final keyed = encoder.keyed();
+  keyed.encodeString(_$TeamSchema.nameName, instance.name);
+  keyed.encodeList(_$TeamSchema.nameRoles, instance.roles, (item, e) {
+    e.singleValue().encodeString(item.name);
+  });
+  keyed.encodeList(_$TeamSchema.nameNullableTags, instance.nullableTags, (
+    item,
+    e,
+  ) {
     if (item == null) {
-      writer.writeNull();
+      e.singleValue().encodeNull();
     } else {
-      writer.writeString(item);
+      e.singleValue().encodeString(item);
     }
-  }
-  writer.endArray();
-  writer.writeNameBytes(_$TeamSchema.nameScoresBytes);
-  writer.beginObject();
-  for (final entry in instance.scores.entries) {
-    final value = entry.value;
-    writer.writeName(entry.key);
-    if (value == null) {
-      writer.writeNull();
-    } else {
-      writer.writeInt(value);
+  });
+  keyed.encodeValue(_$TeamSchema.nameScores, instance.scores, (map, e) {
+    final k = e.keyed();
+    for (final entry in map.entries) {
+      k.encodeNullableInt(entry.key, entry.value);
     }
-  }
-  writer.endObject();
-  writer.endObject();
+  });
 }
