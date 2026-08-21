@@ -4,10 +4,6 @@
 
 part of 'coordinate.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -54,6 +50,10 @@ extension type const _$CoordinateSchema(int _value) {
     _$CoordinateSchema.nameLongitude,
     _$CoordinateSchema.aliasLongitudeLon,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CoordinateSchema none = _$CoordinateSchema(0);
@@ -136,6 +136,54 @@ Coordinate _$CoordinateFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return Coordinate(latitude: latitude!, longitude: longitude!);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for Coordinate
+// =============================================================================
+Coordinate _$CoordinateFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  double? latitude;
+  double? longitude;
+  var seen = _$CoordinateSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
+      case _$CoordinateSchema.keyLatitude:
+      case _$CoordinateSchema.aliasKeyLatitudeLat:
+        if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
+          throw const CodableException('Duplicate field "latitude"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          latitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.latitude;
+        }
+        break;
+      case _$CoordinateSchema.keyLongitude:
+      case _$CoordinateSchema.aliasKeyLongitudeLon:
+        if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
+          throw const CodableException('Duplicate field "longitude"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          longitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.longitude;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();

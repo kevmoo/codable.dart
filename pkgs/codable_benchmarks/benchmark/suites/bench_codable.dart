@@ -180,7 +180,7 @@ BenchResult runBenchmark(
         final decoder = JsonCodableDecoder.fromBytes(bytes);
         final unkeyed = decoder.unkeyed();
         while (unkeyed.hasNext()) {
-          list.add(Coordinate.decode(decoder));
+          list.add(unkeyed.decodeElement(Coordinate.decode));
         }
         preDecodedModel = list;
         break;
@@ -219,7 +219,7 @@ BenchResult runBenchmark(
             final unkeyed = decoder.unkeyed();
             final list = <Coordinate>[];
             while (unkeyed.hasNext()) {
-              list.add(Coordinate.decode(decoder));
+              list.add(unkeyed.decodeElement(Coordinate.decode));
             }
             consumeBlackBox(list);
           };

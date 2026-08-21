@@ -300,5 +300,60 @@ void main() {
         check(roundtripped.headcountByDept['sales']).equals(20000);
       });
     });
+
+    group('Universal Decoder Contract Execution', () {
+      test('Point deserializes via Decoder.decode', () {
+        final bytes = Uint8List.fromList(utf8.encode('{"x": 42.0, "y": 84.0}'));
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final point = Point.decode(decoder);
+
+        check(point.x).equals(42.0);
+        check(point.y).equals(84.0);
+      });
+
+      test('UserAccount deserializes via Decoder.decode', () {
+        final bytes = Uint8List.fromList(
+          utf8.encode(
+            '{"id": "usr_99", "email": "user@example.com", "role": "admin"}',
+          ),
+        );
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final user = UserAccount.decode(decoder);
+
+        check(user.id).equals('usr_99');
+        check(user.emailAddress).equals('user@example.com');
+        check(user.role).equals(UserRole.admin);
+      });
+
+      test('Enterprise nested structure deserializes via Decoder.decode', () {
+        final bytes = Uint8List.fromList(
+          utf8.encode(
+            '{"name": "Corp", "headquarter": {"city": "Zurich", "street": "Brandschenkestrasse"}, "branches": [{"city": "London", "street": "Belgrave"}], "categories": ["tech"]}',
+          ),
+        );
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final enterprise = Enterprise.decode(decoder);
+
+        check(enterprise.name).equals('Corp');
+        check(enterprise.headquarter.city).equals('Zurich');
+        check(enterprise.branches.length).equals(1);
+        check(enterprise.branches[0].city).equals('London');
+        check(enterprise.categories.contains('tech')).isTrue();
+      });
+
+      test(
+        'UserProfileCustom with CustomDecoder deserializes via Decoder.decode',
+        () {
+          final bytes = Uint8List.fromList(
+            utf8.encode('{"id": "p1", "zip": "90210"}'),
+          );
+          final decoder = JsonCodableDecoder.fromBytes(bytes);
+          final profile = UserProfileCustom.decode(decoder);
+
+          check(profile.id).equals('p1');
+          check(profile.zip).equals('90210');
+        },
+      );
+    });
   });
 }

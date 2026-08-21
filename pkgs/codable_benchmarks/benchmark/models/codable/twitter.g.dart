@@ -4,10 +4,6 @@
 
 part of 'twitter.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -59,6 +55,10 @@ extension type const _$TwitterMetadataSchema(int _value) {
     _$TwitterMetadataSchema.nameResultType,
     _$TwitterMetadataSchema.nameIsoLanguageCode,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterMetadataSchema none = _$TwitterMetadataSchema(0);
@@ -104,6 +104,47 @@ TwitterMetadata _$TwitterMetadataFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterMetadata(
+    resultType: resultType,
+    isoLanguageCode: isoLanguageCode,
+  );
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterMetadata
+// =============================================================================
+TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var resultType = '';
+  var isoLanguageCode = '';
+  var seen = _$TwitterMetadataSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterMetadataSchema.keyOptions)) {
+      case _$TwitterMetadataSchema.keyResultType:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          resultType = keyed.readString();
+        }
+        break;
+      case _$TwitterMetadataSchema.keyIsoLanguageCode:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          isoLanguageCode = keyed.readString();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -194,6 +235,10 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     _$TwitterUserMentionSchema.nameIdStr,
     _$TwitterUserMentionSchema.nameIndices,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterUserMentionSchema none = _$TwitterUserMentionSchema(0);
@@ -343,6 +388,90 @@ TwitterUserMention _$TwitterUserMentionFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for TwitterUserMention
+// =============================================================================
+TwitterUserMention _$TwitterUserMentionFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  String? screenName;
+  String? name;
+  int? id;
+  String? idStr;
+  var indices = const <int>[];
+  var seen = _$TwitterUserMentionSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterUserMentionSchema.keyOptions)) {
+      case _$TwitterUserMentionSchema.keyScreenName:
+        if ((seen._value & _$TwitterUserMentionSchema.screenName._value) != 0) {
+          throw const CodableException('Duplicate field "screen_name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          screenName = keyed.readString();
+          seen |= _$TwitterUserMentionSchema.screenName;
+        }
+        break;
+      case _$TwitterUserMentionSchema.keyName:
+        if ((seen._value & _$TwitterUserMentionSchema.name._value) != 0) {
+          throw const CodableException('Duplicate field "name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          name = keyed.readString();
+          seen |= _$TwitterUserMentionSchema.name;
+        }
+        break;
+      case _$TwitterUserMentionSchema.keyId:
+        if ((seen._value & _$TwitterUserMentionSchema.id._value) != 0) {
+          throw const CodableException('Duplicate field "id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          id = keyed.readInt();
+          seen |= _$TwitterUserMentionSchema.id;
+        }
+        break;
+      case _$TwitterUserMentionSchema.keyIdStr:
+        if ((seen._value & _$TwitterUserMentionSchema.idStr._value) != 0) {
+          throw const CodableException('Duplicate field "id_str"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          idStr = keyed.readString();
+          seen |= _$TwitterUserMentionSchema.idStr;
+        }
+        break;
+      case _$TwitterUserMentionSchema.keyIndices:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          indices = keyed.decodeIntList();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterUserMention(
+    screenName: screenName!,
+    name: name!,
+    id: id!,
+    idStr: idStr!,
+    indices: indices,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for TwitterUserMention
 // =============================================================================
 void _$TwitterUserMentionToWriter(
@@ -433,6 +562,10 @@ extension type const _$TwitterUrlSchema(int _value) {
     _$TwitterUrlSchema.nameDisplayUrl,
     _$TwitterUrlSchema.nameIndices,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterUrlSchema none = _$TwitterUrlSchema(0);
@@ -561,6 +694,77 @@ TwitterUrl _$TwitterUrlFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for TwitterUrl
+// =============================================================================
+TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  String? url;
+  String? expandedUrl;
+  String? displayUrl;
+  var indices = const <int>[];
+  var seen = _$TwitterUrlSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterUrlSchema.keyOptions)) {
+      case _$TwitterUrlSchema.keyUrl:
+        if ((seen._value & _$TwitterUrlSchema.url._value) != 0) {
+          throw const CodableException('Duplicate field "url"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          url = keyed.readString();
+          seen |= _$TwitterUrlSchema.url;
+        }
+        break;
+      case _$TwitterUrlSchema.keyExpandedUrl:
+        if ((seen._value & _$TwitterUrlSchema.expandedUrl._value) != 0) {
+          throw const CodableException('Duplicate field "expanded_url"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          expandedUrl = keyed.readString();
+          seen |= _$TwitterUrlSchema.expandedUrl;
+        }
+        break;
+      case _$TwitterUrlSchema.keyDisplayUrl:
+        if ((seen._value & _$TwitterUrlSchema.displayUrl._value) != 0) {
+          throw const CodableException('Duplicate field "display_url"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          displayUrl = keyed.readString();
+          seen |= _$TwitterUrlSchema.displayUrl;
+        }
+        break;
+      case _$TwitterUrlSchema.keyIndices:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          indices = keyed.decodeIntList();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterUrl(
+    url: url!,
+    expandedUrl: expandedUrl!,
+    displayUrl: displayUrl!,
+    indices: indices,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for TwitterUrl
 // =============================================================================
 void _$TwitterUrlToWriter(TwitterUrl instance, JsonTokenWriter writer) {
@@ -602,6 +806,10 @@ extension type const _$TwitterEntitiesUrlsSchema(int _value) {
   static final JsonKeyOptions options = JsonKeyOptions.of(const [
     _$TwitterEntitiesUrlsSchema.nameUrls,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterEntitiesUrlsSchema none = _$TwitterEntitiesUrlsSchema(
@@ -647,6 +855,36 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterEntitiesUrls(urls: urls);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterEntitiesUrls
+// =============================================================================
+TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var urls = const <TwitterUrl>[];
+  var seen = _$TwitterEntitiesUrlsSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterEntitiesUrlsSchema.keyOptions)) {
+      case _$TwitterEntitiesUrlsSchema.keyUrls:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          urls = keyed.decodeList(_$TwitterUrlFromDecoder);
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -708,6 +946,10 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
     _$TwitterUserEntitiesSchema.nameUrl,
     _$TwitterUserEntitiesSchema.nameDescription,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterUserEntitiesSchema none = _$TwitterUserEntitiesSchema(
@@ -757,6 +999,46 @@ TwitterUserEntities _$TwitterUserEntitiesFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterUserEntities(url: url, description: description);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterUserEntities
+// =============================================================================
+TwitterUserEntities _$TwitterUserEntitiesFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  TwitterEntitiesUrls? url;
+  TwitterEntitiesUrls? description;
+  var seen = _$TwitterUserEntitiesSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterUserEntitiesSchema.keyOptions)) {
+      case _$TwitterUserEntitiesSchema.keyUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          url = null;
+        } else {
+          url = keyed.decodeValue(_$TwitterEntitiesUrlsFromDecoder);
+        }
+        break;
+      case _$TwitterUserEntitiesSchema.keyDescription:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          description = null;
+        } else {
+          description = keyed.decodeValue(_$TwitterEntitiesUrlsFromDecoder);
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -823,6 +1105,10 @@ extension type const _$TwitterEntitiesSchema(int _value) {
     _$TwitterEntitiesSchema.nameUrls,
     _$TwitterEntitiesSchema.nameUserMentions,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterEntitiesSchema none = _$TwitterEntitiesSchema(0);
@@ -880,6 +1166,44 @@ TwitterEntities _$TwitterEntitiesFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterEntities(urls: urls, userMentions: userMentions);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterEntities
+// =============================================================================
+TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var urls = const <TwitterUrl>[];
+  var userMentions = const <TwitterUserMention>[];
+  var seen = _$TwitterEntitiesSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterEntitiesSchema.keyOptions)) {
+      case _$TwitterEntitiesSchema.keyUrls:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          urls = keyed.decodeList(_$TwitterUrlFromDecoder);
+        }
+        break;
+      case _$TwitterEntitiesSchema.keyUserMentions:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          userMentions = keyed.decodeList(_$TwitterUserMentionFromDecoder);
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -1744,6 +2068,10 @@ extension type const _$TwitterUserSchema(int _value) {
     _$TwitterUserSchema.nameFollowRequestSent,
     _$TwitterUserSchema.nameNotifications,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterUserSchema none = _$TwitterUserSchema(0);
@@ -2164,6 +2492,414 @@ TwitterUser _$TwitterUserFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterUser(
+    id: id!,
+    idStr: idStr!,
+    name: name!,
+    screenName: screenName!,
+    location: location,
+    description: description,
+    url: url,
+    entities: entities,
+    protected: protected,
+    followersCount: followersCount,
+    friendsCount: friendsCount,
+    listedCount: listedCount,
+    createdAt: createdAt!,
+    favouritesCount: favouritesCount,
+    utcOffset: utcOffset,
+    timeZone: timeZone,
+    geoEnabled: geoEnabled,
+    verified: verified,
+    statusesCount: statusesCount,
+    lang: lang,
+    contributorsEnabled: contributorsEnabled,
+    isTranslator: isTranslator,
+    isTranslationEnabled: isTranslationEnabled,
+    profileBackgroundColor: profileBackgroundColor,
+    profileBackgroundImageUrl: profileBackgroundImageUrl,
+    profileBackgroundImageUrlHttps: profileBackgroundImageUrlHttps,
+    profileBackgroundTile: profileBackgroundTile,
+    profileImageUrl: profileImageUrl,
+    profileImageUrlHttps: profileImageUrlHttps,
+    profileBannerUrl: profileBannerUrl,
+    profileLinkColor: profileLinkColor,
+    profileSidebarBorderColor: profileSidebarBorderColor,
+    profileSidebarFillColor: profileSidebarFillColor,
+    profileTextColor: profileTextColor,
+    profileUseBackgroundImage: profileUseBackgroundImage,
+    defaultProfile: defaultProfile,
+    defaultProfileImage: defaultProfileImage,
+    following: following,
+    followRequestSent: followRequestSent,
+    notifications: notifications,
+  );
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterUser
+// =============================================================================
+TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  int? id;
+  String? idStr;
+  String? name;
+  String? screenName;
+  var location = '';
+  var description = '';
+  String? url;
+  TwitterUserEntities? entities;
+  var protected = false;
+  var followersCount = 0;
+  var friendsCount = 0;
+  var listedCount = 0;
+  String? createdAt;
+  var favouritesCount = 0;
+  int? utcOffset;
+  String? timeZone;
+  var geoEnabled = false;
+  var verified = false;
+  var statusesCount = 0;
+  var lang = 'en';
+  var contributorsEnabled = false;
+  var isTranslator = false;
+  var isTranslationEnabled = false;
+  var profileBackgroundColor = '';
+  var profileBackgroundImageUrl = '';
+  var profileBackgroundImageUrlHttps = '';
+  var profileBackgroundTile = false;
+  var profileImageUrl = '';
+  var profileImageUrlHttps = '';
+  String? profileBannerUrl;
+  var profileLinkColor = '';
+  var profileSidebarBorderColor = '';
+  var profileSidebarFillColor = '';
+  var profileTextColor = '';
+  var profileUseBackgroundImage = false;
+  var defaultProfile = false;
+  var defaultProfileImage = false;
+  var following = false;
+  var followRequestSent = false;
+  var notifications = false;
+  var seen = _$TwitterUserSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterUserSchema.keyOptions)) {
+      case _$TwitterUserSchema.keyId:
+        if ((seen._value & _$TwitterUserSchema.id._value) != 0) {
+          throw const CodableException('Duplicate field "id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          id = keyed.readInt();
+          seen |= _$TwitterUserSchema.id;
+        }
+        break;
+      case _$TwitterUserSchema.keyIdStr:
+        if ((seen._value & _$TwitterUserSchema.idStr._value) != 0) {
+          throw const CodableException('Duplicate field "id_str"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          idStr = keyed.readString();
+          seen |= _$TwitterUserSchema.idStr;
+        }
+        break;
+      case _$TwitterUserSchema.keyName:
+        if ((seen._value & _$TwitterUserSchema.name._value) != 0) {
+          throw const CodableException('Duplicate field "name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          name = keyed.readString();
+          seen |= _$TwitterUserSchema.name;
+        }
+        break;
+      case _$TwitterUserSchema.keyScreenName:
+        if ((seen._value & _$TwitterUserSchema.screenName._value) != 0) {
+          throw const CodableException('Duplicate field "screen_name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          screenName = keyed.readString();
+          seen |= _$TwitterUserSchema.screenName;
+        }
+        break;
+      case _$TwitterUserSchema.keyLocation:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          location = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyDescription:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          description = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          url = null;
+        } else {
+          url = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyEntities:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          entities = null;
+        } else {
+          entities = keyed.decodeValue(_$TwitterUserEntitiesFromDecoder);
+        }
+        break;
+      case _$TwitterUserSchema.keyProtected:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          protected = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyFollowersCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          followersCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyFriendsCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          friendsCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyListedCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          listedCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyCreatedAt:
+        if ((seen._value & _$TwitterUserSchema.createdAt._value) != 0) {
+          throw const CodableException('Duplicate field "created_at"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          createdAt = keyed.readString();
+          seen |= _$TwitterUserSchema.createdAt;
+        }
+        break;
+      case _$TwitterUserSchema.keyFavouritesCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          favouritesCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyUtcOffset:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          utcOffset = null;
+        } else {
+          utcOffset = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyTimeZone:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          timeZone = null;
+        } else {
+          timeZone = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyGeoEnabled:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          geoEnabled = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyVerified:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          verified = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyStatusesCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          statusesCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterUserSchema.keyLang:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          lang = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyContributorsEnabled:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          contributorsEnabled = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyIsTranslator:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          isTranslator = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyIsTranslationEnabled:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          isTranslationEnabled = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileBackgroundColor:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileBackgroundColor = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileBackgroundImageUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileBackgroundImageUrl = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileBackgroundImageUrlHttps:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileBackgroundImageUrlHttps = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileBackgroundTile:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileBackgroundTile = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileImageUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileImageUrl = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileImageUrlHttps:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileImageUrlHttps = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileBannerUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          profileBannerUrl = null;
+        } else {
+          profileBannerUrl = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileLinkColor:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileLinkColor = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileSidebarBorderColor:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileSidebarBorderColor = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileSidebarFillColor:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileSidebarFillColor = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileTextColor:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileTextColor = keyed.readString();
+        }
+        break;
+      case _$TwitterUserSchema.keyProfileUseBackgroundImage:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          profileUseBackgroundImage = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyDefaultProfile:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          defaultProfile = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyDefaultProfileImage:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          defaultProfileImage = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyFollowing:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          following = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyFollowRequestSent:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          followRequestSent = keyed.readBool();
+        }
+        break;
+      case _$TwitterUserSchema.keyNotifications:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          notifications = keyed.readBool();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -2684,6 +3420,10 @@ extension type const _$TwitterStatusSchema(int _value) {
     _$TwitterStatusSchema.nameLang,
     _$TwitterStatusSchema.nameRetweetedStatus,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterStatusSchema none = _$TwitterStatusSchema(0);
@@ -2985,6 +3725,248 @@ TwitterStatus _$TwitterStatusFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for TwitterStatus
+// =============================================================================
+TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  TwitterMetadata? metadata;
+  String? createdAt;
+  int? id;
+  String? idStr;
+  String? text;
+  String? source;
+  var truncated = false;
+  int? inReplyToStatusId;
+  String? inReplyToStatusIdStr;
+  int? inReplyToUserId;
+  String? inReplyToUserIdStr;
+  String? inReplyToScreenName;
+  TwitterUser? user;
+  var retweetCount = 0;
+  var favoriteCount = 0;
+  TwitterEntities? entities;
+  var favorited = false;
+  var retweeted = false;
+  bool? possiblySensitive;
+  var lang = 'en';
+  TwitterStatus? retweetedStatus;
+  var seen = _$TwitterStatusSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterStatusSchema.keyOptions)) {
+      case _$TwitterStatusSchema.keyMetadata:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          metadata = null;
+        } else {
+          metadata = keyed.decodeValue(_$TwitterMetadataFromDecoder);
+        }
+        break;
+      case _$TwitterStatusSchema.keyCreatedAt:
+        if ((seen._value & _$TwitterStatusSchema.createdAt._value) != 0) {
+          throw const CodableException('Duplicate field "created_at"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          createdAt = keyed.readString();
+          seen |= _$TwitterStatusSchema.createdAt;
+        }
+        break;
+      case _$TwitterStatusSchema.keyId:
+        if ((seen._value & _$TwitterStatusSchema.id._value) != 0) {
+          throw const CodableException('Duplicate field "id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          id = keyed.readInt();
+          seen |= _$TwitterStatusSchema.id;
+        }
+        break;
+      case _$TwitterStatusSchema.keyIdStr:
+        if ((seen._value & _$TwitterStatusSchema.idStr._value) != 0) {
+          throw const CodableException('Duplicate field "id_str"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          idStr = keyed.readString();
+          seen |= _$TwitterStatusSchema.idStr;
+        }
+        break;
+      case _$TwitterStatusSchema.keyText:
+        if ((seen._value & _$TwitterStatusSchema.text._value) != 0) {
+          throw const CodableException('Duplicate field "text"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          text = keyed.readString();
+          seen |= _$TwitterStatusSchema.text;
+        }
+        break;
+      case _$TwitterStatusSchema.keySource:
+        if ((seen._value & _$TwitterStatusSchema.source._value) != 0) {
+          throw const CodableException('Duplicate field "source"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          source = keyed.readString();
+          seen |= _$TwitterStatusSchema.source;
+        }
+        break;
+      case _$TwitterStatusSchema.keyTruncated:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          truncated = keyed.readBool();
+        }
+        break;
+      case _$TwitterStatusSchema.keyInReplyToStatusId:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          inReplyToStatusId = null;
+        } else {
+          inReplyToStatusId = keyed.readInt();
+        }
+        break;
+      case _$TwitterStatusSchema.keyInReplyToStatusIdStr:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          inReplyToStatusIdStr = null;
+        } else {
+          inReplyToStatusIdStr = keyed.readString();
+        }
+        break;
+      case _$TwitterStatusSchema.keyInReplyToUserId:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          inReplyToUserId = null;
+        } else {
+          inReplyToUserId = keyed.readInt();
+        }
+        break;
+      case _$TwitterStatusSchema.keyInReplyToUserIdStr:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          inReplyToUserIdStr = null;
+        } else {
+          inReplyToUserIdStr = keyed.readString();
+        }
+        break;
+      case _$TwitterStatusSchema.keyInReplyToScreenName:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          inReplyToScreenName = null;
+        } else {
+          inReplyToScreenName = keyed.readString();
+        }
+        break;
+      case _$TwitterStatusSchema.keyUser:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          user = null;
+        } else {
+          user = keyed.decodeValue(_$TwitterUserFromDecoder);
+        }
+        break;
+      case _$TwitterStatusSchema.keyRetweetCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          retweetCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterStatusSchema.keyFavoriteCount:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          favoriteCount = keyed.readInt();
+        }
+        break;
+      case _$TwitterStatusSchema.keyEntities:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          entities = null;
+        } else {
+          entities = keyed.decodeValue(_$TwitterEntitiesFromDecoder);
+        }
+        break;
+      case _$TwitterStatusSchema.keyFavorited:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          favorited = keyed.readBool();
+        }
+        break;
+      case _$TwitterStatusSchema.keyRetweeted:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          retweeted = keyed.readBool();
+        }
+        break;
+      case _$TwitterStatusSchema.keyPossiblySensitive:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          possiblySensitive = null;
+        } else {
+          possiblySensitive = keyed.readBool();
+        }
+        break;
+      case _$TwitterStatusSchema.keyLang:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          lang = keyed.readString();
+        }
+        break;
+      case _$TwitterStatusSchema.keyRetweetedStatus:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          retweetedStatus = null;
+        } else {
+          retweetedStatus = keyed.decodeValue(_$TwitterStatusFromDecoder);
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterStatus(
+    metadata: metadata,
+    createdAt: createdAt!,
+    id: id!,
+    idStr: idStr!,
+    text: text!,
+    source: source!,
+    truncated: truncated,
+    inReplyToStatusId: inReplyToStatusId,
+    inReplyToStatusIdStr: inReplyToStatusIdStr,
+    inReplyToUserId: inReplyToUserId,
+    inReplyToUserIdStr: inReplyToUserIdStr,
+    inReplyToScreenName: inReplyToScreenName,
+    user: user,
+    retweetCount: retweetCount,
+    favoriteCount: favoriteCount,
+    entities: entities,
+    favorited: favorited,
+    retweeted: retweeted,
+    possiblySensitive: possiblySensitive,
+    lang: lang,
+    retweetedStatus: retweetedStatus,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for TwitterStatus
 // =============================================================================
 void _$TwitterStatusToWriter(TwitterStatus instance, JsonTokenWriter writer) {
@@ -3193,6 +4175,10 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     _$TwitterSearchMetadataSchema.nameSinceId,
     _$TwitterSearchMetadataSchema.nameSinceIdStr,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterSearchMetadataSchema none =
@@ -3386,6 +4372,132 @@ TwitterSearchMetadata _$TwitterSearchMetadataFromReader(
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for TwitterSearchMetadata
+// =============================================================================
+TwitterSearchMetadata _$TwitterSearchMetadataFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  double? completedIn;
+  int? maxId;
+  String? maxIdStr;
+  var nextResults = '';
+  String? query;
+  var refreshUrl = '';
+  int? count;
+  var sinceId = 0;
+  var sinceIdStr = '0';
+  var seen = _$TwitterSearchMetadataSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterSearchMetadataSchema.keyOptions)) {
+      case _$TwitterSearchMetadataSchema.keyCompletedIn:
+        if ((seen._value & _$TwitterSearchMetadataSchema.completedIn._value) !=
+            0) {
+          throw const CodableException('Duplicate field "completed_in"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          completedIn = keyed.readDouble();
+          seen |= _$TwitterSearchMetadataSchema.completedIn;
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyMaxId:
+        if ((seen._value & _$TwitterSearchMetadataSchema.maxId._value) != 0) {
+          throw const CodableException('Duplicate field "max_id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          maxId = keyed.readInt();
+          seen |= _$TwitterSearchMetadataSchema.maxId;
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyMaxIdStr:
+        if ((seen._value & _$TwitterSearchMetadataSchema.maxIdStr._value) !=
+            0) {
+          throw const CodableException('Duplicate field "max_id_str"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          maxIdStr = keyed.readString();
+          seen |= _$TwitterSearchMetadataSchema.maxIdStr;
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyNextResults:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          nextResults = keyed.readString();
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyQuery:
+        if ((seen._value & _$TwitterSearchMetadataSchema.query._value) != 0) {
+          throw const CodableException('Duplicate field "query"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          query = keyed.readString();
+          seen |= _$TwitterSearchMetadataSchema.query;
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyRefreshUrl:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          refreshUrl = keyed.readString();
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keyCount:
+        if ((seen._value & _$TwitterSearchMetadataSchema.count._value) != 0) {
+          throw const CodableException('Duplicate field "count"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          count = keyed.readInt();
+          seen |= _$TwitterSearchMetadataSchema.count;
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keySinceId:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          sinceId = keyed.readInt();
+        }
+        break;
+      case _$TwitterSearchMetadataSchema.keySinceIdStr:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          sinceIdStr = keyed.readString();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterSearchMetadata(
+    completedIn: completedIn!,
+    maxId: maxId!,
+    maxIdStr: maxIdStr!,
+    nextResults: nextResults,
+    query: query!,
+    refreshUrl: refreshUrl,
+    count: count!,
+    sinceId: sinceId,
+    sinceIdStr: sinceIdStr,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for TwitterSearchMetadata
 // =============================================================================
 void _$TwitterSearchMetadataToWriter(
@@ -3460,6 +4572,10 @@ extension type const _$TwitterResponseSchema(int _value) {
     _$TwitterResponseSchema.nameStatuses,
     _$TwitterResponseSchema.nameSearchMetadata,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$TwitterResponseSchema none = _$TwitterResponseSchema(0);
@@ -3540,6 +4656,51 @@ TwitterResponse _$TwitterResponseFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return TwitterResponse(statuses: statuses, searchMetadata: searchMetadata!);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for TwitterResponse
+// =============================================================================
+TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var statuses = const <TwitterStatus>[];
+  TwitterSearchMetadata? searchMetadata;
+  var seen = _$TwitterResponseSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$TwitterResponseSchema.keyOptions)) {
+      case _$TwitterResponseSchema.keyStatuses:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          statuses = keyed.decodeList(_$TwitterStatusFromDecoder);
+        }
+        break;
+      case _$TwitterResponseSchema.keySearchMetadata:
+        if ((seen._value & _$TwitterResponseSchema.searchMetadata._value) !=
+            0) {
+          throw const CodableException('Duplicate field "search_metadata"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          searchMetadata = keyed.decodeValue(
+            _$TwitterSearchMetadataFromDecoder,
+          );
+          seen |= _$TwitterResponseSchema.searchMetadata;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();

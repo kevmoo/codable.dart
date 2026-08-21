@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'small.g.dart';
 
@@ -26,12 +25,8 @@ class SmallLocation {
   void toWriter(JsonTokenWriter writer) =>
       _$SmallLocationToWriter(this, writer);
 
-  static SmallLocation decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$SmallLocationFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static SmallLocation decode(Decoder decoder) =>
+      _$SmallLocationFromDecoder(decoder);
 }
 
 @Codable()
@@ -51,12 +46,8 @@ class SmallMetadata {
   void toWriter(JsonTokenWriter writer) =>
       _$SmallMetadataToWriter(this, writer);
 
-  static SmallMetadata decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$SmallMetadataFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static SmallMetadata decode(Decoder decoder) =>
+      _$SmallMetadataFromDecoder(decoder);
 }
 
 @Codable()
@@ -90,10 +81,6 @@ class SmallDocument {
   void toWriter(JsonTokenWriter writer) =>
       _$SmallDocumentToWriter(this, writer);
 
-  static SmallDocument decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$SmallDocumentFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static SmallDocument decode(Decoder decoder) =>
+      _$SmallDocumentFromDecoder(decoder);
 }

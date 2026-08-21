@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'twitter.g.dart';
 
@@ -289,10 +288,6 @@ class TwitterResponse {
   void toWriter(JsonTokenWriter writer) =>
       _$TwitterResponseToWriter(this, writer);
 
-  static TwitterResponse decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$TwitterResponseFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static TwitterResponse decode(Decoder decoder) =>
+      _$TwitterResponseFromDecoder(decoder);
 }

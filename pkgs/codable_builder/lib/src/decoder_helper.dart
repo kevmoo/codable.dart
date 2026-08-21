@@ -101,6 +101,10 @@ final class DecoderGeneratorHelper {
       }
       buffer.writeln('  ]);');
     }
+    buffer.writeln(
+      '  static final KeyOptions keyOptions = '
+      'KeyOptions(options.keys, compiled: options);',
+    );
 
     // Enum Options
     for (final field in nonIgnoredFields) {
@@ -116,7 +120,11 @@ final class DecoderGeneratorHelper {
         for (final constant in field.enumConstants!) {
           buffer.writeln("    '$constant',");
         }
-        buffer.writeln('  ]);');
+        buffer.writeln(
+          '  static final KeyOptions ${field.name}KeyOptions = '
+          'KeyOptions(${field.name}EnumOptions.keys, '
+          'compiled: ${field.name}EnumOptions);',
+        );
       }
     }
 
@@ -186,12 +194,318 @@ final class DecoderGeneratorHelper {
 
   void _writeDecoder(StringBuffer buffer) {
     final schemaName = '_\$${model.className}Schema';
-    final funcName = '_\$${model.className}FromReader';
+    final readerFuncName = '_\$${model.className}FromReader';
+    final decoderFuncName = '_\$${model.className}FromDecoder';
 
-    _writeDecoderHeader(buffer, funcName);
+    _writeDecoderHeader(buffer, readerFuncName);
     _writeLocalVarDeclarations(buffer);
     _writeSelectLoop(buffer, schemaName);
     _writeDecoderReturn(buffer);
+
+    buffer.writeln();
+    _writeKeyedDecoder(buffer, decoderFuncName, schemaName);
+  }
+
+  void _writeKeyedDecoder(
+    StringBuffer buffer,
+    String funcName,
+    String schemaName,
+  ) {
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln('// 3. Universal Keyed Deserializer for ${model.className}');
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln('${model.className} $funcName(Decoder decoder) {');
+    buffer.writeln('  final keyed = decoder.keyed();');
+    buffer.writeln();
+    _writeLocalVarDeclarations(buffer);
+    _writeKeyedSelectLoop(buffer, schemaName);
+    _writeDecoderReturn(buffer);
+  }
+
+  void _writeKeyedSelectLoop(StringBuffer buffer, String schemaName) {
+    buffer.writeln('  var seen = $schemaName.none;');
+    buffer.writeln();
+    buffer.writeln('  while (keyed.hasNextKey()) {');
+    buffer.writeln(
+      '    switch (keyed.selectKeyIndex($schemaName.keyOptions)) {',
+    );
+
+    final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
+    for (final field in nonIgnoredFields) {
+      _writeKeyedFieldCase(buffer, field, schemaName);
+    }
+
+    buffer.writeln('      default:');
+    buffer.writeln('        keyed.skipValue();');
+    buffer.writeln('        break;');
+    buffer.writeln('    }');
+    buffer.writeln('  }');
+    buffer.writeln();
+    buffer.writeln('  // Inlined fast-path check');
+    buffer.writeln('  seen.validate();');
+    buffer.writeln();
+  }
+
+  void _writeKeyedFieldCase(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    String schemaName,
+  ) {
+    final suffix = toSafeIdentifierSuffix(field.name);
+    buffer.writeln('      case $schemaName.key$suffix:');
+    for (var i = 0; i < field.aliases.length; i++) {
+      final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+      buffer.writeln('      case $schemaName.aliasKey$suffix$aliasSuffix:');
+    }
+
+    if (field.participatesInGoldenMask) {
+      buffer.writeln(
+        '        if ((seen._value & '
+        '$schemaName.${field.name}._value) != 0) {',
+      );
+      buffer.writeln(
+        '          throw const CodableException('
+        "'Duplicate field \"${field.wireName}\"');",
+      );
+      buffer.writeln('        }');
+    }
+
+    if (field.isNullable) {
+      buffer.writeln('        if (keyed.isNextNull()) {');
+      buffer.writeln('          keyed.readNull();');
+      buffer.writeln('          ${field.name} = null;');
+      buffer.writeln('        } else {');
+      _writeKeyedFieldRead(buffer, field, indent: '          ');
+      if (field.participatesInGoldenMask) {
+        buffer.writeln('          seen |= $schemaName.${field.name};');
+      }
+      buffer.writeln('        }');
+    } else if (field.category == TypeCategory.enumType) {
+      _writeKeyedEnumFieldRead(buffer, field, schemaName, indent: '        ');
+    } else {
+      buffer.writeln('        if (keyed.isNextNull()) {');
+      buffer.writeln('          keyed.readNull();');
+      buffer.writeln('        } else {');
+      _writeKeyedFieldRead(buffer, field, indent: '          ');
+      if (field.participatesInGoldenMask) {
+        buffer.writeln('          seen |= $schemaName.${field.name};');
+      }
+      buffer.writeln('        }');
+    }
+    buffer.writeln('        break;');
+  }
+
+  void _writeKeyedEnumFieldRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    String schemaName, {
+    required String indent,
+  }) {
+    final typeStr =
+        field.type.element?.name ??
+        field.type.getDisplayString().replaceAll('?', '');
+    buffer.writeln('$indent// Zero-allocation enum matching');
+    buffer.writeln(
+      '${indent}final enumIndex = '
+      'keyed.selectStringIndex($schemaName.${field.name}KeyOptions);',
+    );
+    buffer.writeln(
+      '${indent}if (enumIndex >= 0 && enumIndex < $typeStr.values.length) {',
+    );
+    buffer.writeln('$indent  ${field.name} = $typeStr.values[enumIndex];');
+    if (field.participatesInGoldenMask) {
+      buffer.writeln('$indent  seen |= $schemaName.${field.name};');
+    }
+    buffer.writeln('$indent} else {');
+    buffer.writeln(
+      "$indent  throw const CodableException('Unknown $typeStr value');",
+    );
+    buffer.writeln('$indent}');
+  }
+
+  void _writeKeyedFieldRead(
+    StringBuffer buffer,
+    FieldDescriptor field, {
+    required String indent,
+  }) {
+    switch (field.category) {
+      case TypeCategory.primitiveInt:
+        buffer.writeln('$indent${field.name} = keyed.readInt();');
+      case TypeCategory.primitiveDouble:
+        buffer.writeln('$indent${field.name} = keyed.readDouble();');
+      case TypeCategory.primitiveNum:
+        buffer.writeln('$indent${field.name} = keyed.readDouble();');
+      case TypeCategory.primitiveString:
+        buffer.writeln('$indent${field.name} = keyed.readString();');
+      case TypeCategory.primitiveBool:
+        buffer.writeln('$indent${field.name} = keyed.readBool();');
+      case TypeCategory.enumType:
+        final schemaName = '_\$${model.className}Schema';
+        _writeKeyedEnumFieldRead(buffer, field, schemaName, indent: indent);
+      case TypeCategory.custom:
+        buffer.writeln(
+          '$indent${field.name} = '
+          'keyed.decodeValue(${field.customDecoderCode}.decode);',
+        );
+      case TypeCategory.tuple:
+        final tupleType =
+            field.type.element?.name ??
+            field.type.getDisplayString().replaceAll('?', '');
+        if (tupleType == 'Float64List') {
+          buffer.writeln('$indent${field.name} = keyed.decodeFloat64List();');
+        } else {
+          buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
+        }
+      case TypeCategory.list:
+        _writeKeyedListRead(buffer, field, indent: indent);
+      case TypeCategory.set:
+        _writeKeyedSetRead(buffer, field, indent: indent);
+      case TypeCategory.map:
+        _writeKeyedMapRead(buffer, field, indent: indent);
+      case TypeCategory.nestedCodable:
+        final nestedName = field.type.element!.name;
+        buffer.writeln(
+          '$indent${field.name} = '
+          'keyed.decodeValue(_\$${nestedName}FromDecoder);',
+        );
+      case TypeCategory.unknown:
+        buffer.writeln('$indent// Unknown type, reading string as fallback');
+        buffer.writeln('$indent${field.name} = keyed.readString() as dynamic;');
+    }
+  }
+
+  void _writeKeyedListRead(
+    StringBuffer buffer,
+    FieldDescriptor field, {
+    required String indent,
+  }) {
+    final elemType = field.elementType;
+    if (elemType == null) {
+      buffer.writeln(
+        '$indent${field.name} = '
+        'keyed.decodeList((d) => d.singleValue().readString() as dynamic);',
+      );
+      return;
+    }
+    if (elemType.isDartCoreInt) {
+      buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
+    } else if (elemType.isDartCoreDouble) {
+      buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
+    } else if (elemType.isDartCoreString) {
+      buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
+    } else if (elemType.isDartCoreBool) {
+      buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
+    } else if (elemType.element is EnumElement) {
+      final enumName = elemType.element!.name;
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList('
+        '(d) => $enumName.values.byName(d.singleValue().readString()));',
+      );
+    } else if (elemType.element != null &&
+        const TypeClassifier().isCodableElement(elemType.element!)) {
+      final nestedName = elemType.element!.name;
+      buffer.writeln(
+        '$indent${field.name} = '
+        'keyed.decodeList(_\$${nestedName}FromDecoder);',
+      );
+    } else {
+      final elemTypeStr = elemType.getDisplayString();
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
+        '(d) => d.singleValue().readString() as dynamic);',
+      );
+    }
+  }
+
+  void _writeKeyedSetRead(
+    StringBuffer buffer,
+    FieldDescriptor field, {
+    required String indent,
+  }) {
+    final elemType = field.elementType;
+    if (elemType != null && elemType.isDartCoreString) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeStringList().toSet();',
+      );
+    } else if (elemType != null && elemType.isDartCoreInt) {
+      buffer.writeln('$indent${field.name} = keyed.decodeIntList().toSet();');
+    } else {
+      _writeKeyedListRead(buffer, field, indent: indent);
+      buffer.writeln('$indent${field.name} = ${field.name}.toSet();');
+    }
+  }
+
+  void _writeKeyedMapRead(
+    StringBuffer buffer,
+    FieldDescriptor field, {
+    required String indent,
+  }) {
+    final valType = field.mapValueType;
+    final valTypeStr = valType?.getDisplayString() ?? 'dynamic';
+    if (valType != null && valType.isDartCoreString) {
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, String>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readString(); }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    } else if (valType != null && valType.isDartCoreInt) {
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, int>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readInt(); }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    } else if (valType != null && valType.isDartCoreDouble) {
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, double>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readDouble(); }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    } else if (valType != null && valType.isDartCoreBool) {
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, bool>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readBool(); }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    } else if (valType != null &&
+        valType.element != null &&
+        const TypeClassifier().isCodableElement(valType.element!)) {
+      final nestedName = valType.element!.name;
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, $nestedName>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { '
+        'm[k.nextKey()] = k.decodeValue(_\$${nestedName}FromDecoder); }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    } else {
+      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+      buffer.writeln('$indent  final m = <String, $valTypeStr>{};');
+      buffer.writeln('$indent  final k = d.keyed();');
+      buffer.writeln(
+        '$indent  while (k.hasNextKey()) { '
+        'm[k.nextKey()] = k.readString() as dynamic; }',
+      );
+      buffer.writeln('$indent  return m;');
+      buffer.writeln('$indent});');
+    }
   }
 
   void _writeDecoderHeader(StringBuffer buffer, String funcName) {
@@ -225,7 +539,16 @@ final class DecoderGeneratorHelper {
 
   String _formatDefaultValue(FieldDescriptor field) {
     var defaultCode = field.defaultValueCode!;
-    if (defaultCode == 'const {}') {
+    if (field.category == TypeCategory.set && defaultCode == 'const {}') {
+      final elemType =
+          field.elementType?.getDisplayString() ??
+          (field.type is InterfaceType &&
+                  (field.type as InterfaceType).typeArguments.isNotEmpty
+              ? (field.type as InterfaceType).typeArguments.first
+                    .getDisplayString()
+              : 'dynamic');
+      defaultCode = 'const <$elemType>{};';
+    } else if (defaultCode == 'const {}') {
       final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
       defaultCode = 'const <String, $valType>{};';
     } else if (defaultCode == 'const []') {

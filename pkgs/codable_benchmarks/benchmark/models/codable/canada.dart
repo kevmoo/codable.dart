@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'canada.g.dart';
 
@@ -29,6 +28,20 @@ final class CanadaCoordinatesDecoder {
       coords.add(poly);
     }
     reader.endArray();
+    return coords;
+  }
+
+  List<List<List<double>>> decode(Decoder decoder) {
+    final unkeyed = decoder.unkeyed();
+    final coords = <List<List<double>>>[];
+    while (unkeyed.hasNext()) {
+      final poly = <List<double>>[];
+      final u1 = unkeyed.decodeElement((d1) => d1.unkeyed());
+      while (u1.hasNext()) {
+        poly.add(u1.decodeDoubleList());
+      }
+      coords.add(poly);
+    }
     return coords;
   }
 
@@ -63,12 +76,8 @@ class CanadaProperties {
   void toWriter(JsonTokenWriter writer) =>
       _$CanadaPropertiesToWriter(this, writer);
 
-  static CanadaProperties decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CanadaPropertiesFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static CanadaProperties decode(Decoder decoder) =>
+      _$CanadaPropertiesFromDecoder(decoder);
 }
 
 @Codable()
@@ -84,12 +93,8 @@ class CanadaGeometry {
   void toWriter(JsonTokenWriter writer) =>
       _$CanadaGeometryToWriter(this, writer);
 
-  static CanadaGeometry decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CanadaGeometryFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static CanadaGeometry decode(Decoder decoder) =>
+      _$CanadaGeometryFromDecoder(decoder);
 }
 
 @Codable()
@@ -109,12 +114,8 @@ class CanadaFeature {
   void toWriter(JsonTokenWriter writer) =>
       _$CanadaFeatureToWriter(this, writer);
 
-  static CanadaFeature decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CanadaFeatureFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static CanadaFeature decode(Decoder decoder) =>
+      _$CanadaFeatureFromDecoder(decoder);
 }
 
 @Codable()
@@ -129,10 +130,6 @@ class CanadaFeatureCollection {
   void toWriter(JsonTokenWriter writer) =>
       _$CanadaFeatureCollectionToWriter(this, writer);
 
-  static CanadaFeatureCollection decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      return _$CanadaFeatureCollectionFromReader(decoder.reader);
-    }
-    throw UnimplementedError();
-  }
+  static CanadaFeatureCollection decode(Decoder decoder) =>
+      _$CanadaFeatureCollectionFromDecoder(decoder);
 }
