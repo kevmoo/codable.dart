@@ -11,7 +11,7 @@ void main(List<String> args) {
   }
 
   final mode = args.first;
-  final targetFile = File('pkgs/codable/lib/src/substrate/substrate.dart');
+  final targetFile = File('pkgs/codable/lib/src/json/substrate/substrate.dart');
 
   if (mode == 'mock') {
     targetFile.writeAsStringSync('''
