@@ -14,6 +14,7 @@ final class Point {
   const Point(this.x, this.y);
 
   static Point fromReader(JsonTokenReader reader) => _$PointFromReader(reader);
+  static Point decode(Decoder decoder) => _$PointFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) => _$PointToWriter(this, writer);
 }
 
@@ -39,6 +40,8 @@ final class UserAccount {
 
   static UserAccount fromReader(JsonTokenReader reader) =>
       _$UserAccountFromReader(reader);
+  static UserAccount decode(Decoder decoder) =>
+      _$UserAccountFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) => _$UserAccountToWriter(this, writer);
 }
 
@@ -57,6 +60,7 @@ final class Address {
 
   static Address fromReader(JsonTokenReader reader) =>
       _$AddressFromReader(reader);
+  static Address decode(Decoder decoder) => _$AddressFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) => _$AddressToWriter(this, writer);
 }
 
@@ -78,6 +82,7 @@ final class Enterprise {
 
   static Enterprise fromReader(JsonTokenReader reader) =>
       _$EnterpriseFromReader(reader);
+  static Enterprise decode(Decoder decoder) => _$EnterpriseFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) => _$EnterpriseToWriter(this, writer);
 }
 
@@ -94,6 +99,15 @@ final class ZipCodeDecoder {
       return reader.readInt().toString();
     }
     return reader.readString();
+  }
+
+  String decode(Decoder decoder) {
+    final sv = decoder.singleValue();
+    if (sv.isNull()) {
+      sv.readNull();
+      return '';
+    }
+    return sv.readString();
   }
 
   void encodeToWriter(String value, JsonTokenWriter writer) {
@@ -116,6 +130,8 @@ final class UserProfileCustom {
 
   static UserProfileCustom fromReader(JsonTokenReader reader) =>
       _$UserProfileCustomFromReader(reader);
+  static UserProfileCustom decode(Decoder decoder) =>
+      _$UserProfileCustomFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) =>
       _$UserProfileCustomToWriter(this, writer);
 }
@@ -135,6 +151,7 @@ final class Team {
   });
 
   static Team fromReader(JsonTokenReader reader) => _$TeamFromReader(reader);
+  static Team decode(Decoder decoder) => _$TeamFromDecoder(decoder);
   void toWriter(JsonTokenWriter writer) => _$TeamToWriter(this, writer);
 }
 

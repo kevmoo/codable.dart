@@ -4,10 +4,6 @@
 
 part of 'citm_catalog.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for CitmCatalog
 // =============================================================================
@@ -212,6 +208,10 @@ extension type const _$CitmCatalogSchema(int _value) {
     _$CitmCatalogSchema.nameTopicSynced,
     _$CitmCatalogSchema.nameVenueNames,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmCatalogSchema none = _$CitmCatalogSchema(0);
@@ -405,6 +405,198 @@ CitmCatalog _$CitmCatalogFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmCatalog(
+    areaNames: areaNames,
+    audienceSubCategoryNames: audienceSubCategoryNames,
+    blockNames: blockNames,
+    events: events,
+    performances: performances,
+    seatCategoryNames: seatCategoryNames,
+    subTopicNames: subTopicNames,
+    subjectNames: subjectNames,
+    topicNames: topicNames,
+    topicSynced: topicSynced,
+    venueNames: venueNames,
+  );
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for CitmCatalog
+// =============================================================================
+CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var areaNames = const <String, String>{};
+  var audienceSubCategoryNames = const <String, String>{};
+  var blockNames = const <String, String>{};
+  var events = const <String, CitmEvent>{};
+  var performances = const <CitmPerformance>[];
+  var seatCategoryNames = const <String, String>{};
+  var subTopicNames = const <String, String>{};
+  var subjectNames = const <String, String>{};
+  var topicNames = const <String, String>{};
+  var topicSynced = const <String, bool>{};
+  var venueNames = const <String, String>{};
+  var seen = _$CitmCatalogSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmCatalogSchema.keyOptions)) {
+      case _$CitmCatalogSchema.keyAreaNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          areaNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyAudienceSubCategoryNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          audienceSubCategoryNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyBlockNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          blockNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyEvents:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          events = keyed.decodeValue((d) {
+            final m = <String, CitmEvent>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.decodeValue(_$CitmEventFromDecoder);
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyPerformances:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          performances = keyed.decodeList(_$CitmPerformanceFromDecoder);
+        }
+        break;
+      case _$CitmCatalogSchema.keySeatCategoryNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          seatCategoryNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keySubTopicNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          subTopicNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keySubjectNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          subjectNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyTopicNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          topicNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyTopicSynced:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          topicSynced = keyed.decodeValue((d) {
+            final m = <String, bool>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readBool();
+            }
+            return m;
+          });
+        }
+        break;
+      case _$CitmCatalogSchema.keyVenueNames:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          venueNames = keyed.decodeValue((d) {
+            final m = <String, String>{};
+            final k = d.keyed();
+            while (k.hasNextKey()) {
+              m[k.nextKey()] = k.readString();
+            }
+            return m;
+          });
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();
@@ -627,6 +819,10 @@ extension type const _$CitmEventSchema(int _value) {
     _$CitmEventSchema.nameSubtitle,
     _$CitmEventSchema.nameTopicIds,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmEventSchema none = _$CitmEventSchema(0);
@@ -786,6 +982,113 @@ CitmEvent _$CitmEventFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for CitmEvent
+// =============================================================================
+CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  String? description;
+  int? id;
+  String? logo;
+  String? name;
+  var subTopicIds = const <int>[];
+  int? subjectCode;
+  String? subtitle;
+  var topicIds = const <int>[];
+  var seen = _$CitmEventSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmEventSchema.keyOptions)) {
+      case _$CitmEventSchema.keyDescription:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          description = null;
+        } else {
+          description = keyed.readString();
+        }
+        break;
+      case _$CitmEventSchema.keyId:
+        if ((seen._value & _$CitmEventSchema.id._value) != 0) {
+          throw const CodableException('Duplicate field "id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          id = keyed.readInt();
+          seen |= _$CitmEventSchema.id;
+        }
+        break;
+      case _$CitmEventSchema.keyLogo:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          logo = null;
+        } else {
+          logo = keyed.readString();
+        }
+        break;
+      case _$CitmEventSchema.keyName:
+        if ((seen._value & _$CitmEventSchema.name._value) != 0) {
+          throw const CodableException('Duplicate field "name"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          name = keyed.readString();
+          seen |= _$CitmEventSchema.name;
+        }
+        break;
+      case _$CitmEventSchema.keySubTopicIds:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          subTopicIds = keyed.decodeIntList();
+        }
+        break;
+      case _$CitmEventSchema.keySubjectCode:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          subjectCode = null;
+        } else {
+          subjectCode = keyed.readInt();
+        }
+        break;
+      case _$CitmEventSchema.keySubtitle:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          subtitle = null;
+        } else {
+          subtitle = keyed.readString();
+        }
+        break;
+      case _$CitmEventSchema.keyTopicIds:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          topicIds = keyed.decodeIntList();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmEvent(
+    description: description,
+    id: id!,
+    logo: logo,
+    name: name!,
+    subTopicIds: subTopicIds,
+    subjectCode: subjectCode,
+    subtitle: subtitle,
+    topicIds: topicIds,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for CitmEvent
 // =============================================================================
 void _$CitmEventToWriter(CitmEvent instance, JsonTokenWriter writer) {
@@ -926,6 +1229,10 @@ extension type const _$CitmPerformanceSchema(int _value) {
     _$CitmPerformanceSchema.nameStart,
     _$CitmPerformanceSchema.nameVenueCode,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmPerformanceSchema none = _$CitmPerformanceSchema(0);
@@ -1109,6 +1416,119 @@ CitmPerformance _$CitmPerformanceFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for CitmPerformance
+// =============================================================================
+CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  int? eventId;
+  int? id;
+  String? logo;
+  String? name;
+  var prices = const <CitmPrice>[];
+  var seatCategories = const <CitmSeatCategory>[];
+  int? start;
+  String? venueCode;
+  var seen = _$CitmPerformanceSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmPerformanceSchema.keyOptions)) {
+      case _$CitmPerformanceSchema.keyEventId:
+        if ((seen._value & _$CitmPerformanceSchema.eventId._value) != 0) {
+          throw const CodableException('Duplicate field "eventId"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          eventId = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.eventId;
+        }
+        break;
+      case _$CitmPerformanceSchema.keyId:
+        if ((seen._value & _$CitmPerformanceSchema.id._value) != 0) {
+          throw const CodableException('Duplicate field "id"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          id = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.id;
+        }
+        break;
+      case _$CitmPerformanceSchema.keyLogo:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          logo = null;
+        } else {
+          logo = keyed.readString();
+        }
+        break;
+      case _$CitmPerformanceSchema.keyName:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+          name = null;
+        } else {
+          name = keyed.readString();
+        }
+        break;
+      case _$CitmPerformanceSchema.keyPrices:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          prices = keyed.decodeList(_$CitmPriceFromDecoder);
+        }
+        break;
+      case _$CitmPerformanceSchema.keySeatCategories:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          seatCategories = keyed.decodeList(_$CitmSeatCategoryFromDecoder);
+        }
+        break;
+      case _$CitmPerformanceSchema.keyStart:
+        if ((seen._value & _$CitmPerformanceSchema.start._value) != 0) {
+          throw const CodableException('Duplicate field "start"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          start = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.start;
+        }
+        break;
+      case _$CitmPerformanceSchema.keyVenueCode:
+        if ((seen._value & _$CitmPerformanceSchema.venueCode._value) != 0) {
+          throw const CodableException('Duplicate field "venueCode"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          venueCode = keyed.readString();
+          seen |= _$CitmPerformanceSchema.venueCode;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmPerformance(
+    eventId: eventId!,
+    id: id!,
+    logo: logo,
+    name: name,
+    prices: prices,
+    seatCategories: seatCategories,
+    start: start!,
+    venueCode: venueCode!,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for CitmPerformance
 // =============================================================================
 void _$CitmPerformanceToWriter(
@@ -1218,6 +1638,10 @@ extension type const _$CitmPriceSchema(int _value) {
     _$CitmPriceSchema.nameAudienceSubCategoryId,
     _$CitmPriceSchema.nameSeatCategoryId,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmPriceSchema none = _$CitmPriceSchema(0);
@@ -1334,6 +1758,71 @@ CitmPrice _$CitmPriceFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for CitmPrice
+// =============================================================================
+CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  int? amount;
+  int? audienceSubCategoryId;
+  int? seatCategoryId;
+  var seen = _$CitmPriceSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmPriceSchema.keyOptions)) {
+      case _$CitmPriceSchema.keyAmount:
+        if ((seen._value & _$CitmPriceSchema.amount._value) != 0) {
+          throw const CodableException('Duplicate field "amount"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          amount = keyed.readInt();
+          seen |= _$CitmPriceSchema.amount;
+        }
+        break;
+      case _$CitmPriceSchema.keyAudienceSubCategoryId:
+        if ((seen._value & _$CitmPriceSchema.audienceSubCategoryId._value) !=
+            0) {
+          throw const CodableException(
+            'Duplicate field "audienceSubCategoryId"',
+          );
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          audienceSubCategoryId = keyed.readInt();
+          seen |= _$CitmPriceSchema.audienceSubCategoryId;
+        }
+        break;
+      case _$CitmPriceSchema.keySeatCategoryId:
+        if ((seen._value & _$CitmPriceSchema.seatCategoryId._value) != 0) {
+          throw const CodableException('Duplicate field "seatCategoryId"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          seatCategoryId = keyed.readInt();
+          seen |= _$CitmPriceSchema.seatCategoryId;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmPrice(
+    amount: amount!,
+    audienceSubCategoryId: audienceSubCategoryId!,
+    seatCategoryId: seatCategoryId!,
+  );
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for CitmPrice
 // =============================================================================
 void _$CitmPriceToWriter(CitmPrice instance, JsonTokenWriter writer) {
@@ -1389,6 +1878,10 @@ extension type const _$CitmSeatCategorySchema(int _value) {
     _$CitmSeatCategorySchema.nameAreas,
     _$CitmSeatCategorySchema.nameSeatCategoryId,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmSeatCategorySchema none = _$CitmSeatCategorySchema(0);
@@ -1476,6 +1969,49 @@ CitmSeatCategory _$CitmSeatCategoryFromReader(JsonTokenReader reader) {
 }
 
 // =============================================================================
+// 3. Universal Keyed Deserializer for CitmSeatCategory
+// =============================================================================
+CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  var areas = const <CitmArea>[];
+  int? seatCategoryId;
+  var seen = _$CitmSeatCategorySchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmSeatCategorySchema.keyOptions)) {
+      case _$CitmSeatCategorySchema.keyAreas:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          areas = keyed.decodeList(_$CitmAreaFromDecoder);
+        }
+        break;
+      case _$CitmSeatCategorySchema.keySeatCategoryId:
+        if ((seen._value & _$CitmSeatCategorySchema.seatCategoryId._value) !=
+            0) {
+          throw const CodableException('Duplicate field "seatCategoryId"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          seatCategoryId = keyed.readInt();
+          seen |= _$CitmSeatCategorySchema.seatCategoryId;
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmSeatCategory(areas: areas, seatCategoryId: seatCategoryId!);
+}
+
+// =============================================================================
 // 3. Single-Pass Streaming Serializer for CitmSeatCategory
 // =============================================================================
 void _$CitmSeatCategoryToWriter(
@@ -1531,6 +2067,10 @@ extension type const _$CitmAreaSchema(int _value) {
     _$CitmAreaSchema.nameAreaId,
     _$CitmAreaSchema.nameBlockIds,
   ]);
+  static final KeyOptions keyOptions = KeyOptions(
+    options.keys,
+    compiled: options,
+  );
 
   // Bitmask Flags strictly for Required Fields
   static const _$CitmAreaSchema none = _$CitmAreaSchema(0);
@@ -1606,6 +2146,48 @@ CitmArea _$CitmAreaFromReader(JsonTokenReader reader) {
     }
   }
   reader.endObject();
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return CitmArea(areaId: areaId!, blockIds: blockIds);
+}
+
+// =============================================================================
+// 3. Universal Keyed Deserializer for CitmArea
+// =============================================================================
+CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
+  final keyed = decoder.keyed();
+
+  int? areaId;
+  var blockIds = const <int>[];
+  var seen = _$CitmAreaSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(_$CitmAreaSchema.keyOptions)) {
+      case _$CitmAreaSchema.keyAreaId:
+        if ((seen._value & _$CitmAreaSchema.areaId._value) != 0) {
+          throw const CodableException('Duplicate field "areaId"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          areaId = keyed.readInt();
+          seen |= _$CitmAreaSchema.areaId;
+        }
+        break;
+      case _$CitmAreaSchema.keyBlockIds:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          blockIds = keyed.decodeIntList();
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
 
   // Inlined fast-path check
   seen.validate();

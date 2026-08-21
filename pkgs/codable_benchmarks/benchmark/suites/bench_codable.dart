@@ -8,7 +8,6 @@ import 'dart:convert';
 
 import 'package:args/args.dart';
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 import '../data/embedded_datasets.dart';
 import '../models/codable/canada.dart';
@@ -180,7 +179,7 @@ BenchResult runBenchmark(
         final decoder = JsonCodableDecoder.fromBytes(bytes);
         final unkeyed = decoder.unkeyed();
         while (unkeyed.hasNext()) {
-          list.add(Coordinate.decode(decoder));
+          list.add(unkeyed.decodeElement(Coordinate.decode));
         }
         preDecodedModel = list;
         break;
@@ -219,7 +218,7 @@ BenchResult runBenchmark(
             final unkeyed = decoder.unkeyed();
             final list = <Coordinate>[];
             while (unkeyed.hasNext()) {
-              list.add(Coordinate.decode(decoder));
+              list.add(unkeyed.decodeElement(Coordinate.decode));
             }
             consumeBlackBox(list);
           };

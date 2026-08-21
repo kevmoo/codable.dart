@@ -290,7 +290,9 @@ await instance.invokeMain(...scriptArgs);
   }
 
   if (outputMd != null) {
-    File(outputMd).writeAsStringSync(allTargetReports.values.join('\n\n'));
+    File(outputMd).writeAsStringSync(
+      allTargetReports.values.map((s) => s.trim()).join('\n\n') + '\n',
+    );
     print('📄 Saved Markdown report to: $outputMd');
   }
 
@@ -496,7 +498,7 @@ String _formatMarkdownReport({
   required String nodeBinPath,
 }) {
   final sb = StringBuffer();
-  sb.writeln('### 📊 Summary of $targetLabel Benchmark Results');
+  sb.writeln('### 📊 Summary of $targetLabel Decode Benchmark Results');
   sb.writeln('');
   sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
   sb.writeln(
@@ -518,9 +520,10 @@ String _formatMarkdownReport({
   };
 
   for (final dataset in decodeT1.keys) {
-    final t1 = decodeT1[dataset]!;
-    final t2 = decodeT2[dataset]!;
-    final t3 = decodeT3[dataset]!;
+    final t1 = decodeT1[dataset];
+    final t2 = decodeT2[dataset];
+    final t3 = decodeT3[dataset];
+    if (t1 == null || t2 == null || t3 == null) continue;
 
     final t1Ms = (t1['latency_ms'] as num).toDouble();
     final t2Ms = (t2['latency_ms'] as num).toDouble();
@@ -550,6 +553,65 @@ String _formatMarkdownReport({
     );
   }
   sb.writeln('<!-- mdformat on -->');
+
+  final encodeT1 = {
+    for (var r in tier1Results.where((r) => r['mode'] == 'encode'))
+      r['dataset']: r,
+  };
+  final encodeT2 = {
+    for (var r in tier2Results.where((r) => r['mode'] == 'encode'))
+      r['dataset']: r,
+  };
+  final encodeT3 = {
+    for (var r in tier3Results.where((r) => r['mode'] == 'encode'))
+      r['dataset']: r,
+  };
+
+  if (encodeT1.isNotEmpty) {
+    sb.writeln('');
+    sb.writeln('### 📊 Summary of $targetLabel Encode Benchmark Results');
+    sb.writeln('');
+    sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
+    sb.writeln(
+      '| Workload / Dataset | Old Dart + json_serial | New Dart + json_serial | New Dart + Codable | Speedup vs Old Dart | Speedup vs New json_serial |',
+    );
+    sb.writeln('| :--- | :---: | :---: | :---: | :---: | :---: |');
+
+    for (final dataset in encodeT1.keys) {
+      final t1 = encodeT1[dataset];
+      final t2 = encodeT2[dataset];
+      final t3 = encodeT3[dataset];
+      if (t1 == null || t2 == null || t3 == null) continue;
+
+      final t1Ms = (t1['latency_ms'] as num).toDouble();
+      final t2Ms = (t2['latency_ms'] as num).toDouble();
+      final t3Ms = (t3['latency_ms'] as num).toDouble();
+
+      final speedupVsOld = t3Ms > 0
+          ? (t1Ms / t3Ms).toStringAsFixed(2) + 'x'
+          : 'N/A';
+      final speedupVsNewSerial = t3Ms > 0
+          ? (t2Ms / t3Ms).toStringAsFixed(2) + 'x'
+          : 'N/A';
+
+      final dsLabel = dataset == 'citm_catalog'
+          ? 'citm_catalog.json (1.73 MB)'
+          : dataset == 'canada'
+          ? 'canada.json (2.25 MB)'
+          : dataset == 'coordinates'
+          ? '10k Coordinates (0.39 MB)'
+          : dataset == 'small'
+          ? 'small.json (0.55 KB)'
+          : dataset == 'twitter'
+          ? 'twitter.json (0.62 MB)'
+          : dataset;
+
+      sb.writeln(
+        '| **$dsLabel** | ${t1Ms.toStringAsFixed(2)} ms | ${t2Ms.toStringAsFixed(2)} ms | **${t3Ms.toStringAsFixed(2)} ms** | **${speedupVsOld}** | **${speedupVsNewSerial}** |',
+      );
+    }
+    sb.writeln('<!-- mdformat on -->');
+  }
 
   return sb.toString();
 }

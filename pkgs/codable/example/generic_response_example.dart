@@ -7,7 +7,6 @@
 import 'dart:convert';
 
 import 'package:codable/codable.dart';
-import 'package:codable/src/driver/json_codable_driver.dart';
 
 part 'generic_response_example.g.dart';
 

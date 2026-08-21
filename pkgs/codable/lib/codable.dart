@@ -13,6 +13,7 @@ export 'src/contracts/decoder.dart';
 export 'src/contracts/encoder.dart';
 export 'src/contracts/exceptions.dart';
 export 'src/contracts/static_key.dart';
+export 'src/driver/json_codable_driver.dart';
 export 'src/substrate/substrate.dart';
 
 /// Extension on [JsonTokenReader] providing convenience utilities.
