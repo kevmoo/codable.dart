@@ -164,6 +164,7 @@ final class _JsonCodableKeyedDecoder
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
   bool _started = false;
+  bool _ended = false;
 
   _JsonCodableKeyedDecoder(
     this._reader,
@@ -181,10 +182,12 @@ final class _JsonCodableKeyedDecoder
 
   @override
   bool hasNextKey() {
+    if (_ended) return false;
     _ensureStarted();
     final has = _reader.hasNext();
     if (!has) {
       _reader.endObject();
+      _ended = true;
     }
     return has;
   }

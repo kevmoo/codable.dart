@@ -119,16 +119,17 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   final List<String> _keys;
   int _currentIndex = 0;
   Object? _activeValue;
+  bool _hasActiveValue = false;
 
   _JsonCodableMappedKeyedDecoder(this._rootDecoder, this._map)
     : _keys = _map.keys.cast<String>().toList();
 
   @override
-  bool hasNextKey() => _currentIndex < _keys.length || _activeValue != null;
+  bool hasNextKey() => _currentIndex < _keys.length || _hasActiveValue;
 
   @override
   bool isNextNull() {
-    if (_activeValue != null) return _activeValue == null;
+    if (_hasActiveValue) return _activeValue == null;
     if (!hasNextKey()) return false;
     final key = _keys[_currentIndex];
     return _map[key] == null;
@@ -136,7 +137,8 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   void readNull() {
-    if (_activeValue != null) {
+    if (_hasActiveValue) {
+      _hasActiveValue = false;
       _activeValue = null;
     } else if (hasNextKey()) {
       _currentIndex++;
@@ -161,7 +163,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
     }
     final key = _keys[_currentIndex++];
     _activeValue = _map[key];
-    _rootDecoder._activeValue = _activeValue;
+    _hasActiveValue = true;
     return key;
   }
 
@@ -190,7 +192,8 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   void skipValue() {
-    if (_activeValue != null) {
+    if (_hasActiveValue) {
+      _hasActiveValue = false;
       _activeValue = null;
     } else if (hasNextKey()) {
       _currentIndex++;
@@ -198,7 +201,8 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   Object? _consumeValue() {
-    if (_activeValue != null) {
+    if (_hasActiveValue) {
+      _hasActiveValue = false;
       final v = _activeValue;
       _activeValue = null;
       return v;

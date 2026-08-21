@@ -999,7 +999,8 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
             final m = <String, int>{};
             final k = d.keyed();
             while (k.hasNextKey()) {
-              m[k.nextKey()] = k.readInt();
+              final key = k.nextKey();
+              m[key] = k.readInt();
             }
             return m;
           });
@@ -1203,7 +1204,7 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          zip = const ZipCodeDecoder().decode(decoder);
+          zip = keyed.decodeValue(const ZipCodeDecoder().decode);
           seen |= _$UserProfileCustomSchema.zip;
         }
         break;
@@ -1462,7 +1463,9 @@ Team _$TeamFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          nullableTags = keyed.decodeStringList().toSet();
+          nullableTags = keyed
+              .decodeList<String?>((d) => d.singleValue().readNullableString())
+              .toSet();
         }
         break;
       case _$TeamSchema.keyScores:
@@ -1470,10 +1473,16 @@ Team _$TeamFromDecoder(Decoder decoder) {
           keyed.readNull();
         } else {
           scores = keyed.decodeValue((d) {
-            final m = <String, int>{};
+            final m = <String, int?>{};
             final k = d.keyed();
             while (k.hasNextKey()) {
-              m[k.nextKey()] = k.readInt();
+              final key = k.nextKey();
+              if (k.isNextNull()) {
+                k.readNull();
+                m[key] = null as int?;
+              } else {
+                m[key] = k.readInt();
+              }
             }
             return m;
           });

@@ -354,6 +354,43 @@ void main() {
           check(profile.zip).equals('90210');
         },
       );
+
+      test('UserAccount with null location and alias email deserializes via Decoder.decode', () {
+        final bytes = Uint8List.fromList(
+          utf8.encode(
+            '{"id": "usr_100", "contact_email": "alias@example.com", "role": "member", "location": null}',
+          ),
+        );
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final user = UserAccount.decode(decoder);
+
+        check(user.id).equals('usr_100');
+        check(user.emailAddress).equals('alias@example.com');
+        check(user.role).equals(UserRole.member);
+        check(user.location).isNull();
+        check(user.tags).isEmpty();
+      });
+
+      test(
+        'Team with nullable collections deserializes via Decoder.decode',
+        () {
+          final bytes = Uint8List.fromList(
+            utf8.encode(
+              '{"name": "Core", "roles": ["admin"], "nullableTags": ["v1", null], "scores": {"a": 10, "b": null}}',
+            ),
+          );
+          final decoder = JsonCodableDecoder.fromBytes(bytes);
+          final team = Team.decode(decoder);
+
+          check(team.name).equals('Core');
+          check(team.roles.length).equals(1);
+          check(team.roles.first).equals(UserRole.admin);
+          check(team.nullableTags.contains(null)).isTrue();
+          check(team.nullableTags.contains('v1')).isTrue();
+          check(team.scores['a']).equals(10);
+          check(team.scores['b']).isNull();
+        },
+      );
     });
   });
 }

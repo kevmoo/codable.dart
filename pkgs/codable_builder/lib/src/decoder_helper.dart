@@ -120,6 +120,7 @@ final class DecoderGeneratorHelper {
         for (final constant in field.enumConstants!) {
           buffer.writeln("    '$constant',");
         }
+        buffer.writeln('  ]);');
         buffer.writeln(
           '  static final KeyOptions ${field.name}KeyOptions = '
           'KeyOptions(${field.name}EnumOptions.keys, '
@@ -391,26 +392,65 @@ final class DecoderGeneratorHelper {
       );
       return;
     }
-    if (elemType.isDartCoreInt) {
+    final isNullable = elemType.isNullableType;
+    if (elemType.isDartCoreInt && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
-    } else if (elemType.isDartCoreDouble) {
+    } else if ((elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
-    } else if (elemType.isDartCoreString) {
+    } else if (elemType.isDartCoreString && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
-    } else if (elemType.isDartCoreBool) {
+    } else if (elemType.isDartCoreBool && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
     } else if (elemType.element is EnumElement) {
       final enumName = elemType.element!.name;
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList('
-        '(d) => $enumName.values.byName(d.singleValue().readString()));',
-      );
+      if (isNullable) {
+        buffer.writeln(
+          '$indent${field.name} = keyed.decodeList('
+          '(d) => d.singleValue().isNull() ? null : '
+          '$enumName.values.byName(d.singleValue().readString()));',
+        );
+      } else {
+        buffer.writeln(
+          '$indent${field.name} = keyed.decodeList('
+          '(d) => $enumName.values.byName(d.singleValue().readString()));',
+        );
+      }
     } else if (elemType.element != null &&
         const TypeClassifier().isCodableElement(elemType.element!)) {
       final nestedName = elemType.element!.name;
+      if (isNullable) {
+        buffer.writeln(
+          '$indent${field.name} = keyed.decodeList('
+          '(d) => d.singleValue().isNull() ? null : '
+          '_\$${nestedName}FromDecoder(d));',
+        );
+      } else {
+        buffer.writeln(
+          '$indent${field.name} = '
+          'keyed.decodeList(_\$${nestedName}FromDecoder);',
+        );
+      }
+    } else if (elemType.isDartCoreString && isNullable) {
       buffer.writeln(
-        '$indent${field.name} = '
-        'keyed.decodeList(_\$${nestedName}FromDecoder);',
+        '$indent${field.name} = keyed.decodeList<String?>('
+        '(d) => d.singleValue().readNullableString());',
+      );
+    } else if (elemType.isDartCoreInt && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<int?>('
+        '(d) => d.singleValue().readNullableInt());',
+      );
+    } else if ((elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<double?>('
+        '(d) => d.singleValue().readNullableDouble());',
+      );
+    } else if (elemType.isDartCoreBool && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<bool?>('
+        '(d) => d.singleValue().readNullableBool());',
       );
     } else {
       final elemTypeStr = elemType.getDisplayString();
@@ -427,15 +467,56 @@ final class DecoderGeneratorHelper {
     required String indent,
   }) {
     final elemType = field.elementType;
-    if (elemType != null && elemType.isDartCoreString) {
+    final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
+    final isNullable = elemType?.isNullableType ?? false;
+    if (elemType != null && elemType.isDartCoreString && !isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeStringList().toSet();',
       );
-    } else if (elemType != null && elemType.isDartCoreInt) {
+    } else if (elemType != null && elemType.isDartCoreInt && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeIntList().toSet();');
+    } else if (elemType != null && elemType.isDartCoreString && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<String?>('
+        '(d) => d.singleValue().readNullableString()).toSet();',
+      );
+    } else if (elemType != null && elemType.isDartCoreInt && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<int?>('
+        '(d) => d.singleValue().readNullableInt()).toSet();',
+      );
+    } else if (elemType != null &&
+        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        !isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeDoubleList().toSet();',
+      );
+    } else if (elemType != null &&
+        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
+        isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<double?>('
+        '(d) => d.singleValue().readNullableDouble()).toSet();',
+      );
+    } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
+      buffer.writeln('$indent${field.name} = keyed.decodeBoolList().toSet();');
+    } else if (elemType != null && elemType.isDartCoreBool && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<bool?>('
+        '(d) => d.singleValue().readNullableBool()).toSet();',
+      );
+    } else if (elemType != null && elemType.element is EnumElement) {
+      final enumName = elemType.element!.name;
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList('
+        '(d) => d.singleValue().readNullableString() == null ? null : '
+        '$enumName.values.byName(d.singleValue().readString())).toSet();',
+      );
     } else {
-      _writeKeyedListRead(buffer, field, indent: indent);
-      buffer.writeln('$indent${field.name} = ${field.name}.toSet();');
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
+        '(d) => d.singleValue().readString() as dynamic).toSet();',
+      );
     }
   }
 
@@ -446,66 +527,44 @@ final class DecoderGeneratorHelper {
   }) {
     final valType = field.mapValueType;
     final valTypeStr = valType?.getDisplayString() ?? 'dynamic';
+    final isValNullable = valType?.isNullableType ?? false;
+    final String readExpr;
     if (valType != null && valType.isDartCoreString) {
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, String>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readString(); }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
+      readExpr = 'k.readString()';
     } else if (valType != null && valType.isDartCoreInt) {
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, int>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readInt(); }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
-    } else if (valType != null && valType.isDartCoreDouble) {
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, double>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readDouble(); }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
+      readExpr = 'k.readInt()';
+    } else if (valType != null &&
+        (valType.isDartCoreDouble || valType.isDartCoreNum)) {
+      readExpr = 'k.readDouble()';
     } else if (valType != null && valType.isDartCoreBool) {
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, bool>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { m[k.nextKey()] = k.readBool(); }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
+      readExpr = 'k.readBool()';
     } else if (valType != null &&
         valType.element != null &&
         const TypeClassifier().isCodableElement(valType.element!)) {
       final nestedName = valType.element!.name;
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, $nestedName>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { '
-        'm[k.nextKey()] = k.decodeValue(_\$${nestedName}FromDecoder); }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
+      readExpr = 'k.decodeValue(_\$${nestedName}FromDecoder)';
     } else {
-      buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
-      buffer.writeln('$indent  final m = <String, $valTypeStr>{};');
-      buffer.writeln('$indent  final k = d.keyed();');
-      buffer.writeln(
-        '$indent  while (k.hasNextKey()) { '
-        'm[k.nextKey()] = k.readString() as dynamic; }',
-      );
-      buffer.writeln('$indent  return m;');
-      buffer.writeln('$indent});');
+      readExpr = 'k.readString() as dynamic';
     }
+
+    buffer.writeln('$indent${field.name} = keyed.decodeValue((d) {');
+    buffer.writeln('$indent  final m = <String, $valTypeStr>{};');
+    buffer.writeln('$indent  final k = d.keyed();');
+    buffer.writeln('$indent  while (k.hasNextKey()) {');
+    buffer.writeln('$indent    final key = k.nextKey();');
+    if (isValNullable) {
+      buffer.writeln('$indent    if (k.isNextNull()) {');
+      buffer.writeln('$indent      k.readNull();');
+      buffer.writeln('$indent      m[key] = null as $valTypeStr;');
+      buffer.writeln('$indent    } else {');
+      buffer.writeln('$indent      m[key] = $readExpr;');
+      buffer.writeln('$indent    }');
+    } else {
+      buffer.writeln('$indent    m[key] = $readExpr;');
+    }
+    buffer.writeln('$indent  }');
+    buffer.writeln('$indent  return m;');
+    buffer.writeln('$indent});');
   }
 
   void _writeDecoderHeader(StringBuffer buffer, String funcName) {
