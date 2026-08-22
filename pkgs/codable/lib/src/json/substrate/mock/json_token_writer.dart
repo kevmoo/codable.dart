@@ -86,9 +86,13 @@ final class _MockJsonTokenWriter implements JsonTokenWriter {
       }
       _isFirstStack[_isFirstStack.length - 1] = false;
     }
-    _sink.addByte(34); // '"'
-    _sink.add(asciiKey);
-    _sink.addByte(34); // '"'
+    if (asciiKey.isNotEmpty && asciiKey.first == 34 && asciiKey.last == 34) {
+      _sink.add(asciiKey);
+    } else {
+      _sink.addByte(34); // '"'
+      _sink.add(asciiKey);
+      _sink.addByte(34); // '"'
+    }
     _needsColon = true;
   }
 
