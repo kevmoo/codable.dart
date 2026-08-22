@@ -5,9 +5,11 @@
 // ignore_for_file: lines_longer_than_80_chars
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:codable/codable_json.dart';
+import 'package:codable_benchmarks/harness.dart';
 
 import '../data/embedded_datasets.dart';
 import '../models/codable/canada.dart';
@@ -15,83 +17,6 @@ import '../models/codable/citm_catalog.dart';
 import '../models/codable/coordinate.dart';
 import '../models/codable/small.dart';
 import '../models/codable/twitter.dart';
-
-int blackholeSink = 0;
-
-@pragma('vm:never-inline')
-void consumeBlackBox(Object? value) {
-  if (value is List<Coordinate>) {
-    for (var i = 0; i < value.length; i++) {
-      blackholeSink ^= value[i].latitude.toInt() ^ value[i].longitude.toInt();
-    }
-  } else if (value is CanadaFeatureCollection) {
-    blackholeSink ^= value.features.length;
-    for (var i = 0; i < value.features.length; i++) {
-      final f = value.features[i];
-      blackholeSink ^= f.properties.name.length;
-      final coords = f.geometry.coordinates;
-      for (var j = 0; j < coords.length; j++) {
-        final poly = coords[j];
-        for (var k = 0; k < poly.length; k++) {
-          final pt = poly[k];
-          for (var l = 0; l < pt.length; l++) {
-            blackholeSink ^= pt[l].toInt();
-          }
-        }
-      }
-    }
-  } else if (value is CitmCatalog) {
-    blackholeSink ^= value.events.length ^ value.performances.length;
-    for (var i = 0; i < value.performances.length; i++) {
-      final p = value.performances[i];
-      blackholeSink ^= p.id ^ p.eventId ^ p.prices.length;
-    }
-  } else if (value is SmallDocument) {
-    blackholeSink ^= value.id ^ value.name.length ^ value.metadata.loginCount;
-  } else if (value is TwitterResponse) {
-    blackholeSink ^= value.statuses.length ^ value.searchMetadata.count;
-    for (var i = 0; i < value.statuses.length; i++) {
-      final s = value.statuses[i];
-      blackholeSink ^= s.id ^ s.text.length ^ (s.user?.followersCount ?? 0);
-    }
-  } else if (value is Uint8List) {
-    blackholeSink ^=
-        value.length ^
-        (value.isNotEmpty ? value[0] ^ value[value.length - 1] : 0);
-  } else {
-    blackholeSink ^= value.hashCode;
-  }
-}
-
-class BenchResult {
-  final String dataset;
-  final String mode;
-  final String engine;
-  final int iterations;
-  final int fileBytes;
-  final double latencyMs;
-  final double throughputMbS;
-
-  BenchResult({
-    required this.dataset,
-    required this.mode,
-    required this.engine,
-    required this.iterations,
-    required this.fileBytes,
-    required this.latencyMs,
-    required this.throughputMbS,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'dataset': dataset,
-    'mode': mode,
-    'engine': engine,
-    'iterations': iterations,
-    'file_bytes': fileBytes,
-    'latency_ms': double.parse(latencyMs.toStringAsFixed(3)),
-    'throughput_mb_s': double.parse(throughputMbS.toStringAsFixed(2)),
-  };
-}
 
 void main(List<String> rawArgs) {
   final parser = ArgParser()
@@ -122,12 +47,10 @@ void main(List<String> rawArgs) {
   final args = parser.parse(rawArgs);
   final targetDataset = args['dataset'] as String;
   final targetMode = args['mode'] as String;
-  final defaultIters = int.parse(args['iterations'] as String);
-  final defaultWarmup = int.parse(args['warmup'] as String);
   final engineLabel = args['engine-label'] as String;
   final outputJson = args['json'] as bool;
 
-  final results = <BenchResult>[];
+  final results = <BenchmarkResult>[];
 
   final datasets = targetDataset == 'all'
       ? ['coordinates', 'canada', 'citm_catalog', 'small', 'twitter']
@@ -139,16 +62,13 @@ void main(List<String> rawArgs) {
 
   for (final dataset in datasets) {
     for (final mode in modes) {
-      final iters = dataset == 'coordinates' ? defaultIters * 5 : defaultIters;
-      final warmup = dataset == 'coordinates'
-          ? defaultWarmup * 5
-          : defaultWarmup;
-      final res = runBenchmark(dataset, mode, iters, warmup, engineLabel);
+      final res = runBenchmark(dataset, mode, engineLabel);
       results.add(res);
       if (!outputJson) {
+        final stdDevStr = '±${res.stdDevMs.toStringAsFixed(3)}';
         print(
           '[${res.engine}] ${res.dataset.padRight(14)} ${res.mode.padRight(15)}: '
-          '${res.latencyMs.toStringAsFixed(3).padLeft(8)} ms | '
+          '${res.latencyMs.toStringAsFixed(3).padLeft(8)} ms ($stdDevStr ms) | '
           '${res.throughputMbS.toStringAsFixed(2).padLeft(8)} MB/s',
         );
       }
@@ -160,13 +80,7 @@ void main(List<String> rawArgs) {
   }
 }
 
-BenchResult runBenchmark(
-  String dataset,
-  String mode,
-  int iterations,
-  int warmup,
-  String engineLabel,
-) {
+BenchmarkResult runBenchmark(String dataset, String mode, String engineLabel) {
   final bytes = getDatasetBytes(dataset);
   final fileBytes = bytes.length;
 
@@ -220,35 +134,35 @@ BenchResult runBenchmark(
             while (unkeyed.hasNext()) {
               list.add(unkeyed.decodeElement(Coordinate.decode));
             }
-            consumeBlackBox(list);
+            blackhole(list);
           };
           break;
         case 'canada':
           benchmarkWork = () {
             final decoder = JsonCodableDecoder.fromBytes(bytes);
             final model = CanadaFeatureCollection.decode(decoder);
-            consumeBlackBox(model);
+            blackhole(model);
           };
           break;
         case 'citm_catalog':
           benchmarkWork = () {
             final decoder = JsonCodableDecoder.fromBytes(bytes);
             final model = CitmCatalog.decode(decoder);
-            consumeBlackBox(model);
+            blackhole(model);
           };
           break;
         case 'small':
           benchmarkWork = () {
             final decoder = JsonCodableDecoder.fromBytes(bytes);
             final model = SmallDocument.decode(decoder);
-            consumeBlackBox(model);
+            blackhole(model);
           };
           break;
         case 'twitter':
           benchmarkWork = () {
             final decoder = JsonCodableDecoder.fromBytes(bytes);
             final model = TwitterResponse.decode(decoder);
-            consumeBlackBox(model);
+            blackhole(model);
           };
           break;
         default:
@@ -267,35 +181,35 @@ BenchResult runBenchmark(
                 unkeyed.encodeEncodable(list[i]);
               }
             });
-            consumeBlackBox(outBytes);
+            blackhole(outBytes);
           };
           break;
         case 'canada':
           final model = preDecodedModel as CanadaFeatureCollection;
           benchmarkWork = () {
             final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            consumeBlackBox(outBytes);
+            blackhole(outBytes);
           };
           break;
         case 'citm_catalog':
           final model = preDecodedModel as CitmCatalog;
           benchmarkWork = () {
             final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            consumeBlackBox(outBytes);
+            blackhole(outBytes);
           };
           break;
         case 'small':
           final model = preDecodedModel as SmallDocument;
           benchmarkWork = () {
             final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            consumeBlackBox(outBytes);
+            blackhole(outBytes);
           };
           break;
         case 'twitter':
           final model = preDecodedModel as TwitterResponse;
           benchmarkWork = () {
             final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            consumeBlackBox(outBytes);
+            blackhole(outBytes);
           };
           break;
         default:
@@ -307,31 +221,12 @@ BenchResult runBenchmark(
       throw ArgumentError('Unknown mode: $mode');
   }
 
-  // Warmup
-  for (var i = 0; i < warmup; i++) {
-    benchmarkWork();
-  }
-
-  // Measurement
-  final sw = Stopwatch()..start();
-  for (var i = 0; i < iterations; i++) {
-    benchmarkWork();
-  }
-  sw.stop();
-
-  final totalElapsedMicroseconds = sw.elapsedMicroseconds;
-  final avgMicroseconds = totalElapsedMicroseconds / iterations;
-  final latencyMs = avgMicroseconds / 1000.0;
-  final latencySeconds = avgMicroseconds / 1000000.0;
-  final throughputMbS = (fileBytes / (1024 * 1024)) / latencySeconds;
-
-  return BenchResult(
+  final runner = BenchmarkRunner(
     dataset: dataset,
     mode: mode,
     engine: engineLabel,
-    iterations: iterations,
     fileBytes: fileBytes,
-    latencyMs: latencyMs,
-    throughputMbS: throughputMbS,
   );
+
+  return runner.run(benchmarkWork);
 }

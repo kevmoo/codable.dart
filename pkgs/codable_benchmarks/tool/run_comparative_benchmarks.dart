@@ -20,13 +20,11 @@ String _findStockDart(String? explicitPath) {
     throw ArgumentError('Explicit stock Dart SDK not found at: $explicitPath');
   }
 
-  // 1. Flutter bundled SDK (contains full AOT, JS, and WASM toolchains)
   final candidate1 = File(
     '${Platform.environment['HOME'] ?? ''}/github/flutter/bin/cache/dart-sdk/bin/dart',
   );
   if (candidate1.existsSync()) return candidate1.path;
 
-  // 2. System Google Dartlang
   final candidate2 = File('/usr/lib/google-dartlang/bin/dart');
   if (candidate2.existsSync()) return candidate2.path;
 
@@ -42,13 +40,11 @@ String _findNewDart(String? explicitPath) {
     throw ArgumentError('Explicit new Dart SDK not found at: $explicitPath');
   }
 
-  // 1. Deployed custom json-utf8-kernels SDK
   final candidate1 = File(
     '${Platform.environment['HOME'] ?? ''}/.local/share/dart-sdk-json-utf8-kernels/dart-sdk/bin/dart',
   );
   if (candidate1.existsSync()) return candidate1.path;
 
-  // 2. Built ReleaseX64 SDK
   final candidate2 = File(
     '${Platform.environment['HOME'] ?? ''}/github/dart-sdk/out/ReleaseX64/dart-sdk/bin/dart',
   );
@@ -127,19 +123,19 @@ void main(List<String> rawArgs) async {
   final newDart = _findNewDart(args['new-sdk'] as String?);
   final nodeBin = _findNode();
 
-  final targets = target == 'all' ? ['aot', 'js', 'wasm'] : [target];
-
   print(
     '========================================================================',
   );
-  print('3-Tier Dart Serialization Comparative Benchmark Suite');
+  print(
+    '3-Tier Dart Serialization Comparative Benchmark Suite (Statistical KBSSD)',
+  );
   print(
     '========================================================================',
   );
   print('Stock Dart SDK : $stockDart');
   print('New Dart SDK   : $newDart');
   print('Node Runtime   : $nodeBin');
-  print('Target(s)      : ${targets.join(', ')}');
+  print('Target(s)      : $target');
   print('Datasets       : $dataset');
   print('Modes          : $mode');
   print(
@@ -151,9 +147,9 @@ void main(List<String> rawArgs) async {
     binDir.createSync(recursive: true);
   }
 
-  // Write wasm runner helper
-  final wasmRunnerPath = '${binDir.path}/run_wasm_helper.mjs';
-  File(wasmRunnerPath).writeAsStringSync('''
+  final wasmRunnerPath = '$packageRoot/bin/run_wasm.mjs';
+  if (!File(wasmRunnerPath).existsSync()) {
+    File(wasmRunnerPath).writeAsStringSync('''
 import * as fs from 'fs';
 import { pathToFileURL } from 'url';
 
@@ -167,13 +163,23 @@ const compiled = await mjsModule.compile(bytes);
 const instance = await compiled.instantiate();
 await instance.invokeMain(...scriptArgs);
 ''');
+  }
 
+  final targets = target == 'all' ? ['aot', 'js', 'wasm'] : [target];
   final jsonSerialScript =
       '$packageRoot/benchmark/suites/bench_json_serializable.dart';
   final codableScript = '$packageRoot/benchmark/suites/bench_codable.dart';
 
   final allTargetReports = <String, String>{};
-  final allTargetJson = <String, dynamic>{};
+  final allTargetJson = <String, Map<String, dynamic>>{};
+
+  final targetDatasets = dataset == 'all'
+      ? ['coordinates', 'canada', 'citm_catalog', 'small', 'twitter']
+      : [dataset];
+
+  final targetModes = mode == 'all'
+      ? ['decode', 'decode_literal', 'encode']
+      : [mode];
 
   for (final t in targets) {
     print(
@@ -184,9 +190,9 @@ await instance.invokeMain(...scriptArgs);
       '------------------------------------------------------------------------',
     );
 
-    String t1Exe = jsonSerialScript;
-    String t2Exe = jsonSerialScript;
-    String t3Exe = codableScript;
+    String t1Exe = '';
+    String t2Exe = '';
+    String t3Exe = '';
 
     if (t == 'aot') {
       print('⚙️  Compiling Tier 1 (Stock + json_serial AOT)...');
@@ -226,54 +232,63 @@ await instance.invokeMain(...scriptArgs);
       await _compileWasm(newDart, codableScript, t3Exe);
     }
 
-    // Execute Tiers
-    print('🚀 Executing Tier 1: Stock Dart + json_serializable...');
-    final t1Res = await _runBenchmarkTier(
-      target: t,
-      dartBin: stockDart,
-      nodeBin: nodeBin,
-      wasmRunner: wasmRunnerPath,
-      targetFile: t1Exe,
-      engineLabel: 'old_dart_json_serial',
-      dataset: dataset,
-      mode: mode,
-      iters: iters,
-      warmup: warmup,
-    );
+    // Execute Tiers Round-Robin per dataset and mode to eliminate thermal/governor bias
+    final t1Results = <Map<String, dynamic>>[];
+    final t2Results = <Map<String, dynamic>>[];
+    final t3Results = <Map<String, dynamic>>[];
 
-    print('🚀 Executing Tier 2: New Dart + json_serializable...');
-    final t2Res = await _runBenchmarkTier(
-      target: t,
-      dartBin: newDart,
-      nodeBin: nodeBin,
-      wasmRunner: wasmRunnerPath,
-      targetFile: t2Exe,
-      engineLabel: 'new_dart_json_serial',
-      dataset: dataset,
-      mode: mode,
-      iters: iters,
-      warmup: warmup,
-    );
+    print('🚀 Executing Round-Robin Benchmark Runs...');
+    for (final ds in targetDatasets) {
+      for (final m in targetModes) {
+        final t1Res = await _runBenchmarkTier(
+          target: t,
+          dartBin: stockDart,
+          nodeBin: nodeBin,
+          wasmRunner: wasmRunnerPath,
+          targetFile: t1Exe,
+          engineLabel: 'old_dart_json_serial',
+          dataset: ds,
+          mode: m,
+          iters: iters,
+          warmup: warmup,
+        );
+        t1Results.addAll(t1Res);
 
-    print('🚀 Executing Tier 3: New Dart + Codable streaming...');
-    final t3Res = await _runBenchmarkTier(
-      target: t,
-      dartBin: newDart,
-      nodeBin: nodeBin,
-      wasmRunner: wasmRunnerPath,
-      targetFile: t3Exe,
-      engineLabel: 'new_dart_codable',
-      dataset: dataset,
-      mode: mode,
-      iters: iters,
-      warmup: warmup,
-    );
+        final t2Res = await _runBenchmarkTier(
+          target: t,
+          dartBin: newDart,
+          nodeBin: nodeBin,
+          wasmRunner: wasmRunnerPath,
+          targetFile: t2Exe,
+          engineLabel: 'new_dart_json_serial',
+          dataset: ds,
+          mode: m,
+          iters: iters,
+          warmup: warmup,
+        );
+        t2Results.addAll(t2Res);
+
+        final t3Res = await _runBenchmarkTier(
+          target: t,
+          dartBin: newDart,
+          nodeBin: nodeBin,
+          wasmRunner: wasmRunnerPath,
+          targetFile: t3Exe,
+          engineLabel: 'new_dart_codable',
+          dataset: ds,
+          mode: m,
+          iters: iters,
+          warmup: warmup,
+        );
+        t3Results.addAll(t3Res);
+      }
+    }
 
     final report = _formatMarkdownReport(
       targetLabel: t.toUpperCase(),
-      tier1Results: t1Res,
-      tier2Results: t2Res,
-      tier3Results: t3Res,
+      tier1Results: t1Results,
+      tier2Results: t2Results,
+      tier3Results: t3Results,
       stockDartPath: stockDart,
       newDartPath: newDart,
       nodeBinPath: nodeBin,
@@ -281,9 +296,9 @@ await instance.invokeMain(...scriptArgs);
 
     allTargetReports[t] = report;
     allTargetJson[t] = {
-      'tier1_old_dart_json_serial': t1Res,
-      'tier2_new_dart_json_serial': t2Res,
-      'tier3_new_dart_codable': t3Res,
+      'tier1_old_dart_json_serial': t1Results,
+      'tier2_new_dart_json_serial': t2Results,
+      'tier3_new_dart_codable': t3Results,
     };
 
     print('\n$report\n');
@@ -349,7 +364,7 @@ Future<void> _compileJs(String dartBin, String script, String outputJs) async {
     script,
     '-o',
     outputJs,
-    '-O4',
+    '-O3',
   ], workingDirectory: packageRoot);
   if (proc.exitCode != 0) {
     stderr.writeln('JS compilation failed for $script with $dartBin:');
@@ -370,10 +385,10 @@ Future<void> _compileWasm(
     script,
     '-o',
     outputWasm,
-    '-O2',
+    '-O3',
   ], workingDirectory: packageRoot);
   if (proc.exitCode != 0) {
-    stderr.writeln('Wasm compilation failed for $script with $dartBin:');
+    stderr.writeln('WASM compilation failed for $script with $dartBin:');
     stderr.writeln(proc.stderr);
     stderr.writeln(proc.stdout);
     exit(1);
@@ -478,7 +493,7 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
     final lines = out.split('\n');
     final parsedList = <Map<String, dynamic>>[];
     final lineRegex = RegExp(
-      r'\[(?<engine>[\w_]+)\]\s+(?<dataset>\w+)\s+(?<mode>\w+)\s*:\s*(?<latency>[\d\.]+)\s*ms\s*\|\s*(?<throughput>[\d\.]+|Infinity)\s*MB/s',
+      r'\[(?<engine>[\w_]+)\]\s+(?<dataset>\w+)\s+(?<mode>\w+)\s*:\s*(?<latency>[\d\.]+)\s*ms\s*(?:\(±(?<stddev>[\d\.]+)\s*ms\))?\s*\|\s*(?<throughput>[\d\.]+|Infinity)\s*MB/s',
     );
     for (final line in lines) {
       final m = lineRegex.firstMatch(line.trim());
@@ -488,6 +503,9 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
           'dataset': m.namedGroup('dataset')!,
           'mode': m.namedGroup('mode')!,
           'latency_ms': double.parse(m.namedGroup('latency')!),
+          'stddev_ms': m.namedGroup('stddev') != null
+              ? double.parse(m.namedGroup('stddev')!)
+              : 0.0,
           'throughput_mb_s': m.namedGroup('throughput') == 'Infinity'
               ? 99999.0
               : double.parse(m.namedGroup('throughput')!),
