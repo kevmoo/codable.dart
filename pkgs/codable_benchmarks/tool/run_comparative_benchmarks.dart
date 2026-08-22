@@ -304,15 +304,8 @@ await instance.invokeMain(...scriptArgs);
     print('\n$report\n');
   }
 
-  if (outputMd != null) {
-    File(outputMd).writeAsStringSync(
-      allTargetReports.values.map((s) => s.trim()).join('\n\n') + '\n',
-    );
-    print('📄 Saved Markdown report to: $outputMd');
-  }
-
+  Map<String, dynamic> mergedTargets = {};
   if (outputJson != null) {
-    Map<String, dynamic> mergedTargets = {};
     final jsonFile = File(outputJson);
     if (jsonFile.existsSync()) {
       try {
@@ -334,6 +327,53 @@ await instance.invokeMain(...scriptArgs);
       const JsonEncoder.withIndent('  ').convert(combinedJson),
     );
     print('💾 Saved JSON results to: $outputJson');
+  } else {
+    mergedTargets.addAll(allTargetJson);
+  }
+
+  if (outputMd != null) {
+    final allReports = <String>[];
+    // Preserve existing targets order: wasm, js, aot, or any other
+    final orderedTargetKeys = ['wasm', 'js', 'aot']
+      ..addAll(
+        mergedTargets.keys.where((k) => !['wasm', 'js', 'aot'].contains(k)),
+      );
+
+    for (final tKey in orderedTargetKeys) {
+      if (!mergedTargets.containsKey(tKey)) continue;
+      if (allTargetReports.containsKey(tKey)) {
+        allReports.add(allTargetReports[tKey]!.trim());
+      } else {
+        final tData = mergedTargets[tKey];
+        if (tData is Map) {
+          final t1 =
+              (tData['tier1_old_dart_json_serial'] as List?)
+                  ?.cast<Map<String, dynamic>>() ??
+              [];
+          final t2 =
+              (tData['tier2_new_dart_json_serial'] as List?)
+                  ?.cast<Map<String, dynamic>>() ??
+              [];
+          final t3 =
+              (tData['tier3_new_dart_codable'] as List?)
+                  ?.cast<Map<String, dynamic>>() ??
+              [];
+          final rep = _formatMarkdownReport(
+            targetLabel: tKey.toUpperCase(),
+            tier1Results: t1,
+            tier2Results: t2,
+            tier3Results: t3,
+            stockDartPath: stockDart,
+            newDartPath: newDart,
+            nodeBinPath: nodeBin,
+          );
+          allReports.add(rep.trim());
+        }
+      }
+    }
+
+    File(outputMd).writeAsStringSync(allReports.join('\n\n') + '\n');
+    print('📄 Saved Markdown report to: $outputMd');
   }
 }
 
