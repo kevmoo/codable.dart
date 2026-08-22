@@ -3,6 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import '../../contracts/codable.dart';
@@ -737,10 +739,13 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
       isNull() ? null : decode(decoder);
 }
 
+@JS('JSON.stringify')
+external String _jsonStringify(JSAny? value);
+
 /// Concrete high-performance DOM/JS JSON encoder connecting `package:codable`
-/// contracts directly to native objects and `jsonEncode`.
+/// contracts directly to native JavaScript objects and `JSON.stringify`.
 final class JsonCodableEncoder implements Encoder {
-  Object? _root;
+  JSAny? _root;
   @override
   final Map<Object, Object?> userInfo;
 
@@ -753,7 +758,7 @@ final class JsonCodableEncoder implements Encoder {
   }) {
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encode(encoder);
-    return jsonEncode(encoder._root);
+    return _jsonStringify(encoder._root);
   }
 
   /// Encodes a value to a newly allocated UTF-8 byte buffer.
@@ -767,16 +772,16 @@ final class JsonCodableEncoder implements Encoder {
 
   @override
   KeyedEncoder keyed({KeyOptions? options}) {
-    final map = <String, Object?>{};
-    _root = map;
-    return _JsonCodableJsKeyedEncoder(this, map);
+    final obj = JSObject();
+    _root = obj;
+    return _JsonCodableJsKeyedEncoder(this, obj);
   }
 
   @override
   UnkeyedEncoder unkeyed() {
-    final list = <Object?>[];
-    _root = list;
-    return _JsonCodableJsUnkeyedEncoder(this, list);
+    final array = JSArray<JSAny?>();
+    _root = array;
+    return _JsonCodableJsUnkeyedEncoder(this, array);
   }
 
   @override
@@ -794,19 +799,19 @@ final class JsonCodableEncoder implements Encoder {
 
 final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   final JsonCodableEncoder _rootEncoder;
-  final Map<String, Object?> _map;
+  final JSObject _object;
 
-  _JsonCodableJsKeyedEncoder(this._rootEncoder, this._map);
+  _JsonCodableJsKeyedEncoder(this._rootEncoder, this._object);
 
   @override
-  void encodeInt(String key, int value) => _map[key] = value;
+  void encodeInt(String key, int value) => _object[key] = value.toJS;
 
   @override
   void encodeIntKey(StaticKey key, int value) => encodeInt(key.name, value);
 
   @override
   void encodeNullableInt(String key, int? value) {
-    if (value != null) _map[key] = value;
+    if (value != null) _object[key] = value.toJS;
   }
 
   @override
@@ -814,7 +819,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
       encodeNullableInt(key.name, value);
 
   @override
-  void encodeDouble(String key, double value) => _map[key] = value;
+  void encodeDouble(String key, double value) => _object[key] = value.toJS;
 
   @override
   void encodeDoubleKey(StaticKey key, double value) =>
@@ -822,7 +827,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
 
   @override
   void encodeNullableDouble(String key, double? value) {
-    if (value != null) _map[key] = value;
+    if (value != null) _object[key] = value.toJS;
   }
 
   @override
@@ -830,7 +835,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
       encodeNullableDouble(key.name, value);
 
   @override
-  void encodeString(String key, String value) => _map[key] = value;
+  void encodeString(String key, String value) => _object[key] = value.toJS;
 
   @override
   void encodeStringKey(StaticKey key, String value) =>
@@ -838,7 +843,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
 
   @override
   void encodeNullableString(String key, String? value) {
-    if (value != null) _map[key] = value;
+    if (value != null) _object[key] = value.toJS;
   }
 
   @override
@@ -846,14 +851,14 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
       encodeNullableString(key.name, value);
 
   @override
-  void encodeBool(String key, bool value) => _map[key] = value;
+  void encodeBool(String key, bool value) => _object[key] = value.toJS;
 
   @override
   void encodeBoolKey(StaticKey key, bool value) => encodeBool(key.name, value);
 
   @override
   void encodeNullableBool(String key, bool? value) {
-    if (value != null) _map[key] = value;
+    if (value != null) _object[key] = value.toJS;
   }
 
   @override
@@ -861,7 +866,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
       encodeNullableBool(key.name, value);
 
   @override
-  void encodeNull(String key) => _map[key] = null;
+  void encodeNull(String key) => _object[key] = null;
 
   @override
   void encodeNullKey(StaticKey key) => encodeNull(key.name);
@@ -870,7 +875,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
-    _map[key] = child._root;
+    _object[key] = child._root;
   }
 
   @override
@@ -895,7 +900,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   void encodeEncodable(String key, Encodable value) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     value.encode(child);
-    _map[key] = child._root;
+    _object[key] = child._root;
   }
 
   @override
@@ -919,13 +924,13 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     Iterable<T> elements,
     EncoderCallback<T> encode,
   ) {
-    final list = <Object?>[];
+    final array = JSArray<JSAny?>();
     for (final e in elements) {
       final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
       encode(e, child);
-      list.add(child._root);
+      array.add(child._root);
     }
-    _map[key] = list;
+    _object[key] = array;
   }
 
   @override
@@ -936,28 +941,52 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   ) => encodeList(key.name, elements, encode);
 
   @override
-  void encodeIntList(String key, List<int> values) => _map[key] = values;
+  void encodeIntList(String key, List<int> values) {
+    final array = JSArray<JSNumber>.withLength(values.length);
+    for (var i = 0; i < values.length; i++) {
+      array[i] = values[i].toJS;
+    }
+    _object[key] = array;
+  }
 
   @override
   void encodeIntListKey(StaticKey key, List<int> values) =>
       encodeIntList(key.name, values);
 
   @override
-  void encodeDoubleList(String key, List<double> values) => _map[key] = values;
+  void encodeDoubleList(String key, List<double> values) {
+    final array = JSArray<JSNumber>.withLength(values.length);
+    for (var i = 0; i < values.length; i++) {
+      array[i] = values[i].toJS;
+    }
+    _object[key] = array;
+  }
 
   @override
   void encodeDoubleListKey(StaticKey key, List<double> values) =>
       encodeDoubleList(key.name, values);
 
   @override
-  void encodeStringList(String key, List<String> values) => _map[key] = values;
+  void encodeStringList(String key, List<String> values) {
+    final array = JSArray<JSString>.withLength(values.length);
+    for (var i = 0; i < values.length; i++) {
+      array[i] = values[i].toJS;
+    }
+    _object[key] = array;
+  }
 
   @override
   void encodeStringListKey(StaticKey key, List<String> values) =>
       encodeStringList(key.name, values);
 
   @override
-  void encodeBoolList(String key, List<bool> values) => _map[key] = values;
+  void encodeBoolList(String key, List<bool> values) {
+    final array = JSArray<JSBoolean>.withLength(values.length);
+    for (var i = 0; i < values.length; i++) {
+      array[i] = values[i].toJS;
+    }
+    _object[key] = array;
+  }
 
   @override
   void encodeBoolListKey(StaticKey key, List<bool> values) =>
@@ -966,48 +995,48 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
 
 final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   final JsonCodableEncoder _rootEncoder;
-  final List<Object?> _list;
+  final JSArray<JSAny?> _array;
 
-  _JsonCodableJsUnkeyedEncoder(this._rootEncoder, this._list);
-
-  @override
-  void encodeInt(int value) => _list.add(value);
+  _JsonCodableJsUnkeyedEncoder(this._rootEncoder, this._array);
 
   @override
-  void encodeNullableInt(int? value) => _list.add(value);
+  void encodeInt(int value) => _array.add(value.toJS);
 
   @override
-  void encodeDouble(double value) => _list.add(value);
+  void encodeNullableInt(int? value) => _array.add(value?.toJS);
 
   @override
-  void encodeNullableDouble(double? value) => _list.add(value);
+  void encodeDouble(double value) => _array.add(value.toJS);
 
   @override
-  void encodeString(String value) => _list.add(value);
+  void encodeNullableDouble(double? value) => _array.add(value?.toJS);
 
   @override
-  void encodeNullableString(String? value) => _list.add(value);
+  void encodeString(String value) => _array.add(value.toJS);
 
   @override
-  void encodeBool(bool value) => _list.add(value);
+  void encodeNullableString(String? value) => _array.add(value?.toJS);
 
   @override
-  void encodeNullableBool(bool? value) => _list.add(value);
+  void encodeBool(bool value) => _array.add(value.toJS);
 
   @override
-  void encodeNull() => _list.add(null);
+  void encodeNullableBool(bool? value) => _array.add(value?.toJS);
+
+  @override
+  void encodeNull() => _array.add(null);
 
   @override
   void encodeElement<T>(T value, EncoderCallback<T> encode) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
-    _list.add(child._root);
+    _array.add(child._root);
   }
 
   @override
   void encodeNullableElement<T>(T? value, EncoderCallback<T> encode) {
     if (value == null) {
-      _list.add(null);
+      _array.add(null);
     } else {
       encodeElement(value, encode);
     }
@@ -1024,13 +1053,13 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   void encodeEncodable(Encodable value) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     value.encode(child);
-    _list.add(child._root);
+    _array.add(child._root);
   }
 
   @override
   void encodeNullableEncodable(Encodable? value) {
     if (value == null) {
-      _list.add(null);
+      _array.add(null);
     } else {
       encodeEncodable(value);
     }
@@ -1043,28 +1072,28 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
   _JsonCodableJsSingleValueEncoder(this._rootEncoder);
 
   @override
-  void encodeInt(int value) => _rootEncoder._root = value;
+  void encodeInt(int value) => _rootEncoder._root = value.toJS;
 
   @override
-  void encodeNullableInt(int? value) => _rootEncoder._root = value;
+  void encodeNullableInt(int? value) => _rootEncoder._root = value?.toJS;
 
   @override
-  void encodeDouble(double value) => _rootEncoder._root = value;
+  void encodeDouble(double value) => _rootEncoder._root = value.toJS;
 
   @override
-  void encodeNullableDouble(double? value) => _rootEncoder._root = value;
+  void encodeNullableDouble(double? value) => _rootEncoder._root = value?.toJS;
 
   @override
-  void encodeString(String value) => _rootEncoder._root = value;
+  void encodeString(String value) => _rootEncoder._root = value.toJS;
 
   @override
-  void encodeNullableString(String? value) => _rootEncoder._root = value;
+  void encodeNullableString(String? value) => _rootEncoder._root = value?.toJS;
 
   @override
-  void encodeBool(bool value) => _rootEncoder._root = value;
+  void encodeBool(bool value) => _rootEncoder._root = value.toJS;
 
   @override
-  void encodeNullableBool(bool? value) => _rootEncoder._root = value;
+  void encodeNullableBool(bool? value) => _rootEncoder._root = value?.toJS;
 
   @override
   void encodeNull() => _rootEncoder._root = null;

@@ -61,3 +61,14 @@
 - Tier 4: ≥5 realistic application-level scenarios
 - Total Target: ~260+ tests across the test suite
 <!-- mdformat on -->
+
+## Benchmark Execution & Telemetry Protocol
+When running comparative performance benchmarks across engines/tiers, always persist structured JSON and markdown results to keep repository telemetry current:
+
+```bash
+dart pkgs/codable_benchmarks/tool/run_comparative_benchmarks.dart \
+  -t <target> \
+  --output-json pkgs/codable_benchmarks/benchmark_comparison.json \
+  --output-md pkgs/codable_benchmarks/BENCHMARK_REPORT.md
+```
+
