@@ -340,7 +340,9 @@ final class _JsonCodableKeyedDecoder
   }
 }
 
-final class _JsonCodableMappedDecoder implements MappedDecoder {
+final class _JsonCodableMappedDecoder
+    with MappedDecoderBase
+    implements MappedDecoder {
   final JsonCodableDecoder _rootDecoder;
   late final Map<String, Object?> _map;
 
@@ -391,13 +393,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   bool containsKey(String key) => _map.containsKey(key);
 
   @override
-  bool containsStaticKey(StaticKey key) => containsKey(key.name);
-
-  @override
   bool isNull(String key) => _map[key] == null;
-
-  @override
-  bool isNullKey(StaticKey key) => isNull(key.name);
 
   @override
   int readInt(String key) {
@@ -407,13 +403,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  int readIntKey(StaticKey key) => readInt(key.name);
-
-  @override
   int? readNullableInt(String key) => _map[key] == null ? null : readInt(key);
-
-  @override
-  int? readNullableIntKey(StaticKey key) => readNullableInt(key.name);
 
   @override
   double readDouble(String key) {
@@ -423,14 +413,8 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  double readDoubleKey(StaticKey key) => readDouble(key.name);
-
-  @override
   double? readNullableDouble(String key) =>
       _map[key] == null ? null : readDouble(key);
-
-  @override
-  double? readNullableDoubleKey(StaticKey key) => readNullableDouble(key.name);
 
   @override
   String readString(String key) {
@@ -440,14 +424,8 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  String readStringKey(StaticKey key) => readString(key.name);
-
-  @override
   String? readNullableString(String key) =>
       _map[key] == null ? null : readString(key);
-
-  @override
-  String? readNullableStringKey(StaticKey key) => readNullableString(key.name);
 
   @override
   bool readBool(String key) {
@@ -457,14 +435,8 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  bool readBoolKey(StaticKey key) => readBool(key.name);
-
-  @override
   bool? readNullableBool(String key) =>
       _map[key] == null ? null : readBool(key);
-
-  @override
-  bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
 
   @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) {
@@ -476,19 +448,11 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeKey(key.name, decoder);
-
-  @override
   T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
     final v = _map[key];
     if (v == null) return null;
     return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
   }
-
-  @override
-  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeNullableKey(key.name, decoder);
 
   @override
   List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
@@ -502,21 +466,11 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
-  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeListKey(key.name, decoder);
-
-  @override
   List<int> decodeIntList(String key) => (_map[key] as List).cast<int>();
-
-  @override
-  List<int> decodeIntListKey(StaticKey key) => decodeIntList(key.name);
 
   @override
   List<double> decodeDoubleList(String key) =>
       (_map[key] as List).map((e) => (e as num).toDouble()).toList();
-
-  @override
-  List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
 
   @override
   Float64List decodeFloat64List(String key) => Float64List.fromList(
@@ -524,21 +478,11 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   );
 
   @override
-  Float64List decodeFloat64ListKey(StaticKey key) =>
-      decodeFloat64List(key.name);
-
-  @override
   List<String> decodeStringList(String key) =>
       (_map[key] as List).cast<String>();
 
   @override
-  List<String> decodeStringListKey(StaticKey key) => decodeStringList(key.name);
-
-  @override
   List<bool> decodeBoolList(String key) => (_map[key] as List).cast<bool>();
-
-  @override
-  List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
 }
 
 final class _JsonCodableUnkeyedDecoder

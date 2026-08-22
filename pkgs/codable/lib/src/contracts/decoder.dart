@@ -247,6 +247,67 @@ abstract interface class MappedDecoder {
   List<bool> decodeBoolListKey(StaticKey key);
 }
 
+/// Provides default delegation for [MappedDecoder] static key methods.
+mixin MappedDecoderBase implements MappedDecoder {
+  @override
+  bool containsStaticKey(StaticKey key) => containsKey(key.name);
+
+  @override
+  bool isNullKey(StaticKey key) => isNull(key.name);
+
+  @override
+  int readIntKey(StaticKey key) => readInt(key.name);
+
+  @override
+  int? readNullableIntKey(StaticKey key) => readNullableInt(key.name);
+
+  @override
+  double readDoubleKey(StaticKey key) => readDouble(key.name);
+
+  @override
+  double? readNullableDoubleKey(StaticKey key) => readNullableDouble(key.name);
+
+  @override
+  String readStringKey(StaticKey key) => readString(key.name);
+
+  @override
+  String? readNullableStringKey(StaticKey key) => readNullableString(key.name);
+
+  @override
+  bool readBoolKey(StaticKey key) => readBool(key.name);
+
+  @override
+  bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
+
+  @override
+  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
+      decodeKey(key.name, decoder);
+
+  @override
+  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
+      decodeNullableKey(key.name, decoder);
+
+  @override
+  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
+      decodeListKey(key.name, decoder);
+
+  @override
+  List<int> decodeIntListKey(StaticKey key) => decodeIntList(key.name);
+
+  @override
+  List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
+
+  @override
+  Float64List decodeFloat64ListKey(StaticKey key) =>
+      decodeFloat64List(key.name);
+
+  @override
+  List<String> decodeStringListKey(StaticKey key) => decodeStringList(key.name);
+
+  @override
+  List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
+}
+
 /// Sequential decoder for homogeneous or heterogeneous arrays / lists.
 abstract interface class UnkeyedDecoder {
   /// Returns `true` if more elements remain in the sequence.
