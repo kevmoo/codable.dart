@@ -333,11 +333,12 @@ await instance.invokeMain(...scriptArgs);
 
   if (outputMd != null) {
     final allReports = <String>[];
-    // Preserve existing targets order: wasm, js, aot, or any other
-    final orderedTargetKeys = ['wasm', 'js', 'aot']
-      ..addAll(
-        mergedTargets.keys.where((k) => !['wasm', 'js', 'aot'].contains(k)),
-      );
+    final orderedTargetKeys = [
+      'wasm',
+      'js',
+      'aot',
+      ...mergedTargets.keys.where((k) => !['wasm', 'js', 'aot'].contains(k)),
+    ];
 
     for (final tKey in orderedTargetKeys) {
       if (!mergedTargets.containsKey(tKey)) continue;
