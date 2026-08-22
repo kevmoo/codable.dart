@@ -23,7 +23,8 @@ class RunnerConfig {
   /// Maximum total execution time in microseconds per workload.
   final int maxTotalMicros;
 
-  /// Target relative Standard Error of the Mean (SEM) threshold (e.g. 0.05 = 5%).
+  /// Target relative Standard Error of the Mean (SEM) threshold
+  /// (e.g. 0.05 = 5%).
   final double targetRelativeError;
 
   /// Sliding window size for MMD steady-state convergence.
@@ -108,7 +109,8 @@ class BenchmarkRunner {
     }
   }
 
-  /// Runs the benchmark with calibrated [iterations] and returns a [BenchmarkResult].
+  /// Runs the benchmark with calibrated iterations and returns a
+  /// [BenchmarkResult].
   BenchmarkResult run(void Function() benchmark) {
     final iterations = calibrate(benchmark);
     final buffer = <double>[];
@@ -200,7 +202,8 @@ class BenchmarkRunner {
 
     if (!converged) {
       _log(
-        'Warning: Benchmark did not reach strict steady-state convergence; utilizing last ${finalSamples.length} samples.',
+        'Warning: Benchmark did not reach strict steady-state convergence; '
+        'utilizing last ${finalSamples.length} samples.',
       );
     }
 

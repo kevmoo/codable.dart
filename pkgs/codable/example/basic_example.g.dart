@@ -20,6 +20,118 @@ extension type const _$PersonSchema(int _value) {
   static const String nameLastOrder = 'last-order';
   static const String nameOrders = 'orders';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesFirstName = [
+    34,
+    102,
+    105,
+    114,
+    115,
+    116,
+    78,
+    97,
+    109,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyFirstName = StaticKey(
+    nameFirstName,
+    keyFirstName,
+    wireNameBytesFirstName,
+  );
+  static const List<int> wireNameBytesLastName = [
+    34,
+    108,
+    97,
+    115,
+    116,
+    78,
+    97,
+    109,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLastName = StaticKey(
+    nameLastName,
+    keyLastName,
+    wireNameBytesLastName,
+  );
+  static const List<int> wireNameBytesDateOfBirth = [
+    34,
+    100,
+    97,
+    116,
+    101,
+    45,
+    111,
+    102,
+    45,
+    98,
+    105,
+    114,
+    116,
+    104,
+    34,
+  ];
+  static const StaticKey staticKeyDateOfBirth = StaticKey(
+    nameDateOfBirth,
+    keyDateOfBirth,
+    wireNameBytesDateOfBirth,
+  );
+  static const List<int> wireNameBytesMiddleName = [
+    34,
+    109,
+    105,
+    100,
+    100,
+    108,
+    101,
+    78,
+    97,
+    109,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyMiddleName = StaticKey(
+    nameMiddleName,
+    keyMiddleName,
+    wireNameBytesMiddleName,
+  );
+  static const List<int> wireNameBytesLastOrder = [
+    34,
+    108,
+    97,
+    115,
+    116,
+    45,
+    111,
+    114,
+    100,
+    101,
+    114,
+    34,
+  ];
+  static const StaticKey staticKeyLastOrder = StaticKey(
+    nameLastOrder,
+    keyLastOrder,
+    wireNameBytesLastOrder,
+  );
+  static const List<int> wireNameBytesOrders = [
+    34,
+    111,
+    114,
+    100,
+    101,
+    114,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyOrders = StaticKey(
+    nameOrders,
+    keyOrders,
+    wireNameBytesOrders,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyFirstName = 0;
   static const int keyLastName = 1;
@@ -183,25 +295,28 @@ Person _$PersonFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$PersonToEncoder(Person instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
-  keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
-  keyed.encodeValue(
-    _$PersonSchema.nameDateOfBirth,
+  keyed.encodeStringKey(_$PersonSchema.staticKeyFirstName, instance.firstName);
+  keyed.encodeStringKey(_$PersonSchema.staticKeyLastName, instance.lastName);
+  keyed.encodeValueKey(
+    _$PersonSchema.staticKeyDateOfBirth,
     instance.dateOfBirth,
     (v, e) => const DateTimeIsoDecoder().encodeToEncoder(v, e),
   );
   if (instance.middleName != null) {
-    keyed.encodeString(_$PersonSchema.nameMiddleName, instance.middleName!);
+    keyed.encodeStringKey(
+      _$PersonSchema.staticKeyMiddleName,
+      instance.middleName!,
+    );
   }
   if (instance.lastOrder != null) {
-    keyed.encodeValue(
-      _$PersonSchema.nameLastOrder,
+    keyed.encodeValueKey(
+      _$PersonSchema.staticKeyLastOrder,
       instance.lastOrder!,
       (v, e) => const DateTimeIsoDecoder().encodeToEncoder(v, e),
     );
   }
-  keyed.encodeList(
-    _$PersonSchema.nameOrders,
+  keyed.encodeListKey(
+    _$PersonSchema.staticKeyOrders,
     instance.orders,
     _$OrderToEncoder,
   );
@@ -218,6 +333,90 @@ extension type const _$OrderSchema(int _value) {
   static const String nameIsRushed = 'isRushed';
   static const String nameItem = 'item';
   static const String namePrepTimeMs = 'prepTimeMs';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesDateUs = [
+    34,
+    100,
+    97,
+    116,
+    101,
+    85,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyDateUs = StaticKey(
+    nameDateUs,
+    keyDateUs,
+    wireNameBytesDateUs,
+  );
+  static const List<int> wireNameBytesCount = [34, 99, 111, 117, 110, 116, 34];
+  static const StaticKey staticKeyCount = StaticKey(
+    nameCount,
+    keyCount,
+    wireNameBytesCount,
+  );
+  static const List<int> wireNameBytesItemNumber = [
+    34,
+    105,
+    116,
+    101,
+    109,
+    78,
+    117,
+    109,
+    98,
+    101,
+    114,
+    34,
+  ];
+  static const StaticKey staticKeyItemNumber = StaticKey(
+    nameItemNumber,
+    keyItemNumber,
+    wireNameBytesItemNumber,
+  );
+  static const List<int> wireNameBytesIsRushed = [
+    34,
+    105,
+    115,
+    82,
+    117,
+    115,
+    104,
+    101,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyIsRushed = StaticKey(
+    nameIsRushed,
+    keyIsRushed,
+    wireNameBytesIsRushed,
+  );
+  static const List<int> wireNameBytesItem = [34, 105, 116, 101, 109, 34];
+  static const StaticKey staticKeyItem = StaticKey(
+    nameItem,
+    keyItem,
+    wireNameBytesItem,
+  );
+  static const List<int> wireNameBytesPrepTimeMs = [
+    34,
+    112,
+    114,
+    101,
+    112,
+    84,
+    105,
+    109,
+    101,
+    77,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyPrepTimeMs = StaticKey(
+    namePrepTimeMs,
+    keyPrepTimeMs,
+    wireNameBytesPrepTimeMs,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyDateUs = 0;
@@ -361,21 +560,25 @@ Order _$OrderFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$OrderToEncoder(Order instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
+  keyed.encodeIntKey(_$OrderSchema.staticKeyDateUs, instance.dateUs);
   if (instance.count != null) {
-    keyed.encodeInt(_$OrderSchema.nameCount, instance.count!);
+    keyed.encodeIntKey(_$OrderSchema.staticKeyCount, instance.count!);
   }
   if (instance.itemNumber != null) {
-    keyed.encodeInt(_$OrderSchema.nameItemNumber, instance.itemNumber!);
+    keyed.encodeIntKey(_$OrderSchema.staticKeyItemNumber, instance.itemNumber!);
   }
   if (instance.isRushed != null) {
-    keyed.encodeBool(_$OrderSchema.nameIsRushed, instance.isRushed!);
+    keyed.encodeBoolKey(_$OrderSchema.staticKeyIsRushed, instance.isRushed!);
   }
   if (instance.item != null) {
-    keyed.encodeValue(_$OrderSchema.nameItem, instance.item!, _$ItemToEncoder);
+    keyed.encodeValueKey(
+      _$OrderSchema.staticKeyItem,
+      instance.item!,
+      _$ItemToEncoder,
+    );
   }
   if (instance.prepTimeMs != null) {
-    keyed.encodeInt(_$OrderSchema.namePrepTimeMs, instance.prepTimeMs!);
+    keyed.encodeIntKey(_$OrderSchema.staticKeyPrepTimeMs, instance.prepTimeMs!);
   }
 }
 
@@ -387,6 +590,50 @@ extension type const _$ItemSchema(int _value) {
   static const String nameCount = 'count';
   static const String nameItemNumber = 'itemNumber';
   static const String nameIsRushed = 'isRushed';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesCount = [34, 99, 111, 117, 110, 116, 34];
+  static const StaticKey staticKeyCount = StaticKey(
+    nameCount,
+    keyCount,
+    wireNameBytesCount,
+  );
+  static const List<int> wireNameBytesItemNumber = [
+    34,
+    105,
+    116,
+    101,
+    109,
+    78,
+    117,
+    109,
+    98,
+    101,
+    114,
+    34,
+  ];
+  static const StaticKey staticKeyItemNumber = StaticKey(
+    nameItemNumber,
+    keyItemNumber,
+    wireNameBytesItemNumber,
+  );
+  static const List<int> wireNameBytesIsRushed = [
+    34,
+    105,
+    115,
+    82,
+    117,
+    115,
+    104,
+    101,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyIsRushed = StaticKey(
+    nameIsRushed,
+    keyIsRushed,
+    wireNameBytesIsRushed,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyCount = 0;
@@ -468,12 +715,12 @@ Item _$ItemFromDecoder(Decoder decoder) {
 void _$ItemToEncoder(Item instance, Encoder encoder) {
   final keyed = encoder.keyed();
   if (instance.count != null) {
-    keyed.encodeInt(_$ItemSchema.nameCount, instance.count!);
+    keyed.encodeIntKey(_$ItemSchema.staticKeyCount, instance.count!);
   }
   if (instance.itemNumber != null) {
-    keyed.encodeInt(_$ItemSchema.nameItemNumber, instance.itemNumber!);
+    keyed.encodeIntKey(_$ItemSchema.staticKeyItemNumber, instance.itemNumber!);
   }
   if (instance.isRushed != null) {
-    keyed.encodeBool(_$ItemSchema.nameIsRushed, instance.isRushed!);
+    keyed.encodeBoolKey(_$ItemSchema.staticKeyIsRushed, instance.isRushed!);
   }
 }

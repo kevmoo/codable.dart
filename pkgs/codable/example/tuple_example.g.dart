@@ -15,6 +15,25 @@ extension type const _$CoordinatePairSchema(int _value) {
   // String Name Constants
   static const String nameLocation = 'location';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesLocation = [
+    34,
+    108,
+    111,
+    99,
+    97,
+    116,
+    105,
+    111,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyLocation = StaticKey(
+    nameLocation,
+    keyLocation,
+    wireNameBytesLocation,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyLocation = 0;
 
@@ -73,8 +92,8 @@ CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
 void _$CoordinatePairToEncoder(CoordinatePair instance, Encoder encoder) {
   final keyed = encoder.keyed();
   if (instance.location != null) {
-    keyed.encodeList<double>(
-      _$CoordinatePairSchema.nameLocation,
+    keyed.encodeListKey<double>(
+      _$CoordinatePairSchema.staticKeyLocation,
       List.generate(2, (i) => instance.location![i]),
       (v, e) => e.singleValue().encodeDouble(v),
     );

@@ -17,6 +17,35 @@ extension type const _$ArticleSchema(int _value) {
   static const String nameTitle = 'title';
   static const String nameAuthor = 'author';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesTitle = [34, 116, 105, 116, 108, 101, 34];
+  static const StaticKey staticKeyTitle = StaticKey(
+    nameTitle,
+    keyTitle,
+    wireNameBytesTitle,
+  );
+  static const List<int> wireNameBytesAuthor = [
+    34,
+    97,
+    117,
+    116,
+    104,
+    111,
+    114,
+    34,
+  ];
+  static const StaticKey staticKeyAuthor = StaticKey(
+    nameAuthor,
+    keyAuthor,
+    wireNameBytesAuthor,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyTitle = 1;
@@ -127,11 +156,11 @@ Article _$ArticleFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$ArticleToEncoder(Article instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
-  keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
+  keyed.encodeIntKey(_$ArticleSchema.staticKeyId, instance.id);
+  keyed.encodeStringKey(_$ArticleSchema.staticKeyTitle, instance.title);
   if (instance.author != null) {
-    keyed.encodeValue(
-      _$ArticleSchema.nameAuthor,
+    keyed.encodeValueKey(
+      _$ArticleSchema.staticKeyAuthor,
       instance.author!,
       _$UserToEncoder,
     );
@@ -145,6 +174,20 @@ extension type const _$UserSchema(int _value) {
   // String Name Constants
   static const String nameId = 'id';
   static const String nameEmail = 'email';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesEmail = [34, 101, 109, 97, 105, 108, 34];
+  static const StaticKey staticKeyEmail = StaticKey(
+    nameEmail,
+    keyEmail,
+    wireNameBytesEmail,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -245,6 +288,6 @@ User _$UserFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserToEncoder(User instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$UserSchema.nameId, instance.id);
-  keyed.encodeString(_$UserSchema.nameEmail, instance.email);
+  keyed.encodeIntKey(_$UserSchema.staticKeyId, instance.id);
+  keyed.encodeStringKey(_$UserSchema.staticKeyEmail, instance.email);
 }

@@ -36,13 +36,18 @@ class BenchmarkResult {
   }) : latencyMs = calculateMedian(samples) / 1000.0,
        meanMs = calculateMean(samples) / 1000.0,
        stdDevMs = calculateStdDev(samples, calculateMean(samples)) / 1000.0,
-       p95Ms = calculatePercentile(List.from(samples)..sort(), 0.95) / 1000.0,
+       p95Ms =
+           calculatePercentile(List<double>.from(samples)..sort(), 0.95) /
+           1000.0,
        iqrMs = calculateIQR(samples) / 1000.0,
        minMs =
-           (samples.isEmpty ? 0.0 : (List.from(samples)..sort()).first) /
+           (samples.isEmpty
+               ? 0.0
+               : (List<double>.from(samples)..sort()).first) /
            1000.0,
        maxMs =
-           (samples.isEmpty ? 0.0 : (List.from(samples)..sort()).last) / 1000.0,
+           (samples.isEmpty ? 0.0 : (List<double>.from(samples)..sort()).last) /
+           1000.0,
        throughputMbS = _calculateThroughput(
          fileBytes,
          calculateMedian(samples),

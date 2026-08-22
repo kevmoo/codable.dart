@@ -2,10 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: lines_longer_than_80_chars
-
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:codable/codable_json.dart';
@@ -67,7 +64,8 @@ void main(List<String> rawArgs) {
       if (!outputJson) {
         final stdDevStr = '±${res.stdDevMs.toStringAsFixed(3)}';
         print(
-          '[${res.engine}] ${res.dataset.padRight(14)} ${res.mode.padRight(15)}: '
+          '[${res.engine}] ${res.dataset.padRight(14)} '
+          '${res.mode.padRight(15)}: '
           '${res.latencyMs.toStringAsFixed(3).padLeft(8)} ms ($stdDevStr ms) | '
           '${res.throughputMbS.toStringAsFixed(2).padLeft(8)} MB/s',
         );

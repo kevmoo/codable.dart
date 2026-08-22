@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: deprecated_member_use
+import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -49,6 +49,20 @@ final class DecoderGeneratorHelper {
       final suffix = toSafeIdentifierSuffix(field.name);
       buffer.writeln(
         "  static const String name$suffix = '${field.wireName}';",
+      );
+    }
+
+    buffer.writeln();
+    buffer.writeln('  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys');
+    for (final field in nonIgnoredFields) {
+      final suffix = toSafeIdentifierSuffix(field.name);
+      final encoded = utf8.encode(jsonEncode(field.wireName));
+      buffer.writeln(
+        '  static const List<int> wireNameBytes$suffix = $encoded;',
+      );
+      buffer.writeln(
+        '  static const StaticKey staticKey$suffix = '
+        'StaticKey(name$suffix, key$suffix, wireNameBytes$suffix);',
       );
     }
 

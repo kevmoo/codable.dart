@@ -16,6 +16,43 @@ extension type const _$CoordinateSchema(int _value) {
   static const String nameLatitude = 'latitude';
   static const String nameLongitude = 'longitude';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesLatitude = [
+    34,
+    108,
+    97,
+    116,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLatitude = StaticKey(
+    nameLatitude,
+    keyLatitude,
+    wireNameBytesLatitude,
+  );
+  static const List<int> wireNameBytesLongitude = [
+    34,
+    108,
+    111,
+    110,
+    103,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLongitude = StaticKey(
+    nameLongitude,
+    keyLongitude,
+    wireNameBytesLongitude,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
   static const String aliasLatitudeLat = 'lat';
@@ -125,6 +162,12 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
+  keyed.encodeDoubleKey(
+    _$CoordinateSchema.staticKeyLatitude,
+    instance.latitude,
+  );
+  keyed.encodeDoubleKey(
+    _$CoordinateSchema.staticKeyLongitude,
+    instance.longitude,
+  );
 }

@@ -4,8 +4,9 @@
 
 import 'dart:math' as math;
 
-/// Critical values for Student's t-distribution at two-sided alpha = 0.05 (95% confidence).
-/// Indexed by degrees of freedom (df = n - 1), capped at df = 120.
+/// Critical values for Student's t-distribution at two-sided alpha = 0.05
+/// (95% confidence). Indexed by degrees of freedom (df = n - 1), capped at
+/// df = 120.
 const List<double> _tTable95 = [
   0.0, // df = 0 (unused)
   12.706, // df = 1
@@ -40,7 +41,8 @@ const List<double> _tTable95 = [
   2.042, // df = 30
 ];
 
-/// Returns the critical Student's t-value for 95% confidence given [degreesOfFreedom].
+/// Returns the critical Student's t-value for 95% confidence given
+/// [degreesOfFreedom].
 double getStudentTCriticalValue(int degreesOfFreedom) {
   if (degreesOfFreedom <= 0) return 1.96;
   if (degreesOfFreedom < _tTable95.length) {
@@ -128,7 +130,8 @@ List<double> trimWindow(List<double> data, double trimPercentage) {
   return sorted.sublist(trimCount, sorted.length - trimCount);
 }
 
-/// Estimates Gaussian RBF kernel bandwidth (sigma) using the median pairwise distance heuristic.
+/// Estimates Gaussian RBF kernel bandwidth (sigma) using the median pairwise
+/// distance heuristic.
 double estimateSigma(List<double> window) {
   if (window.length < 2) return 1.0;
   final distances = <double>[];
@@ -144,10 +147,11 @@ double estimateSigma(List<double> window) {
   return calculateMedian(distances);
 }
 
-/// Calculates Maximum Mean Discrepancy (MMD) between empirical windows [X] and [Y].
+/// Calculates Maximum Mean Discrepancy (MMD) between empirical windows [X]
+/// and [Y].
 ///
-/// Applies a relative [medianFloor] to [sigma] to prevent kernel collapse when sample
-/// variance is near zero.
+/// Applies a relative [medianFloor] to [sigma] to prevent kernel collapse when
+/// sample variance is near zero.
 double calculateMMD(
   List<double> X,
   List<double> Y,
@@ -158,7 +162,8 @@ double calculateMMD(
   final m = Y.length;
   if (n == 0 || m == 0) return 0.0;
 
-  // Relative floor prevents Dirac delta explosion when samples are bit-exact identical
+  // Relative floor prevents Dirac delta explosion when samples are bit-exact
+  // identical.
   final minFloor = medianFloor > 0.0 ? medianFloor * 0.01 : 1e-4;
   final effectiveSigma = math.max(sigma, minFloor);
   final s2 = 2.0 * math.max(effectiveSigma * effectiveSigma, 1e-9);
@@ -170,7 +175,7 @@ double calculateMMD(
       kXX += math.exp(-(diff * diff) / s2);
     }
   }
-  kXX /= (n * n);
+  kXX /= n * n;
 
   var kYY = 0.0;
   for (var i = 0; i < m; i++) {
@@ -179,7 +184,7 @@ double calculateMMD(
       kYY += math.exp(-(diff * diff) / s2);
     }
   }
-  kYY /= (m * m);
+  kYY /= m * m;
 
   var kXY = 0.0;
   for (var i = 0; i < n; i++) {
@@ -188,14 +193,14 @@ double calculateMMD(
       kXY += math.exp(-(diff * diff) / s2);
     }
   }
-  kXY /= (n * m);
+  kXY /= n * m;
 
   final mmdSquared = kXX - 2.0 * kXY + kYY;
   return mmdSquared > 0.0 ? math.sqrt(mmdSquared) : 0.0;
 }
 
-/// Checks if the Standard Error of the Mean (SEM) normalized 95% confidence interval
-/// is within [targetRelativeError].
+/// Checks if the Standard Error of the Mean (SEM) normalized 95% confidence
+/// interval is within [targetRelativeError].
 bool checkSEM(List<double> data, {double targetRelativeError = 0.05}) {
   if (data.length < 3) return false;
   final mean = calculateMean(data);

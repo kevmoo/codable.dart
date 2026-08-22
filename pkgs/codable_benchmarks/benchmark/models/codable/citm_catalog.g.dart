@@ -25,6 +25,241 @@ extension type const _$CitmCatalogSchema(int _value) {
   static const String nameTopicSynced = 'topicSynced';
   static const String nameVenueNames = 'venueNames';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesAreaNames = [
+    34,
+    97,
+    114,
+    101,
+    97,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyAreaNames = StaticKey(
+    nameAreaNames,
+    keyAreaNames,
+    wireNameBytesAreaNames,
+  );
+  static const List<int> wireNameBytesAudienceSubCategoryNames = [
+    34,
+    97,
+    117,
+    100,
+    105,
+    101,
+    110,
+    99,
+    101,
+    83,
+    117,
+    98,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    121,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyAudienceSubCategoryNames = StaticKey(
+    nameAudienceSubCategoryNames,
+    keyAudienceSubCategoryNames,
+    wireNameBytesAudienceSubCategoryNames,
+  );
+  static const List<int> wireNameBytesBlockNames = [
+    34,
+    98,
+    108,
+    111,
+    99,
+    107,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyBlockNames = StaticKey(
+    nameBlockNames,
+    keyBlockNames,
+    wireNameBytesBlockNames,
+  );
+  static const List<int> wireNameBytesEvents = [
+    34,
+    101,
+    118,
+    101,
+    110,
+    116,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyEvents = StaticKey(
+    nameEvents,
+    keyEvents,
+    wireNameBytesEvents,
+  );
+  static const List<int> wireNameBytesPerformances = [
+    34,
+    112,
+    101,
+    114,
+    102,
+    111,
+    114,
+    109,
+    97,
+    110,
+    99,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyPerformances = StaticKey(
+    namePerformances,
+    keyPerformances,
+    wireNameBytesPerformances,
+  );
+  static const List<int> wireNameBytesSeatCategoryNames = [
+    34,
+    115,
+    101,
+    97,
+    116,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    121,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeySeatCategoryNames = StaticKey(
+    nameSeatCategoryNames,
+    keySeatCategoryNames,
+    wireNameBytesSeatCategoryNames,
+  );
+  static const List<int> wireNameBytesSubTopicNames = [
+    34,
+    115,
+    117,
+    98,
+    84,
+    111,
+    112,
+    105,
+    99,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeySubTopicNames = StaticKey(
+    nameSubTopicNames,
+    keySubTopicNames,
+    wireNameBytesSubTopicNames,
+  );
+  static const List<int> wireNameBytesSubjectNames = [
+    34,
+    115,
+    117,
+    98,
+    106,
+    101,
+    99,
+    116,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeySubjectNames = StaticKey(
+    nameSubjectNames,
+    keySubjectNames,
+    wireNameBytesSubjectNames,
+  );
+  static const List<int> wireNameBytesTopicNames = [
+    34,
+    116,
+    111,
+    112,
+    105,
+    99,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyTopicNames = StaticKey(
+    nameTopicNames,
+    keyTopicNames,
+    wireNameBytesTopicNames,
+  );
+  static const List<int> wireNameBytesTopicSynced = [
+    34,
+    116,
+    111,
+    112,
+    105,
+    99,
+    83,
+    121,
+    110,
+    99,
+    101,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyTopicSynced = StaticKey(
+    nameTopicSynced,
+    keyTopicSynced,
+    wireNameBytesTopicSynced,
+  );
+  static const List<int> wireNameBytesVenueNames = [
+    34,
+    118,
+    101,
+    110,
+    117,
+    101,
+    78,
+    97,
+    109,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyVenueNames = StaticKey(
+    nameVenueNames,
+    keyVenueNames,
+    wireNameBytesVenueNames,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyAreaNames = 0;
   static const int keyAudienceSubCategoryNames = 1;
@@ -273,17 +508,18 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeValue(_$CitmCatalogSchema.nameAreaNames, instance.areaNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameAudienceSubCategoryNames,
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyAreaNames,
+    instance.areaNames,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    },
+  );
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyAudienceSubCategoryNames,
     instance.audienceSubCategoryNames,
     (map, e) {
       final k = e.keyed();
@@ -292,28 +528,32 @@ void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
       }
     },
   );
-  keyed.encodeValue(_$CitmCatalogSchema.nameBlockNames, instance.blockNames, (
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyBlockNames,
+    instance.blockNames,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    },
+  );
+  keyed.encodeValueKey(_$CitmCatalogSchema.staticKeyEvents, instance.events, (
     map,
     e,
   ) {
     final k = e.keyed();
     for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameEvents, instance.events, (map, e) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
       k.encodeValue(entry.key, entry.value, _$CitmEventToEncoder);
     }
   });
-  keyed.encodeList(
-    _$CitmCatalogSchema.namePerformances,
+  keyed.encodeListKey(
+    _$CitmCatalogSchema.staticKeyPerformances,
     instance.performances,
     _$CitmPerformanceToEncoder,
   );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSeatCategoryNames,
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeySeatCategoryNames,
     instance.seatCategoryNames,
     (map, e) {
       final k = e.keyed();
@@ -322,8 +562,8 @@ void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
       }
     },
   );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSubTopicNames,
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeySubTopicNames,
     instance.subTopicNames,
     (map, e) {
       final k = e.keyed();
@@ -332,8 +572,8 @@ void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
       }
     },
   );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSubjectNames,
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeySubjectNames,
     instance.subjectNames,
     (map, e) {
       final k = e.keyed();
@@ -342,33 +582,36 @@ void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
       }
     },
   );
-  keyed.encodeValue(_$CitmCatalogSchema.nameTopicNames, instance.topicNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameTopicSynced, instance.topicSynced, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeBool(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameVenueNames, instance.venueNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyTopicNames,
+    instance.topicNames,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    },
+  );
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyTopicSynced,
+    instance.topicSynced,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeBool(entry.key, entry.value);
+      }
+    },
+  );
+  keyed.encodeValueKey(
+    _$CitmCatalogSchema.staticKeyVenueNames,
+    instance.venueNames,
+    (map, e) {
+      final k = e.keyed();
+      for (final entry in map.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    },
+  );
 }
 
 // =============================================================================
@@ -384,6 +627,120 @@ extension type const _$CitmEventSchema(int _value) {
   static const String nameSubjectCode = 'subjectCode';
   static const String nameSubtitle = 'subtitle';
   static const String nameTopicIds = 'topicIds';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesDescription = [
+    34,
+    100,
+    101,
+    115,
+    99,
+    114,
+    105,
+    112,
+    116,
+    105,
+    111,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyDescription = StaticKey(
+    nameDescription,
+    keyDescription,
+    wireNameBytesDescription,
+  );
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34];
+  static const StaticKey staticKeyLogo = StaticKey(
+    nameLogo,
+    keyLogo,
+    wireNameBytesLogo,
+  );
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const StaticKey staticKeyName = StaticKey(
+    nameName,
+    keyName,
+    wireNameBytesName,
+  );
+  static const List<int> wireNameBytesSubTopicIds = [
+    34,
+    115,
+    117,
+    98,
+    84,
+    111,
+    112,
+    105,
+    99,
+    73,
+    100,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeySubTopicIds = StaticKey(
+    nameSubTopicIds,
+    keySubTopicIds,
+    wireNameBytesSubTopicIds,
+  );
+  static const List<int> wireNameBytesSubjectCode = [
+    34,
+    115,
+    117,
+    98,
+    106,
+    101,
+    99,
+    116,
+    67,
+    111,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeySubjectCode = StaticKey(
+    nameSubjectCode,
+    keySubjectCode,
+    wireNameBytesSubjectCode,
+  );
+  static const List<int> wireNameBytesSubtitle = [
+    34,
+    115,
+    117,
+    98,
+    116,
+    105,
+    116,
+    108,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeySubtitle = StaticKey(
+    nameSubtitle,
+    keySubtitle,
+    wireNameBytesSubtitle,
+  );
+  static const List<int> wireNameBytesTopicIds = [
+    34,
+    116,
+    111,
+    112,
+    105,
+    99,
+    73,
+    100,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyTopicIds = StaticKey(
+    nameTopicIds,
+    keyTopicIds,
+    wireNameBytesTopicIds,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyDescription = 0;
@@ -558,24 +915,36 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
 void _$CitmEventToEncoder(CitmEvent instance, Encoder encoder) {
   final keyed = encoder.keyed();
   if (instance.description != null) {
-    keyed.encodeString(
-      _$CitmEventSchema.nameDescription,
+    keyed.encodeStringKey(
+      _$CitmEventSchema.staticKeyDescription,
       instance.description!,
     );
   }
-  keyed.encodeInt(_$CitmEventSchema.nameId, instance.id);
+  keyed.encodeIntKey(_$CitmEventSchema.staticKeyId, instance.id);
   if (instance.logo != null) {
-    keyed.encodeString(_$CitmEventSchema.nameLogo, instance.logo!);
+    keyed.encodeStringKey(_$CitmEventSchema.staticKeyLogo, instance.logo!);
   }
-  keyed.encodeString(_$CitmEventSchema.nameName, instance.name);
-  keyed.encodeIntList(_$CitmEventSchema.nameSubTopicIds, instance.subTopicIds);
+  keyed.encodeStringKey(_$CitmEventSchema.staticKeyName, instance.name);
+  keyed.encodeIntListKey(
+    _$CitmEventSchema.staticKeySubTopicIds,
+    instance.subTopicIds,
+  );
   if (instance.subjectCode != null) {
-    keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, instance.subjectCode!);
+    keyed.encodeIntKey(
+      _$CitmEventSchema.staticKeySubjectCode,
+      instance.subjectCode!,
+    );
   }
   if (instance.subtitle != null) {
-    keyed.encodeString(_$CitmEventSchema.nameSubtitle, instance.subtitle!);
+    keyed.encodeStringKey(
+      _$CitmEventSchema.staticKeySubtitle,
+      instance.subtitle!,
+    );
   }
-  keyed.encodeIntList(_$CitmEventSchema.nameTopicIds, instance.topicIds);
+  keyed.encodeIntListKey(
+    _$CitmEventSchema.staticKeyTopicIds,
+    instance.topicIds,
+  );
 }
 
 // =============================================================================
@@ -591,6 +960,104 @@ extension type const _$CitmPerformanceSchema(int _value) {
   static const String nameSeatCategories = 'seatCategories';
   static const String nameStart = 'start';
   static const String nameVenueCode = 'venueCode';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesEventId = [
+    34,
+    101,
+    118,
+    101,
+    110,
+    116,
+    73,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyEventId = StaticKey(
+    nameEventId,
+    keyEventId,
+    wireNameBytesEventId,
+  );
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34];
+  static const StaticKey staticKeyLogo = StaticKey(
+    nameLogo,
+    keyLogo,
+    wireNameBytesLogo,
+  );
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const StaticKey staticKeyName = StaticKey(
+    nameName,
+    keyName,
+    wireNameBytesName,
+  );
+  static const List<int> wireNameBytesPrices = [
+    34,
+    112,
+    114,
+    105,
+    99,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyPrices = StaticKey(
+    namePrices,
+    keyPrices,
+    wireNameBytesPrices,
+  );
+  static const List<int> wireNameBytesSeatCategories = [
+    34,
+    115,
+    101,
+    97,
+    116,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    105,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeySeatCategories = StaticKey(
+    nameSeatCategories,
+    keySeatCategories,
+    wireNameBytesSeatCategories,
+  );
+  static const List<int> wireNameBytesStart = [34, 115, 116, 97, 114, 116, 34];
+  static const StaticKey staticKeyStart = StaticKey(
+    nameStart,
+    keyStart,
+    wireNameBytesStart,
+  );
+  static const List<int> wireNameBytesVenueCode = [
+    34,
+    118,
+    101,
+    110,
+    117,
+    101,
+    67,
+    111,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyVenueCode = StaticKey(
+    nameVenueCode,
+    keyVenueCode,
+    wireNameBytesVenueCode,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyEventId = 0;
@@ -788,26 +1255,38 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmPerformanceToEncoder(CitmPerformance instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmPerformanceSchema.nameEventId, instance.eventId);
-  keyed.encodeInt(_$CitmPerformanceSchema.nameId, instance.id);
+  keyed.encodeIntKey(
+    _$CitmPerformanceSchema.staticKeyEventId,
+    instance.eventId,
+  );
+  keyed.encodeIntKey(_$CitmPerformanceSchema.staticKeyId, instance.id);
   if (instance.logo != null) {
-    keyed.encodeString(_$CitmPerformanceSchema.nameLogo, instance.logo!);
+    keyed.encodeStringKey(
+      _$CitmPerformanceSchema.staticKeyLogo,
+      instance.logo!,
+    );
   }
   if (instance.name != null) {
-    keyed.encodeString(_$CitmPerformanceSchema.nameName, instance.name!);
+    keyed.encodeStringKey(
+      _$CitmPerformanceSchema.staticKeyName,
+      instance.name!,
+    );
   }
-  keyed.encodeList(
-    _$CitmPerformanceSchema.namePrices,
+  keyed.encodeListKey(
+    _$CitmPerformanceSchema.staticKeyPrices,
     instance.prices,
     _$CitmPriceToEncoder,
   );
-  keyed.encodeList(
-    _$CitmPerformanceSchema.nameSeatCategories,
+  keyed.encodeListKey(
+    _$CitmPerformanceSchema.staticKeySeatCategories,
     instance.seatCategories,
     _$CitmSeatCategoryToEncoder,
   );
-  keyed.encodeInt(_$CitmPerformanceSchema.nameStart, instance.start);
-  keyed.encodeString(_$CitmPerformanceSchema.nameVenueCode, instance.venueCode);
+  keyed.encodeIntKey(_$CitmPerformanceSchema.staticKeyStart, instance.start);
+  keyed.encodeStringKey(
+    _$CitmPerformanceSchema.staticKeyVenueCode,
+    instance.venueCode,
+  );
 }
 
 // =============================================================================
@@ -818,6 +1297,76 @@ extension type const _$CitmPriceSchema(int _value) {
   static const String nameAmount = 'amount';
   static const String nameAudienceSubCategoryId = 'audienceSubCategoryId';
   static const String nameSeatCategoryId = 'seatCategoryId';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesAmount = [
+    34,
+    97,
+    109,
+    111,
+    117,
+    110,
+    116,
+    34,
+  ];
+  static const StaticKey staticKeyAmount = StaticKey(
+    nameAmount,
+    keyAmount,
+    wireNameBytesAmount,
+  );
+  static const List<int> wireNameBytesAudienceSubCategoryId = [
+    34,
+    97,
+    117,
+    100,
+    105,
+    101,
+    110,
+    99,
+    101,
+    83,
+    117,
+    98,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    121,
+    73,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyAudienceSubCategoryId = StaticKey(
+    nameAudienceSubCategoryId,
+    keyAudienceSubCategoryId,
+    wireNameBytesAudienceSubCategoryId,
+  );
+  static const List<int> wireNameBytesSeatCategoryId = [
+    34,
+    115,
+    101,
+    97,
+    116,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    121,
+    73,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeySeatCategoryId = StaticKey(
+    nameSeatCategoryId,
+    keySeatCategoryId,
+    wireNameBytesSeatCategoryId,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyAmount = 0;
@@ -950,13 +1499,13 @@ CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmPriceToEncoder(CitmPrice instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
-  keyed.encodeInt(
-    _$CitmPriceSchema.nameAudienceSubCategoryId,
+  keyed.encodeIntKey(_$CitmPriceSchema.staticKeyAmount, instance.amount);
+  keyed.encodeIntKey(
+    _$CitmPriceSchema.staticKeyAudienceSubCategoryId,
     instance.audienceSubCategoryId,
   );
-  keyed.encodeInt(
-    _$CitmPriceSchema.nameSeatCategoryId,
+  keyed.encodeIntKey(
+    _$CitmPriceSchema.staticKeySeatCategoryId,
     instance.seatCategoryId,
   );
 }
@@ -968,6 +1517,37 @@ extension type const _$CitmSeatCategorySchema(int _value) {
   // String Name Constants
   static const String nameAreas = 'areas';
   static const String nameSeatCategoryId = 'seatCategoryId';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesAreas = [34, 97, 114, 101, 97, 115, 34];
+  static const StaticKey staticKeyAreas = StaticKey(
+    nameAreas,
+    keyAreas,
+    wireNameBytesAreas,
+  );
+  static const List<int> wireNameBytesSeatCategoryId = [
+    34,
+    115,
+    101,
+    97,
+    116,
+    67,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    121,
+    73,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeySeatCategoryId = StaticKey(
+    nameSeatCategoryId,
+    keySeatCategoryId,
+    wireNameBytesSeatCategoryId,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyAreas = 0;
@@ -1063,13 +1643,13 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmSeatCategoryToEncoder(CitmSeatCategory instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeList(
-    _$CitmSeatCategorySchema.nameAreas,
+  keyed.encodeListKey(
+    _$CitmSeatCategorySchema.staticKeyAreas,
     instance.areas,
     _$CitmAreaToEncoder,
   );
-  keyed.encodeInt(
-    _$CitmSeatCategorySchema.nameSeatCategoryId,
+  keyed.encodeIntKey(
+    _$CitmSeatCategorySchema.staticKeySeatCategoryId,
     instance.seatCategoryId,
   );
 }
@@ -1081,6 +1661,40 @@ extension type const _$CitmAreaSchema(int _value) {
   // String Name Constants
   static const String nameAreaId = 'areaId';
   static const String nameBlockIds = 'blockIds';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesAreaId = [
+    34,
+    97,
+    114,
+    101,
+    97,
+    73,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyAreaId = StaticKey(
+    nameAreaId,
+    keyAreaId,
+    wireNameBytesAreaId,
+  );
+  static const List<int> wireNameBytesBlockIds = [
+    34,
+    98,
+    108,
+    111,
+    99,
+    107,
+    73,
+    100,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyBlockIds = StaticKey(
+    nameBlockIds,
+    keyBlockIds,
+    wireNameBytesBlockIds,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyAreaId = 0;
@@ -1172,6 +1786,6 @@ CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmAreaToEncoder(CitmArea instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
-  keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
+  keyed.encodeIntKey(_$CitmAreaSchema.staticKeyAreaId, instance.areaId);
+  keyed.encodeIntListKey(_$CitmAreaSchema.staticKeyBlockIds, instance.blockIds);
 }

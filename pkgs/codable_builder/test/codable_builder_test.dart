@@ -115,10 +115,12 @@ void main() {
           output,
         ).contains('void _\$PointToEncoder(Point instance, Encoder encoder)');
         check(output).contains('final keyed = encoder.keyed();');
-        check(output)
-            .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
-        check(output)
-            .contains('keyed.encodeDouble(_\$PointSchema.nameY, instance.y);');
+        check(output).contains(
+          'keyed.encodeDoubleKey(_\$PointSchema.staticKeyX, instance.x);',
+        );
+        check(output).contains(
+          'keyed.encodeDoubleKey(_\$PointSchema.staticKeyY, instance.y);',
+        );
       },
     );
 
@@ -182,7 +184,7 @@ void main() {
       check(output).contains('headcountByDept = keyed.decodeValue((d) {');
       // Nested encoder call
       check(output).contains(
-        'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, _\$AddressToEncoder);',
+        'keyed.encodeValueKey(_\$EnterpriseSchema.staticKeyHeadquarter, instance.headquarter, _\$AddressToEncoder);',
       );
     });
 
@@ -192,21 +194,24 @@ void main() {
       check(output)
           .contains('zip = keyed.decodeValue(const ZipCodeDecoder().decode);');
       check(output).contains(
-        'keyed.encodeValue(_\$UserProfileCustomSchema.nameZip, instance.zip, (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e));',
+        'keyed.encodeValueKey(_\$UserProfileCustomSchema.staticKeyZip, instance.zip, (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e));',
       );
     });
 
-    test('generates code for enum collections and nullable collections in Team', () {
-      final output = runGeneratorFor('Team');
+    test(
+      'generates code for enum collections and nullable collections in Team',
+      () {
+        final output = runGeneratorFor('Team');
 
-      check(output)
-          .contains('UserRole.values.byName(d.singleValue().readString())');
-      check(output).contains('nullableTags = keyed.decodeList<String?>');
-      check(output).contains('scores = keyed.decodeValue((d) {');
-      check(output).contains(
-        'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, (item, e) {',
-      );
-    });
+        check(output)
+            .contains('UserRole.values.byName(d.singleValue().readString())');
+        check(output).contains('nullableTags = keyed.decodeList<String?>');
+        check(output).contains('scores = keyed.decodeValue((d) {');
+        check(output).contains(
+          'keyed.encodeListKey(_\$TeamSchema.staticKeyRoles, instance.roles, (item, e) {',
+        );
+      },
+    );
 
     test('throws InvalidGenerationSourceError when required fields exceed 62 limit', () {
       check(() => runGeneratorFor('HugeModel63'))
