@@ -16,6 +16,43 @@ extension type const _$CoordinateSchema(int _value) {
   static const String nameLatitude = 'latitude';
   static const String nameLongitude = 'longitude';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesLatitude = [
+    34,
+    108,
+    97,
+    116,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLatitude = StaticKey(
+    nameLatitude,
+    keyLatitude,
+    wireNameBytesLatitude,
+  );
+  static const List<int> wireNameBytesLongitude = [
+    34,
+    108,
+    111,
+    110,
+    103,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLongitude = StaticKey(
+    nameLongitude,
+    keyLongitude,
+    wireNameBytesLongitude,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
   static const String aliasLatitudeLat = 'lat';
@@ -125,8 +162,14 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
+  keyed.encodeDoubleKey(
+    _$CoordinateSchema.staticKeyLatitude,
+    instance.latitude,
+  );
+  keyed.encodeDoubleKey(
+    _$CoordinateSchema.staticKeyLongitude,
+    instance.longitude,
+  );
 }
 
 // =============================================================================
@@ -139,6 +182,38 @@ extension type const _$UserProfileSchema(int _value) {
   static const String nameRole = 'role';
   static const String nameZip = 'zip';
   static const String nameTags = 'tags';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesEmail = [34, 101, 109, 97, 105, 108, 34];
+  static const StaticKey staticKeyEmail = StaticKey(
+    nameEmail,
+    keyEmail,
+    wireNameBytesEmail,
+  );
+  static const List<int> wireNameBytesRole = [34, 114, 111, 108, 101, 34];
+  static const StaticKey staticKeyRole = StaticKey(
+    nameRole,
+    keyRole,
+    wireNameBytesRole,
+  );
+  static const List<int> wireNameBytesZip = [34, 122, 105, 112, 34];
+  static const StaticKey staticKeyZip = StaticKey(
+    nameZip,
+    keyZip,
+    wireNameBytesZip,
+  );
+  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34];
+  static const StaticKey staticKeyTags = StaticKey(
+    nameTags,
+    keyTags,
+    wireNameBytesTags,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -310,15 +385,15 @@ UserProfile _$UserProfileFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserProfileToEncoder(UserProfile instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
-  keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
-  keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
-  keyed.encodeValue(
-    _$UserProfileSchema.nameZip,
+  keyed.encodeStringKey(_$UserProfileSchema.staticKeyId, instance.id);
+  keyed.encodeStringKey(_$UserProfileSchema.staticKeyEmail, instance.email);
+  keyed.encodeStringKey(_$UserProfileSchema.staticKeyRole, instance.role.name);
+  keyed.encodeValueKey(
+    _$UserProfileSchema.staticKeyZip,
     instance.zip,
     (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e),
   );
-  keyed.encodeStringList(_$UserProfileSchema.nameTags, instance.tags);
+  keyed.encodeStringListKey(_$UserProfileSchema.staticKeyTags, instance.tags);
 }
 
 // =============================================================================
@@ -328,6 +403,31 @@ extension type const _$CarSchema(int _value) {
   // String Name Constants
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameDoors = 'doors';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesMaxSpeed = [
+    34,
+    109,
+    97,
+    120,
+    83,
+    112,
+    101,
+    101,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyMaxSpeed = StaticKey(
+    nameMaxSpeed,
+    keyMaxSpeed,
+    wireNameBytesMaxSpeed,
+  );
+  static const List<int> wireNameBytesDoors = [34, 100, 111, 111, 114, 115, 34];
+  static const StaticKey staticKeyDoors = StaticKey(
+    nameDoors,
+    keyDoors,
+    wireNameBytesDoors,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
@@ -428,8 +528,8 @@ Car _$CarFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CarToEncoder(Car instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
+  keyed.encodeIntKey(_$CarSchema.staticKeyMaxSpeed, instance.maxSpeed);
+  keyed.encodeIntKey(_$CarSchema.staticKeyDoors, instance.doors);
 }
 
 // =============================================================================
@@ -439,6 +539,41 @@ extension type const _$BicycleSchema(int _value) {
   // String Name Constants
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameHasBell = 'hasBell';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesMaxSpeed = [
+    34,
+    109,
+    97,
+    120,
+    83,
+    112,
+    101,
+    101,
+    100,
+    34,
+  ];
+  static const StaticKey staticKeyMaxSpeed = StaticKey(
+    nameMaxSpeed,
+    keyMaxSpeed,
+    wireNameBytesMaxSpeed,
+  );
+  static const List<int> wireNameBytesHasBell = [
+    34,
+    104,
+    97,
+    115,
+    66,
+    101,
+    108,
+    108,
+    34,
+  ];
+  static const StaticKey staticKeyHasBell = StaticKey(
+    nameHasBell,
+    keyHasBell,
+    wireNameBytesHasBell,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
@@ -541,8 +676,8 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$BicycleToEncoder(Bicycle instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
+  keyed.encodeIntKey(_$BicycleSchema.staticKeyMaxSpeed, instance.maxSpeed);
+  keyed.encodeBoolKey(_$BicycleSchema.staticKeyHasBell, instance.hasBell);
 }
 
 // =============================================================================
@@ -552,6 +687,41 @@ extension type const _$UserWithLocationSchema(int _value) {
   // String Name Constants
   static const String nameProfile = 'profile';
   static const String nameLocation = 'location';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesProfile = [
+    34,
+    112,
+    114,
+    111,
+    102,
+    105,
+    108,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyProfile = StaticKey(
+    nameProfile,
+    keyProfile,
+    wireNameBytesProfile,
+  );
+  static const List<int> wireNameBytesLocation = [
+    34,
+    108,
+    111,
+    99,
+    97,
+    116,
+    105,
+    111,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyLocation = StaticKey(
+    nameLocation,
+    keyLocation,
+    wireNameBytesLocation,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyProfile = 0;
@@ -658,13 +828,13 @@ UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserWithLocationToEncoder(UserWithLocation instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeValue(
-    _$UserWithLocationSchema.nameProfile,
+  keyed.encodeValueKey(
+    _$UserWithLocationSchema.staticKeyProfile,
     instance.profile,
     _$UserProfileToEncoder,
   );
-  keyed.encodeValue(
-    _$UserWithLocationSchema.nameLocation,
+  keyed.encodeValueKey(
+    _$UserWithLocationSchema.staticKeyLocation,
     instance.location,
     _$CoordinateToEncoder,
   );

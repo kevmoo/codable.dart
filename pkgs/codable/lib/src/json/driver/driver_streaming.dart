@@ -663,7 +663,7 @@ final class JsonCodableEncoder implements Encoder {
     void Function(Encoder encoder) encode, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    final builder = BytesBuilder(copy: false);
+    final builder = BytesBuilder();
     final writer = JsonTokenWriter.toSink(builder);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
     encode(encoder);
@@ -718,6 +718,17 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   final JsonTokenWriter _writer;
   bool _closed = false;
 
+  void _writeFastKey(StaticKey key) {
+    final metadata = key.wireMetadata;
+    if (metadata is Uint8List) {
+      _writer.writeNameBytes(metadata);
+    } else if (metadata is List<int>) {
+      _writer.writeNameBytes(Uint8List.fromList(metadata));
+    } else {
+      _writer.writeName(key.name);
+    }
+  }
+
   _JsonCodableKeyedEncoder(this._rootEncoder, this._writer) {
     _writer.beginObject();
   }
@@ -736,7 +747,10 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeIntKey(StaticKey key, int value) => encodeInt(key.name, value);
+  void encodeIntKey(StaticKey key, int value) {
+    _writeFastKey(key);
+    _writer.writeInt(value);
+  }
 
   @override
   void encodeNullableInt(String key, int? value) {
@@ -746,8 +760,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableIntKey(StaticKey key, int? value) =>
-      encodeNullableInt(key.name, value);
+  void encodeNullableIntKey(StaticKey key, int? value) {
+    if (value != null) {
+      encodeIntKey(key, value);
+    }
+  }
 
   @override
   void encodeDouble(String key, double value) {
@@ -756,8 +773,10 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeDoubleKey(StaticKey key, double value) =>
-      encodeDouble(key.name, value);
+  void encodeDoubleKey(StaticKey key, double value) {
+    _writeFastKey(key);
+    _writer.writeDouble(value);
+  }
 
   @override
   void encodeNullableDouble(String key, double? value) {
@@ -767,8 +786,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableDoubleKey(StaticKey key, double? value) =>
-      encodeNullableDouble(key.name, value);
+  void encodeNullableDoubleKey(StaticKey key, double? value) {
+    if (value != null) {
+      encodeDoubleKey(key, value);
+    }
+  }
 
   @override
   void encodeString(String key, String value) {
@@ -777,8 +799,10 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeStringKey(StaticKey key, String value) =>
-      encodeString(key.name, value);
+  void encodeStringKey(StaticKey key, String value) {
+    _writeFastKey(key);
+    _writer.writeString(value);
+  }
 
   @override
   void encodeNullableString(String key, String? value) {
@@ -788,8 +812,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableStringKey(StaticKey key, String? value) =>
-      encodeNullableString(key.name, value);
+  void encodeNullableStringKey(StaticKey key, String? value) {
+    if (value != null) {
+      encodeStringKey(key, value);
+    }
+  }
 
   @override
   void encodeBool(String key, bool value) {
@@ -798,7 +825,10 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeBoolKey(StaticKey key, bool value) => encodeBool(key.name, value);
+  void encodeBoolKey(StaticKey key, bool value) {
+    _writeFastKey(key);
+    _writer.writeBool(value);
+  }
 
   @override
   void encodeNullableBool(String key, bool? value) {
@@ -808,8 +838,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableBoolKey(StaticKey key, bool? value) =>
-      encodeNullableBool(key.name, value);
+  void encodeNullableBoolKey(StaticKey key, bool? value) {
+    if (value != null) {
+      encodeBoolKey(key, value);
+    }
+  }
 
   @override
   void encodeNull(String key) {
@@ -818,7 +851,10 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullKey(StaticKey key) => encodeNull(key.name);
+  void encodeNullKey(StaticKey key) {
+    _writeFastKey(key);
+    _writer.writeNull();
+  }
 
   @override
   void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
@@ -906,8 +942,14 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeIntListKey(StaticKey key, List<int> values) =>
-      encodeIntList(key.name, values);
+  void encodeIntListKey(StaticKey key, List<int> values) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final value in values) {
+      _writer.writeInt(value);
+    }
+    _writer.endArray();
+  }
 
   @override
   void encodeDoubleList(String key, List<double> values) {
@@ -920,8 +962,14 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeDoubleListKey(StaticKey key, List<double> values) =>
-      encodeDoubleList(key.name, values);
+  void encodeDoubleListKey(StaticKey key, List<double> values) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final value in values) {
+      _writer.writeDouble(value);
+    }
+    _writer.endArray();
+  }
 
   @override
   void encodeStringList(String key, List<String> values) {
@@ -934,8 +982,14 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeStringListKey(StaticKey key, List<String> values) =>
-      encodeStringList(key.name, values);
+  void encodeStringListKey(StaticKey key, List<String> values) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final value in values) {
+      _writer.writeString(value);
+    }
+    _writer.endArray();
+  }
 
   @override
   void encodeBoolList(String key, List<bool> values) {
@@ -948,8 +1002,14 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeBoolListKey(StaticKey key, List<bool> values) =>
-      encodeBoolList(key.name, values);
+  void encodeBoolListKey(StaticKey key, List<bool> values) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final value in values) {
+      _writer.writeBool(value);
+    }
+    _writer.endArray();
+  }
 }
 
 final class _JsonCodableUnkeyedEncoder implements UnkeyedEncoder {

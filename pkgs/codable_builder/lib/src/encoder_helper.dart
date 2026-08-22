@@ -43,7 +43,7 @@ final class EncoderGeneratorHelper {
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
       final fieldAccess = 'instance.${field.name}';
-      final keyExpr = '$schemaName.name$suffix';
+      final keyExpr = '$schemaName.staticKey$suffix';
 
       if (field.isNullable) {
         buffer.writeln('  if ($fieldAccess != null) {');
@@ -73,33 +73,37 @@ final class EncoderGeneratorHelper {
   }) {
     switch (field.category) {
       case TypeCategory.primitiveInt:
-        buffer.writeln('${indent}keyed.encodeInt($keyExpr, $access);');
+        buffer.writeln('${indent}keyed.encodeIntKey($keyExpr, $access);');
       case TypeCategory.primitiveDouble:
-        buffer.writeln('${indent}keyed.encodeDouble($keyExpr, $access);');
+        buffer.writeln('${indent}keyed.encodeDoubleKey($keyExpr, $access);');
       case TypeCategory.primitiveNum:
         buffer.writeln('${indent}if ($access is int) {');
-        buffer.writeln('$indent  keyed.encodeInt($keyExpr, $access as int);');
+        buffer.writeln(
+          '$indent  keyed.encodeIntKey($keyExpr, $access as int);',
+        );
         buffer.writeln('$indent} else {');
         buffer.writeln(
-          '$indent  keyed.encodeDouble($keyExpr, $access.toDouble());',
+          '$indent  keyed.encodeDoubleKey($keyExpr, $access.toDouble());',
         );
         buffer.writeln('$indent}');
       case TypeCategory.primitiveString:
-        buffer.writeln('${indent}keyed.encodeString($keyExpr, $access);');
+        buffer.writeln('${indent}keyed.encodeStringKey($keyExpr, $access);');
       case TypeCategory.primitiveBool:
-        buffer.writeln('${indent}keyed.encodeBool($keyExpr, $access);');
+        buffer.writeln('${indent}keyed.encodeBoolKey($keyExpr, $access);');
       case TypeCategory.enumType:
-        buffer.writeln('${indent}keyed.encodeString($keyExpr, $access.name);');
+        buffer.writeln(
+          '${indent}keyed.encodeStringKey($keyExpr, $access.name);',
+        );
       case TypeCategory.custom:
         final decoder = field.customDecoderCode;
         buffer.writeln(
-          '${indent}keyed.encodeValue($keyExpr, $access, '
+          '${indent}keyed.encodeValueKey($keyExpr, $access, '
           '(v, e) => $decoder.encodeToEncoder(v, e));',
         );
       case TypeCategory.tuple:
         final tupleLen = field.tupleLength ?? 2;
         buffer.writeln(
-          '${indent}keyed.encodeList<double>($keyExpr, '
+          '${indent}keyed.encodeListKey<double>($keyExpr, '
           'List.generate($tupleLen, (i) => $access[i]), '
           '(v, e) => e.singleValue().encodeDouble(v));',
         );
@@ -112,12 +116,12 @@ final class EncoderGeneratorHelper {
       case TypeCategory.nestedCodable:
         final nestedName = field.type.element!.name;
         buffer.writeln(
-          '${indent}keyed.encodeValue('
+          '${indent}keyed.encodeValueKey('
           '$keyExpr, $access, _\$${nestedName}ToEncoder);',
         );
       case TypeCategory.unknown:
         buffer.writeln(
-          '${indent}keyed.encodeString($keyExpr, $access.toString());',
+          '${indent}keyed.encodeStringKey($keyExpr, $access.toString());',
         );
     }
   }
@@ -132,29 +136,29 @@ final class EncoderGeneratorHelper {
     final elemType = field.elementType;
     final isNullable = elemType?.isNullableType ?? false;
     if (elemType != null && elemType.isDartCoreInt && !isNullable) {
-      buffer.writeln('${indent}keyed.encodeIntList($keyExpr, $access);');
+      buffer.writeln('${indent}keyed.encodeIntListKey($keyExpr, $access);');
     } else if (elemType != null &&
         (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
         !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeDoubleList($keyExpr, '
+        '${indent}keyed.encodeDoubleListKey($keyExpr, '
         '$access.map((e) => e.toDouble()).toList());',
       );
     } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
-      buffer.writeln('${indent}keyed.encodeStringList($keyExpr, $access);');
+      buffer.writeln('${indent}keyed.encodeStringListKey($keyExpr, $access);');
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
-      buffer.writeln('${indent}keyed.encodeBoolList($keyExpr, $access);');
+      buffer.writeln('${indent}keyed.encodeBoolListKey($keyExpr, $access);');
     } else if (elemType != null &&
         elemType.element != null &&
         const TypeClassifier().isCodableElement(elemType.element!)) {
       final nestedName = elemType.element!.name;
       buffer.writeln(
-        '${indent}keyed.encodeList('
+        '${indent}keyed.encodeListKey('
         '$keyExpr, $access, _\$${nestedName}ToEncoder);',
       );
     } else {
       buffer.writeln(
-        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+        '${indent}keyed.encodeListKey($keyExpr, $access, (item, e) {',
       );
       _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
       buffer.writeln('$indent});');
@@ -172,26 +176,26 @@ final class EncoderGeneratorHelper {
     final isNullable = elemType?.isNullableType ?? false;
     if (elemType != null && elemType.isDartCoreInt && !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeIntList($keyExpr, $access.toList());',
+        '${indent}keyed.encodeIntListKey($keyExpr, $access.toList());',
       );
     } else if (elemType != null &&
         (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
         !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeDoubleList($keyExpr, '
+        '${indent}keyed.encodeDoubleListKey($keyExpr, '
         '$access.map((e) => e.toDouble()).toList());',
       );
     } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeStringList($keyExpr, $access.toList());',
+        '${indent}keyed.encodeStringListKey($keyExpr, $access.toList());',
       );
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeBoolList($keyExpr, $access.toList());',
+        '${indent}keyed.encodeBoolListKey($keyExpr, $access.toList());',
       );
     } else {
       buffer.writeln(
-        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+        '${indent}keyed.encodeListKey($keyExpr, $access, (item, e) {',
       );
       _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
       buffer.writeln('$indent});');
@@ -205,7 +209,9 @@ final class EncoderGeneratorHelper {
     String access, {
     required String indent,
   }) {
-    buffer.writeln('${indent}keyed.encodeValue($keyExpr, $access, (map, e) {');
+    buffer.writeln(
+      '${indent}keyed.encodeValueKey($keyExpr, $access, (map, e) {',
+    );
     buffer.writeln('$indent  final k = e.keyed();');
     buffer.writeln('$indent  for (final entry in map.entries) {');
     _writeMapValueEncode(

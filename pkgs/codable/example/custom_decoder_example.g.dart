@@ -15,6 +15,14 @@ extension type const _$DateTimeExampleSchema(int _value) {
   // String Name Constants
   static const String nameWhen = 'when';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesWhen = [34, 119, 104, 101, 110, 34];
+  static const StaticKey staticKeyWhen = StaticKey(
+    nameWhen,
+    keyWhen,
+    wireNameBytesWhen,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyWhen = 0;
 
@@ -97,8 +105,8 @@ DateTimeExample _$DateTimeExampleFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$DateTimeExampleToEncoder(DateTimeExample instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeValue(
-    _$DateTimeExampleSchema.nameWhen,
+  keyed.encodeValueKey(
+    _$DateTimeExampleSchema.staticKeyWhen,
     instance.when,
     (v, e) => const DateTimeEpochDecoder().encodeToEncoder(v, e),
   );

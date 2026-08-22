@@ -18,6 +18,65 @@ extension type const _$SmallLocationSchema(int _value) {
   static const String nameCity = 'city';
   static const String nameCountry = 'country';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesLatitude = [
+    34,
+    108,
+    97,
+    116,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLatitude = StaticKey(
+    nameLatitude,
+    keyLatitude,
+    wireNameBytesLatitude,
+  );
+  static const List<int> wireNameBytesLongitude = [
+    34,
+    108,
+    111,
+    110,
+    103,
+    105,
+    116,
+    117,
+    100,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyLongitude = StaticKey(
+    nameLongitude,
+    keyLongitude,
+    wireNameBytesLongitude,
+  );
+  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34];
+  static const StaticKey staticKeyCity = StaticKey(
+    nameCity,
+    keyCity,
+    wireNameBytesCity,
+  );
+  static const List<int> wireNameBytesCountry = [
+    34,
+    99,
+    111,
+    117,
+    110,
+    116,
+    114,
+    121,
+    34,
+  ];
+  static const StaticKey staticKeyCountry = StaticKey(
+    nameCountry,
+    keyCountry,
+    wireNameBytesCountry,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
   static const int keyLongitude = 1;
@@ -168,10 +227,19 @@ SmallLocation _$SmallLocationFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallLocationToEncoder(SmallLocation instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
-  keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
-  keyed.encodeString(_$SmallLocationSchema.nameCountry, instance.country);
+  keyed.encodeDoubleKey(
+    _$SmallLocationSchema.staticKeyLatitude,
+    instance.latitude,
+  );
+  keyed.encodeDoubleKey(
+    _$SmallLocationSchema.staticKeyLongitude,
+    instance.longitude,
+  );
+  keyed.encodeStringKey(_$SmallLocationSchema.staticKeyCity, instance.city);
+  keyed.encodeStringKey(
+    _$SmallLocationSchema.staticKeyCountry,
+    instance.country,
+  );
 }
 
 // =============================================================================
@@ -182,6 +250,62 @@ extension type const _$SmallMetadataSchema(int _value) {
   static const String nameLoginCount = 'loginCount';
   static const String nameLastLogin = 'lastLogin';
   static const String nameLocation = 'location';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesLoginCount = [
+    34,
+    108,
+    111,
+    103,
+    105,
+    110,
+    67,
+    111,
+    117,
+    110,
+    116,
+    34,
+  ];
+  static const StaticKey staticKeyLoginCount = StaticKey(
+    nameLoginCount,
+    keyLoginCount,
+    wireNameBytesLoginCount,
+  );
+  static const List<int> wireNameBytesLastLogin = [
+    34,
+    108,
+    97,
+    115,
+    116,
+    76,
+    111,
+    103,
+    105,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyLastLogin = StaticKey(
+    nameLastLogin,
+    keyLastLogin,
+    wireNameBytesLastLogin,
+  );
+  static const List<int> wireNameBytesLocation = [
+    34,
+    108,
+    111,
+    99,
+    97,
+    116,
+    105,
+    111,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyLocation = StaticKey(
+    nameLocation,
+    keyLocation,
+    wireNameBytesLocation,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyLoginCount = 0;
@@ -313,10 +437,16 @@ SmallMetadata _$SmallMetadataFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallMetadataToEncoder(SmallMetadata instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
-  keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
-  keyed.encodeValue(
-    _$SmallMetadataSchema.nameLocation,
+  keyed.encodeIntKey(
+    _$SmallMetadataSchema.staticKeyLoginCount,
+    instance.loginCount,
+  );
+  keyed.encodeStringKey(
+    _$SmallMetadataSchema.staticKeyLastLogin,
+    instance.lastLogin,
+  );
+  keyed.encodeValueKey(
+    _$SmallMetadataSchema.staticKeyLocation,
     instance.location,
     _$SmallLocationToEncoder,
   );
@@ -337,6 +467,100 @@ extension type const _$SmallDocumentSchema(int _value) {
   static const String nameRoles = 'roles';
   static const String nameMetadata = 'metadata';
   static const String nameTags = 'tags';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesUuid = [34, 117, 117, 105, 100, 34];
+  static const StaticKey staticKeyUuid = StaticKey(
+    nameUuid,
+    keyUuid,
+    wireNameBytesUuid,
+  );
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const StaticKey staticKeyName = StaticKey(
+    nameName,
+    keyName,
+    wireNameBytesName,
+  );
+  static const List<int> wireNameBytesEmail = [34, 101, 109, 97, 105, 108, 34];
+  static const StaticKey staticKeyEmail = StaticKey(
+    nameEmail,
+    keyEmail,
+    wireNameBytesEmail,
+  );
+  static const List<int> wireNameBytesIsActive = [
+    34,
+    105,
+    115,
+    65,
+    99,
+    116,
+    105,
+    118,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyIsActive = StaticKey(
+    nameIsActive,
+    keyIsActive,
+    wireNameBytesIsActive,
+  );
+  static const List<int> wireNameBytesBalance = [
+    34,
+    98,
+    97,
+    108,
+    97,
+    110,
+    99,
+    101,
+    34,
+  ];
+  static const StaticKey staticKeyBalance = StaticKey(
+    nameBalance,
+    keyBalance,
+    wireNameBytesBalance,
+  );
+  static const List<int> wireNameBytesAge = [34, 97, 103, 101, 34];
+  static const StaticKey staticKeyAge = StaticKey(
+    nameAge,
+    keyAge,
+    wireNameBytesAge,
+  );
+  static const List<int> wireNameBytesRoles = [34, 114, 111, 108, 101, 115, 34];
+  static const StaticKey staticKeyRoles = StaticKey(
+    nameRoles,
+    keyRoles,
+    wireNameBytesRoles,
+  );
+  static const List<int> wireNameBytesMetadata = [
+    34,
+    109,
+    101,
+    116,
+    97,
+    100,
+    97,
+    116,
+    97,
+    34,
+  ];
+  static const StaticKey staticKeyMetadata = StaticKey(
+    nameMetadata,
+    keyMetadata,
+    wireNameBytesMetadata,
+  );
+  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34];
+  static const StaticKey staticKeyTags = StaticKey(
+    nameTags,
+    keyTags,
+    wireNameBytesTags,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -617,18 +841,27 @@ SmallDocument _$SmallDocumentFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallDocumentToEncoder(SmallDocument instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
-  keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
-  keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);
-  keyed.encodeString(_$SmallDocumentSchema.nameEmail, instance.email);
-  keyed.encodeBool(_$SmallDocumentSchema.nameIsActive, instance.isActive);
-  keyed.encodeDouble(_$SmallDocumentSchema.nameBalance, instance.balance);
-  keyed.encodeInt(_$SmallDocumentSchema.nameAge, instance.age);
-  keyed.encodeStringList(_$SmallDocumentSchema.nameRoles, instance.roles);
-  keyed.encodeValue(
-    _$SmallDocumentSchema.nameMetadata,
+  keyed.encodeIntKey(_$SmallDocumentSchema.staticKeyId, instance.id);
+  keyed.encodeStringKey(_$SmallDocumentSchema.staticKeyUuid, instance.uuid);
+  keyed.encodeStringKey(_$SmallDocumentSchema.staticKeyName, instance.name);
+  keyed.encodeStringKey(_$SmallDocumentSchema.staticKeyEmail, instance.email);
+  keyed.encodeBoolKey(
+    _$SmallDocumentSchema.staticKeyIsActive,
+    instance.isActive,
+  );
+  keyed.encodeDoubleKey(
+    _$SmallDocumentSchema.staticKeyBalance,
+    instance.balance,
+  );
+  keyed.encodeIntKey(_$SmallDocumentSchema.staticKeyAge, instance.age);
+  keyed.encodeStringListKey(
+    _$SmallDocumentSchema.staticKeyRoles,
+    instance.roles,
+  );
+  keyed.encodeValueKey(
+    _$SmallDocumentSchema.staticKeyMetadata,
     instance.metadata,
     _$SmallMetadataToEncoder,
   );
-  keyed.encodeStringList(_$SmallDocumentSchema.nameTags, instance.tags);
+  keyed.encodeStringListKey(_$SmallDocumentSchema.staticKeyTags, instance.tags);
 }
