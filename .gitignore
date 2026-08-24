@@ -4,4 +4,5 @@ pubspec.lock
 build/
 .DS_Store
 .agents/
-\n*.exe
+.deslop/
+*.exe
