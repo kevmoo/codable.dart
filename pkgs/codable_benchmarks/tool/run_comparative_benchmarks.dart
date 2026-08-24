@@ -107,6 +107,13 @@ void main(List<String> rawArgs) async {
       help: 'Iterations per test',
     )
     ..addOption('warmup', abbr: 'w', defaultsTo: '5', help: 'Warmup iterations')
+    ..addOption(
+      'concurrency',
+      abbr: 'j',
+      defaultsTo: '1',
+      help:
+          'Concurrent benchmark worker tasks (use 1 for statistical fidelity)',
+    )
     ..addOption('output-md', help: 'Save markdown report to file')
     ..addOption('output-json', help: 'Save JSON results to file');
 
@@ -116,6 +123,7 @@ void main(List<String> rawArgs) async {
   final target = args['target'] as String;
   final iters = args['iterations'] as String;
   final warmup = args['warmup'] as String;
+  final concurrency = int.tryParse(args['concurrency'] as String? ?? '8') ?? 8;
   final outputMd = args['output-md'] as String?;
   final outputJson = args['output-json'] as String?;
 
@@ -138,6 +146,7 @@ void main(List<String> rawArgs) async {
   print('Target(s)      : $target');
   print('Datasets       : $dataset');
   print('Modes          : $mode');
+  print('Concurrency    : $concurrency');
   print(
     '========================================================================\n',
   );
@@ -195,92 +204,116 @@ await instance.invokeMain(...scriptArgs);
     String t3Exe = '';
 
     if (t == 'aot') {
-      print('⚙️  Compiling Tier 1 (Stock + json_serial AOT)...');
       t1Exe = '${binDir.path}/stock_json_serial.exe';
-      await _compileExe(stockDart, jsonSerialScript, t1Exe);
-
-      print('⚙️  Compiling Tier 2 (New + json_serial AOT)...');
       t2Exe = '${binDir.path}/new_json_serial.exe';
-      await _compileExe(newDart, jsonSerialScript, t2Exe);
-
-      print('⚙️  Compiling Tier 3 (New + Codable AOT)...');
       t3Exe = '${binDir.path}/new_codable.exe';
-      await _compileExe(newDart, codableScript, t3Exe);
+      print('⚙️  Compiling Tier 1, 2, and 3 (AOT) concurrently...');
+      await Future.wait([
+        _compileExe(stockDart, jsonSerialScript, t1Exe),
+        _compileExe(newDart, jsonSerialScript, t2Exe),
+        _compileExe(newDart, codableScript, t3Exe),
+      ]);
     } else if (t == 'js') {
-      print('⚙️  Compiling Tier 1 (Stock + json_serial JS)...');
       t1Exe = '${binDir.path}/stock_json_serial.js';
-      await _compileJs(stockDart, jsonSerialScript, t1Exe);
-
-      print('⚙️  Compiling Tier 2 (New + json_serial JS)...');
       t2Exe = '${binDir.path}/new_json_serial.js';
-      await _compileJs(newDart, jsonSerialScript, t2Exe);
-
-      print('⚙️  Compiling Tier 3 (New + Codable JS)...');
       t3Exe = '${binDir.path}/new_codable.js';
-      await _compileJs(newDart, codableScript, t3Exe);
+      print('⚙️  Compiling Tier 1, 2, and 3 (JS) concurrently...');
+      await Future.wait([
+        _compileJs(stockDart, jsonSerialScript, t1Exe),
+        _compileJs(newDart, jsonSerialScript, t2Exe),
+        _compileJs(newDart, codableScript, t3Exe),
+      ]);
     } else if (t == 'wasm') {
-      print('⚙️  Compiling Tier 1 (Stock + json_serial WASM)...');
       t1Exe = '${binDir.path}/stock_json_serial.wasm';
-      await _compileWasm(stockDart, jsonSerialScript, t1Exe);
-
-      print('⚙️  Compiling Tier 2 (New + json_serial WASM)...');
       t2Exe = '${binDir.path}/new_json_serial.wasm';
-      await _compileWasm(newDart, jsonSerialScript, t2Exe);
-
-      print('⚙️  Compiling Tier 3 (New + Codable WASM)...');
       t3Exe = '${binDir.path}/new_codable.wasm';
-      await _compileWasm(newDart, codableScript, t3Exe);
+      print('⚙️  Compiling Tier 1, 2, and 3 (WASM) concurrently...');
+      await Future.wait([
+        _compileWasm(stockDart, jsonSerialScript, t1Exe),
+        _compileWasm(newDart, jsonSerialScript, t2Exe),
+        _compileWasm(newDart, codableScript, t3Exe),
+      ]);
     }
 
-    // Execute Tiers Round-Robin per dataset and mode to eliminate thermal/governor bias
+    final workloadUnits = <({String dataset, String mode})>[];
+    for (final ds in targetDatasets) {
+      for (final m in targetModes) {
+        workloadUnits.add((dataset: ds, mode: m));
+      }
+    }
+
+    final resultsByUnit =
+        <
+          String,
+          ({
+            List<Map<String, dynamic>> t1,
+            List<Map<String, dynamic>> t2,
+            List<Map<String, dynamic>> t3,
+          })
+        >{};
+
+    print(
+      '🚀 Executing ${workloadUnits.length} Benchmark Units across $concurrency workers...',
+    );
+    await _runInParallel(workloadUnits, concurrency, (unit) async {
+      final t1Res = await _runBenchmarkTier(
+        target: t,
+        dartBin: stockDart,
+        nodeBin: nodeBin,
+        wasmRunner: wasmRunnerPath,
+        targetFile: t1Exe,
+        engineLabel: 'old_dart_json_serial',
+        dataset: unit.dataset,
+        mode: unit.mode,
+        iters: iters,
+        warmup: warmup,
+      );
+
+      final t2Res = await _runBenchmarkTier(
+        target: t,
+        dartBin: newDart,
+        nodeBin: nodeBin,
+        wasmRunner: wasmRunnerPath,
+        targetFile: t2Exe,
+        engineLabel: 'new_dart_json_serial',
+        dataset: unit.dataset,
+        mode: unit.mode,
+        iters: iters,
+        warmup: warmup,
+      );
+
+      final t3Res = await _runBenchmarkTier(
+        target: t,
+        dartBin: newDart,
+        nodeBin: nodeBin,
+        wasmRunner: wasmRunnerPath,
+        targetFile: t3Exe,
+        engineLabel: 'new_dart_codable',
+        dataset: unit.dataset,
+        mode: unit.mode,
+        iters: iters,
+        warmup: warmup,
+      );
+
+      resultsByUnit['${unit.dataset}:${unit.mode}'] = (
+        t1: t1Res,
+        t2: t2Res,
+        t3: t3Res,
+      );
+    });
+
     final t1Results = <Map<String, dynamic>>[];
     final t2Results = <Map<String, dynamic>>[];
     final t3Results = <Map<String, dynamic>>[];
 
-    print('🚀 Executing Round-Robin Benchmark Runs...');
     for (final ds in targetDatasets) {
       for (final m in targetModes) {
-        final t1Res = await _runBenchmarkTier(
-          target: t,
-          dartBin: stockDart,
-          nodeBin: nodeBin,
-          wasmRunner: wasmRunnerPath,
-          targetFile: t1Exe,
-          engineLabel: 'old_dart_json_serial',
-          dataset: ds,
-          mode: m,
-          iters: iters,
-          warmup: warmup,
-        );
-        t1Results.addAll(t1Res);
-
-        final t2Res = await _runBenchmarkTier(
-          target: t,
-          dartBin: newDart,
-          nodeBin: nodeBin,
-          wasmRunner: wasmRunnerPath,
-          targetFile: t2Exe,
-          engineLabel: 'new_dart_json_serial',
-          dataset: ds,
-          mode: m,
-          iters: iters,
-          warmup: warmup,
-        );
-        t2Results.addAll(t2Res);
-
-        final t3Res = await _runBenchmarkTier(
-          target: t,
-          dartBin: newDart,
-          nodeBin: nodeBin,
-          wasmRunner: wasmRunnerPath,
-          targetFile: t3Exe,
-          engineLabel: 'new_dart_codable',
-          dataset: ds,
-          mode: m,
-          iters: iters,
-          warmup: warmup,
-        );
-        t3Results.addAll(t3Res);
+        final res = resultsByUnit['$ds:$m'];
+        if (res != null) {
+          t1Results.addAll(res.t1);
+          t2Results.addAll(res.t2);
+          t3Results.addAll(res.t3);
+        }
       }
     }
 
@@ -685,4 +718,24 @@ String _formatMarkdownReport({
   }
 
   return sb.toString();
+}
+
+Future<void> _runInParallel<T>(
+  List<T> items,
+  int concurrency,
+  Future<void> Function(T item) worker,
+) async {
+  if (items.isEmpty) return;
+  var nextIndex = 0;
+  Future<void> runWorker() async {
+    while (true) {
+      final idx = nextIndex++;
+      if (idx >= items.length) break;
+      await worker(items[idx]);
+    }
+  }
+
+  final workerCount = concurrency.clamp(1, items.length);
+  final futures = List.generate(workerCount, (_) => runWorker());
+  await Future.wait(futures);
 }
