@@ -666,8 +666,6 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
     final metadata = key.wireMetadata;
     if (metadata is Uint8List) {
       _writer.writeNameBytes(metadata);
-    } else if (metadata is List<int>) {
-      _writer.writeNameBytes(Uint8List.fromList(metadata));
     } else {
       _writer.writeName(key.name);
     }
