@@ -78,146 +78,114 @@ void main(List<String> rawArgs) {
   }
 }
 
+dynamic _preDecodeModel(String dataset, Uint8List bytes) {
+  return switch (dataset) {
+    'coordinates' => () {
+      final list = <Coordinate>[];
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final unkeyed = decoder.unkeyed();
+      while (unkeyed.hasNext()) {
+        list.add(unkeyed.decodeElement(Coordinate.decode));
+      }
+      return list;
+    }(),
+    'canada' => CanadaFeatureCollection.decode(
+      JsonCodableDecoder.fromBytes(bytes),
+    ),
+    'citm_catalog' => CitmCatalog.decode(JsonCodableDecoder.fromBytes(bytes)),
+    'small' => SmallDocument.decode(JsonCodableDecoder.fromBytes(bytes)),
+    'twitter' => TwitterResponse.decode(JsonCodableDecoder.fromBytes(bytes)),
+    _ => null,
+  };
+}
+
+void Function() _createDecodeBenchmark(String dataset, Uint8List bytes) {
+  return switch (dataset) {
+    'coordinates' => () {
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final unkeyed = decoder.unkeyed();
+      final list = <Coordinate>[];
+      while (unkeyed.hasNext()) {
+        list.add(unkeyed.decodeElement(Coordinate.decode));
+      }
+      blackhole(list);
+    },
+    'canada' => () {
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final model = CanadaFeatureCollection.decode(decoder);
+      blackhole(model);
+    },
+    'citm_catalog' => () {
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final model = CitmCatalog.decode(decoder);
+      blackhole(model);
+    },
+    'small' => () {
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final model = SmallDocument.decode(decoder);
+      blackhole(model);
+    },
+    'twitter' => () {
+      final decoder = JsonCodableDecoder.fromBytes(bytes);
+      final model = TwitterResponse.decode(decoder);
+      blackhole(model);
+    },
+    _ => throw ArgumentError('Unknown dataset: $dataset'),
+  };
+}
+
+void Function() _createEncodeBenchmark(
+  String dataset,
+  dynamic preDecodedModel,
+) {
+  return switch (dataset) {
+    'coordinates' => () {
+      final list = preDecodedModel as List<Coordinate>;
+      final outBytes = JsonCodableEncoder.toBytes((e) {
+        final unkeyed = e.unkeyed();
+        for (var i = 0; i < list.length; i++) {
+          unkeyed.encodeEncodable(list[i]);
+        }
+      });
+      blackhole(outBytes);
+    },
+    'canada' => () {
+      final model = preDecodedModel as CanadaFeatureCollection;
+      final outBytes = JsonCodableEncoder.toBytes(model.encode);
+      blackhole(outBytes);
+    },
+    'citm_catalog' => () {
+      final model = preDecodedModel as CitmCatalog;
+      final outBytes = JsonCodableEncoder.toBytes(model.encode);
+      blackhole(outBytes);
+    },
+    'small' => () {
+      final model = preDecodedModel as SmallDocument;
+      final outBytes = JsonCodableEncoder.toBytes(model.encode);
+      blackhole(outBytes);
+    },
+    'twitter' => () {
+      final model = preDecodedModel as TwitterResponse;
+      final outBytes = JsonCodableEncoder.toBytes(model.encode);
+      blackhole(outBytes);
+    },
+    _ => throw ArgumentError('Unknown dataset: $dataset'),
+  };
+}
+
 BenchmarkResult runBenchmark(String dataset, String mode, String engineLabel) {
   final bytes = getDatasetBytes(dataset);
   final fileBytes = bytes.length;
 
-  // Pre-decode model for encode benchmarks
-  dynamic preDecodedModel;
-  if (mode == 'encode') {
-    switch (dataset) {
-      case 'coordinates':
-        final list = <Coordinate>[];
-        final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final unkeyed = decoder.unkeyed();
-        while (unkeyed.hasNext()) {
-          list.add(unkeyed.decodeElement(Coordinate.decode));
-        }
-        preDecodedModel = list;
-        break;
-      case 'canada':
-        preDecodedModel = CanadaFeatureCollection.decode(
-          JsonCodableDecoder.fromBytes(bytes),
-        );
-        break;
-      case 'citm_catalog':
-        preDecodedModel = CitmCatalog.decode(
-          JsonCodableDecoder.fromBytes(bytes),
-        );
-        break;
-      case 'small':
-        preDecodedModel = SmallDocument.decode(
-          JsonCodableDecoder.fromBytes(bytes),
-        );
-        break;
-      case 'twitter':
-        preDecodedModel = TwitterResponse.decode(
-          JsonCodableDecoder.fromBytes(bytes),
-        );
-        break;
-    }
-  }
+  final preDecodedModel = mode == 'encode'
+      ? _preDecodeModel(dataset, bytes)
+      : null;
 
-  void Function() benchmarkWork;
-
-  switch (mode) {
-    case 'decode':
-    case 'decode_literal':
-      switch (dataset) {
-        case 'coordinates':
-          benchmarkWork = () {
-            final decoder = JsonCodableDecoder.fromBytes(bytes);
-            final unkeyed = decoder.unkeyed();
-            final list = <Coordinate>[];
-            while (unkeyed.hasNext()) {
-              list.add(unkeyed.decodeElement(Coordinate.decode));
-            }
-            blackhole(list);
-          };
-          break;
-        case 'canada':
-          benchmarkWork = () {
-            final decoder = JsonCodableDecoder.fromBytes(bytes);
-            final model = CanadaFeatureCollection.decode(decoder);
-            blackhole(model);
-          };
-          break;
-        case 'citm_catalog':
-          benchmarkWork = () {
-            final decoder = JsonCodableDecoder.fromBytes(bytes);
-            final model = CitmCatalog.decode(decoder);
-            blackhole(model);
-          };
-          break;
-        case 'small':
-          benchmarkWork = () {
-            final decoder = JsonCodableDecoder.fromBytes(bytes);
-            final model = SmallDocument.decode(decoder);
-            blackhole(model);
-          };
-          break;
-        case 'twitter':
-          benchmarkWork = () {
-            final decoder = JsonCodableDecoder.fromBytes(bytes);
-            final model = TwitterResponse.decode(decoder);
-            blackhole(model);
-          };
-          break;
-        default:
-          throw ArgumentError('Unknown dataset: $dataset');
-      }
-      break;
-
-    case 'encode':
-      switch (dataset) {
-        case 'coordinates':
-          final list = preDecodedModel as List<Coordinate>;
-          benchmarkWork = () {
-            final outBytes = JsonCodableEncoder.toBytes((e) {
-              final unkeyed = e.unkeyed();
-              for (var i = 0; i < list.length; i++) {
-                unkeyed.encodeEncodable(list[i]);
-              }
-            });
-            blackhole(outBytes);
-          };
-          break;
-        case 'canada':
-          final model = preDecodedModel as CanadaFeatureCollection;
-          benchmarkWork = () {
-            final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            blackhole(outBytes);
-          };
-          break;
-        case 'citm_catalog':
-          final model = preDecodedModel as CitmCatalog;
-          benchmarkWork = () {
-            final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            blackhole(outBytes);
-          };
-          break;
-        case 'small':
-          final model = preDecodedModel as SmallDocument;
-          benchmarkWork = () {
-            final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            blackhole(outBytes);
-          };
-          break;
-        case 'twitter':
-          final model = preDecodedModel as TwitterResponse;
-          benchmarkWork = () {
-            final outBytes = JsonCodableEncoder.toBytes(model.encode);
-            blackhole(outBytes);
-          };
-          break;
-        default:
-          throw ArgumentError('Unknown dataset: $dataset');
-      }
-      break;
-
-    default:
-      throw ArgumentError('Unknown mode: $mode');
-  }
+  final benchmarkWork = switch (mode) {
+    'decode' || 'decode_literal' => _createDecodeBenchmark(dataset, bytes),
+    'encode' => _createEncodeBenchmark(dataset, preDecodedModel),
+    _ => throw ArgumentError('Unknown mode: $mode'),
+  };
 
   final runner = BenchmarkRunner(
     dataset: dataset,
