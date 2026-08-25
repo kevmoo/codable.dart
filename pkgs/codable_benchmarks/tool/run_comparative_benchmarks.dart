@@ -142,10 +142,19 @@ void main(List<String> rawArgs) async {
     final rawData = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
     final targetsData = rawData['targets'] as Map<String, dynamic>? ?? {};
     final combinedMd = StringBuffer();
+    final targetsMap = Map<String, Map<String, dynamic>>.from(targetsData);
 
-    for (final entry in targetsData.entries) {
-      final tLabel = entry.key.toUpperCase();
-      final tMap = entry.value as Map<String, dynamic>;
+    // 1. Output the single unified 3-runtime summary table at the top:
+    combinedMd.writeln(_formatCombined3RuntimeSummaryTable(targetsMap));
+    combinedMd.writeln(
+      '------------------------------------------------------------------------\n',
+    );
+
+    // 2. Output detailed breakdowns for each target:
+    for (final tKey in ['aot', 'js', 'wasm']) {
+      if (!targetsData.containsKey(tKey)) continue;
+      final tLabel = tKey.toUpperCase();
+      final tMap = targetsData[tKey] as Map<String, dynamic>;
       final t1 = (tMap['tier1_old_dart_json_serial'] as List<dynamic>? ?? [])
           .cast<Map<String, dynamic>>();
       final t2 = (tMap['tier2_new_dart_json_serial'] as List<dynamic>? ?? [])
@@ -168,7 +177,7 @@ void main(List<String> rawArgs) async {
       );
     }
 
-    final rendered = combinedMd.toString();
+    final rendered = combinedMd.toString().trim() + '\n';
     print(rendered);
 
     if (outputMd != null) {
@@ -424,48 +433,60 @@ await instance.invokeMain(...scriptArgs);
   }
 
   if (outputMd != null) {
-    final allReports = <String>[];
+    final combinedMd = StringBuffer();
+    final targetsMap = <String, Map<String, dynamic>>{};
+    for (final entry in mergedTargets.entries) {
+      if (entry.value is Map) {
+        targetsMap[entry.key] = Map<String, dynamic>.from(entry.value as Map);
+      }
+    }
+
+    // 1. Output the single unified 3-runtime summary table at the top:
+    combinedMd.writeln(_formatCombined3RuntimeSummaryTable(targetsMap));
+    combinedMd.writeln(
+      '------------------------------------------------------------------------\n',
+    );
+
     final orderedTargetKeys = [
-      'wasm',
-      'js',
       'aot',
-      ...mergedTargets.keys.where((k) => !['wasm', 'js', 'aot'].contains(k)),
+      'js',
+      'wasm',
+      ...mergedTargets.keys.where((k) => !['aot', 'js', 'wasm'].contains(k)),
     ];
 
     for (final tKey in orderedTargetKeys) {
       if (!mergedTargets.containsKey(tKey)) continue;
-      if (allTargetReports.containsKey(tKey)) {
-        allReports.add(allTargetReports[tKey]!.trim());
-      } else {
-        final tData = mergedTargets[tKey];
-        if (tData is Map) {
-          final t1 =
-              (tData['tier1_old_dart_json_serial'] as List?)
-                  ?.cast<Map<String, dynamic>>() ??
-              [];
-          final t2 =
-              (tData['tier2_new_dart_json_serial'] as List?)
-                  ?.cast<Map<String, dynamic>>() ??
-              [];
-          final t3 =
-              (tData['tier3_new_dart_codable'] as List?)
-                  ?.cast<Map<String, dynamic>>() ??
-              [];
-          final rep = _formatMarkdownReport(
-            targetLabel: tKey.toUpperCase(),
-            tier1Results: t1,
-            tier2Results: t2,
-            tier3Results: t3,
-            stockDartPath: stockDart,
-            newDartPath: newDart,
-            nodeBinPath: nodeBin,
-          );
-          allReports.add(rep.trim());
-        }
+      final tData = mergedTargets[tKey];
+      if (tData is Map) {
+        final t1 =
+            (tData['tier1_old_dart_json_serial'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+        final t2 =
+            (tData['tier2_new_dart_json_serial'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+        final t3 =
+            (tData['tier3_new_dart_codable'] as List?)
+                ?.cast<Map<String, dynamic>>() ??
+            [];
+        final rep = _formatMarkdownReport(
+          targetLabel: tKey.toUpperCase(),
+          tier1Results: t1,
+          tier2Results: t2,
+          tier3Results: t3,
+          stockDartPath: stockDart,
+          newDartPath: newDart,
+          nodeBinPath: nodeBin,
+        );
+        combinedMd.writeln(rep.trim());
+        combinedMd.writeln(
+          '\n------------------------------------------------------------------------\n',
+        );
       }
     }
 
-    File(outputMd).writeAsStringSync(allReports.join('\n\n') + '\n');
+    File(outputMd).writeAsStringSync(combinedMd.toString().trim() + '\n');
     print('📄 Saved Markdown report to: $outputMd');
   }
 }
@@ -651,27 +672,23 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
   }
 }
 
-String _formatRuntimeSummaryTable({
-  required String targetLabel,
-  required List<Map<String, dynamic>> tier1Results,
-  required List<Map<String, dynamic>> tier2Results,
-  required List<Map<String, dynamic>> tier3Results,
-}) {
+String _formatCombined3RuntimeSummaryTable(
+  Map<String, Map<String, dynamic>> targetsData,
+) {
   final sb = StringBuffer();
-  sb.writeln(
-    '### 📊 Summary: $targetLabel Target ([ min / avg / max ] Multiplier vs Fastest)',
-  );
+  sb.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)');
   sb.writeln('');
   sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
   sb.writeln(
-    '| Dart Configuration | 📥 Decode [ min / avg / max ] | 📤 Encode [ min / avg / max ] |',
+    '| Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / Avg / Best ] | 📤 Encode Efficiency<br/>[ Worst / Avg / Best ] |',
   );
-  sb.writeln('| :--- | :---: | :---: |');
+  sb.writeln('| :--- | :--- | :---: | :---: |');
 
-  final tierMap = {
-    'Old Dart + json_serial': tier1Results,
-    'New Dart + json_serial': tier2Results,
-    'New Dart + Codable': tier3Results,
+  final orderedTargets = ['aot', 'js', 'wasm'];
+  final targetLabels = {
+    'aot': 'AOT (`dart compile exe`)',
+    'js': 'JS (`dart2js` / Node 24 / V8)',
+    'wasm': 'WASM (`dart2wasm` / d8)',
   };
 
   final datasets = [
@@ -682,68 +699,100 @@ String _formatRuntimeSummaryTable({
     'twitter',
   ];
   final modes = ['decode', 'encode'];
-  final tableStats = <String, Map<String, List<double>>>{
-    for (final c in tierMap.keys) c: {'decode': [], 'encode': []},
-  };
 
-  for (final mode in modes) {
-    final dsMap = <String, Map<String, double>>{};
-    for (final entry in tierMap.entries) {
-      for (final b in entry.value) {
-        if (b['mode'] != mode) continue;
-        final ds = b['dataset'] as String?;
-        if (ds == null || !datasets.contains(ds)) continue;
-        final lat = (b['latency_ms'] as num?)?.toDouble();
-        if (lat == null) continue;
-        dsMap.putIfAbsent(ds, () => {})[entry.key] = lat;
+  for (final tKey in orderedTargets) {
+    if (!targetsData.containsKey(tKey)) continue;
+    final tMap = targetsData[tKey]!;
+    final t1 = (tMap['tier1_old_dart_json_serial'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final t2 = (tMap['tier2_new_dart_json_serial'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final t3 = (tMap['tier3_new_dart_codable'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+
+    final tierMap = {
+      'Old Dart + json_serial': t1,
+      'New Dart + json_serial': t2,
+      'New Dart + Codable': t3,
+    };
+
+    final tableStats = <String, Map<String, List<double>>>{
+      for (final c in tierMap.keys) c: {'decode': [], 'encode': []},
+    };
+
+    for (final mode in modes) {
+      final dsMap = <String, Map<String, double>>{};
+      for (final entry in tierMap.entries) {
+        for (final b in entry.value) {
+          if (b['mode'] != mode) continue;
+          final ds = b['dataset'] as String?;
+          if (ds == null || !datasets.contains(ds)) continue;
+          final lat = (b['latency_ms'] as num?)?.toDouble();
+          if (lat == null) continue;
+          dsMap.putIfAbsent(ds, () => {})[entry.key] = lat;
+        }
       }
-    }
 
-    for (final ds in datasets) {
-      final lats = dsMap[ds] ?? {};
-      if (lats.isEmpty) continue;
-      final minLat = lats.values.reduce((a, b) => a < b ? a : b);
-      if (minLat <= 0) continue;
+      for (final ds in datasets) {
+        final lats = dsMap[ds] ?? {};
+        if (lats.isEmpty) continue;
+        final minLat = lats.values.reduce((a, b) => a < b ? a : b);
+        if (minLat <= 0) continue;
 
-      for (final c in tierMap.keys) {
-        final lat = lats[c];
-        if (lat != null) {
-          tableStats[c]![mode]!.add(lat / minLat);
+        for (final c in tierMap.keys) {
+          final lat = lats[c];
+          if (lat != null && lat > 0) {
+            final eff = ((minLat / lat) * 100).roundToDouble();
+            tableStats[c]![mode]!.add(eff);
+          }
         }
       }
     }
-  }
 
-  for (final c in tierMap.keys) {
-    final decMults = tableStats[c]!['decode']!;
-    final encMults = tableStats[c]!['encode']!;
+    var isFirstRow = true;
+    final tLabelFormatted = '**${targetLabels[tKey] ?? tKey.toUpperCase()}**';
 
-    String formatStats(List<double> mults) {
-      if (mults.isEmpty) return 'N/A';
-      final minM = mults.reduce((a, b) => a < b ? a : b);
-      final avgM = mults.reduce((a, b) => a + b) / mults.length;
-      final maxM = mults.reduce((a, b) => a > b ? a : b);
+    for (final c in tierMap.keys) {
+      final decScores = tableStats[c]!['decode']!;
+      final encScores = tableStats[c]!['encode']!;
 
-      String emoji;
-      if (minM <= 1.005 && maxM <= 1.005) {
-        emoji = '🥇 ';
-      } else if (avgM <= 1.15) {
-        emoji = '🟢 ';
-      } else if (avgM <= 1.60) {
-        emoji = '🟡 ';
-      } else {
-        emoji = '🔴 ';
+      String formatStats(List<double> scores) {
+        if (scores.isEmpty) return 'N/A';
+        final worst = scores.reduce((a, b) => a < b ? a : b).round();
+        final avg = (scores.reduce((a, b) => a + b) / scores.length).round();
+        final best = scores.reduce((a, b) => a > b ? a : b).round();
+
+        String emoji;
+        if (worst == 100 && best == 100) {
+          emoji = '🥇 ';
+        } else if (avg >= 90) {
+          emoji = '🟢 ';
+        } else if (avg >= 70) {
+          emoji = '🟡 ';
+        } else {
+          emoji = '🔴 ';
+        }
+
+        return '$emoji`[ $worst / $avg / $best ]`';
       }
 
-      return '$emoji`[ ${minM.toStringAsFixed(2)} / ${avgM.toStringAsFixed(2)} / ${maxM.toStringAsFixed(2)} ]`';
+      final rtCol = isFirstRow ? tLabelFormatted : '';
+      sb.writeln(
+        '| $rtCol | **`$c`** | ${formatStats(decScores)} | ${formatStats(encScores)} |',
+      );
+      isFirstRow = false;
     }
-
-    sb.writeln(
-      '| **`$c`** | ${formatStats(decMults)} | ${formatStats(encMults)} |',
-    );
   }
 
   sb.writeln('<!-- mdformat on -->');
+  sb.writeln('');
+  sb.writeln(
+    '> **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). '
+    'Calculated as `round((MinLatency / Latency) * 100)` per workload, '
+    'measuring the percentage of maximum achievable throughput delivered.\n'
+    '> - **`[ Worst / Avg / Best ]`**: Range from lowest score (worst workload) to the average and peak dataset score across the 5 canonical benchmarks (`coordinates`, `canada`, `citm_catalog`, `small`, `twitter`).\n'
+    '> - **Badges**: 🥇 Peak across all workloads (`100`) &bull; 🟢 `≥ 90` (Within 10% of peak) &bull; 🟡 `70–89` (Good / moderate) &bull; 🔴 `< 70` (Significant performance gap).',
+  );
   sb.writeln('');
   return sb.toString();
 }
@@ -758,15 +807,8 @@ String _formatMarkdownReport({
   required String nodeBinPath,
 }) {
   final sb = StringBuffer();
-  sb.write(
-    _formatRuntimeSummaryTable(
-      targetLabel: targetLabel,
-      tier1Results: tier1Results,
-      tier2Results: tier2Results,
-      tier3Results: tier3Results,
-    ),
-  );
-
+  sb.writeln('### 🎯 $targetLabel Target Detailed Breakdown');
+  sb.writeln('');
   sb.writeln('#### Detailed Breakdown: $targetLabel Decode');
   sb.writeln('');
   sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
