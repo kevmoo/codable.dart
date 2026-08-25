@@ -496,6 +496,30 @@ _runTargetBenchmarks({
   return (t1Results: t1Results, t2Results: t2Results, t3Results: t3Results);
 }
 
+List<Map<String, dynamic>> _mergeTierLists(
+  List<dynamic>? existingList,
+  List<dynamic>? newList,
+) {
+  final map = <String, Map<String, dynamic>>{};
+  if (existingList != null) {
+    for (final item in existingList) {
+      if (item is Map) {
+        final key = '${item['dataset']}:${item['mode']}';
+        map[key] = Map<String, dynamic>.from(item);
+      }
+    }
+  }
+  if (newList != null) {
+    for (final item in newList) {
+      if (item is Map) {
+        final key = '${item['dataset']}:${item['mode']}';
+        map[key] = Map<String, dynamic>.from(item);
+      }
+    }
+  }
+  return map.values.toList();
+}
+
 Map<String, dynamic> _saveJsonReport({
   required String? outputJson,
   required Map<String, Map<String, dynamic>> allTargetJson,
@@ -514,7 +538,31 @@ Map<String, dynamic> _saveJsonReport({
       }
     } catch (_) {}
   }
-  mergedTargets.addAll(allTargetJson);
+
+  for (final entry in allTargetJson.entries) {
+    final tKey = entry.key;
+    final newTargetData = entry.value;
+    final existingTargetData = mergedTargets[tKey] is Map
+        ? Map<String, dynamic>.from(mergedTargets[tKey] as Map)
+        : <String, dynamic>{};
+
+    final mergedTargetData = <String, dynamic>{};
+    final allTierKeys = {
+      'tier1_old_dart_json_serial',
+      'tier2_new_dart_json_serial',
+      'tier3_new_dart_codable',
+      ...existingTargetData.keys,
+      ...newTargetData.keys,
+    };
+
+    for (final tierKey in allTierKeys) {
+      mergedTargetData[tierKey] = _mergeTierLists(
+        existingTargetData[tierKey] as List?,
+        newTargetData[tierKey] as List?,
+      );
+    }
+    mergedTargets[tKey] = mergedTargetData;
+  }
 
   final combinedJson = {
     'stock_dart_path': stockDart,
