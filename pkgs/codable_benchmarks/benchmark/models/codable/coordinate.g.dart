@@ -162,6 +162,16 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"latitude":');
+    w.writeDouble(instance.latitude);
+    w.writeAsciiLiteral(r'"longitude":');
+    w.writeDouble(instance.longitude);
+    w.endObject();
+    return;
+  }
   keyed.encodeDoubleKey(
     _$CoordinateSchema.staticKeyLatitude,
     instance.latitude,

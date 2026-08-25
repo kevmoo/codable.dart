@@ -227,6 +227,20 @@ SmallLocation _$SmallLocationFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallLocationToEncoder(SmallLocation instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"latitude":');
+    w.writeDouble(instance.latitude);
+    w.writeAsciiLiteral(r'"longitude":');
+    w.writeDouble(instance.longitude);
+    w.writeAsciiLiteral(r'"city":');
+    w.writeString(instance.city);
+    w.writeAsciiLiteral(r'"country":');
+    w.writeString(instance.country);
+    w.endObject();
+    return;
+  }
   keyed.encodeDoubleKey(
     _$SmallLocationSchema.staticKeyLatitude,
     instance.latitude,
@@ -437,6 +451,18 @@ SmallMetadata _$SmallMetadataFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallMetadataToEncoder(SmallMetadata instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"loginCount":');
+    w.writeInt(instance.loginCount);
+    w.writeAsciiLiteral(r'"lastLogin":');
+    w.writeString(instance.lastLogin);
+    w.writeAsciiLiteral(r'"location":');
+    _$SmallLocationToEncoder(instance.location, encoder);
+    w.endObject();
+    return;
+  }
   keyed.encodeIntKey(
     _$SmallMetadataSchema.staticKeyLoginCount,
     instance.loginCount,
@@ -841,6 +867,40 @@ SmallDocument _$SmallDocumentFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$SmallDocumentToEncoder(SmallDocument instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"id":');
+    w.writeInt(instance.id);
+    w.writeAsciiLiteral(r'"uuid":');
+    w.writeString(instance.uuid);
+    w.writeAsciiLiteral(r'"name":');
+    w.writeString(instance.name);
+    w.writeAsciiLiteral(r'"email":');
+    w.writeString(instance.email);
+    w.writeAsciiLiteral(r'"isActive":');
+    w.writeBool(instance.isActive);
+    w.writeAsciiLiteral(r'"balance":');
+    w.writeDouble(instance.balance);
+    w.writeAsciiLiteral(r'"age":');
+    w.writeInt(instance.age);
+    w.writeAsciiLiteral(r'"roles":');
+    // Fallback for complex collections
+    keyed.encodeStringListKey(
+      _$SmallDocumentSchema.staticKeyRoles,
+      instance.roles,
+    );
+    w.writeAsciiLiteral(r'"metadata":');
+    _$SmallMetadataToEncoder(instance.metadata, encoder);
+    w.writeAsciiLiteral(r'"tags":');
+    // Fallback for complex collections
+    keyed.encodeStringListKey(
+      _$SmallDocumentSchema.staticKeyTags,
+      instance.tags,
+    );
+    w.endObject();
+    return;
+  }
   keyed.encodeIntKey(_$SmallDocumentSchema.staticKeyId, instance.id);
   keyed.encodeStringKey(_$SmallDocumentSchema.staticKeyUuid, instance.uuid);
   keyed.encodeStringKey(_$SmallDocumentSchema.staticKeyName, instance.name);

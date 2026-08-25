@@ -593,10 +593,43 @@ final class _JsonCodableSingleValueDecoder
 
 /// Concrete high-performance streaming JSON encoder connecting
 /// `package:codable` contracts directly to `JsonTokenWriter`.
-final class JsonCodableEncoder implements Encoder {
+final class JsonCodableEncoder implements Encoder, CodableByteWriter {
   final JsonTokenWriter _writer;
+
+  @override
+  void beginObject() => _writer.beginObject();
+
+  @override
+  void endObject() => _writer.endObject();
+
+  @override
+  void beginArray() => _writer.beginArray();
+
+  @override
+  void endArray() => _writer.endArray();
+
+  @override
+  void writeAsciiLiteral(String literal) => _writer.writeAsciiLiteral(literal);
+
+  @override
+  void writeInt(int value) => _writer.writeInt(value);
+
+  @override
+  void writeDouble(double value) => _writer.writeDouble(value);
+
+  @override
+  void writeBool(bool value) => _writer.writeBool(value);
+
+  @override
+  void writeString(String value) => _writer.writeString(value);
+
   @override
   final Map<Object, Object?> userInfo;
+
+  /// Exposes the underlying push-based token writer for direct, devirtualized
+  /// encoding.
+  JsonTokenWriter get writer => _writer;
+
   _JsonCodableKeyedEncoder? _activeKeyed;
   _JsonCodableUnkeyedEncoder? _activeUnkeyed;
 
@@ -606,13 +639,13 @@ final class JsonCodableEncoder implements Encoder {
   static Uint8List toBytes(
     void Function(Encoder encoder) encode, {
     Map<Object, Object?> userInfo = const {},
+    int? capacityHint,
   }) {
-    final builder = BytesBuilder();
-    final writer = JsonTokenWriter.toSink(builder);
+    final writer = JsonTokenWriter.toBuffer(capacity: capacityHint ?? 1024);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
     encode(encoder);
     encoder._finish();
-    return builder.takeBytes();
+    return writer.takeBytes();
   }
 
   /// Encodes a value to a JSON String.

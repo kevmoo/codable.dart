@@ -880,6 +880,9 @@ final class JsonCodableEncoder implements Encoder {
   @override
   final Map<Object, Object?> userInfo;
 
+  /// Native JS encoding does not use an underlying writer.
+  JsonTokenWriter? get writer => null;
+
   JsonCodableEncoder({this.userInfo = const {}});
 
   /// Encodes a value to a JSON String.

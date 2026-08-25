@@ -4,6 +4,19 @@ library;
 import 'codable.dart';
 import 'static_key.dart';
 
+/// Extended interface for encoders that can receive pre-encoded ASCII chunks directly.
+abstract interface class CodableByteWriter {
+  void beginObject();
+  void endObject();
+  void beginArray();
+  void endArray();
+  void writeAsciiLiteral(String literal);
+  void writeInt(int value);
+  void writeDouble(double value);
+  void writeBool(bool value);
+  void writeString(String value);
+}
+
 /// Top-level encoding context providing access to specialized encoding
 /// containers.
 abstract interface class Encoder {

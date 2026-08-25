@@ -133,6 +133,16 @@ TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterMetadataToEncoder(TwitterMetadata instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"resultType":');
+    w.writeString(instance.resultType);
+    w.writeAsciiLiteral(r'"isoLanguageCode":');
+    w.writeString(instance.isoLanguageCode);
+    w.endObject();
+    return;
+  }
   keyed.encodeStringKey(
     _$TwitterMetadataSchema.staticKeyResultType,
     instance.resultType,
@@ -384,6 +394,26 @@ void _$TwitterUserMentionToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"screenName":');
+    w.writeString(instance.screenName);
+    w.writeAsciiLiteral(r'"name":');
+    w.writeString(instance.name);
+    w.writeAsciiLiteral(r'"id":');
+    w.writeInt(instance.id);
+    w.writeAsciiLiteral(r'"idStr":');
+    w.writeString(instance.idStr);
+    w.writeAsciiLiteral(r'"indices":');
+    // Fallback for complex collections
+    keyed.encodeIntListKey(
+      _$TwitterUserMentionSchema.staticKeyIndices,
+      instance.indices,
+    );
+    w.endObject();
+    return;
+  }
   keyed.encodeStringKey(
     _$TwitterUserMentionSchema.staticKeyScreenName,
     instance.screenName,
@@ -617,6 +647,24 @@ TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterUrlToEncoder(TwitterUrl instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"url":');
+    w.writeString(instance.url);
+    w.writeAsciiLiteral(r'"expandedUrl":');
+    w.writeString(instance.expandedUrl);
+    w.writeAsciiLiteral(r'"displayUrl":');
+    w.writeString(instance.displayUrl);
+    w.writeAsciiLiteral(r'"indices":');
+    // Fallback for complex collections
+    keyed.encodeIntListKey(
+      _$TwitterUrlSchema.staticKeyIndices,
+      instance.indices,
+    );
+    w.endObject();
+    return;
+  }
   keyed.encodeStringKey(_$TwitterUrlSchema.staticKeyUrl, instance.url);
   keyed.encodeStringKey(
     _$TwitterUrlSchema.staticKeyExpandedUrl,
@@ -705,6 +753,19 @@ void _$TwitterEntitiesUrlsToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"urls":');
+    // Fallback for complex collections
+    keyed.encodeListKey(
+      _$TwitterEntitiesUrlsSchema.staticKeyUrls,
+      instance.urls,
+      _$TwitterUrlToEncoder,
+    );
+    w.endObject();
+    return;
+  }
   keyed.encodeListKey(
     _$TwitterEntitiesUrlsSchema.staticKeyUrls,
     instance.urls,
@@ -821,6 +882,20 @@ void _$TwitterUserEntitiesToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    if (instance.url != null) {
+      w.writeAsciiLiteral(r'"url":');
+      _$TwitterEntitiesUrlsToEncoder(instance.url!, encoder);
+    }
+    if (instance.description != null) {
+      w.writeAsciiLiteral(r'"description":');
+      _$TwitterEntitiesUrlsToEncoder(instance.description!, encoder);
+    }
+    w.endObject();
+    return;
+  }
   if (instance.url != null) {
     keyed.encodeValueKey(
       _$TwitterUserEntitiesSchema.staticKeyUrl,
@@ -941,6 +1016,26 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterEntitiesToEncoder(TwitterEntities instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"urls":');
+    // Fallback for complex collections
+    keyed.encodeListKey(
+      _$TwitterEntitiesSchema.staticKeyUrls,
+      instance.urls,
+      _$TwitterUrlToEncoder,
+    );
+    w.writeAsciiLiteral(r'"userMentions":');
+    // Fallback for complex collections
+    keyed.encodeListKey(
+      _$TwitterEntitiesSchema.staticKeyUserMentions,
+      instance.userMentions,
+      _$TwitterUserMentionToEncoder,
+    );
+    w.endObject();
+    return;
+  }
   keyed.encodeListKey(
     _$TwitterEntitiesSchema.staticKeyUrls,
     instance.urls,
@@ -2500,6 +2595,102 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterUserToEncoder(TwitterUser instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"id":');
+    w.writeInt(instance.id);
+    w.writeAsciiLiteral(r'"idStr":');
+    w.writeString(instance.idStr);
+    w.writeAsciiLiteral(r'"name":');
+    w.writeString(instance.name);
+    w.writeAsciiLiteral(r'"screenName":');
+    w.writeString(instance.screenName);
+    w.writeAsciiLiteral(r'"location":');
+    w.writeString(instance.location);
+    w.writeAsciiLiteral(r'"description":');
+    w.writeString(instance.description);
+    if (instance.url != null) {
+      w.writeAsciiLiteral(r'"url":');
+      w.writeString(instance.url!);
+    }
+    if (instance.entities != null) {
+      w.writeAsciiLiteral(r'"entities":');
+      _$TwitterUserEntitiesToEncoder(instance.entities!, encoder);
+    }
+    w.writeAsciiLiteral(r'"protected":');
+    w.writeBool(instance.protected);
+    w.writeAsciiLiteral(r'"followersCount":');
+    w.writeInt(instance.followersCount);
+    w.writeAsciiLiteral(r'"friendsCount":');
+    w.writeInt(instance.friendsCount);
+    w.writeAsciiLiteral(r'"listedCount":');
+    w.writeInt(instance.listedCount);
+    w.writeAsciiLiteral(r'"createdAt":');
+    w.writeString(instance.createdAt);
+    w.writeAsciiLiteral(r'"favouritesCount":');
+    w.writeInt(instance.favouritesCount);
+    if (instance.utcOffset != null) {
+      w.writeAsciiLiteral(r'"utcOffset":');
+      w.writeInt(instance.utcOffset!);
+    }
+    if (instance.timeZone != null) {
+      w.writeAsciiLiteral(r'"timeZone":');
+      w.writeString(instance.timeZone!);
+    }
+    w.writeAsciiLiteral(r'"geoEnabled":');
+    w.writeBool(instance.geoEnabled);
+    w.writeAsciiLiteral(r'"verified":');
+    w.writeBool(instance.verified);
+    w.writeAsciiLiteral(r'"statusesCount":');
+    w.writeInt(instance.statusesCount);
+    w.writeAsciiLiteral(r'"lang":');
+    w.writeString(instance.lang);
+    w.writeAsciiLiteral(r'"contributorsEnabled":');
+    w.writeBool(instance.contributorsEnabled);
+    w.writeAsciiLiteral(r'"isTranslator":');
+    w.writeBool(instance.isTranslator);
+    w.writeAsciiLiteral(r'"isTranslationEnabled":');
+    w.writeBool(instance.isTranslationEnabled);
+    w.writeAsciiLiteral(r'"profileBackgroundColor":');
+    w.writeString(instance.profileBackgroundColor);
+    w.writeAsciiLiteral(r'"profileBackgroundImageUrl":');
+    w.writeString(instance.profileBackgroundImageUrl);
+    w.writeAsciiLiteral(r'"profileBackgroundImageUrlHttps":');
+    w.writeString(instance.profileBackgroundImageUrlHttps);
+    w.writeAsciiLiteral(r'"profileBackgroundTile":');
+    w.writeBool(instance.profileBackgroundTile);
+    w.writeAsciiLiteral(r'"profileImageUrl":');
+    w.writeString(instance.profileImageUrl);
+    w.writeAsciiLiteral(r'"profileImageUrlHttps":');
+    w.writeString(instance.profileImageUrlHttps);
+    if (instance.profileBannerUrl != null) {
+      w.writeAsciiLiteral(r'"profileBannerUrl":');
+      w.writeString(instance.profileBannerUrl!);
+    }
+    w.writeAsciiLiteral(r'"profileLinkColor":');
+    w.writeString(instance.profileLinkColor);
+    w.writeAsciiLiteral(r'"profileSidebarBorderColor":');
+    w.writeString(instance.profileSidebarBorderColor);
+    w.writeAsciiLiteral(r'"profileSidebarFillColor":');
+    w.writeString(instance.profileSidebarFillColor);
+    w.writeAsciiLiteral(r'"profileTextColor":');
+    w.writeString(instance.profileTextColor);
+    w.writeAsciiLiteral(r'"profileUseBackgroundImage":');
+    w.writeBool(instance.profileUseBackgroundImage);
+    w.writeAsciiLiteral(r'"defaultProfile":');
+    w.writeBool(instance.defaultProfile);
+    w.writeAsciiLiteral(r'"defaultProfileImage":');
+    w.writeBool(instance.defaultProfileImage);
+    w.writeAsciiLiteral(r'"following":');
+    w.writeBool(instance.following);
+    w.writeAsciiLiteral(r'"followRequestSent":');
+    w.writeBool(instance.followRequestSent);
+    w.writeAsciiLiteral(r'"notifications":');
+    w.writeBool(instance.notifications);
+    w.endObject();
+    return;
+  }
   keyed.encodeIntKey(_$TwitterUserSchema.staticKeyId, instance.id);
   keyed.encodeStringKey(_$TwitterUserSchema.staticKeyIdStr, instance.idStr);
   keyed.encodeStringKey(_$TwitterUserSchema.staticKeyName, instance.name);
@@ -3450,6 +3641,74 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterStatusToEncoder(TwitterStatus instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    if (instance.metadata != null) {
+      w.writeAsciiLiteral(r'"metadata":');
+      _$TwitterMetadataToEncoder(instance.metadata!, encoder);
+    }
+    w.writeAsciiLiteral(r'"createdAt":');
+    w.writeString(instance.createdAt);
+    w.writeAsciiLiteral(r'"id":');
+    w.writeInt(instance.id);
+    w.writeAsciiLiteral(r'"idStr":');
+    w.writeString(instance.idStr);
+    w.writeAsciiLiteral(r'"text":');
+    w.writeString(instance.text);
+    w.writeAsciiLiteral(r'"source":');
+    w.writeString(instance.source);
+    w.writeAsciiLiteral(r'"truncated":');
+    w.writeBool(instance.truncated);
+    if (instance.inReplyToStatusId != null) {
+      w.writeAsciiLiteral(r'"inReplyToStatusId":');
+      w.writeInt(instance.inReplyToStatusId!);
+    }
+    if (instance.inReplyToStatusIdStr != null) {
+      w.writeAsciiLiteral(r'"inReplyToStatusIdStr":');
+      w.writeString(instance.inReplyToStatusIdStr!);
+    }
+    if (instance.inReplyToUserId != null) {
+      w.writeAsciiLiteral(r'"inReplyToUserId":');
+      w.writeInt(instance.inReplyToUserId!);
+    }
+    if (instance.inReplyToUserIdStr != null) {
+      w.writeAsciiLiteral(r'"inReplyToUserIdStr":');
+      w.writeString(instance.inReplyToUserIdStr!);
+    }
+    if (instance.inReplyToScreenName != null) {
+      w.writeAsciiLiteral(r'"inReplyToScreenName":');
+      w.writeString(instance.inReplyToScreenName!);
+    }
+    if (instance.user != null) {
+      w.writeAsciiLiteral(r'"user":');
+      _$TwitterUserToEncoder(instance.user!, encoder);
+    }
+    w.writeAsciiLiteral(r'"retweetCount":');
+    w.writeInt(instance.retweetCount);
+    w.writeAsciiLiteral(r'"favoriteCount":');
+    w.writeInt(instance.favoriteCount);
+    if (instance.entities != null) {
+      w.writeAsciiLiteral(r'"entities":');
+      _$TwitterEntitiesToEncoder(instance.entities!, encoder);
+    }
+    w.writeAsciiLiteral(r'"favorited":');
+    w.writeBool(instance.favorited);
+    w.writeAsciiLiteral(r'"retweeted":');
+    w.writeBool(instance.retweeted);
+    if (instance.possiblySensitive != null) {
+      w.writeAsciiLiteral(r'"possiblySensitive":');
+      w.writeBool(instance.possiblySensitive!);
+    }
+    w.writeAsciiLiteral(r'"lang":');
+    w.writeString(instance.lang);
+    if (instance.retweetedStatus != null) {
+      w.writeAsciiLiteral(r'"retweetedStatus":');
+      _$TwitterStatusToEncoder(instance.retweetedStatus!, encoder);
+    }
+    w.endObject();
+    return;
+  }
   if (instance.metadata != null) {
     keyed.encodeValueKey(
       _$TwitterStatusSchema.staticKeyMetadata,
@@ -3931,6 +4190,30 @@ void _$TwitterSearchMetadataToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"completedIn":');
+    w.writeDouble(instance.completedIn);
+    w.writeAsciiLiteral(r'"maxId":');
+    w.writeInt(instance.maxId);
+    w.writeAsciiLiteral(r'"maxIdStr":');
+    w.writeString(instance.maxIdStr);
+    w.writeAsciiLiteral(r'"nextResults":');
+    w.writeString(instance.nextResults);
+    w.writeAsciiLiteral(r'"query":');
+    w.writeString(instance.query);
+    w.writeAsciiLiteral(r'"refreshUrl":');
+    w.writeString(instance.refreshUrl);
+    w.writeAsciiLiteral(r'"count":');
+    w.writeInt(instance.count);
+    w.writeAsciiLiteral(r'"sinceId":');
+    w.writeInt(instance.sinceId);
+    w.writeAsciiLiteral(r'"sinceIdStr":');
+    w.writeString(instance.sinceIdStr);
+    w.endObject();
+    return;
+  }
   keyed.encodeDoubleKey(
     _$TwitterSearchMetadataSchema.staticKeyCompletedIn,
     instance.completedIn,
@@ -4117,6 +4400,21 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterResponseToEncoder(TwitterResponse instance, Encoder encoder) {
   final keyed = encoder.keyed();
+  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
+  if (w != null) {
+    w.beginObject();
+    w.writeAsciiLiteral(r'"statuses":');
+    // Fallback for complex collections
+    keyed.encodeListKey(
+      _$TwitterResponseSchema.staticKeyStatuses,
+      instance.statuses,
+      _$TwitterStatusToEncoder,
+    );
+    w.writeAsciiLiteral(r'"searchMetadata":');
+    _$TwitterSearchMetadataToEncoder(instance.searchMetadata, encoder);
+    w.endObject();
+    return;
+  }
   keyed.encodeListKey(
     _$TwitterResponseSchema.staticKeyStatuses,
     instance.statuses,

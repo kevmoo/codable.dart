@@ -37,8 +37,28 @@ final class EncoderGeneratorHelper {
       'void $funcName(${model.className} instance, Encoder encoder) {',
     );
     buffer.writeln('  final keyed = encoder.keyed();');
+    buffer.writeln(
+      '  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;',
+    );
+    buffer.writeln('  if (w != null) {');
+    buffer.writeln('    w.beginObject();');
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
+
+    for (final field in nonIgnoredFields) {
+      final fieldAccess = 'instance.${field.name}';
+      if (field.isNullable) {
+        buffer.writeln('    if ($fieldAccess != null) {');
+        _writeFastFieldEncode(buffer, field, '$fieldAccess!', indent: '      ');
+        buffer.writeln('    }');
+      } else {
+        _writeFastFieldEncode(buffer, field, fieldAccess, indent: '    ');
+      }
+    }
+
+    buffer.writeln('    w.endObject();');
+    buffer.writeln('    return;');
+    buffer.writeln('  }');
 
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
@@ -62,6 +82,63 @@ final class EncoderGeneratorHelper {
 
     buffer.writeln('}');
     return buffer.toString();
+  }
+
+  void _writeFastFieldEncode(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    String access, {
+    required String indent,
+  }) {
+    buffer.writeln('${indent}w.writeAsciiLiteral(r\'"${field.name}":\');');
+    _writeDirectWriterEncode(buffer, field, access, indent: indent);
+  }
+
+  void _writeDirectWriterEncode(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    String access, {
+    required String indent,
+  }) {
+    switch (field.category) {
+      case TypeCategory.primitiveInt:
+        buffer.writeln('${indent}w.writeInt($access);');
+      case TypeCategory.primitiveDouble:
+        buffer.writeln('${indent}w.writeDouble($access);');
+      case TypeCategory.primitiveNum:
+        buffer.writeln('${indent}if ($access is int) {');
+        buffer.writeln('${indent}  w.writeInt($access as int);');
+        buffer.writeln('${indent}} else {');
+        buffer.writeln('${indent}  w.writeDouble($access.toDouble());');
+        buffer.writeln('${indent}}');
+      case TypeCategory.primitiveString:
+        buffer.writeln('${indent}w.writeString($access);');
+      case TypeCategory.primitiveBool:
+        buffer.writeln('${indent}w.writeBool($access);');
+      case TypeCategory.enumType:
+        buffer.writeln('${indent}w.writeString($access.name);');
+      case TypeCategory.custom:
+        final decoder = field.customDecoderCode;
+        buffer.writeln('${indent}$decoder.encodeToEncoder($access, encoder);');
+      case TypeCategory.tuple:
+        final tupleLen = field.tupleLength ?? 2;
+        buffer.writeln('${indent}w.beginArray();');
+        for (var i = 0; i < tupleLen; i++) {
+          buffer.writeln('${indent}w.writeDouble($access[$i]);');
+        }
+        buffer.writeln('${indent}w.endArray();');
+      case TypeCategory.nestedCodable:
+        final nestedName = field.type.element!.name;
+        buffer.writeln('${indent}_\$${nestedName}ToEncoder($access, encoder);');
+      case TypeCategory.list:
+      case TypeCategory.set:
+      case TypeCategory.map:
+      case TypeCategory.unknown:
+        final keyExpr =
+            '_\$${model.className}Schema.staticKey${toSafeIdentifierSuffix(field.name)}';
+        buffer.writeln('${indent}// Fallback for complex collections');
+        _writeFieldEncode(buffer, field, keyExpr, access, indent: indent);
+    }
   }
 
   void _writeFieldEncode(
