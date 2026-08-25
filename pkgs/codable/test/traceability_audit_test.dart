@@ -227,6 +227,40 @@ void main() {
       reader.endObject();
     });
 
+    test('JsonTokenWriter: writeAsciiLiteral, writeRawJson, writeNameBytes, '
+        'toBuffer', () {
+      // Test _BufferJsonTokenWriter
+      final bufWriter = JsonTokenWriter.toBuffer(capacity: 64);
+      bufWriter.beginObject();
+      bufWriter.writeNameBytes(Uint8List.fromList(utf8.encode('flag')));
+      bufWriter.writeBool(false);
+      bufWriter.writeName('raw');
+      bufWriter.writeRawJson(Uint8List.fromList(utf8.encode('[1,2,3]')));
+      bufWriter.writeName('literal');
+      bufWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
+      bufWriter.endObject();
+
+      final bufBytes = bufWriter.takeBytes();
+      check(utf8.decode(bufBytes))
+          .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
+
+      // Test _MockJsonTokenWriter
+      final sink = BytesBuilder();
+      final sinkWriter = JsonTokenWriter.toSink(sink);
+      sinkWriter.beginObject();
+      sinkWriter.writeNameBytes(Uint8List.fromList(utf8.encode('flag')));
+      sinkWriter.writeBool(false);
+      sinkWriter.writeName('raw');
+      sinkWriter.writeRawJson(Uint8List.fromList(utf8.encode('[1,2,3]')));
+      sinkWriter.writeName('literal');
+      sinkWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
+      sinkWriter.endObject();
+
+      final sinkBytes = sinkWriter.takeBytes();
+      check(utf8.decode(sinkBytes))
+          .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
+    });
+
     // -------------------------------------------------------------------------
     // 5. Full End-to-End JsonCodableDriver Integration
     // -------------------------------------------------------------------------
