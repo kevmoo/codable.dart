@@ -78,7 +78,7 @@ void main(List<String> rawArgs) {
   }
 }
 
-dynamic _preDecodeModel(String dataset, Uint8List bytes) {
+Object? _preDecodeModel(String dataset, Uint8List bytes) {
   return switch (dataset) {
     'coordinates' => () {
       final list = <Coordinate>[];
@@ -136,7 +136,7 @@ void Function() _createDecodeBenchmark(String dataset, Uint8List bytes) {
 
 void Function() _createEncodeBenchmark(
   String dataset,
-  dynamic preDecodedModel,
+  Object? preDecodedModel,
 ) {
   return switch (dataset) {
     'coordinates' => () {
