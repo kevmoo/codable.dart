@@ -496,14 +496,6 @@ _runTargetBenchmarks({
   return (t1Results: t1Results, t2Results: t2Results, t3Results: t3Results);
 }
 
-const _canonicalDatasets = [
-  'coordinates',
-  'canada',
-  'citm_catalog',
-  'small',
-  'twitter',
-];
-
 const _canonicalModes = ['decode', 'decode_literal', 'encode'];
 
 const _canonicalTargets = ['aot', 'js', 'wasm'];
