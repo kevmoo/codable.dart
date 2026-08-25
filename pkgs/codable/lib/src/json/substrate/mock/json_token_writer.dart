@@ -17,7 +17,7 @@ abstract interface class JsonTokenWriter {
   void endArray();
   void writeName(String name);
   void writeNameBytes(Uint8List asciiKey);
-  void writeAsciiLiteral(String asciiString);
+  void writeAsciiLiteral(Uint8List preEncoded);
   void writeRawJson(Uint8List rawJson);
   void writeString(String value);
   void writeInt(int value);
@@ -126,11 +126,9 @@ final class _MockJsonTokenWriter implements JsonTokenWriter {
   }
 
   @override
-  void writeAsciiLiteral(String asciiString) {
+  void writeAsciiLiteral(Uint8List preEncoded) {
     _beforeValue();
-    for (var i = 0; i < asciiString.length; i++) {
-      _sink.addByte(asciiString.codeUnitAt(i));
-    }
+    _sink.add(preEncoded);
   }
 
   @override
@@ -386,13 +384,9 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
   }
 
   @override
-  void writeAsciiLiteral(String asciiString) {
+  void writeAsciiLiteral(Uint8List preEncoded) {
     _beforeValue();
-    final len = asciiString.length;
-    _ensureSpace(len);
-    for (var i = 0; i < len; i++) {
-      _buf[_offset++] = asciiString.codeUnitAt(i);
-    }
+    _add(preEncoded);
   }
 
   @override
