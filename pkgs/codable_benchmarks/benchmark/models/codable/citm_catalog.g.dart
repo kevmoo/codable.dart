@@ -508,138 +508,6 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"areaNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyAreaNames,
-      instance.areaNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"audienceSubCategoryNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyAudienceSubCategoryNames,
-      instance.audienceSubCategoryNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"blockNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyBlockNames,
-      instance.blockNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"events":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(_$CitmCatalogSchema.staticKeyEvents, instance.events, (
-      map,
-      e,
-    ) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeValue(entry.key, entry.value, _$CitmEventToEncoder);
-      }
-    });
-    w.writeAsciiLiteral(r'"performances":');
-    // Fallback for complex collections
-    keyed.encodeListKey(
-      _$CitmCatalogSchema.staticKeyPerformances,
-      instance.performances,
-      _$CitmPerformanceToEncoder,
-    );
-    w.writeAsciiLiteral(r'"seatCategoryNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeySeatCategoryNames,
-      instance.seatCategoryNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"subTopicNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeySubTopicNames,
-      instance.subTopicNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"subjectNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeySubjectNames,
-      instance.subjectNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"topicNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyTopicNames,
-      instance.topicNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"topicSynced":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyTopicSynced,
-      instance.topicSynced,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeBool(entry.key, entry.value);
-        }
-      },
-    );
-    w.writeAsciiLiteral(r'"venueNames":');
-    // Fallback for complex collections
-    keyed.encodeValueKey(
-      _$CitmCatalogSchema.staticKeyVenueNames,
-      instance.venueNames,
-      (map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      },
-    );
-    w.endObject();
-    return;
-  }
   keyed.encodeValueKey(
     _$CitmCatalogSchema.staticKeyAreaNames,
     instance.areaNames,
@@ -1046,44 +914,6 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmEventToEncoder(CitmEvent instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    if (instance.description != null) {
-      w.writeAsciiLiteral(r'"description":');
-      w.writeString(instance.description!);
-    }
-    w.writeAsciiLiteral(r'"id":');
-    w.writeInt(instance.id);
-    if (instance.logo != null) {
-      w.writeAsciiLiteral(r'"logo":');
-      w.writeString(instance.logo!);
-    }
-    w.writeAsciiLiteral(r'"name":');
-    w.writeString(instance.name);
-    w.writeAsciiLiteral(r'"subTopicIds":');
-    // Fallback for complex collections
-    keyed.encodeIntListKey(
-      _$CitmEventSchema.staticKeySubTopicIds,
-      instance.subTopicIds,
-    );
-    if (instance.subjectCode != null) {
-      w.writeAsciiLiteral(r'"subjectCode":');
-      w.writeInt(instance.subjectCode!);
-    }
-    if (instance.subtitle != null) {
-      w.writeAsciiLiteral(r'"subtitle":');
-      w.writeString(instance.subtitle!);
-    }
-    w.writeAsciiLiteral(r'"topicIds":');
-    // Fallback for complex collections
-    keyed.encodeIntListKey(
-      _$CitmEventSchema.staticKeyTopicIds,
-      instance.topicIds,
-    );
-    w.endObject();
-    return;
-  }
   if (instance.description != null) {
     keyed.encodeStringKey(
       _$CitmEventSchema.staticKeyDescription,
@@ -1425,42 +1255,6 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmPerformanceToEncoder(CitmPerformance instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"eventId":');
-    w.writeInt(instance.eventId);
-    w.writeAsciiLiteral(r'"id":');
-    w.writeInt(instance.id);
-    if (instance.logo != null) {
-      w.writeAsciiLiteral(r'"logo":');
-      w.writeString(instance.logo!);
-    }
-    if (instance.name != null) {
-      w.writeAsciiLiteral(r'"name":');
-      w.writeString(instance.name!);
-    }
-    w.writeAsciiLiteral(r'"prices":');
-    // Fallback for complex collections
-    keyed.encodeListKey(
-      _$CitmPerformanceSchema.staticKeyPrices,
-      instance.prices,
-      _$CitmPriceToEncoder,
-    );
-    w.writeAsciiLiteral(r'"seatCategories":');
-    // Fallback for complex collections
-    keyed.encodeListKey(
-      _$CitmPerformanceSchema.staticKeySeatCategories,
-      instance.seatCategories,
-      _$CitmSeatCategoryToEncoder,
-    );
-    w.writeAsciiLiteral(r'"start":');
-    w.writeInt(instance.start);
-    w.writeAsciiLiteral(r'"venueCode":');
-    w.writeString(instance.venueCode);
-    w.endObject();
-    return;
-  }
   keyed.encodeIntKey(
     _$CitmPerformanceSchema.staticKeyEventId,
     instance.eventId,
@@ -1705,18 +1499,6 @@ CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmPriceToEncoder(CitmPrice instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"amount":');
-    w.writeInt(instance.amount);
-    w.writeAsciiLiteral(r'"audienceSubCategoryId":');
-    w.writeInt(instance.audienceSubCategoryId);
-    w.writeAsciiLiteral(r'"seatCategoryId":');
-    w.writeInt(instance.seatCategoryId);
-    w.endObject();
-    return;
-  }
   keyed.encodeIntKey(_$CitmPriceSchema.staticKeyAmount, instance.amount);
   keyed.encodeIntKey(
     _$CitmPriceSchema.staticKeyAudienceSubCategoryId,
@@ -1861,21 +1643,6 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmSeatCategoryToEncoder(CitmSeatCategory instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"areas":');
-    // Fallback for complex collections
-    keyed.encodeListKey(
-      _$CitmSeatCategorySchema.staticKeyAreas,
-      instance.areas,
-      _$CitmAreaToEncoder,
-    );
-    w.writeAsciiLiteral(r'"seatCategoryId":');
-    w.writeInt(instance.seatCategoryId);
-    w.endObject();
-    return;
-  }
   keyed.encodeListKey(
     _$CitmSeatCategorySchema.staticKeyAreas,
     instance.areas,
@@ -2019,20 +1786,6 @@ CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CitmAreaToEncoder(CitmArea instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"areaId":');
-    w.writeInt(instance.areaId);
-    w.writeAsciiLiteral(r'"blockIds":');
-    // Fallback for complex collections
-    keyed.encodeIntListKey(
-      _$CitmAreaSchema.staticKeyBlockIds,
-      instance.blockIds,
-    );
-    w.endObject();
-    return;
-  }
   keyed.encodeIntKey(_$CitmAreaSchema.staticKeyAreaId, instance.areaId);
   keyed.encodeIntListKey(_$CitmAreaSchema.staticKeyBlockIds, instance.blockIds);
 }

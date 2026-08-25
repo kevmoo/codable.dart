@@ -593,42 +593,11 @@ final class _JsonCodableSingleValueDecoder
 
 /// Concrete high-performance streaming JSON encoder connecting
 /// `package:codable` contracts directly to `JsonTokenWriter`.
-final class JsonCodableEncoder implements Encoder, CodableByteWriter {
+final class JsonCodableEncoder implements Encoder {
   final JsonTokenWriter _writer;
 
   @override
-  void beginObject() => _writer.beginObject();
-
-  @override
-  void endObject() => _writer.endObject();
-
-  @override
-  void beginArray() => _writer.beginArray();
-
-  @override
-  void endArray() => _writer.endArray();
-
-  @override
-  void writeAsciiLiteral(String literal) => _writer.writeAsciiLiteral(literal);
-
-  @override
-  void writeInt(int value) => _writer.writeInt(value);
-
-  @override
-  void writeDouble(double value) => _writer.writeDouble(value);
-
-  @override
-  void writeBool(bool value) => _writer.writeBool(value);
-
-  @override
-  void writeString(String value) => _writer.writeString(value);
-
-  @override
   final Map<Object, Object?> userInfo;
-
-  /// Exposes the underlying push-based token writer for direct, devirtualized
-  /// encoding.
-  JsonTokenWriter get writer => _writer;
 
   _JsonCodableKeyedEncoder? _activeKeyed;
   _JsonCodableUnkeyedEncoder? _activeUnkeyed;

@@ -79,14 +79,6 @@ CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaPropertiesToEncoder(CanadaProperties instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"name":');
-    w.writeString(instance.name);
-    w.endObject();
-    return;
-  }
   keyed.encodeStringKey(_$CanadaPropertiesSchema.staticKeyName, instance.name);
 }
 
@@ -218,19 +210,6 @@ CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaGeometryToEncoder(CanadaGeometry instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"type":');
-    w.writeString(instance.type);
-    w.writeAsciiLiteral(r'"coordinates":');
-    const CanadaCoordinatesDecoder().encodeToEncoder(
-      instance.coordinates,
-      encoder,
-    );
-    w.endObject();
-    return;
-  }
   keyed.encodeStringKey(_$CanadaGeometrySchema.staticKeyType, instance.type);
   keyed.encodeValueKey(
     _$CanadaGeometrySchema.staticKeyCoordinates,
@@ -420,18 +399,6 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaFeatureToEncoder(CanadaFeature instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"type":');
-    w.writeString(instance.type);
-    w.writeAsciiLiteral(r'"properties":');
-    _$CanadaPropertiesToEncoder(instance.properties, encoder);
-    w.writeAsciiLiteral(r'"geometry":');
-    _$CanadaGeometryToEncoder(instance.geometry, encoder);
-    w.endObject();
-    return;
-  }
   keyed.encodeStringKey(_$CanadaFeatureSchema.staticKeyType, instance.type);
   keyed.encodeValueKey(
     _$CanadaFeatureSchema.staticKeyProperties,
@@ -577,21 +544,6 @@ void _$CanadaFeatureCollectionToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  final w = encoder is CodableByteWriter ? encoder as CodableByteWriter : null;
-  if (w != null) {
-    w.beginObject();
-    w.writeAsciiLiteral(r'"type":');
-    w.writeString(instance.type);
-    w.writeAsciiLiteral(r'"features":');
-    // Fallback for complex collections
-    keyed.encodeListKey(
-      _$CanadaFeatureCollectionSchema.staticKeyFeatures,
-      instance.features,
-      _$CanadaFeatureToEncoder,
-    );
-    w.endObject();
-    return;
-  }
   keyed.encodeStringKey(
     _$CanadaFeatureCollectionSchema.staticKeyType,
     instance.type,

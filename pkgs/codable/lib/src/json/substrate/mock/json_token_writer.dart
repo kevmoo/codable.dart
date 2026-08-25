@@ -25,7 +25,8 @@ abstract interface class JsonTokenWriter {
   void writeBool(bool value);
   void writeNull();
 
-  /// Extracts the written byte buffer. Only supported in `toBuffer` configurations.
+  /// Extracts the written byte buffer. Only supported in `toBuffer`
+  /// configurations.
   Uint8List takeBytes();
 }
 
@@ -298,7 +299,7 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
 
   void _ensureSpace(int required) {
     if (_offset + required > _buf.length) {
-      int newLen = _buf.length;
+      var newLen = _buf.length;
       while (_offset + required > newLen) {
         newLen *= 2;
       }
