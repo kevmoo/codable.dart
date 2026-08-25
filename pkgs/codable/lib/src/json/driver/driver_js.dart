@@ -206,7 +206,8 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  String? peekKey() => hasNextKey() ? _keys[_currentIndex] : null;
+  String? peekKey() =>
+      _currentIndex < _keys.length ? _keys[_currentIndex] : null;
 
   @override
   int selectKeyIndex(KeyOptions options) {
@@ -223,7 +224,10 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  int selectStringIndex(KeyOptions options) => selectKeyIndex(options);
+  int selectStringIndex(KeyOptions options) {
+    final str = readString();
+    return options.keys.indexOf(str);
+  }
 
   @override
   void skipField() => skipValue();
@@ -466,7 +470,10 @@ final class _JsonCodableMappedDecoder
   int? readNullableInt(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v == null) return null;
-    return readInt(key);
+    if (v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble.toInt();
+    }
+    throw CodableException('Expected int for $key, found $v');
   }
 
   @override
@@ -480,7 +487,10 @@ final class _JsonCodableMappedDecoder
   double? readNullableDouble(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v == null) return null;
-    return readDouble(key);
+    if (v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble;
+    }
+    throw CodableException('Expected double for $key, found $v');
   }
 
   @override
@@ -494,7 +504,10 @@ final class _JsonCodableMappedDecoder
   String? readNullableString(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v == null) return null;
-    return readString(key);
+    if (v.isA<JSString>()) {
+      return (v as JSString).toDart;
+    }
+    throw CodableException('Expected String for $key, found $v');
   }
 
   @override
@@ -508,7 +521,10 @@ final class _JsonCodableMappedDecoder
   bool? readNullableBool(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v == null) return null;
-    return readBool(key);
+    if (v.isA<JSBoolean>()) {
+      return (v as JSBoolean).toDart;
+    }
+    throw CodableException('Expected bool for $key, found $v');
   }
 
   @override
