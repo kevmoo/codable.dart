@@ -109,6 +109,86 @@ class BenchmarkRunner {
     }
   }
 
+  double _computeConvergenceThreshold(List<double> buffer) {
+    final coldBuffer = List<double>.from(buffer)..sort();
+    final coldMedian = calculateMedian(coldBuffer);
+    final coldMAD = calculateMAD(coldBuffer, coldMedian);
+    final rawRelativeMAD = coldMedian > 0 ? (coldMAD / coldMedian) : 0.01;
+    return rawRelativeMAD.clamp(0.01, 0.05);
+  }
+
+  bool _checkWindowSteady(
+    List<double> buffer,
+    int windowSize,
+    double convergenceThreshold,
+  ) {
+    final past = trimWindow(
+      buffer.sublist(0, windowSize),
+      config.trimPercentage,
+    );
+    final present = trimWindow(
+      buffer.sublist(windowSize),
+      config.trimPercentage,
+    );
+
+    final combined = past + present;
+    final sigma = estimateSigma(combined);
+    final combinedMedian = calculateMedian(combined);
+    final mmd = calculateMMD(past, present, sigma, medianFloor: combinedMedian);
+
+    return mmd < convergenceThreshold ||
+        checkSEM(present, targetRelativeError: config.targetRelativeError);
+  }
+
+  ({List<double> steadySamples, bool converged}) _runSlidingWindow({
+    required int iterations,
+    required List<double> buffer,
+    required int windowSize,
+    required int coldBufferSize,
+    required double convergenceThreshold,
+    required Stopwatch totalWatch,
+    required int Function() measure,
+  }) {
+    var stabilityCount = 0;
+    var converged = false;
+    final steadySamples = <double>[];
+
+    while (buffer.length < config.maxSamples) {
+      if (totalWatch.elapsedMicroseconds > config.maxTotalMicros) {
+        break;
+      }
+
+      final elapsed = measure();
+      final perOpMicros = elapsed / iterations;
+      buffer.add(perOpMicros);
+
+      if (buffer.length > coldBufferSize) {
+        buffer.removeAt(0);
+      }
+
+      final isSteady = _checkWindowSteady(
+        buffer,
+        windowSize,
+        convergenceThreshold,
+      );
+      if (isSteady) {
+        stabilityCount++;
+        steadySamples.add(perOpMicros);
+      } else {
+        stabilityCount = 0;
+        steadySamples.clear();
+      }
+
+      if (stabilityCount >= config.stabilityRequired &&
+          steadySamples.length >= config.minSamples) {
+        converged = true;
+        break;
+      }
+    }
+
+    return (steadySamples: steadySamples, converged: converged);
+  }
+
   /// Runs the benchmark with calibrated iterations and returns a
   /// [BenchmarkResult].
   BenchmarkResult run(void Function() benchmark) {
@@ -134,67 +214,18 @@ class BenchmarkRunner {
     }
 
     // 2. Compute Bounded Convergence Threshold
-    final coldBuffer = List<double>.from(buffer)..sort();
-    final coldMedian = calculateMedian(coldBuffer);
-    final coldMAD = calculateMAD(coldBuffer, coldMedian);
-    final rawRelativeMAD = coldMedian > 0 ? (coldMAD / coldMedian) : 0.01;
-    // Clamp threshold to [1%, 5%] to prevent noise reward/penalty
-    final convergenceThreshold = rawRelativeMAD.clamp(0.01, 0.05);
-
-    var stabilityCount = 0;
-    var converged = false;
-    final steadySamples = <double>[];
+    final convergenceThreshold = _computeConvergenceThreshold(buffer);
 
     // 3. Sliding Window Convergence Detection
-    while (buffer.length < config.maxSamples) {
-      if (totalWatch.elapsedMicroseconds > config.maxTotalMicros) {
-        break;
-      }
-
-      final elapsed = measure();
-      final perOpMicros = elapsed / iterations;
-      buffer.add(perOpMicros);
-
-      if (buffer.length > coldBufferSize) {
-        buffer.removeAt(0);
-      }
-
-      final past = trimWindow(
-        buffer.sublist(0, windowSize),
-        config.trimPercentage,
-      );
-      final present = trimWindow(
-        buffer.sublist(windowSize),
-        config.trimPercentage,
-      );
-
-      final combined = past + present;
-      final sigma = estimateSigma(combined);
-      final combinedMedian = calculateMedian(combined);
-      final mmd = calculateMMD(
-        past,
-        present,
-        sigma,
-        medianFloor: combinedMedian,
-      );
-
-      final isSteady =
-          mmd < convergenceThreshold ||
-          checkSEM(present, targetRelativeError: config.targetRelativeError);
-      if (isSteady) {
-        stabilityCount++;
-        steadySamples.add(perOpMicros);
-      } else {
-        stabilityCount = 0;
-        steadySamples.clear();
-      }
-
-      if (stabilityCount >= config.stabilityRequired &&
-          steadySamples.length >= config.minSamples) {
-        converged = true;
-        break;
-      }
-    }
+    final (:steadySamples, :converged) = _runSlidingWindow(
+      iterations: iterations,
+      buffer: buffer,
+      windowSize: windowSize,
+      coldBufferSize: coldBufferSize,
+      convergenceThreshold: convergenceThreshold,
+      totalWatch: totalWatch,
+      measure: measure,
+    );
 
     final finalSamples = steadySamples.length >= config.minSamples
         ? steadySamples
