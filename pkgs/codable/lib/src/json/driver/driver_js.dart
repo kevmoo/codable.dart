@@ -14,13 +14,52 @@ import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 
+@JS('JSON.parse')
+external JSAny? _jsonParse(String text);
+
+@JS('Object.keys')
+external JSArray<JSAny?> _objectKeys(JSObject object);
+
+List<String> _getKeys(JSObject obj) {
+  final keys = _objectKeys(obj);
+  return List.generate(
+    keys.length,
+    (i) => keys.getProperty<JSString>(i.toJS).toDart,
+  );
+}
+
+Object? _jsToDart(JSAny? value) {
+  if (value == null) return null;
+  if (value.isA<JSString>()) return (value as JSString).toDart;
+  if (value.isA<JSNumber>()) return (value as JSNumber).toDartDouble;
+  if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
+  if (value.isA<JSArray>()) {
+    final arr = value as JSArray;
+    final list = <Object?>[];
+    for (var i = 0; i < arr.length; i++) {
+      list.add(_jsToDart(arr.getProperty<JSAny?>(i.toJS)));
+    }
+    return list;
+  }
+  if (value.isA<JSObject>()) {
+    final obj = value as JSObject;
+    final map = <String, Object?>{};
+    final keys = _getKeys(obj);
+    for (final key in keys) {
+      map[key] = _jsToDart(obj.getProperty<JSAny?>(key.toJS));
+    }
+    return map;
+  }
+  return null;
+}
+
 final class JsonCodableDecoder implements Decoder {
-  final Object? _decoded;
+  final JSAny? _decoded;
   final Uint8List? _bytes;
   @override
   final Map<Object, Object?> userInfo;
 
-  Object? _activeValue;
+  JSAny? _activeValue;
 
   JsonCodableDecoder._(this._decoded, this._bytes, {this.userInfo = const {}});
 
@@ -28,7 +67,7 @@ final class JsonCodableDecoder implements Decoder {
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    final decoded = jsonDecode(utf8.decode(bytes));
+    final decoded = _jsonParse(utf8.decode(bytes));
     return JsonCodableDecoder._(decoded, bytes, userInfo: userInfo);
   }
 
@@ -38,32 +77,32 @@ final class JsonCodableDecoder implements Decoder {
   }) : _bytes = null,
        _decoded = _readAll(reader);
 
-  static Object? _readAll(JsonTokenReader reader) {
+  static JSAny? _readAll(JsonTokenReader reader) {
     if (!reader.hasNext()) return null;
     switch (reader.peek()) {
       case JsonTokenType.beginObject:
         reader.beginObject();
-        final map = <String, Object?>{};
+        final map = JSObject();
         while (reader.hasNext()) {
           final key = reader.nextName();
-          map[key] = _readAll(reader);
+          map.setProperty(key.toJS, _readAll(reader));
         }
         reader.endObject();
         return map;
       case JsonTokenType.beginArray:
         reader.beginArray();
-        final list = <Object?>[];
+        final list = JSArray<JSAny?>();
         while (reader.hasNext()) {
           list.add(_readAll(reader));
         }
         reader.endArray();
         return list;
       case JsonTokenType.string:
-        return reader.readString();
+        return reader.readString().toJS;
       case JsonTokenType.number:
-        return reader.readDouble();
+        return reader.readDouble().toJS;
       case JsonTokenType.boolean:
-        return reader.readBool();
+        return reader.readBool().toJS;
       case JsonTokenType.nullValue:
         reader.readNull();
         return null;
@@ -76,7 +115,7 @@ final class JsonCodableDecoder implements Decoder {
     final target = _activeValue ?? _decoded;
     final bytes = (target == _decoded && _bytes != null)
         ? _bytes
-        : Uint8List.fromList(utf8.encode(jsonEncode(target)));
+        : Uint8List.fromList(utf8.encode(jsonEncode(_jsToDart(target))));
     _activeValue = null;
     return JsonTokenReader.fromBytes(bytes);
   }
@@ -84,20 +123,16 @@ final class JsonCodableDecoder implements Decoder {
   @override
   KeyedDecoder keyed({KeyOptions? options}) => _JsonCodableMappedKeyedDecoder(
     this,
-    (_activeValue ?? _decoded) as Map<dynamic, dynamic>,
+    (_activeValue ?? _decoded) as JSObject,
   );
 
   @override
-  MappedDecoder mapped() => _JsonCodableMappedDecoder(
-    this,
-    (_activeValue ?? _decoded) as Map<dynamic, dynamic>,
-  );
+  MappedDecoder mapped() =>
+      _JsonCodableMappedDecoder(this, (_activeValue ?? _decoded) as JSObject);
 
   @override
-  UnkeyedDecoder unkeyed() => _JsonCodableUnkeyedDecoder(
-    this,
-    (_activeValue ?? _decoded) as List<dynamic>,
-  );
+  UnkeyedDecoder unkeyed() =>
+      _JsonCodableUnkeyedDecoder(this, (_activeValue ?? _decoded) as JSArray);
 
   @override
   SingleValueDecoder singleValue() =>
@@ -118,14 +153,14 @@ final class JsonCodableDecoder implements Decoder {
 
 final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   final JsonCodableDecoder _rootDecoder;
-  final Map<dynamic, dynamic> _map;
+  final JSObject _map;
   final List<String> _keys;
   int _currentIndex = 0;
-  Object? _activeValue;
+  JSAny? _activeValue;
   bool _hasActiveValue = false;
 
   _JsonCodableMappedKeyedDecoder(this._rootDecoder, this._map)
-    : _keys = _map.keys.cast<String>().toList();
+    : _keys = _getKeys(_map);
 
   @override
   bool hasNextKey() => _currentIndex < _keys.length || _hasActiveValue;
@@ -135,7 +170,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
     if (_hasActiveValue) return _activeValue == null;
     if (!hasNextKey()) return false;
     final key = _keys[_currentIndex];
-    return _map[key] == null;
+    return _map.getProperty<JSAny?>(key.toJS) == null;
   }
 
   @override
@@ -165,13 +200,14 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
       throw const CodableException('No more keys in object');
     }
     final key = _keys[_currentIndex++];
-    _activeValue = _map[key];
+    _activeValue = _map.getProperty<JSAny?>(key.toJS);
     _hasActiveValue = true;
     return key;
   }
 
   @override
-  String? peekKey() => hasNextKey() ? _keys[_currentIndex] : null;
+  String? peekKey() =>
+      _currentIndex < _keys.length ? _keys[_currentIndex] : null;
 
   @override
   int selectKeyIndex(KeyOptions options) {
@@ -188,7 +224,10 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  int selectStringIndex(KeyOptions options) => selectKeyIndex(options);
+  int selectStringIndex(KeyOptions options) {
+    final str = readString();
+    return options.keys.indexOf(str);
+  }
 
   @override
   void skipField() => skipValue();
@@ -203,7 +242,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
     }
   }
 
-  Object? _consumeValue() {
+  JSAny? _consumeValue() {
     if (_hasActiveValue) {
       _hasActiveValue = false;
       final v = _activeValue;
@@ -214,7 +253,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
       throw const CodableException('No more keys in object');
     }
     final key = _keys[_currentIndex++];
-    return _map[key];
+    return _map.getProperty<JSAny?>(key.toJS);
   }
 
   @override
@@ -237,14 +276,21 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   List<T> decodeList<T>(DecoderCallback<T> decoder) {
     final val = _consumeValue();
-    if (val is List) {
-      return val
-          .map(
-            (e) => decoder(
-              JsonCodableDecoder._(e, null, userInfo: _rootDecoder.userInfo),
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <T>[];
+      for (var i = 0; i < arr.length; i++) {
+        result.add(
+          decoder(
+            JsonCodableDecoder._(
+              arr.getProperty<JSAny?>(i.toJS),
+              null,
+              userInfo: _rootDecoder.userInfo,
             ),
-          )
-          .toList();
+          ),
+        );
+      }
+      return result;
     }
     throw const CodableException('Expected List');
   }
@@ -253,14 +299,21 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
     final val = _consumeValue();
     if (val == null) return null;
-    if (val is List) {
-      return val
-          .map(
-            (e) => decoder(
-              JsonCodableDecoder._(e, null, userInfo: _rootDecoder.userInfo),
+    if (val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <T>[];
+      for (var i = 0; i < arr.length; i++) {
+        result.add(
+          decoder(
+            JsonCodableDecoder._(
+              arr.getProperty<JSAny?>(i.toJS),
+              null,
+              userInfo: _rootDecoder.userInfo,
             ),
-          )
-          .toList();
+          ),
+        );
+      }
+      return result;
     }
     throw const CodableException('Expected List');
   }
@@ -268,39 +321,69 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   List<int> decodeIntList() {
     final val = _consumeValue();
-    return (val as List).map((e) => (e as num).toInt()).toList();
+    final arr = val as JSArray;
+    final result = <int>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble.toInt());
+    }
+    return result;
   }
 
   @override
   List<double> decodeDoubleList() {
     final val = _consumeValue();
-    return (val as List).map((e) => (e as num).toDouble()).toList();
+    final arr = val as JSArray;
+    final result = <double>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble);
+    }
+    return result;
   }
 
   @override
   Float64List decodeFloat64List() {
     final val = _consumeValue();
-    return Float64List.fromList(
-      (val as List).map((e) => (e as num).toDouble()).toList(),
-    );
+    final arr = val as JSArray;
+    final result = Float64List(arr.length);
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result[i] = (e as JSNumber).toDartDouble;
+    }
+    return result;
   }
 
   @override
   List<String> decodeStringList() {
     final val = _consumeValue();
-    return (val as List).map((e) => e as String).toList();
+    final arr = val as JSArray;
+    final result = <String>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSString).toDart);
+    }
+    return result;
   }
 
   @override
   List<bool> decodeBoolList() {
     final val = _consumeValue();
-    return (val as List).map((e) => e as bool).toList();
+    final arr = val as JSArray;
+    final result = <bool>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSBoolean).toDart);
+    }
+    return result;
   }
 
   @override
   int readInt() {
     final val = _consumeValue();
-    if (val is num) return val.toInt();
+    if (val != null && val.isA<JSNumber>()) {
+      return (val as JSNumber).toDartDouble.toInt();
+    }
     throw CodableException('Expected int, found $val');
   }
 
@@ -308,14 +391,16 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   int? readNullableInt() {
     final val = _consumeValue();
     if (val == null) return null;
-    if (val is num) return val.toInt();
+    if (val.isA<JSNumber>()) return (val as JSNumber).toDartDouble.toInt();
     throw CodableException('Expected int?, found $val');
   }
 
   @override
   double readDouble() {
     final val = _consumeValue();
-    if (val is num) return val.toDouble();
+    if (val != null && val.isA<JSNumber>()) {
+      return (val as JSNumber).toDartDouble;
+    }
     throw CodableException('Expected double, found $val');
   }
 
@@ -323,14 +408,14 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   double? readNullableDouble() {
     final val = _consumeValue();
     if (val == null) return null;
-    if (val is num) return val.toDouble();
+    if (val.isA<JSNumber>()) return (val as JSNumber).toDartDouble;
     throw CodableException('Expected double?, found $val');
   }
 
   @override
   String readString() {
     final val = _consumeValue();
-    if (val is String) return val;
+    if (val != null && val.isA<JSString>()) return (val as JSString).toDart;
     throw CodableException('Expected String, found $val');
   }
 
@@ -338,14 +423,14 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   String? readNullableString() {
     final val = _consumeValue();
     if (val == null) return null;
-    if (val is String) return val;
+    if (val.isA<JSString>()) return (val as JSString).toDart;
     throw CodableException('Expected String?, found $val');
   }
 
   @override
   bool readBool() {
     final val = _consumeValue();
-    if (val is bool) return val;
+    if (val != null && val.isA<JSBoolean>()) return (val as JSBoolean).toDart;
     throw CodableException('Expected bool, found $val');
   }
 
@@ -353,7 +438,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   bool? readNullableBool() {
     final val = _consumeValue();
     if (val == null) return null;
-    if (val is bool) return val;
+    if (val.isA<JSBoolean>()) return (val as JSBoolean).toDart;
     throw CodableException('Expected bool?, found $val');
   }
 }
@@ -362,62 +447,93 @@ final class _JsonCodableMappedDecoder
     with MappedDecoderBase
     implements MappedDecoder {
   final JsonCodableDecoder _rootDecoder;
-  final Map<dynamic, dynamic> _map;
+  final JSObject _map;
 
   _JsonCodableMappedDecoder(this._rootDecoder, this._map);
 
   @override
-  bool containsKey(String key) => _map.containsKey(key);
+  bool containsKey(String key) => _map.hasProperty(key.toJS).toDart;
 
   @override
-  bool isNull(String key) => _map[key] == null;
+  bool isNull(String key) => _map.getProperty<JSAny?>(key.toJS) == null;
 
   @override
   int readInt(String key) {
-    final v = _map[key];
-    if (v is num) return v.toInt();
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble.toInt();
+    }
     throw CodableException('Expected int for $key, found $v');
   }
 
   @override
-  int? readNullableInt(String key) => _map[key] == null ? null : readInt(key);
+  int? readNullableInt(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v == null) return null;
+    if (v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble.toInt();
+    }
+    throw CodableException('Expected int for $key, found $v');
+  }
 
   @override
   double readDouble(String key) {
-    final v = _map[key];
-    if (v is num) return v.toDouble();
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
     throw CodableException('Expected double for $key, found $v');
   }
 
   @override
-  double? readNullableDouble(String key) =>
-      _map[key] == null ? null : readDouble(key);
+  double? readNullableDouble(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v == null) return null;
+    if (v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble;
+    }
+    throw CodableException('Expected double for $key, found $v');
+  }
 
   @override
   String readString(String key) {
-    final v = _map[key];
-    if (v is String) return v;
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
     throw CodableException('Expected String for $key, found $v');
   }
 
   @override
-  String? readNullableString(String key) =>
-      _map[key] == null ? null : readString(key);
+  String? readNullableString(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v == null) return null;
+    if (v.isA<JSString>()) {
+      return (v as JSString).toDart;
+    }
+    throw CodableException('Expected String for $key, found $v');
+  }
 
   @override
   bool readBool(String key) {
-    final v = _map[key];
-    if (v is bool) return v;
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
     throw CodableException('Expected bool for $key, found $v');
   }
 
   @override
-  bool? readNullableBool(String key) =>
-      _map[key] == null ? null : readBool(key);
+  bool? readNullableBool(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v == null) return null;
+    if (v.isA<JSBoolean>()) {
+      return (v as JSBoolean).toDart;
+    }
+    throw CodableException('Expected bool for $key, found $v');
+  }
 
   @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) => decoder(
-    JsonCodableDecoder._(_map[key], null, userInfo: _rootDecoder.userInfo),
+    JsonCodableDecoder._(
+      _map.getProperty<JSAny?>(key.toJS),
+      null,
+      userInfo: _rootDecoder.userInfo,
+    ),
   );
 
   @override
@@ -426,44 +542,85 @@ final class _JsonCodableMappedDecoder
 
   @override
   List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
-    final v = _map[key];
-    if (v is List) {
-      return v
-          .map(
-            (e) => decoder(
-              JsonCodableDecoder._(e, null, userInfo: _rootDecoder.userInfo),
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSArray>()) {
+      final arr = v as JSArray;
+      final result = <T>[];
+      for (var i = 0; i < arr.length; i++) {
+        result.add(
+          decoder(
+            JsonCodableDecoder._(
+              arr.getProperty<JSAny?>(i.toJS),
+              null,
+              userInfo: _rootDecoder.userInfo,
             ),
-          )
-          .toList();
+          ),
+        );
+      }
+      return result;
     }
     throw CodableException('Expected list for $key');
   }
 
   @override
-  List<int> decodeIntList(String key) =>
-      (_map[key] as List).map((e) => (e as num).toInt()).toList();
+  List<int> decodeIntList(String key) {
+    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
+    final result = <int>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble.toInt());
+    }
+    return result;
+  }
 
   @override
-  List<double> decodeDoubleList(String key) =>
-      (_map[key] as List).map((e) => (e as num).toDouble()).toList();
+  List<double> decodeDoubleList(String key) {
+    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
+    final result = <double>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble);
+    }
+    return result;
+  }
 
   @override
-  Float64List decodeFloat64List(String key) => Float64List.fromList(
-    (_map[key] as List).map((e) => (e as num).toDouble()).toList(),
-  );
+  Float64List decodeFloat64List(String key) {
+    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
+    final result = Float64List(arr.length);
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result[i] = (e as JSNumber).toDartDouble;
+    }
+    return result;
+  }
 
   @override
-  List<String> decodeStringList(String key) =>
-      (_map[key] as List).map((e) => e as String).toList();
+  List<String> decodeStringList(String key) {
+    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
+    final result = <String>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSString).toDart);
+    }
+    return result;
+  }
 
   @override
-  List<bool> decodeBoolList(String key) =>
-      (_map[key] as List).map((e) => e as bool).toList();
+  List<bool> decodeBoolList(String key) {
+    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
+    final result = <bool>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSBoolean).toDart);
+    }
+    return result;
+  }
 }
 
 final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   final JsonCodableDecoder _rootDecoder;
-  final List<dynamic> _list;
+  final JSArray _list;
   int _currentIndex = 0;
 
   _JsonCodableUnkeyedDecoder(this._rootDecoder, this._list);
@@ -474,7 +631,7 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   @override
   bool isNextNull() {
     if (!hasNext()) return false;
-    return _list[_currentIndex] == null;
+    return _list.getProperty<JSAny?>(_currentIndex.toJS) == null;
   }
 
   @override
@@ -497,7 +654,8 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   T decodeElement<T>(DecoderCallback<T> decoder) {
-    final value = _list[_currentIndex++];
+    final value = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     return decoder(
       JsonCodableDecoder._(value, null, userInfo: _rootDecoder.userInfo),
     );
@@ -505,7 +663,8 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
-    final value = _list[_currentIndex++];
+    final value = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     if (value == null) return null;
     return decoder(
       JsonCodableDecoder._(value, null, userInfo: _rootDecoder.userInfo),
@@ -514,88 +673,114 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<int> decodeIntList() {
-    final value = _list[_currentIndex++];
-    return (value as List).map((e) => (e as num).toInt()).toList();
+    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    _currentIndex++;
+    final result = <int>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble.toInt());
+    }
+    return result;
   }
 
   @override
   List<double> decodeDoubleList() {
-    final value = _list[_currentIndex++];
-    return (value as List).map((e) => (e as num).toDouble()).toList();
+    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    _currentIndex++;
+    final result = <double>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSNumber).toDartDouble);
+    }
+    return result;
   }
 
   @override
   Float64List decodeFloat64List() {
-    final value = _list[_currentIndex++];
-    return Float64List.fromList(
-      (value as List).map((e) => (e as num).toDouble()).toList(),
-    );
+    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    _currentIndex++;
+    final result = Float64List(arr.length);
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result[i] = (e as JSNumber).toDartDouble;
+    }
+    return result;
   }
 
   @override
   bool readBool() {
-    final v = _list[_currentIndex++];
-    if (v is bool) return v;
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
+    if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
     throw CodableException('Expected bool, found $v');
   }
 
   @override
   bool? readNullableBool() {
-    final v = _list[_currentIndex++];
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     if (v == null) return null;
-    if (v is bool) return v;
+    if (v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
     throw CodableException('Expected bool?, found $v');
   }
 
   @override
   double readDouble() {
-    final v = _list[_currentIndex++];
-    if (v is num) return v.toDouble();
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
+    if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
     throw CodableException('Expected double, found $v');
   }
 
   @override
   double? readNullableDouble() {
-    final v = _list[_currentIndex++];
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     if (v == null) return null;
-    if (v is num) return v.toDouble();
+    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
     throw CodableException('Expected double?, found $v');
   }
 
   @override
   int readInt() {
-    final v = _list[_currentIndex++];
-    if (v is num) return v.toInt();
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
+    if (v != null && v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble.toInt();
+    }
     throw CodableException('Expected int, found $v');
   }
 
   @override
   int? readNullableInt() {
-    final v = _list[_currentIndex++];
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     if (v == null) return null;
-    if (v is num) return v.toInt();
+    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble.toInt();
     throw CodableException('Expected int?, found $v');
   }
 
   @override
   String readString() {
-    final v = _list[_currentIndex++];
-    if (v is String) return v;
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
+    if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
     throw CodableException('Expected String, found $v');
   }
 
   @override
   String? readNullableString() {
-    final v = _list[_currentIndex++];
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
     if (v == null) return null;
-    if (v is String) return v;
+    if (v.isA<JSString>()) return (v as JSString).toDart;
     throw CodableException('Expected String?, found $v');
   }
 }
 
 final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   final JsonCodableDecoder _rootDecoder;
-  final Object? _val;
+  final JSAny? _val;
 
   _JsonCodableSingleValueDecoder(this._rootDecoder, this._val);
 
@@ -613,7 +798,7 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   @override
   bool readBool() {
     final v = _val;
-    if (v is bool) return v;
+    if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
     throw CodableException('Expected bool, found $v');
   }
 
@@ -621,14 +806,14 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   bool? readNullableBool() {
     final v = _val;
     if (v == null) return null;
-    if (v is bool) return v;
+    if (v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
     throw CodableException('Expected bool?, found $v');
   }
 
   @override
   double readDouble() {
     final v = _val;
-    if (v is num) return v.toDouble();
+    if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
     throw CodableException('Expected double, found $v');
   }
 
@@ -636,14 +821,16 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   double? readNullableDouble() {
     final v = _val;
     if (v == null) return null;
-    if (v is num) return v.toDouble();
+    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
     throw CodableException('Expected double?, found $v');
   }
 
   @override
   int readInt() {
     final v = _val;
-    if (v is num) return v.toInt();
+    if (v != null && v.isA<JSNumber>()) {
+      return (v as JSNumber).toDartDouble.toInt();
+    }
     throw CodableException('Expected int, found $v');
   }
 
@@ -651,14 +838,14 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   int? readNullableInt() {
     final v = _val;
     if (v == null) return null;
-    if (v is num) return v.toInt();
+    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble.toInt();
     throw CodableException('Expected int?, found $v');
   }
 
   @override
   String readString() {
     final v = _val;
-    if (v is String) return v;
+    if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
     throw CodableException('Expected String, found $v');
   }
 
@@ -666,7 +853,7 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   String? readNullableString() {
     final v = _val;
     if (v == null) return null;
-    if (v is String) return v;
+    if (v.isA<JSString>()) return (v as JSString).toDart;
     throw CodableException('Expected String?, found $v');
   }
 
