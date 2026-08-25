@@ -114,18 +114,77 @@ void main(List<String> rawArgs) async {
       help:
           'Concurrent benchmark worker tasks (use 1 for statistical fidelity)',
     )
+    ..addOption(
+      'from-json',
+      help: 'Path to benchmark JSON results to format into Markdown without re-running',
+    )
     ..addOption('output-md', help: 'Save markdown report to file')
     ..addOption('output-json', help: 'Save JSON results to file');
 
   final args = parser.parse(rawArgs);
+  final fromJsonPath = args['from-json'] as String?;
+  final outputMd = args['output-md'] as String?;
+  final outputJson = args['output-json'] as String?;
+
+  if (fromJsonPath != null) {
+    File resolveFile(String p) {
+      if (p.startsWith('/')) return File(p);
+      final fromCwd = File('${Directory.current.path}/$p');
+      if (fromCwd.existsSync()) return fromCwd;
+      return File('$packageRoot/$p');
+    }
+
+    final file = resolveFile(fromJsonPath);
+    if (!file.existsSync()) {
+      stderr.writeln('Error: JSON file not found at: ${file.path}');
+      exit(1);
+    }
+    final rawData = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    final targetsData = rawData['targets'] as Map<String, dynamic>? ?? {};
+    final combinedMd = StringBuffer();
+
+    for (final entry in targetsData.entries) {
+      final tLabel = entry.key.toUpperCase();
+      final tMap = entry.value as Map<String, dynamic>;
+      final t1 = (tMap['tier1_old_dart_json_serial'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+      final t2 = (tMap['tier2_new_dart_json_serial'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+      final t3 = (tMap['tier3_new_dart_codable'] as List<dynamic>? ?? [])
+          .cast<Map<String, dynamic>>();
+
+      final report = _formatMarkdownReport(
+        targetLabel: tLabel,
+        tier1Results: t1,
+        tier2Results: t2,
+        tier3Results: t3,
+        stockDartPath: rawData['stock_dart_path'] as String? ?? 'stock',
+        newDartPath: rawData['new_dart_path'] as String? ?? 'new',
+        nodeBinPath: 'node',
+      );
+      combinedMd.writeln(report);
+      combinedMd.writeln(
+        '\n------------------------------------------------------------------------\n',
+      );
+    }
+
+    final rendered = combinedMd.toString();
+    print(rendered);
+
+    if (outputMd != null) {
+      final mdFile = resolveFile(outputMd);
+      mdFile.writeAsStringSync(rendered);
+      print('>> Saved Markdown report to: ${mdFile.path}');
+    }
+    return;
+  }
+
   final dataset = args['dataset'] as String;
   final mode = args['mode'] as String;
   final target = args['target'] as String;
   final iters = args['iterations'] as String;
   final warmup = args['warmup'] as String;
   final concurrency = int.tryParse(args['concurrency'] as String? ?? '8') ?? 8;
-  final outputMd = args['output-md'] as String?;
-  final outputJson = args['output-json'] as String?;
 
   final stockDart = _findStockDart(args['stock-sdk'] as String?);
   final newDart = _findNewDart(args['new-sdk'] as String?);
@@ -592,6 +651,91 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
   }
 }
 
+String _formatRuntimeSummaryTable({
+  required String targetLabel,
+  required List<Map<String, dynamic>> tier1Results,
+  required List<Map<String, dynamic>> tier2Results,
+  required List<Map<String, dynamic>> tier3Results,
+}) {
+  final sb = StringBuffer();
+  sb.writeln(
+    '### 📊 Summary: $targetLabel Target ([ min / avg / max ] Multiplier vs Fastest)',
+  );
+  sb.writeln('');
+  sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
+  sb.writeln(
+    '| Dart Configuration | 📥 Decode [ min / avg / max ] | 📤 Encode [ min / avg / max ] |',
+  );
+  sb.writeln('| :--- | :---: | :---: |');
+
+  final tierMap = {
+    'Old Dart + json_serial': tier1Results,
+    'New Dart + json_serial': tier2Results,
+    'New Dart + Codable': tier3Results,
+  };
+
+  final datasets = [
+    'coordinates',
+    'canada',
+    'citm_catalog',
+    'small',
+    'twitter',
+  ];
+  final modes = ['decode', 'encode'];
+  final tableStats = <String, Map<String, List<double>>>{
+    for (final c in tierMap.keys) c: {'decode': [], 'encode': []},
+  };
+
+  for (final mode in modes) {
+    final dsMap = <String, Map<String, double>>{};
+    for (final entry in tierMap.entries) {
+      for (final b in entry.value) {
+        if (b['mode'] != mode) continue;
+        final ds = b['dataset'] as String?;
+        if (ds == null || !datasets.contains(ds)) continue;
+        final lat = (b['latency_ms'] as num?)?.toDouble();
+        if (lat == null) continue;
+        dsMap.putIfAbsent(ds, () => {})[entry.key] = lat;
+      }
+    }
+
+    for (final ds in datasets) {
+      final lats = dsMap[ds] ?? {};
+      if (lats.isEmpty) continue;
+      final minLat = lats.values.reduce((a, b) => a < b ? a : b);
+      if (minLat <= 0) continue;
+
+      for (final c in tierMap.keys) {
+        final lat = lats[c];
+        if (lat != null) {
+          tableStats[c]![mode]!.add(lat / minLat);
+        }
+      }
+    }
+  }
+
+  for (final c in tierMap.keys) {
+    final decMults = tableStats[c]!['decode']!;
+    final encMults = tableStats[c]!['encode']!;
+
+    String formatStats(List<double> mults) {
+      if (mults.isEmpty) return 'N/A';
+      final minM = mults.reduce((a, b) => a < b ? a : b);
+      final avgM = mults.reduce((a, b) => a + b) / mults.length;
+      final maxM = mults.reduce((a, b) => a > b ? a : b);
+      return '[ ${minM.toStringAsFixed(2)} / ${avgM.toStringAsFixed(2)} / ${maxM.toStringAsFixed(2)} ]';
+    }
+
+    sb.writeln(
+      '| **`$c`** | ${formatStats(decMults)} | ${formatStats(encMults)} |',
+    );
+  }
+
+  sb.writeln('<!-- mdformat on -->');
+  sb.writeln('');
+  return sb.toString();
+}
+
 String _formatMarkdownReport({
   required String targetLabel,
   required List<Map<String, dynamic>> tier1Results,
@@ -602,7 +746,16 @@ String _formatMarkdownReport({
   required String nodeBinPath,
 }) {
   final sb = StringBuffer();
-  sb.writeln('### 📊 Summary of $targetLabel Decode Benchmark Results');
+  sb.write(
+    _formatRuntimeSummaryTable(
+      targetLabel: targetLabel,
+      tier1Results: tier1Results,
+      tier2Results: tier2Results,
+      tier3Results: tier3Results,
+    ),
+  );
+
+  sb.writeln('#### Detailed Breakdown: $targetLabel Decode');
   sb.writeln('');
   sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
   sb.writeln(
