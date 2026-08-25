@@ -896,6 +896,7 @@ final class JsonCodableEncoder implements Encoder {
   static Uint8List toBytes(
     void Function(Encoder encoder) encode, {
     Map<Object, Object?> userInfo = const {},
+    int? capacityHint,
   }) {
     final str = JsonCodableEncoder.encode(encode, userInfo: userInfo);
     return Uint8List.fromList(utf8.encode(str));

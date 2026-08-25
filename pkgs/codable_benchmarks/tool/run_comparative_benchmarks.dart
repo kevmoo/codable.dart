@@ -496,6 +496,59 @@ _runTargetBenchmarks({
   return (t1Results: t1Results, t2Results: t2Results, t3Results: t3Results);
 }
 
+const _canonicalModes = ['decode', 'decode_literal', 'encode'];
+
+const _canonicalTargets = ['aot', 'js', 'wasm'];
+
+const _canonicalTiers = [
+  'tier1_old_dart_json_serial',
+  'tier2_new_dart_json_serial',
+  'tier3_new_dart_codable',
+];
+
+List<Map<String, dynamic>> _mergeTierLists(
+  List<dynamic>? existingList,
+  List<dynamic>? newList,
+) {
+  final map = <String, Map<String, dynamic>>{};
+  if (existingList != null) {
+    for (final item in existingList) {
+      if (item is Map) {
+        final key = '${item['dataset']}:${item['mode']}';
+        map[key] = Map<String, dynamic>.from(item);
+      }
+    }
+  }
+  if (newList != null) {
+    for (final item in newList) {
+      if (item is Map) {
+        final key = '${item['dataset']}:${item['mode']}';
+        map[key] = Map<String, dynamic>.from(item);
+      }
+    }
+  }
+
+  final list = map.values.toList();
+  list.sort((a, b) {
+    final dIndexA = _canonicalDatasets.indexOf(a['dataset'] as String? ?? '');
+    final dIndexB = _canonicalDatasets.indexOf(b['dataset'] as String? ?? '');
+    if (dIndexA != dIndexB) {
+      if (dIndexA == -1) return 1;
+      if (dIndexB == -1) return -1;
+      return dIndexA.compareTo(dIndexB);
+    }
+    final mIndexA = _canonicalModes.indexOf(a['mode'] as String? ?? '');
+    final mIndexB = _canonicalModes.indexOf(b['mode'] as String? ?? '');
+    if (mIndexA != mIndexB) {
+      if (mIndexA == -1) return 1;
+      if (mIndexB == -1) return -1;
+      return mIndexA.compareTo(mIndexB);
+    }
+    return 0;
+  });
+  return list;
+}
+
 Map<String, dynamic> _saveJsonReport({
   required String? outputJson,
   required Map<String, Map<String, dynamic>> allTargetJson,
@@ -504,29 +557,60 @@ Map<String, dynamic> _saveJsonReport({
 }) {
   if (outputJson == null) return Map<String, dynamic>.from(allTargetJson);
 
-  Map<String, dynamic> mergedTargets = {};
+  Map<String, dynamic> rawMergedTargets = {};
   final jsonFile = File(outputJson);
   if (jsonFile.existsSync()) {
     try {
       final decoded = jsonDecode(jsonFile.readAsStringSync());
       if (decoded is Map && decoded['targets'] is Map) {
-        mergedTargets = Map<String, dynamic>.from(decoded['targets'] as Map);
+        rawMergedTargets = Map<String, dynamic>.from(decoded['targets'] as Map);
       }
     } catch (_) {}
   }
-  mergedTargets.addAll(allTargetJson);
+
+  for (final entry in allTargetJson.entries) {
+    final tKey = entry.key;
+    final newTargetData = entry.value;
+    final existingTargetData = rawMergedTargets[tKey] is Map
+        ? Map<String, dynamic>.from(rawMergedTargets[tKey] as Map)
+        : <String, dynamic>{};
+
+    final mergedTargetData = <String, dynamic>{};
+    final allTierKeys = [
+      ..._canonicalTiers,
+      ...existingTargetData.keys.where((k) => !_canonicalTiers.contains(k)),
+      ...newTargetData.keys.where((k) => !_canonicalTiers.contains(k)),
+    ];
+
+    for (final tierKey in allTierKeys) {
+      mergedTargetData[tierKey] = _mergeTierLists(
+        existingTargetData[tierKey] as List?,
+        newTargetData[tierKey] as List?,
+      );
+    }
+    rawMergedTargets[tKey] = mergedTargetData;
+  }
+
+  final sortedTargets = <String, dynamic>{};
+  final allTargetKeys = [
+    ..._canonicalTargets.where((t) => rawMergedTargets.containsKey(t)),
+    ...rawMergedTargets.keys.where((t) => !_canonicalTargets.contains(t)),
+  ];
+  for (final t in allTargetKeys) {
+    sortedTargets[t] = rawMergedTargets[t];
+  }
 
   final combinedJson = {
     'stock_dart_path': stockDart,
     'new_dart_path': newDart,
     'generated_at': DateTime.now().toUtc().toIso8601String(),
-    'targets': mergedTargets,
+    'targets': sortedTargets,
   };
   jsonFile.writeAsStringSync(
     const JsonEncoder.withIndent('  ').convert(combinedJson),
   );
   print('💾 Saved JSON results to: $outputJson');
-  return mergedTargets;
+  return sortedTargets;
 }
 
 void _saveMarkdownReport({

@@ -595,8 +595,10 @@ final class _JsonCodableSingleValueDecoder
 /// `package:codable` contracts directly to `JsonTokenWriter`.
 final class JsonCodableEncoder implements Encoder {
   final JsonTokenWriter _writer;
+
   @override
   final Map<Object, Object?> userInfo;
+
   _JsonCodableKeyedEncoder? _activeKeyed;
   _JsonCodableUnkeyedEncoder? _activeUnkeyed;
 
@@ -606,13 +608,13 @@ final class JsonCodableEncoder implements Encoder {
   static Uint8List toBytes(
     void Function(Encoder encoder) encode, {
     Map<Object, Object?> userInfo = const {},
+    int? capacityHint,
   }) {
-    final builder = BytesBuilder();
-    final writer = JsonTokenWriter.toSink(builder);
+    final writer = JsonTokenWriter.toBuffer(capacity: capacityHint ?? 1024);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
     encode(encoder);
     encoder._finish();
-    return builder.takeBytes();
+    return writer.takeBytes();
   }
 
   /// Encodes a value to a JSON String.
