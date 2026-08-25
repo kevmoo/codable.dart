@@ -723,7 +723,19 @@ String _formatRuntimeSummaryTable({
       final minM = mults.reduce((a, b) => a < b ? a : b);
       final avgM = mults.reduce((a, b) => a + b) / mults.length;
       final maxM = mults.reduce((a, b) => a > b ? a : b);
-      return '[ ${minM.toStringAsFixed(2)} / ${avgM.toStringAsFixed(2)} / ${maxM.toStringAsFixed(2)} ]';
+
+      String emoji;
+      if (minM <= 1.005 && maxM <= 1.005) {
+        emoji = '🥇 ';
+      } else if (avgM <= 1.15) {
+        emoji = '🟢 ';
+      } else if (avgM <= 1.60) {
+        emoji = '🟡 ';
+      } else {
+        emoji = '🔴 ';
+      }
+
+      return '$emoji`[ ${minM.toStringAsFixed(2)} / ${avgM.toStringAsFixed(2)} / ${maxM.toStringAsFixed(2)} ]`';
     }
 
     sb.writeln(

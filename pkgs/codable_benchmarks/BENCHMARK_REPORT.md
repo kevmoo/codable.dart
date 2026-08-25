@@ -3,9 +3,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Dart Configuration | 📥 Decode [ min / avg / max ] | 📤 Encode [ min / avg / max ] |
 | :--- | :---: | :---: |
-| **`Old Dart + json_serial`** | [ 1.00 / 1.05 / 1.26 ] | [ 1.50 / 1.78 / 2.13 ] |
-| **`New Dart + json_serial`** | [ 1.71 / 2.16 / 2.49 ] | [ 1.00 / 1.11 / 1.33 ] |
-| **`New Dart + Codable`** | [ 1.00 / 1.43 / 1.83 ] | [ 1.00 / 1.10 / 1.27 ] |
+| **`Old Dart + json_serial`** | 🟢 `[ 1.00 / 1.05 / 1.26 ]` | 🔴 `[ 1.50 / 1.78 / 2.13 ]` |
+| **`New Dart + json_serial`** | 🔴 `[ 1.71 / 2.16 / 2.49 ]` | 🟢 `[ 1.00 / 1.11 / 1.33 ]` |
+| **`New Dart + Codable`** | 🟡 `[ 1.00 / 1.43 / 1.83 ]` | 🟢 `[ 1.00 / 1.10 / 1.27 ]` |
 <!-- mdformat on -->
 
 #### Detailed Breakdown: AOT Decode
@@ -40,9 +40,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Dart Configuration | 📥 Decode [ min / avg / max ] | 📤 Encode [ min / avg / max ] |
 | :--- | :---: | :---: |
-| **`Old Dart + json_serial`** | [ 1.00 / 1.00 / 1.00 ] | [ 1.16 / 1.54 / 1.83 ] |
-| **`New Dart + json_serial`** | [ 2.38 / 3.58 / 4.25 ] | [ 1.00 / 1.46 / 2.20 ] |
-| **`New Dart + Codable`** | [ 1.11 / 1.41 / 1.63 ] | [ 1.00 / 1.02 / 1.09 ] |
+| **`Old Dart + json_serial`** | 🥇 `[ 1.00 / 1.00 / 1.00 ]` | 🟡 `[ 1.16 / 1.54 / 1.83 ]` |
+| **`New Dart + json_serial`** | 🔴 `[ 2.38 / 3.58 / 4.25 ]` | 🟡 `[ 1.00 / 1.46 / 2.20 ]` |
+| **`New Dart + Codable`** | 🟡 `[ 1.11 / 1.41 / 1.63 ]` | 🟢 `[ 1.00 / 1.02 / 1.09 ]` |
 <!-- mdformat on -->
 
 #### Detailed Breakdown: JS Decode
@@ -77,9 +77,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Dart Configuration | 📥 Decode [ min / avg / max ] | 📤 Encode [ min / avg / max ] |
 | :--- | :---: | :---: |
-| **`Old Dart + json_serial`** | [ 1.00 / 1.00 / 1.00 ] | [ 1.25 / 1.57 / 2.12 ] |
-| **`New Dart + json_serial`** | [ 1.39 / 2.25 / 2.67 ] | [ 1.00 / 1.09 / 1.25 ] |
-| **`New Dart + Codable`** | [ 1.17 / 2.40 / 3.44 ] | [ 1.00 / 1.40 / 1.84 ] |
+| **`Old Dart + json_serial`** | 🥇 `[ 1.00 / 1.00 / 1.00 ]` | 🟡 `[ 1.25 / 1.57 / 2.12 ]` |
+| **`New Dart + json_serial`** | 🔴 `[ 1.39 / 2.25 / 2.67 ]` | 🟢 `[ 1.00 / 1.09 / 1.25 ]` |
+| **`New Dart + Codable`** | 🔴 `[ 1.17 / 2.40 / 3.44 ]` | 🟡 `[ 1.00 / 1.40 / 1.84 ]` |
 <!-- mdformat on -->
 
 #### Detailed Breakdown: WASM Decode
