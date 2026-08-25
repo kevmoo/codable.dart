@@ -25,8 +25,7 @@ abstract interface class JsonTokenWriter {
   void writeBool(bool value);
   void writeNull();
 
-  /// Extracts the written byte buffer. Only supported in `toBuffer`
-  /// configurations.
+  /// Extracts the written byte buffer.
   Uint8List takeBytes();
 }
 
@@ -115,7 +114,7 @@ final class _MockJsonTokenWriter implements JsonTokenWriter {
       }
       _isFirstStack[_isFirstStack.length - 1] = false;
     }
-    if (asciiKey.isNotEmpty && asciiKey.first == 34 && asciiKey.last == 34) {
+    if (asciiKey.length >= 2 && asciiKey.first == 34 && asciiKey.last == 34) {
       _sink.add(asciiKey);
     } else {
       _sink.addByte(34); // '"'
@@ -297,7 +296,7 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
 
   void _ensureSpace(int required) {
     if (_offset + required > _buf.length) {
-      var newLen = _buf.length;
+      var newLen = _buf.isEmpty ? 64 : _buf.length;
       while (_offset + required > newLen) {
         newLen *= 2;
       }
@@ -373,7 +372,7 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
       if (!_isFirstStack.last) _addByte(44);
       _isFirstStack[_isFirstStack.length - 1] = false;
     }
-    if (asciiKey.isNotEmpty && asciiKey.first == 34 && asciiKey.last == 34) {
+    if (asciiKey.length >= 2 && asciiKey.first == 34 && asciiKey.last == 34) {
       _add(asciiKey);
     } else {
       _addByte(34);
@@ -434,32 +433,11 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
       _add(_minInt64Bytes);
       return;
     }
-    var v = value;
-    if (v < 0) {
+    if (value < 0) {
       _addByte(45);
-      v = -v;
-    }
-    if (v < 10) {
-      _addByte(48 + v);
-      return;
-    }
-    if (v < 100) {
-      _addByte(48 + (v ~/ 10));
-      _addByte(48 + (v % 10));
-      return;
-    }
-    var val = v;
-    var pos = 24;
-    while (val >= 10) {
-      final rem = val % 10;
-      val ~/= 10;
-      _scratch[--pos] = 48 + rem;
-    }
-    _scratch[--pos] = 48 + val;
-    final len = 24 - pos;
-    _ensureSpace(len);
-    for (var i = pos; i < 24; i++) {
-      _buf[_offset++] = _scratch[i];
+      _writePositiveInt(-value);
+    } else {
+      _writePositiveInt(value);
     }
   }
 

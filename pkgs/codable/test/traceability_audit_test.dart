@@ -261,6 +261,67 @@ void main() {
           .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
     });
 
+    test(
+      'JsonTokenWriter: zero-capacity & multi-doubling buffer expansion',
+      () {
+        // 1. Zero capacity initialization expands smoothly without loop
+        final zeroWriter = JsonTokenWriter.toBuffer(capacity: 0);
+        zeroWriter.beginArray();
+        for (var i = 0; i < 100; i++) {
+          zeroWriter.writeInt(i);
+        }
+        zeroWriter.endArray();
+        final zeroBytes = zeroWriter.takeBytes();
+        check(zeroBytes).isNotEmpty();
+        final decodedList = jsonDecode(utf8.decode(zeroBytes)) as List<dynamic>;
+        check(decodedList.length).equals(100);
+
+        // 2. Small initial capacity (4 bytes) expands across doubling steps
+        final smallWriter = JsonTokenWriter.toBuffer(capacity: 4);
+        smallWriter.beginObject();
+        smallWriter.writeName('message');
+        smallWriter.writeString('A long string that exceeds initial capacity');
+        smallWriter.endObject();
+        final smallBytes = smallWriter.takeBytes();
+        check(
+          utf8.decode(smallBytes),
+        ).equals('{"message":"A long string that exceeds initial capacity"}');
+
+        // 3. JsonCodableEncoder.toBytes with capacityHint: 0
+        final bytes = JsonCodableEncoder.toBytes((encoder) {
+          final k = encoder.keyed();
+          k.encodeInt('count', 42);
+        }, capacityHint: 0);
+        check(utf8.decode(bytes)).equals('{"count":42}');
+      },
+    );
+
+    test('JsonTokenWriter: writeNameBytes key quoting and edge cases', () {
+      void verifyWriter(JsonTokenWriter Function() createWriter) {
+        final w = createWriter();
+        w.beginObject();
+        // Unquoted key
+        w.writeNameBytes(Uint8List.fromList(utf8.encode('unquoted')));
+        w.writeInt(1);
+        // Pre-quoted key
+        w.writeNameBytes(Uint8List.fromList(utf8.encode('"already_quoted"')));
+        w.writeInt(2);
+        // Single quote character key (should be quoted as '""""')
+        w.writeNameBytes(Uint8List.fromList([34]));
+        w.writeInt(3);
+        // Two quotes key (should be treated as pre-quoted empty string '""')
+        w.writeNameBytes(Uint8List.fromList([34, 34]));
+        w.writeInt(4);
+        w.endObject();
+
+        final result = utf8.decode(w.takeBytes());
+        check(result).equals('{"unquoted":1,"already_quoted":2,""":3,"":4}');
+      }
+
+      verifyWriter(() => JsonTokenWriter.toBuffer(capacity: 16));
+      verifyWriter(() => JsonTokenWriter.toSink(BytesBuilder()));
+    });
+
     // -------------------------------------------------------------------------
     // 5. Full End-to-End JsonCodableDriver Integration
     // -------------------------------------------------------------------------
