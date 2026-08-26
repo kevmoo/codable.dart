@@ -230,7 +230,7 @@ void main() {
     test('JsonTokenWriter: writeAsciiLiteral, writeRawJson, writeNameBytes, '
         'toBuffer', () {
       // Test _BufferJsonTokenWriter
-      final bufWriter = JsonTokenWriter.toBuffer(capacity: 64);
+      final bufWriter = JsonTokenWriter.toBuffer(64);
       bufWriter.beginObject();
       bufWriter.writeNameBytes(Uint8List.fromList(utf8.encode('flag')));
       bufWriter.writeBool(false);
@@ -240,7 +240,7 @@ void main() {
       bufWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
       bufWriter.endObject();
 
-      final bufBytes = bufWriter.takeBytes();
+      final bufBytes = bufWriter.toBytes();
       check(utf8.decode(bufBytes))
           .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
 
@@ -256,33 +256,26 @@ void main() {
       sinkWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
       sinkWriter.endObject();
 
-      final sinkBytes = sinkWriter.takeBytes();
+      final sinkBytes = sinkWriter.toBytes();
       check(utf8.decode(sinkBytes))
           .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
     });
 
     test(
-      'JsonTokenWriter: zero-capacity & multi-doubling buffer expansion',
+      'JsonTokenWriter: non-positive capacity & multi-doubling expansion',
       () {
-        // 1. Zero capacity initialization expands smoothly without loop
-        final zeroWriter = JsonTokenWriter.toBuffer(capacity: 0);
-        zeroWriter.beginArray();
-        for (var i = 0; i < 100; i++) {
-          zeroWriter.writeInt(i);
-        }
-        zeroWriter.endArray();
-        final zeroBytes = zeroWriter.takeBytes();
-        check(zeroBytes).isNotEmpty();
-        final decodedList = jsonDecode(utf8.decode(zeroBytes)) as List<dynamic>;
-        check(decodedList.length).equals(100);
+        // 1. Non-positive initial capacity is rejected, matching the
+        //    dart:convert contract (and JsonUtf8Encoder.bufferSize).
+        check(() => JsonTokenWriter.toBuffer(0)).throws<RangeError>();
+        check(() => JsonTokenWriter.toBuffer(-1)).throws<RangeError>();
 
         // 2. Small initial capacity (4 bytes) expands across doubling steps
-        final smallWriter = JsonTokenWriter.toBuffer(capacity: 4);
+        final smallWriter = JsonTokenWriter.toBuffer(4);
         smallWriter.beginObject();
         smallWriter.writeName('message');
         smallWriter.writeString('A long string that exceeds initial capacity');
         smallWriter.endObject();
-        final smallBytes = smallWriter.takeBytes();
+        final smallBytes = smallWriter.toBytes();
         check(
           utf8.decode(smallBytes),
         ).equals('{"message":"A long string that exceeds initial capacity"}');
@@ -314,11 +307,11 @@ void main() {
         w.writeInt(4);
         w.endObject();
 
-        final result = utf8.decode(w.takeBytes());
+        final result = utf8.decode(w.toBytes());
         check(result).equals('{"unquoted":1,"already_quoted":2,""":3,"":4}');
       }
 
-      verifyWriter(() => JsonTokenWriter.toBuffer(capacity: 16));
+      verifyWriter(() => JsonTokenWriter.toBuffer(16));
       verifyWriter(() => JsonTokenWriter.toSink(BytesBuilder()));
     });
 

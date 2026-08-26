@@ -6,9 +6,24 @@ abstract interface class JsonTokenWriter {
   /// Instantiates a token writer emitting to [sink].
   factory JsonTokenWriter.toSink(BytesBuilder sink) = _MockJsonTokenWriter;
 
-  /// Instantiates a token writer emitting to a newly allocated internal buffer.
-  factory JsonTokenWriter.toBuffer({int capacity = 1024}) {
-    return _BufferJsonTokenWriter(capacity);
+  /// Instantiates a contiguous buffer token writer with [initialCapacity].
+  ///
+  /// The buffer grows as needed, so [initialCapacity] only affects how often
+  /// that happens. It must be greater than zero.
+  ///
+  /// Throws a [RangeError] if [initialCapacity] is zero or negative.
+  ///
+  /// Mirrors the `dart:convert` signature exactly so the mock and native
+  /// substrates stay source-compatible.
+  factory JsonTokenWriter.toBuffer([int initialCapacity = 256]) {
+    if (initialCapacity < 1) {
+      throw RangeError.value(
+        initialCapacity,
+        'initialCapacity',
+        'Must be positive',
+      );
+    }
+    return _BufferJsonTokenWriter(initialCapacity);
   }
 
   void beginObject();
@@ -25,8 +40,11 @@ abstract interface class JsonTokenWriter {
   void writeBool(bool value);
   void writeNull();
 
-  /// Extracts the written byte buffer.
-  Uint8List takeBytes();
+  /// Returns a copy of the UTF-8 JSON bytes written so far.
+  ///
+  /// The copy belongs to the caller and is independent of this writer in both
+  /// directions, matching the `dart:convert` contract.
+  Uint8List toBytes();
 }
 
 final class _MockJsonTokenWriter implements JsonTokenWriter {
@@ -260,8 +278,8 @@ final class _MockJsonTokenWriter implements JsonTokenWriter {
   }
 
   @override
-  Uint8List takeBytes() {
-    return _sink.takeBytes();
+  Uint8List toBytes() {
+    return _sink.toBytes();
   }
 }
 
@@ -518,7 +536,7 @@ final class _BufferJsonTokenWriter implements JsonTokenWriter {
   }
 
   @override
-  Uint8List takeBytes() {
-    return Uint8List.sublistView(_buf, 0, _offset);
+  Uint8List toBytes() {
+    return _buf.sublist(0, _offset);
   }
 }
