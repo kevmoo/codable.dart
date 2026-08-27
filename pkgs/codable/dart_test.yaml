@@ -1,2 +1,0 @@
-# Shares the workspace-level test configuration (tags, presets).
-include: ../../dart_test.yaml

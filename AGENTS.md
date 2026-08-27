@@ -20,13 +20,17 @@ declaration in the SDK's `sdk/lib/convert/json_utf8.dart` first.
 Switch with `dart run tool/switch_substrate.dart mock|native`. Never commit
 `substrate.dart` in the `native` state.
 
-## Native-substrate check (run before opening a PR)
+## Native-substrate check
 
-If your change touches `pkgs/codable/lib/` or `pkgs/codable_benchmarks/`, and
-a private SDK is available on this machine, run:
+`native_sdk_parity_test.dart` automatically runs `tool/native_sdk_check.dart`
+whenever `dart test` is invoked in an environment with a private SDK (e.g.
+local development on Cloudtop). It dynamically skips on standard SDK / CI
+environments.
+
+You can also run the check standalone:
 
 ```bash
-dart run tool/native_sdk_check.dart     # or: dart test pkgs/codable -P native
+dart run tool/native_sdk_check.dart
 ```
 
 It switches to the native substrate, runs `dart analyze` (errors and warnings fatal, infos not) with
@@ -38,8 +42,6 @@ the private SDK, and restores the mock substrate. SDK discovery order:
 - Exit 3 (no SDK found): say so explicitly in the PR description so a human
   can run it; do not silently skip.
 - Exit 1: fix the drift before opening the PR.
-
-The tagged test (`native-sdk`) is skipped by default; `-P native` enables it.
 
 ## Standard checks
 

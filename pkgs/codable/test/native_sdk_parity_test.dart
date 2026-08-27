@@ -1,16 +1,13 @@
 // Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-
-@Tags(['native-sdk'])
-library;
-
 import 'dart:io';
 
 import 'package:test/test.dart';
 
 /// Guards against the mock substrate drifting from the real `dart:convert`
-/// API. Skipped by default; run with `dart test -P native`.
+/// API. Runs automatically whenever a private json-utf8 SDK is available
+/// (e.g. local dev), and dynamically skips on standard CI.
 void main() {
   test('package:codable analyzes clean on the native substrate', () {
     final result = Process.runSync(Platform.resolvedExecutable, [
