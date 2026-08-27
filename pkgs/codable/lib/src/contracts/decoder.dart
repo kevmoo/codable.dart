@@ -39,10 +39,10 @@ abstract interface class Decoder {
 
 /// Sequential streaming decoder matching keys in incoming stream order.
 abstract interface class KeyedDecoder {
-  /// Returns `true` if more key-value pairs remain in the current object.
+  /// Whether more key-value pairs remain in the current object.
   bool hasNextKey();
 
-  /// Returns `true` if more key-value pairs remain in the current object (alias
+  /// Whether more key-value pairs remain in the current object (alias
   /// for [hasNextKey]).
   bool hasNext();
 
@@ -69,7 +69,7 @@ abstract interface class KeyedDecoder {
   /// Skips the upcoming value (alias for [skipField]).
   void skipValue();
 
-  /// Returns `true` if the next value token is null.
+  /// Whether the next value token is null.
   bool isNextNull();
 
   /// Consumes a null value token from the stream.
@@ -136,16 +136,16 @@ abstract interface class KeyedDecoder {
 
 /// In-memory or buffered random-access decoder supporting out-of-order lookups.
 abstract interface class MappedDecoder {
-  /// Returns `true` if [key] is present in the container.
+  /// Whether [key] is present in the container.
   bool containsKey(String key);
 
-  /// Returns `true` if [key] is present in the container.
+  /// Whether [key] is present in the container.
   bool containsStaticKey(StaticKey key);
 
-  /// Returns `true` if the value associated with [key] is null.
+  /// Whether the value associated with [key] is null.
   bool isNull(String key);
 
-  /// Returns `true` if the value associated with [key] is null.
+  /// Whether the value associated with [key] is null.
   bool isNullKey(StaticKey key);
 
   /// Reads a non-nullable integer value by string [key].
@@ -310,10 +310,10 @@ mixin MappedDecoderBase implements MappedDecoder {
 
 /// Sequential decoder for homogeneous or heterogeneous arrays / lists.
 abstract interface class UnkeyedDecoder {
-  /// Returns `true` if more elements remain in the sequence.
+  /// Whether more elements remain in the sequence.
   bool hasNext();
 
-  /// Returns `true` if the next element in the sequence is null.
+  /// Whether the next element in the sequence is null.
   bool isNextNull();
 
   /// Consumes a null element from the sequence.
@@ -373,7 +373,7 @@ abstract interface class UnkeyedDecoder {
 
 /// Decoder for standalone scalar values or primitive wrappers.
 abstract interface class SingleValueDecoder {
-  /// Returns `true` if the scalar value is null.
+  /// Whether the scalar value is null.
   bool isNull();
 
   /// Consumes a null scalar value.

@@ -40,7 +40,7 @@ abstract interface class JsonTokenWriter {
   void writeBool(bool value);
   void writeNull();
 
-  /// Returns a copy of the UTF-8 JSON bytes written so far.
+  /// A copy of the UTF-8 JSON bytes written so far.
   ///
   /// The copy belongs to the caller and is independent of this writer in both
   /// directions, matching the `dart:convert` contract.

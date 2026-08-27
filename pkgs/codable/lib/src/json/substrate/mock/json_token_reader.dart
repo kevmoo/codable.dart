@@ -24,7 +24,7 @@ abstract interface class JsonTokenReader {
   /// Advances past the closing `]` of an array.
   void endArray();
 
-  /// Returns `true` if the current object or array has more elements.
+  /// Whether the current object or array has more elements.
   bool hasNext();
 
   /// Reads the next object property name as a [String].
@@ -64,7 +64,7 @@ abstract interface class JsonTokenReader {
   /// Reads the next string token and returns its raw byte span `(start, end)`.
   (int start, int end) readStringSpan();
 
-  /// Returns the raw byte span `(start, end)` of the current token.
+  /// The raw byte span `(start, end)` of the current token.
   (int start, int end) getTokenSpan();
 }
 

@@ -54,15 +54,15 @@ final class KeyOptions {
   factory KeyOptions.fromStaticKeys(List<StaticKey> staticKeys) =>
       KeyOptions(staticKeys.map((k) => k.name).toList(growable: false));
 
-  /// Returns the index of [key], or `-1` if not recognized.
+  /// The index of [key], or `-1` if not recognized.
   int indexOf(String key) => _indexMap[key] ?? -1;
 
-  /// Returns the number of keys in the table.
+  /// The number of keys in the table.
   int get length => keys.length;
 
-  /// Returns the key name at the given [index].
+  /// The key name at the given [index].
   String operator [](int index) => keys[index];
 
-  /// Returns `true` if [key] exists in the table.
+  /// Whether [key] exists in the table.
   bool contains(String key) => _indexMap.containsKey(key);
 }
