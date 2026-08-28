@@ -36,8 +36,6 @@ void main(List<String> rawArgs) {
       defaultsTo: 'all',
       allowed: ['decode', 'decode_literal', 'encode', 'all'],
     )
-    ..addOption('iterations', abbr: 'n', defaultsTo: '50')
-    ..addOption('warmup', abbr: 'w', defaultsTo: '5')
     ..addOption('engine-label', defaultsTo: 'dart_codable_streaming')
     ..addFlag('json', defaultsTo: false);
 
