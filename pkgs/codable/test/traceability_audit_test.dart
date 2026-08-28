@@ -228,24 +228,8 @@ void main() {
     });
 
     test('JsonTokenWriter: writeAsciiLiteral, writeRawJson, writeNameBytes, '
-        'toBuffer', () {
-      // Test _BufferJsonTokenWriter
-      final bufWriter = JsonTokenWriter.toBuffer(64);
-      bufWriter.beginObject();
-      bufWriter.writeNameBytes(Uint8List.fromList(utf8.encode('flag')));
-      bufWriter.writeBool(false);
-      bufWriter.writeName('raw');
-      bufWriter.writeRawJson(Uint8List.fromList(utf8.encode('[1,2,3]')));
-      bufWriter.writeName('literal');
-      bufWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
-      bufWriter.endObject();
-
-      final bufBytes = bufWriter.toBytes();
-      check(utf8.decode(bufBytes))
-          .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
-
-      // Test _MockJsonTokenWriter
-      final sink = BytesBuilder();
+        'toSink', () {
+      final sink = BytesBuilder(copy: false);
       final sinkWriter = JsonTokenWriter.toSink(sink);
       sinkWriter.beginObject();
       sinkWriter.writeNameBytes(Uint8List.fromList(utf8.encode('flag')));
@@ -255,43 +239,27 @@ void main() {
       sinkWriter.writeName('literal');
       sinkWriter.writeAsciiLiteral(Uint8List.fromList(utf8.encode('"direct"')));
       sinkWriter.endObject();
+      sinkWriter.flush();
 
-      final sinkBytes = sinkWriter.toBytes();
+      final sinkBytes = sink.takeBytes();
       check(utf8.decode(sinkBytes))
           .equals('{"flag":false,"raw":[1,2,3],"literal":"direct"}');
     });
 
-    test(
-      'JsonTokenWriter: non-positive capacity & multi-doubling expansion',
-      () {
-        // 1. Non-positive initial capacity is rejected, matching the
-        //    dart:convert contract (and JsonUtf8Encoder.bufferSize).
-        check(() => JsonTokenWriter.toBuffer(0)).throws<RangeError>();
-        check(() => JsonTokenWriter.toBuffer(-1)).throws<RangeError>();
-
-        // 2. Small initial capacity (4 bytes) expands across doubling steps
-        final smallWriter = JsonTokenWriter.toBuffer(4);
-        smallWriter.beginObject();
-        smallWriter.writeName('message');
-        smallWriter.writeString('A long string that exceeds initial capacity');
-        smallWriter.endObject();
-        final smallBytes = smallWriter.toBytes();
-        check(
-          utf8.decode(smallBytes),
-        ).equals('{"message":"A long string that exceeds initial capacity"}');
-
-        // 3. JsonCodableEncoder.toBytes with capacityHint: 0
-        final bytes = JsonCodableEncoder.toBytes((encoder) {
-          final k = encoder.keyed();
-          k.encodeInt('count', 42);
-        }, capacityHint: 0);
-        check(utf8.decode(bytes)).equals('{"count":42}');
-      },
-    );
+    test('JsonCodableEncoder.toBytes with capacityHint', () {
+      final bytes = JsonCodableEncoder.toBytes((encoder) {
+        final k = encoder.keyed();
+        k.encodeInt('count', 42);
+      }, capacityHint: 0);
+      check(utf8.decode(bytes)).equals('{"count":42}');
+    });
 
     test('JsonTokenWriter: writeNameBytes key quoting and edge cases', () {
-      void verifyWriter(JsonTokenWriter Function() createWriter) {
-        final w = createWriter();
+      void verifyWriter(
+        JsonTokenWriter Function(BytesBuilder sink) createWriter,
+      ) {
+        final sink = BytesBuilder(copy: false);
+        final w = createWriter(sink);
         w.beginObject();
         // Unquoted key
         w.writeNameBytes(Uint8List.fromList(utf8.encode('unquoted')));
@@ -306,13 +274,14 @@ void main() {
         w.writeNameBytes(Uint8List.fromList([34, 34]));
         w.writeInt(4);
         w.endObject();
+        w.flush();
 
-        final result = utf8.decode(w.toBytes());
+        final result = utf8.decode(sink.takeBytes());
         check(result).equals('{"unquoted":1,"already_quoted":2,""":3,"":4}');
       }
 
-      verifyWriter(() => JsonTokenWriter.toBuffer(16));
-      verifyWriter(() => JsonTokenWriter.toSink(BytesBuilder()));
+      verifyWriter(JsonTokenWriter.toSink);
+      verifyWriter(JsonUtf8TokenWriter.new);
     });
 
     // -------------------------------------------------------------------------

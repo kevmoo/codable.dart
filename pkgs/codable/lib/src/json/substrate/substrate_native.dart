@@ -13,6 +13,7 @@ export 'dart:convert'
         JsonTokenReader,
         JsonTokenType,
         JsonTokenWriter,
+        JsonUtf8TokenWriter,
         jsonUtf8,
         jsonUtf8Decode,
         jsonUtf8Encode;

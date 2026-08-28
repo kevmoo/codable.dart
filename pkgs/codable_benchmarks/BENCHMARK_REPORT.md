@@ -3,9 +3,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / Avg / Best ] | 📤 Encode Efficiency<br/>[ Worst / Avg / Best ] |
 | :--- | :--- | :---: | :---: |
-| **AOT (`dart compile exe`)** | **`Old Dart + json_serial`** | 🟡 `[ 32 / 75 / 100 ]` | 🔴 `[ 40 / 53 / 73 ]` |
-|  | **`New Dart + json_serial`** | 🟡 `[ 42 / 77 / 100 ]` | 🟡 `[ 50 / 83 / 100 ]` |
-|  | **`New Dart + Codable`** | 🟢 `[ 52 / 90 / 100 ]` | 🟡 `[ 68 / 88 / 100 ]` |
+| **AOT (`dart compile exe`)** | **`Old Dart + json_serial`** | 🟡 `[ 32 / 75 / 100 ]` | 🔴 `[ 32 / 53 / 80 ]` |
+|  | **`New Dart + json_serial`** | 🟡 `[ 42 / 77 / 100 ]` | 🟡 `[ 50 / 78 / 100 ]` |
+|  | **`New Dart + Codable`** | 🟢 `[ 52 / 90 / 100 ]` | 🟢 `[ 67 / 91 / 100 ]` |
 | **JS (`dart2js` / Node 24 / V8)** | **`Old Dart + json_serial`** | 🟡 `[ 45 / 82 / 100 ]` | 🔴 `[ 49 / 60 / 77 ]` |
 |  | **`New Dart + json_serial`** | 🟡 `[ 44 / 81 / 100 ]` | 🟡 `[ 45 / 73 / 100 ]` |
 |  | **`New Dart + Codable`** | 🟢 `[ 91 / 98 / 100 ]` | 🟢 `[ 85 / 97 / 100 ]` |
@@ -41,14 +41,12 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Old Dart + json_serial | New Dart + json_serial | New Dart + Codable | Speedup vs Old Dart | Speedup vs New json_serial |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 9.13 ms | 4.17 ms | **6.17 ms** | **1.48x** | **0.68x** |
-| **canada.json (2.25 MB)** | 43.51 ms | 31.64 ms | **40.92 ms** | **1.06x** | **0.77x** |
-| **citm_catalog.json (1.73 MB)** | 8.26 ms | 5.96 ms | **3.96 ms** | **2.09x** | **1.51x** |
-| **small.json (0.55 KB)** | 0.01 ms | 0.00 ms | **0.00 ms** | **2.50x** | **2.00x** |
-| **twitter.json (0.62 MB)** | 5.22 ms | 3.00 ms | **3.19 ms** | **1.64x** | **0.94x** |
+| **10k Coordinates (0.39 MB)** | 10.09 ms | 4.49 ms | **3.19 ms** | **3.17x** | **1.41x** |
+| **canada.json (2.25 MB)** | 46.99 ms | 34.77 ms | **38.48 ms** | **1.22x** | **0.90x** |
+| **citm_catalog.json (1.73 MB)** | 8.80 ms | 7.67 ms | **3.82 ms** | **2.30x** | **2.01x** |
+| **small.json (0.55 KB)** | 0.01 ms | 0.00 ms | **0.01 ms** | **0.83x** | **0.67x** |
+| **twitter.json (0.62 MB)** | 5.71 ms | 3.09 ms | **2.08 ms** | **2.74x** | **1.48x** |
 <!-- mdformat on -->
-
-
 
 ------------------------------------------------------------------------
 
@@ -79,8 +77,6 @@
 | **twitter.json (0.62 MB)** | 6.00 ms | 3.67 ms | **4.33 ms** | **1.38x** | **0.85x** |
 <!-- mdformat on -->
 
-
-
 ------------------------------------------------------------------------
 
 ### 🎯 WASM Target Detailed Breakdown
@@ -109,7 +105,5 @@
 | **small.json (0.55 KB)** | 0.01 ms | 0.01 ms | **0.00 ms** | **1.25x** | **1.25x** |
 | **twitter.json (0.62 MB)** | 5.28 ms | 3.40 ms | **6.14 ms** | **0.86x** | **0.55x** |
 <!-- mdformat on -->
-
-
 
 ------------------------------------------------------------------------
