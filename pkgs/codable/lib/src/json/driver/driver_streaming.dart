@@ -610,15 +610,13 @@ final class JsonCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
-    // A non-positive hint means "unknown"; the writer itself rejects it.
-    final capacity = capacityHint != null && capacityHint > 0
-        ? capacityHint
-        : 1024;
-    final writer = JsonTokenWriter.toBuffer(capacity);
+    final sink = BytesBuilder(copy: false);
+    final writer = JsonUtf8TokenWriter(sink);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
     encode(encoder);
     encoder._finish();
-    return writer.toBytes();
+    writer.flush();
+    return sink.takeBytes();
   }
 
   /// Encodes a value to a JSON String.

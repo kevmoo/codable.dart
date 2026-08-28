@@ -86,6 +86,7 @@ String? _findNativeDart() {
   final home = Platform.environment['HOME'] ?? '';
   for (final candidate in [
     '$home/.local/share/dart-sdk-json-utf8-kernels/dart-sdk',
+    '$home/github/dart-sdk/core/agent-json-utf8-kernels/sdk/out/ReleaseX64/dart-sdk',
     '$home/github/dart-sdk/core/agent-json-squash/sdk/out/ReleaseX64/dart-sdk',
   ]) {
     final dart = _dartIn(candidate);
