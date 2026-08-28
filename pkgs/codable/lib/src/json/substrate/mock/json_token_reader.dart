@@ -69,8 +69,8 @@ abstract interface class JsonTokenReader {
 }
 
 final class _MockJsonTokenReader implements JsonTokenReader {
-  static const int _stringCacheSize = 16;
-  static const int _stringCacheMask = 15;
+  static const int _stringCacheSize = 128;
+  static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
   final Uint8List _bytes;
