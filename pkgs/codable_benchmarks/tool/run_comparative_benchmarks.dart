@@ -121,13 +121,6 @@ ArgParser _buildArgParser() => ArgParser()
   )
   ..addOption('new-sdk', help: 'Path to custom/next-gen Dart SDK (or bin/dart)')
   ..addOption(
-    'iterations',
-    abbr: 'n',
-    defaultsTo: '50',
-    help: 'Iterations per test',
-  )
-  ..addOption('warmup', abbr: 'w', defaultsTo: '5', help: 'Warmup iterations')
-  ..addOption(
     'concurrency',
     abbr: 'j',
     defaultsTo: '1',
@@ -214,8 +207,6 @@ void main(List<String> rawArgs) async {
   final dataset = args['dataset'] as String;
   final mode = args['mode'] as String;
   final target = args['target'] as String;
-  final iters = args['iterations'] as String;
-  final warmup = args['warmup'] as String;
   final concurrency = int.tryParse(args['concurrency'] as String? ?? '8') ?? 8;
 
   final stockDart = _findStockDart(args['stock-sdk'] as String?);
@@ -295,8 +286,6 @@ void main(List<String> rawArgs) async {
       t1Exe: t1Exe,
       t2Exe: t2Exe,
       t3Exe: t3Exe,
-      iters: iters,
-      warmup: warmup,
       concurrency: concurrency,
     );
 
@@ -407,8 +396,6 @@ _runTargetBenchmarks({
   required String t1Exe,
   required String t2Exe,
   required String t3Exe,
-  required String iters,
-  required String warmup,
   required int concurrency,
 }) async {
   final workloadUnits = <({String dataset, String mode})>[];
@@ -441,8 +428,6 @@ _runTargetBenchmarks({
       engineLabel: 'old_dart_json_serial',
       dataset: unit.dataset,
       mode: unit.mode,
-      iters: iters,
-      warmup: warmup,
     );
 
     final t2Res = await _runBenchmarkTier(
@@ -454,8 +439,6 @@ _runTargetBenchmarks({
       engineLabel: 'new_dart_json_serial',
       dataset: unit.dataset,
       mode: unit.mode,
-      iters: iters,
-      warmup: warmup,
     );
 
     final t3Res = await _runBenchmarkTier(
@@ -467,8 +450,6 @@ _runTargetBenchmarks({
       engineLabel: 'new_dart_codable',
       dataset: unit.dataset,
       mode: unit.mode,
-      iters: iters,
-      warmup: warmup,
     );
 
     resultsByUnit['${unit.dataset}:${unit.mode}'] = (
@@ -794,24 +775,11 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
   required String engineLabel,
   required String dataset,
   required String mode,
-  required String iters,
-  required String warmup,
 }) async {
   final (cmd, args) = switch (target) {
     'aot' => (
       targetFile,
-      [
-        '-d',
-        dataset,
-        '-m',
-        mode,
-        '-n',
-        iters,
-        '-w',
-        warmup,
-        '--engine-label=$engineLabel',
-        '--json',
-      ],
+      ['-d', dataset, '-m', mode, '--engine-label=$engineLabel', '--json'],
     ),
     'js' => (
       nodeBin,
@@ -821,10 +789,6 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
         dataset,
         '-m',
         mode,
-        '-n',
-        iters,
-        '-w',
-        warmup,
         '--engine-label=$engineLabel',
         '--json',
       ],
@@ -839,10 +803,6 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
         dataset,
         '-m',
         mode,
-        '-n',
-        iters,
-        '-w',
-        warmup,
         '--engine-label=$engineLabel',
         '--json',
       ],
@@ -856,10 +816,6 @@ Future<List<Map<String, dynamic>>> _runBenchmarkTier({
         dataset,
         '-m',
         mode,
-        '-n',
-        iters,
-        '-w',
-        warmup,
         '--engine-label=$engineLabel',
         '--json',
       ],
