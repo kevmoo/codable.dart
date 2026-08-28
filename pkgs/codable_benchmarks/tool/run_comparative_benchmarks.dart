@@ -46,7 +46,7 @@ String _findNewDart(String? explicitPath) {
   if (candidate1.existsSync()) return candidate1.path;
 
   final candidate2 = File(
-    '${Platform.environment['HOME'] ?? ''}/github/dart-sdk/out/ReleaseX64/dart-sdk/bin/dart',
+    '${Platform.environment['HOME'] ?? ''}/github/dart-sdk/core/agent-json-utf8-kernels/sdk/out/ReleaseX64/dart-sdk/bin/dart',
   );
   if (candidate2.existsSync()) return candidate2.path;
 
