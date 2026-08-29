@@ -60,10 +60,11 @@ final class DecoderGeneratorHelper {
       final suffix = toSafeIdentifierSuffix(field.name);
       final encoded = utf8.encode('${jsonEncode(field.wireName)}:');
       buffer.writeln(
-        '  static const List<int> wireNameBytes$suffix = $encoded;',
+        '  static final Uint8List wireNameBytes$suffix = '
+        'Uint8List.fromList(const $encoded);',
       );
       buffer.writeln(
-        '  static const StaticKey staticKey$suffix = '
+        '  static final StaticKey staticKey$suffix = '
         'StaticKey(name$suffix, key$suffix, wireNameBytes$suffix);',
       );
     }

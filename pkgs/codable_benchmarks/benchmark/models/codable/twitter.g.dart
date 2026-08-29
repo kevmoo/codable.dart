@@ -13,7 +13,7 @@ extension type const _$TwitterMetadataSchema(int _value) {
   static const String nameIsoLanguageCode = 'iso_language_code';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesResultType = [
+  static final Uint8List wireNameBytesResultType = Uint8List.fromList(const [
     34,
     114,
     101,
@@ -28,35 +28,37 @@ extension type const _$TwitterMetadataSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyResultType = StaticKey(
+  ]);
+  static final StaticKey staticKeyResultType = StaticKey(
     nameResultType,
     keyResultType,
     wireNameBytesResultType,
   );
-  static const List<int> wireNameBytesIsoLanguageCode = [
-    34,
-    105,
-    115,
-    111,
-    95,
-    108,
-    97,
-    110,
-    103,
-    117,
-    97,
-    103,
-    101,
-    95,
-    99,
-    111,
-    100,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyIsoLanguageCode = StaticKey(
+  static final Uint8List wireNameBytesIsoLanguageCode = Uint8List.fromList(
+    const [
+      34,
+      105,
+      115,
+      111,
+      95,
+      108,
+      97,
+      110,
+      103,
+      117,
+      97,
+      103,
+      101,
+      95,
+      99,
+      111,
+      100,
+      101,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyIsoLanguageCode = StaticKey(
     nameIsoLanguageCode,
     keyIsoLanguageCode,
     wireNameBytesIsoLanguageCode,
@@ -153,7 +155,7 @@ extension type const _$TwitterUserMentionSchema(int _value) {
   static const String nameIndices = 'indices';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesScreenName = [
+  static final Uint8List wireNameBytesScreenName = Uint8List.fromList(const [
     34,
     115,
     99,
@@ -168,25 +170,39 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyScreenName = StaticKey(
+  ]);
+  static final StaticKey staticKeyScreenName = StaticKey(
     nameScreenName,
     keyScreenName,
     wireNameBytesScreenName,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesIdStr = [
+  static final Uint8List wireNameBytesIdStr = Uint8List.fromList(const [
     34,
     105,
     100,
@@ -196,13 +212,13 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
+  ]);
+  static final StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
     keyIdStr,
     wireNameBytesIdStr,
   );
-  static const List<int> wireNameBytesIndices = [
+  static final Uint8List wireNameBytesIndices = Uint8List.fromList(const [
     34,
     105,
     110,
@@ -213,8 +229,8 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIndices = StaticKey(
+  ]);
+  static final StaticKey staticKeyIndices = StaticKey(
     nameIndices,
     keyIndices,
     wireNameBytesIndices,
@@ -415,13 +431,20 @@ extension type const _$TwitterUrlSchema(int _value) {
   static const String nameIndices = 'indices';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
-  static const StaticKey staticKeyUrl = StaticKey(
+  static final Uint8List wireNameBytesUrl = Uint8List.fromList(const [
+    34,
+    117,
+    114,
+    108,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
     wireNameBytesUrl,
   );
-  static const List<int> wireNameBytesExpandedUrl = [
+  static final Uint8List wireNameBytesExpandedUrl = Uint8List.fromList(const [
     34,
     101,
     120,
@@ -437,13 +460,13 @@ extension type const _$TwitterUrlSchema(int _value) {
     108,
     34,
     58,
-  ];
-  static const StaticKey staticKeyExpandedUrl = StaticKey(
+  ]);
+  static final StaticKey staticKeyExpandedUrl = StaticKey(
     nameExpandedUrl,
     keyExpandedUrl,
     wireNameBytesExpandedUrl,
   );
-  static const List<int> wireNameBytesDisplayUrl = [
+  static final Uint8List wireNameBytesDisplayUrl = Uint8List.fromList(const [
     34,
     100,
     105,
@@ -458,13 +481,13 @@ extension type const _$TwitterUrlSchema(int _value) {
     108,
     34,
     58,
-  ];
-  static const StaticKey staticKeyDisplayUrl = StaticKey(
+  ]);
+  static final StaticKey staticKeyDisplayUrl = StaticKey(
     nameDisplayUrl,
     keyDisplayUrl,
     wireNameBytesDisplayUrl,
   );
-  static const List<int> wireNameBytesIndices = [
+  static final Uint8List wireNameBytesIndices = Uint8List.fromList(const [
     34,
     105,
     110,
@@ -475,8 +498,8 @@ extension type const _$TwitterUrlSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIndices = StaticKey(
+  ]);
+  static final StaticKey staticKeyIndices = StaticKey(
     nameIndices,
     keyIndices,
     wireNameBytesIndices,
@@ -641,8 +664,16 @@ extension type const _$TwitterEntitiesUrlsSchema(int _value) {
   static const String nameUrls = 'urls';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34, 58];
-  static const StaticKey staticKeyUrls = StaticKey(
+  static final Uint8List wireNameBytesUrls = Uint8List.fromList(const [
+    34,
+    117,
+    114,
+    108,
+    115,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUrls = StaticKey(
     nameUrls,
     keyUrls,
     wireNameBytesUrls,
@@ -725,13 +756,20 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
   static const String nameDescription = 'description';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
-  static const StaticKey staticKeyUrl = StaticKey(
+  static final Uint8List wireNameBytesUrl = Uint8List.fromList(const [
+    34,
+    117,
+    114,
+    108,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
     wireNameBytesUrl,
   );
-  static const List<int> wireNameBytesDescription = [
+  static final Uint8List wireNameBytesDescription = Uint8List.fromList(const [
     34,
     100,
     101,
@@ -746,8 +784,8 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyDescription = StaticKey(
+  ]);
+  static final StaticKey staticKeyDescription = StaticKey(
     nameDescription,
     keyDescription,
     wireNameBytesDescription,
@@ -851,13 +889,21 @@ extension type const _$TwitterEntitiesSchema(int _value) {
   static const String nameUserMentions = 'user_mentions';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34, 58];
-  static const StaticKey staticKeyUrls = StaticKey(
+  static final Uint8List wireNameBytesUrls = Uint8List.fromList(const [
+    34,
+    117,
+    114,
+    108,
+    115,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUrls = StaticKey(
     nameUrls,
     keyUrls,
     wireNameBytesUrls,
   );
-  static const List<int> wireNameBytesUserMentions = [
+  static final Uint8List wireNameBytesUserMentions = Uint8List.fromList(const [
     34,
     117,
     115,
@@ -874,8 +920,8 @@ extension type const _$TwitterEntitiesSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyUserMentions = StaticKey(
+  ]);
+  static final StaticKey staticKeyUserMentions = StaticKey(
     nameUserMentions,
     keyUserMentions,
     wireNameBytesUserMentions,
@@ -1011,13 +1057,19 @@ extension type const _$TwitterUserSchema(int _value) {
   static const String nameNotifications = 'notifications';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesIdStr = [
+  static final Uint8List wireNameBytesIdStr = Uint8List.fromList(const [
     34,
     105,
     100,
@@ -1027,19 +1079,27 @@ extension type const _$TwitterUserSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
+  ]);
+  static final StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
     keyIdStr,
     wireNameBytesIdStr,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesScreenName = [
+  static final Uint8List wireNameBytesScreenName = Uint8List.fromList(const [
     34,
     115,
     99,
@@ -1054,13 +1114,13 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyScreenName = StaticKey(
+  ]);
+  static final StaticKey staticKeyScreenName = StaticKey(
     nameScreenName,
     keyScreenName,
     wireNameBytesScreenName,
   );
-  static const List<int> wireNameBytesLocation = [
+  static final Uint8List wireNameBytesLocation = Uint8List.fromList(const [
     34,
     108,
     111,
@@ -1072,13 +1132,13 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLocation = StaticKey(
+  ]);
+  static final StaticKey staticKeyLocation = StaticKey(
     nameLocation,
     keyLocation,
     wireNameBytesLocation,
   );
-  static const List<int> wireNameBytesDescription = [
+  static final Uint8List wireNameBytesDescription = Uint8List.fromList(const [
     34,
     100,
     101,
@@ -1093,19 +1153,26 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyDescription = StaticKey(
+  ]);
+  static final StaticKey staticKeyDescription = StaticKey(
     nameDescription,
     keyDescription,
     wireNameBytesDescription,
   );
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
-  static const StaticKey staticKeyUrl = StaticKey(
+  static final Uint8List wireNameBytesUrl = Uint8List.fromList(const [
+    34,
+    117,
+    114,
+    108,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
     wireNameBytesUrl,
   );
-  static const List<int> wireNameBytesEntities = [
+  static final Uint8List wireNameBytesEntities = Uint8List.fromList(const [
     34,
     101,
     110,
@@ -1117,13 +1184,13 @@ extension type const _$TwitterUserSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyEntities = StaticKey(
+  ]);
+  static final StaticKey staticKeyEntities = StaticKey(
     nameEntities,
     keyEntities,
     wireNameBytesEntities,
   );
-  static const List<int> wireNameBytesProtected = [
+  static final Uint8List wireNameBytesProtected = Uint8List.fromList(const [
     34,
     112,
     114,
@@ -1136,38 +1203,40 @@ extension type const _$TwitterUserSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyProtected = StaticKey(
+  ]);
+  static final StaticKey staticKeyProtected = StaticKey(
     nameProtected,
     keyProtected,
     wireNameBytesProtected,
   );
-  static const List<int> wireNameBytesFollowersCount = [
-    34,
-    102,
-    111,
-    108,
-    108,
-    111,
-    119,
-    101,
-    114,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyFollowersCount = StaticKey(
+  static final Uint8List wireNameBytesFollowersCount = Uint8List.fromList(
+    const [
+      34,
+      102,
+      111,
+      108,
+      108,
+      111,
+      119,
+      101,
+      114,
+      115,
+      95,
+      99,
+      111,
+      117,
+      110,
+      116,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyFollowersCount = StaticKey(
     nameFollowersCount,
     keyFollowersCount,
     wireNameBytesFollowersCount,
   );
-  static const List<int> wireNameBytesFriendsCount = [
+  static final Uint8List wireNameBytesFriendsCount = Uint8List.fromList(const [
     34,
     102,
     114,
@@ -1184,13 +1253,13 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyFriendsCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyFriendsCount = StaticKey(
     nameFriendsCount,
     keyFriendsCount,
     wireNameBytesFriendsCount,
   );
-  static const List<int> wireNameBytesListedCount = [
+  static final Uint8List wireNameBytesListedCount = Uint8List.fromList(const [
     34,
     108,
     105,
@@ -1206,13 +1275,13 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyListedCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyListedCount = StaticKey(
     nameListedCount,
     keyListedCount,
     wireNameBytesListedCount,
   );
-  static const List<int> wireNameBytesCreatedAt = [
+  static final Uint8List wireNameBytesCreatedAt = Uint8List.fromList(const [
     34,
     99,
     114,
@@ -1226,39 +1295,41 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCreatedAt = StaticKey(
+  ]);
+  static final StaticKey staticKeyCreatedAt = StaticKey(
     nameCreatedAt,
     keyCreatedAt,
     wireNameBytesCreatedAt,
   );
-  static const List<int> wireNameBytesFavouritesCount = [
-    34,
-    102,
-    97,
-    118,
-    111,
-    117,
-    114,
-    105,
-    116,
-    101,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyFavouritesCount = StaticKey(
+  static final Uint8List wireNameBytesFavouritesCount = Uint8List.fromList(
+    const [
+      34,
+      102,
+      97,
+      118,
+      111,
+      117,
+      114,
+      105,
+      116,
+      101,
+      115,
+      95,
+      99,
+      111,
+      117,
+      110,
+      116,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyFavouritesCount = StaticKey(
     nameFavouritesCount,
     keyFavouritesCount,
     wireNameBytesFavouritesCount,
   );
-  static const List<int> wireNameBytesUtcOffset = [
+  static final Uint8List wireNameBytesUtcOffset = Uint8List.fromList(const [
     34,
     117,
     116,
@@ -1272,13 +1343,13 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyUtcOffset = StaticKey(
+  ]);
+  static final StaticKey staticKeyUtcOffset = StaticKey(
     nameUtcOffset,
     keyUtcOffset,
     wireNameBytesUtcOffset,
   );
-  static const List<int> wireNameBytesTimeZone = [
+  static final Uint8List wireNameBytesTimeZone = Uint8List.fromList(const [
     34,
     116,
     105,
@@ -1291,13 +1362,13 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyTimeZone = StaticKey(
+  ]);
+  static final StaticKey staticKeyTimeZone = StaticKey(
     nameTimeZone,
     keyTimeZone,
     wireNameBytesTimeZone,
   );
-  static const List<int> wireNameBytesGeoEnabled = [
+  static final Uint8List wireNameBytesGeoEnabled = Uint8List.fromList(const [
     34,
     103,
     101,
@@ -1312,13 +1383,13 @@ extension type const _$TwitterUserSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyGeoEnabled = StaticKey(
+  ]);
+  static final StaticKey staticKeyGeoEnabled = StaticKey(
     nameGeoEnabled,
     keyGeoEnabled,
     wireNameBytesGeoEnabled,
   );
-  static const List<int> wireNameBytesVerified = [
+  static final Uint8List wireNameBytesVerified = Uint8List.fromList(const [
     34,
     118,
     101,
@@ -1330,13 +1401,13 @@ extension type const _$TwitterUserSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyVerified = StaticKey(
+  ]);
+  static final StaticKey staticKeyVerified = StaticKey(
     nameVerified,
     keyVerified,
     wireNameBytesVerified,
   );
-  static const List<int> wireNameBytesStatusesCount = [
+  static final Uint8List wireNameBytesStatusesCount = Uint8List.fromList(const [
     34,
     115,
     116,
@@ -1354,49 +1425,59 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyStatusesCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyStatusesCount = StaticKey(
     nameStatusesCount,
     keyStatusesCount,
     wireNameBytesStatusesCount,
   );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34, 58];
-  static const StaticKey staticKeyLang = StaticKey(
+  static final Uint8List wireNameBytesLang = Uint8List.fromList(const [
+    34,
+    108,
+    97,
+    110,
+    103,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyLang = StaticKey(
     nameLang,
     keyLang,
     wireNameBytesLang,
   );
-  static const List<int> wireNameBytesContributorsEnabled = [
-    34,
-    99,
-    111,
-    110,
-    116,
-    114,
-    105,
-    98,
-    117,
-    116,
-    111,
-    114,
-    115,
-    95,
-    101,
-    110,
-    97,
-    98,
-    108,
-    101,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyContributorsEnabled = StaticKey(
+  static final Uint8List wireNameBytesContributorsEnabled = Uint8List.fromList(
+    const [
+      34,
+      99,
+      111,
+      110,
+      116,
+      114,
+      105,
+      98,
+      117,
+      116,
+      111,
+      114,
+      115,
+      95,
+      101,
+      110,
+      97,
+      98,
+      108,
+      101,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyContributorsEnabled = StaticKey(
     nameContributorsEnabled,
     keyContributorsEnabled,
     wireNameBytesContributorsEnabled,
   );
-  static const List<int> wireNameBytesIsTranslator = [
+  static final Uint8List wireNameBytesIsTranslator = Uint8List.fromList(const [
     34,
     105,
     115,
@@ -1413,506 +1494,529 @@ extension type const _$TwitterUserSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIsTranslator = StaticKey(
+  ]);
+  static final StaticKey staticKeyIsTranslator = StaticKey(
     nameIsTranslator,
     keyIsTranslator,
     wireNameBytesIsTranslator,
   );
-  static const List<int> wireNameBytesIsTranslationEnabled = [
-    34,
-    105,
-    115,
-    95,
-    116,
-    114,
-    97,
-    110,
-    115,
-    108,
-    97,
-    116,
-    105,
-    111,
-    110,
-    95,
-    101,
-    110,
-    97,
-    98,
-    108,
-    101,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyIsTranslationEnabled = StaticKey(
+  static final Uint8List wireNameBytesIsTranslationEnabled = Uint8List.fromList(
+    const [
+      34,
+      105,
+      115,
+      95,
+      116,
+      114,
+      97,
+      110,
+      115,
+      108,
+      97,
+      116,
+      105,
+      111,
+      110,
+      95,
+      101,
+      110,
+      97,
+      98,
+      108,
+      101,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyIsTranslationEnabled = StaticKey(
     nameIsTranslationEnabled,
     keyIsTranslationEnabled,
     wireNameBytesIsTranslationEnabled,
   );
-  static const List<int> wireNameBytesProfileBackgroundColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileBackgroundColor = StaticKey(
+  static final Uint8List wireNameBytesProfileBackgroundColor =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        98,
+        97,
+        99,
+        107,
+        103,
+        114,
+        111,
+        117,
+        110,
+        100,
+        95,
+        99,
+        111,
+        108,
+        111,
+        114,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileBackgroundColor = StaticKey(
     nameProfileBackgroundColor,
     keyProfileBackgroundColor,
     wireNameBytesProfileBackgroundColor,
   );
-  static const List<int> wireNameBytesProfileBackgroundImageUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileBackgroundImageUrl = StaticKey(
+  static final Uint8List wireNameBytesProfileBackgroundImageUrl =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        98,
+        97,
+        99,
+        107,
+        103,
+        114,
+        111,
+        117,
+        110,
+        100,
+        95,
+        105,
+        109,
+        97,
+        103,
+        101,
+        95,
+        117,
+        114,
+        108,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileBackgroundImageUrl = StaticKey(
     nameProfileBackgroundImageUrl,
     keyProfileBackgroundImageUrl,
     wireNameBytesProfileBackgroundImageUrl,
   );
-  static const List<int> wireNameBytesProfileBackgroundImageUrlHttps = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    95,
-    104,
-    116,
-    116,
-    112,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileBackgroundImageUrlHttps = StaticKey(
+  static final Uint8List wireNameBytesProfileBackgroundImageUrlHttps =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        98,
+        97,
+        99,
+        107,
+        103,
+        114,
+        111,
+        117,
+        110,
+        100,
+        95,
+        105,
+        109,
+        97,
+        103,
+        101,
+        95,
+        117,
+        114,
+        108,
+        95,
+        104,
+        116,
+        116,
+        112,
+        115,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileBackgroundImageUrlHttps = StaticKey(
     nameProfileBackgroundImageUrlHttps,
     keyProfileBackgroundImageUrlHttps,
     wireNameBytesProfileBackgroundImageUrlHttps,
   );
-  static const List<int> wireNameBytesProfileBackgroundTile = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    116,
-    105,
-    108,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileBackgroundTile = StaticKey(
+  static final Uint8List wireNameBytesProfileBackgroundTile =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        98,
+        97,
+        99,
+        107,
+        103,
+        114,
+        111,
+        117,
+        110,
+        100,
+        95,
+        116,
+        105,
+        108,
+        101,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileBackgroundTile = StaticKey(
     nameProfileBackgroundTile,
     keyProfileBackgroundTile,
     wireNameBytesProfileBackgroundTile,
   );
-  static const List<int> wireNameBytesProfileImageUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileImageUrl = StaticKey(
+  static final Uint8List wireNameBytesProfileImageUrl = Uint8List.fromList(
+    const [
+      34,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      105,
+      109,
+      97,
+      103,
+      101,
+      95,
+      117,
+      114,
+      108,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyProfileImageUrl = StaticKey(
     nameProfileImageUrl,
     keyProfileImageUrl,
     wireNameBytesProfileImageUrl,
   );
-  static const List<int> wireNameBytesProfileImageUrlHttps = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    95,
-    104,
-    116,
-    116,
-    112,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileImageUrlHttps = StaticKey(
+  static final Uint8List wireNameBytesProfileImageUrlHttps = Uint8List.fromList(
+    const [
+      34,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      105,
+      109,
+      97,
+      103,
+      101,
+      95,
+      117,
+      114,
+      108,
+      95,
+      104,
+      116,
+      116,
+      112,
+      115,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyProfileImageUrlHttps = StaticKey(
     nameProfileImageUrlHttps,
     keyProfileImageUrlHttps,
     wireNameBytesProfileImageUrlHttps,
   );
-  static const List<int> wireNameBytesProfileBannerUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    110,
-    110,
-    101,
-    114,
-    95,
-    117,
-    114,
-    108,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileBannerUrl = StaticKey(
+  static final Uint8List wireNameBytesProfileBannerUrl = Uint8List.fromList(
+    const [
+      34,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      98,
+      97,
+      110,
+      110,
+      101,
+      114,
+      95,
+      117,
+      114,
+      108,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyProfileBannerUrl = StaticKey(
     nameProfileBannerUrl,
     keyProfileBannerUrl,
     wireNameBytesProfileBannerUrl,
   );
-  static const List<int> wireNameBytesProfileLinkColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    108,
-    105,
-    110,
-    107,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileLinkColor = StaticKey(
+  static final Uint8List wireNameBytesProfileLinkColor = Uint8List.fromList(
+    const [
+      34,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      108,
+      105,
+      110,
+      107,
+      95,
+      99,
+      111,
+      108,
+      111,
+      114,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyProfileLinkColor = StaticKey(
     nameProfileLinkColor,
     keyProfileLinkColor,
     wireNameBytesProfileLinkColor,
   );
-  static const List<int> wireNameBytesProfileSidebarBorderColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    115,
-    105,
-    100,
-    101,
-    98,
-    97,
-    114,
-    95,
-    98,
-    111,
-    114,
-    100,
-    101,
-    114,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileSidebarBorderColor = StaticKey(
+  static final Uint8List wireNameBytesProfileSidebarBorderColor =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        115,
+        105,
+        100,
+        101,
+        98,
+        97,
+        114,
+        95,
+        98,
+        111,
+        114,
+        100,
+        101,
+        114,
+        95,
+        99,
+        111,
+        108,
+        111,
+        114,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileSidebarBorderColor = StaticKey(
     nameProfileSidebarBorderColor,
     keyProfileSidebarBorderColor,
     wireNameBytesProfileSidebarBorderColor,
   );
-  static const List<int> wireNameBytesProfileSidebarFillColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    115,
-    105,
-    100,
-    101,
-    98,
-    97,
-    114,
-    95,
-    102,
-    105,
-    108,
-    108,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileSidebarFillColor = StaticKey(
+  static final Uint8List wireNameBytesProfileSidebarFillColor =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        115,
+        105,
+        100,
+        101,
+        98,
+        97,
+        114,
+        95,
+        102,
+        105,
+        108,
+        108,
+        95,
+        99,
+        111,
+        108,
+        111,
+        114,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileSidebarFillColor = StaticKey(
     nameProfileSidebarFillColor,
     keyProfileSidebarFillColor,
     wireNameBytesProfileSidebarFillColor,
   );
-  static const List<int> wireNameBytesProfileTextColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    116,
-    101,
-    120,
-    116,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileTextColor = StaticKey(
+  static final Uint8List wireNameBytesProfileTextColor = Uint8List.fromList(
+    const [
+      34,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      116,
+      101,
+      120,
+      116,
+      95,
+      99,
+      111,
+      108,
+      111,
+      114,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyProfileTextColor = StaticKey(
     nameProfileTextColor,
     keyProfileTextColor,
     wireNameBytesProfileTextColor,
   );
-  static const List<int> wireNameBytesProfileUseBackgroundImage = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    117,
-    115,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyProfileUseBackgroundImage = StaticKey(
+  static final Uint8List wireNameBytesProfileUseBackgroundImage =
+      Uint8List.fromList(const [
+        34,
+        112,
+        114,
+        111,
+        102,
+        105,
+        108,
+        101,
+        95,
+        117,
+        115,
+        101,
+        95,
+        98,
+        97,
+        99,
+        107,
+        103,
+        114,
+        111,
+        117,
+        110,
+        100,
+        95,
+        105,
+        109,
+        97,
+        103,
+        101,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyProfileUseBackgroundImage = StaticKey(
     nameProfileUseBackgroundImage,
     keyProfileUseBackgroundImage,
     wireNameBytesProfileUseBackgroundImage,
   );
-  static const List<int> wireNameBytesDefaultProfile = [
-    34,
-    100,
-    101,
-    102,
-    97,
-    117,
-    108,
-    116,
-    95,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyDefaultProfile = StaticKey(
+  static final Uint8List wireNameBytesDefaultProfile = Uint8List.fromList(
+    const [
+      34,
+      100,
+      101,
+      102,
+      97,
+      117,
+      108,
+      116,
+      95,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyDefaultProfile = StaticKey(
     nameDefaultProfile,
     keyDefaultProfile,
     wireNameBytesDefaultProfile,
   );
-  static const List<int> wireNameBytesDefaultProfileImage = [
-    34,
-    100,
-    101,
-    102,
-    97,
-    117,
-    108,
-    116,
-    95,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyDefaultProfileImage = StaticKey(
+  static final Uint8List wireNameBytesDefaultProfileImage = Uint8List.fromList(
+    const [
+      34,
+      100,
+      101,
+      102,
+      97,
+      117,
+      108,
+      116,
+      95,
+      112,
+      114,
+      111,
+      102,
+      105,
+      108,
+      101,
+      95,
+      105,
+      109,
+      97,
+      103,
+      101,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyDefaultProfileImage = StaticKey(
     nameDefaultProfileImage,
     keyDefaultProfileImage,
     wireNameBytesDefaultProfileImage,
   );
-  static const List<int> wireNameBytesFollowing = [
+  static final Uint8List wireNameBytesFollowing = Uint8List.fromList(const [
     34,
     102,
     111,
@@ -1925,42 +2029,44 @@ extension type const _$TwitterUserSchema(int _value) {
     103,
     34,
     58,
-  ];
-  static const StaticKey staticKeyFollowing = StaticKey(
+  ]);
+  static final StaticKey staticKeyFollowing = StaticKey(
     nameFollowing,
     keyFollowing,
     wireNameBytesFollowing,
   );
-  static const List<int> wireNameBytesFollowRequestSent = [
-    34,
-    102,
-    111,
-    108,
-    108,
-    111,
-    119,
-    95,
-    114,
-    101,
-    113,
-    117,
-    101,
-    115,
-    116,
-    95,
-    115,
-    101,
-    110,
-    116,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyFollowRequestSent = StaticKey(
+  static final Uint8List wireNameBytesFollowRequestSent = Uint8List.fromList(
+    const [
+      34,
+      102,
+      111,
+      108,
+      108,
+      111,
+      119,
+      95,
+      114,
+      101,
+      113,
+      117,
+      101,
+      115,
+      116,
+      95,
+      115,
+      101,
+      110,
+      116,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyFollowRequestSent = StaticKey(
     nameFollowRequestSent,
     keyFollowRequestSent,
     wireNameBytesFollowRequestSent,
   );
-  static const List<int> wireNameBytesNotifications = [
+  static final Uint8List wireNameBytesNotifications = Uint8List.fromList(const [
     34,
     110,
     111,
@@ -1977,8 +2083,8 @@ extension type const _$TwitterUserSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyNotifications = StaticKey(
+  ]);
+  static final StaticKey staticKeyNotifications = StaticKey(
     nameNotifications,
     keyNotifications,
     wireNameBytesNotifications,
@@ -2725,7 +2831,7 @@ extension type const _$TwitterStatusSchema(int _value) {
   static const String nameRetweetedStatus = 'retweeted_status';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesMetadata = [
+  static final Uint8List wireNameBytesMetadata = Uint8List.fromList(const [
     34,
     109,
     101,
@@ -2737,13 +2843,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     97,
     34,
     58,
-  ];
-  static const StaticKey staticKeyMetadata = StaticKey(
+  ]);
+  static final StaticKey staticKeyMetadata = StaticKey(
     nameMetadata,
     keyMetadata,
     wireNameBytesMetadata,
   );
-  static const List<int> wireNameBytesCreatedAt = [
+  static final Uint8List wireNameBytesCreatedAt = Uint8List.fromList(const [
     34,
     99,
     114,
@@ -2757,19 +2863,25 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCreatedAt = StaticKey(
+  ]);
+  static final StaticKey staticKeyCreatedAt = StaticKey(
     nameCreatedAt,
     keyCreatedAt,
     wireNameBytesCreatedAt,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesIdStr = [
+  static final Uint8List wireNameBytesIdStr = Uint8List.fromList(const [
     34,
     105,
     100,
@@ -2779,19 +2891,27 @@ extension type const _$TwitterStatusSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
+  ]);
+  static final StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
     keyIdStr,
     wireNameBytesIdStr,
   );
-  static const List<int> wireNameBytesText = [34, 116, 101, 120, 116, 34, 58];
-  static const StaticKey staticKeyText = StaticKey(
+  static final Uint8List wireNameBytesText = Uint8List.fromList(const [
+    34,
+    116,
+    101,
+    120,
+    116,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyText = StaticKey(
     nameText,
     keyText,
     wireNameBytesText,
   );
-  static const List<int> wireNameBytesSource = [
+  static final Uint8List wireNameBytesSource = Uint8List.fromList(const [
     34,
     115,
     111,
@@ -2801,13 +2921,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeySource = StaticKey(
+  ]);
+  static final StaticKey staticKeySource = StaticKey(
     nameSource,
     keySource,
     wireNameBytesSource,
   );
-  static const List<int> wireNameBytesTruncated = [
+  static final Uint8List wireNameBytesTruncated = Uint8List.fromList(const [
     34,
     116,
     114,
@@ -2820,180 +2940,198 @@ extension type const _$TwitterStatusSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyTruncated = StaticKey(
+  ]);
+  static final StaticKey staticKeyTruncated = StaticKey(
     nameTruncated,
     keyTruncated,
     wireNameBytesTruncated,
   );
-  static const List<int> wireNameBytesInReplyToStatusId = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    95,
-    105,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyInReplyToStatusId = StaticKey(
+  static final Uint8List wireNameBytesInReplyToStatusId = Uint8List.fromList(
+    const [
+      34,
+      105,
+      110,
+      95,
+      114,
+      101,
+      112,
+      108,
+      121,
+      95,
+      116,
+      111,
+      95,
+      115,
+      116,
+      97,
+      116,
+      117,
+      115,
+      95,
+      105,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyInReplyToStatusId = StaticKey(
     nameInReplyToStatusId,
     keyInReplyToStatusId,
     wireNameBytesInReplyToStatusId,
   );
-  static const List<int> wireNameBytesInReplyToStatusIdStr = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyInReplyToStatusIdStr = StaticKey(
+  static final Uint8List wireNameBytesInReplyToStatusIdStr = Uint8List.fromList(
+    const [
+      34,
+      105,
+      110,
+      95,
+      114,
+      101,
+      112,
+      108,
+      121,
+      95,
+      116,
+      111,
+      95,
+      115,
+      116,
+      97,
+      116,
+      117,
+      115,
+      95,
+      105,
+      100,
+      95,
+      115,
+      116,
+      114,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyInReplyToStatusIdStr = StaticKey(
     nameInReplyToStatusIdStr,
     keyInReplyToStatusIdStr,
     wireNameBytesInReplyToStatusIdStr,
   );
-  static const List<int> wireNameBytesInReplyToUserId = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    117,
-    115,
-    101,
-    114,
-    95,
-    105,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyInReplyToUserId = StaticKey(
+  static final Uint8List wireNameBytesInReplyToUserId = Uint8List.fromList(
+    const [
+      34,
+      105,
+      110,
+      95,
+      114,
+      101,
+      112,
+      108,
+      121,
+      95,
+      116,
+      111,
+      95,
+      117,
+      115,
+      101,
+      114,
+      95,
+      105,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyInReplyToUserId = StaticKey(
     nameInReplyToUserId,
     keyInReplyToUserId,
     wireNameBytesInReplyToUserId,
   );
-  static const List<int> wireNameBytesInReplyToUserIdStr = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    117,
-    115,
-    101,
-    114,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyInReplyToUserIdStr = StaticKey(
+  static final Uint8List wireNameBytesInReplyToUserIdStr = Uint8List.fromList(
+    const [
+      34,
+      105,
+      110,
+      95,
+      114,
+      101,
+      112,
+      108,
+      121,
+      95,
+      116,
+      111,
+      95,
+      117,
+      115,
+      101,
+      114,
+      95,
+      105,
+      100,
+      95,
+      115,
+      116,
+      114,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyInReplyToUserIdStr = StaticKey(
     nameInReplyToUserIdStr,
     keyInReplyToUserIdStr,
     wireNameBytesInReplyToUserIdStr,
   );
-  static const List<int> wireNameBytesInReplyToScreenName = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    99,
-    114,
-    101,
-    101,
-    110,
-    95,
-    110,
-    97,
-    109,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyInReplyToScreenName = StaticKey(
+  static final Uint8List wireNameBytesInReplyToScreenName = Uint8List.fromList(
+    const [
+      34,
+      105,
+      110,
+      95,
+      114,
+      101,
+      112,
+      108,
+      121,
+      95,
+      116,
+      111,
+      95,
+      115,
+      99,
+      114,
+      101,
+      101,
+      110,
+      95,
+      110,
+      97,
+      109,
+      101,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyInReplyToScreenName = StaticKey(
     nameInReplyToScreenName,
     keyInReplyToScreenName,
     wireNameBytesInReplyToScreenName,
   );
-  static const List<int> wireNameBytesUser = [34, 117, 115, 101, 114, 34, 58];
-  static const StaticKey staticKeyUser = StaticKey(
+  static final Uint8List wireNameBytesUser = Uint8List.fromList(const [
+    34,
+    117,
+    115,
+    101,
+    114,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUser = StaticKey(
     nameUser,
     keyUser,
     wireNameBytesUser,
   );
-  static const List<int> wireNameBytesRetweetCount = [
+  static final Uint8List wireNameBytesRetweetCount = Uint8List.fromList(const [
     34,
     114,
     101,
@@ -3010,13 +3148,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyRetweetCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyRetweetCount = StaticKey(
     nameRetweetCount,
     keyRetweetCount,
     wireNameBytesRetweetCount,
   );
-  static const List<int> wireNameBytesFavoriteCount = [
+  static final Uint8List wireNameBytesFavoriteCount = Uint8List.fromList(const [
     34,
     102,
     97,
@@ -3034,13 +3172,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyFavoriteCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyFavoriteCount = StaticKey(
     nameFavoriteCount,
     keyFavoriteCount,
     wireNameBytesFavoriteCount,
   );
-  static const List<int> wireNameBytesEntities = [
+  static final Uint8List wireNameBytesEntities = Uint8List.fromList(const [
     34,
     101,
     110,
@@ -3052,13 +3190,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyEntities = StaticKey(
+  ]);
+  static final StaticKey staticKeyEntities = StaticKey(
     nameEntities,
     keyEntities,
     wireNameBytesEntities,
   );
-  static const List<int> wireNameBytesFavorited = [
+  static final Uint8List wireNameBytesFavorited = Uint8List.fromList(const [
     34,
     102,
     97,
@@ -3071,13 +3209,13 @@ extension type const _$TwitterStatusSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyFavorited = StaticKey(
+  ]);
+  static final StaticKey staticKeyFavorited = StaticKey(
     nameFavorited,
     keyFavorited,
     wireNameBytesFavorited,
   );
-  static const List<int> wireNameBytesRetweeted = [
+  static final Uint8List wireNameBytesRetweeted = Uint8List.fromList(const [
     34,
     114,
     101,
@@ -3090,68 +3228,80 @@ extension type const _$TwitterStatusSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyRetweeted = StaticKey(
+  ]);
+  static final StaticKey staticKeyRetweeted = StaticKey(
     nameRetweeted,
     keyRetweeted,
     wireNameBytesRetweeted,
   );
-  static const List<int> wireNameBytesPossiblySensitive = [
-    34,
-    112,
-    111,
-    115,
-    115,
-    105,
-    98,
-    108,
-    121,
-    95,
-    115,
-    101,
-    110,
-    115,
-    105,
-    116,
-    105,
-    118,
-    101,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyPossiblySensitive = StaticKey(
+  static final Uint8List wireNameBytesPossiblySensitive = Uint8List.fromList(
+    const [
+      34,
+      112,
+      111,
+      115,
+      115,
+      105,
+      98,
+      108,
+      121,
+      95,
+      115,
+      101,
+      110,
+      115,
+      105,
+      116,
+      105,
+      118,
+      101,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyPossiblySensitive = StaticKey(
     namePossiblySensitive,
     keyPossiblySensitive,
     wireNameBytesPossiblySensitive,
   );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34, 58];
-  static const StaticKey staticKeyLang = StaticKey(
+  static final Uint8List wireNameBytesLang = Uint8List.fromList(const [
+    34,
+    108,
+    97,
+    110,
+    103,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyLang = StaticKey(
     nameLang,
     keyLang,
     wireNameBytesLang,
   );
-  static const List<int> wireNameBytesRetweetedStatus = [
-    34,
-    114,
-    101,
-    116,
-    119,
-    101,
-    101,
-    116,
-    101,
-    100,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyRetweetedStatus = StaticKey(
+  static final Uint8List wireNameBytesRetweetedStatus = Uint8List.fromList(
+    const [
+      34,
+      114,
+      101,
+      116,
+      119,
+      101,
+      101,
+      116,
+      101,
+      100,
+      95,
+      115,
+      116,
+      97,
+      116,
+      117,
+      115,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeyRetweetedStatus = StaticKey(
     nameRetweetedStatus,
     keyRetweetedStatus,
     wireNameBytesRetweetedStatus,
@@ -3620,7 +3770,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
   static const String nameSinceIdStr = 'since_id_str';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesCompletedIn = [
+  static final Uint8List wireNameBytesCompletedIn = Uint8List.fromList(const [
     34,
     99,
     111,
@@ -3636,13 +3786,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCompletedIn = StaticKey(
+  ]);
+  static final StaticKey staticKeyCompletedIn = StaticKey(
     nameCompletedIn,
     keyCompletedIn,
     wireNameBytesCompletedIn,
   );
-  static const List<int> wireNameBytesMaxId = [
+  static final Uint8List wireNameBytesMaxId = Uint8List.fromList(const [
     34,
     109,
     97,
@@ -3652,13 +3802,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyMaxId = StaticKey(
+  ]);
+  static final StaticKey staticKeyMaxId = StaticKey(
     nameMaxId,
     keyMaxId,
     wireNameBytesMaxId,
   );
-  static const List<int> wireNameBytesMaxIdStr = [
+  static final Uint8List wireNameBytesMaxIdStr = Uint8List.fromList(const [
     34,
     109,
     97,
@@ -3672,13 +3822,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeyMaxIdStr = StaticKey(
+  ]);
+  static final StaticKey staticKeyMaxIdStr = StaticKey(
     nameMaxIdStr,
     keyMaxIdStr,
     wireNameBytesMaxIdStr,
   );
-  static const List<int> wireNameBytesNextResults = [
+  static final Uint8List wireNameBytesNextResults = Uint8List.fromList(const [
     34,
     110,
     101,
@@ -3694,13 +3844,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyNextResults = StaticKey(
+  ]);
+  static final StaticKey staticKeyNextResults = StaticKey(
     nameNextResults,
     keyNextResults,
     wireNameBytesNextResults,
   );
-  static const List<int> wireNameBytesQuery = [
+  static final Uint8List wireNameBytesQuery = Uint8List.fromList(const [
     34,
     113,
     117,
@@ -3709,13 +3859,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     121,
     34,
     58,
-  ];
-  static const StaticKey staticKeyQuery = StaticKey(
+  ]);
+  static final StaticKey staticKeyQuery = StaticKey(
     nameQuery,
     keyQuery,
     wireNameBytesQuery,
   );
-  static const List<int> wireNameBytesRefreshUrl = [
+  static final Uint8List wireNameBytesRefreshUrl = Uint8List.fromList(const [
     34,
     114,
     101,
@@ -3730,13 +3880,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     108,
     34,
     58,
-  ];
-  static const StaticKey staticKeyRefreshUrl = StaticKey(
+  ]);
+  static final StaticKey staticKeyRefreshUrl = StaticKey(
     nameRefreshUrl,
     keyRefreshUrl,
     wireNameBytesRefreshUrl,
   );
-  static const List<int> wireNameBytesCount = [
+  static final Uint8List wireNameBytesCount = Uint8List.fromList(const [
     34,
     99,
     111,
@@ -3745,13 +3895,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyCount = StaticKey(
     nameCount,
     keyCount,
     wireNameBytesCount,
   );
-  static const List<int> wireNameBytesSinceId = [
+  static final Uint8List wireNameBytesSinceId = Uint8List.fromList(const [
     34,
     115,
     105,
@@ -3763,13 +3913,13 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeySinceId = StaticKey(
+  ]);
+  static final StaticKey staticKeySinceId = StaticKey(
     nameSinceId,
     keySinceId,
     wireNameBytesSinceId,
   );
-  static const List<int> wireNameBytesSinceIdStr = [
+  static final Uint8List wireNameBytesSinceIdStr = Uint8List.fromList(const [
     34,
     115,
     105,
@@ -3785,8 +3935,8 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     114,
     34,
     58,
-  ];
-  static const StaticKey staticKeySinceIdStr = StaticKey(
+  ]);
+  static final StaticKey staticKeySinceIdStr = StaticKey(
     nameSinceIdStr,
     keySinceIdStr,
     wireNameBytesSinceIdStr,
@@ -4062,7 +4212,7 @@ extension type const _$TwitterResponseSchema(int _value) {
   static const String nameSearchMetadata = 'search_metadata';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesStatuses = [
+  static final Uint8List wireNameBytesStatuses = Uint8List.fromList(const [
     34,
     115,
     116,
@@ -4074,33 +4224,35 @@ extension type const _$TwitterResponseSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyStatuses = StaticKey(
+  ]);
+  static final StaticKey staticKeyStatuses = StaticKey(
     nameStatuses,
     keyStatuses,
     wireNameBytesStatuses,
   );
-  static const List<int> wireNameBytesSearchMetadata = [
-    34,
-    115,
-    101,
-    97,
-    114,
-    99,
-    104,
-    95,
-    109,
-    101,
-    116,
-    97,
-    100,
-    97,
-    116,
-    97,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeySearchMetadata = StaticKey(
+  static final Uint8List wireNameBytesSearchMetadata = Uint8List.fromList(
+    const [
+      34,
+      115,
+      101,
+      97,
+      114,
+      99,
+      104,
+      95,
+      109,
+      101,
+      116,
+      97,
+      100,
+      97,
+      116,
+      97,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeySearchMetadata = StaticKey(
     nameSearchMetadata,
     keySearchMetadata,
     wireNameBytesSearchMetadata,

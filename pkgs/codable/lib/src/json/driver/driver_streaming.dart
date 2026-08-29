@@ -666,35 +666,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   final JsonTokenWriter _writer;
   bool _closed = false;
 
-  static final Expando<Uint8List> _cachedWireKeys = Expando<Uint8List>();
-
-  static Uint8List _compileWireKeyBytes(List<int> bytes) {
-    if (bytes.length >= 3 && bytes.first == 0x22 && bytes.last == 0x3A) {
-      return Uint8List.fromList(bytes);
-    }
-    if (bytes.length >= 2 && bytes.first == 0x22 && bytes.last == 0x22) {
-      final out = Uint8List(bytes.length + 1);
-      out.setRange(0, bytes.length, bytes);
-      out[bytes.length] = 0x3A; // ':'
-      return out;
-    }
-    final out = Uint8List(bytes.length + 3);
-    out[0] = 0x22;
-    out.setRange(1, 1 + bytes.length, bytes);
-    out[bytes.length + 1] = 0x22;
-    out[bytes.length + 2] = 0x3A;
-    return out;
-  }
-
+  @pragma('vm:prefer-inline')
   void _writeFastKey(StaticKey key) {
     final metadata = key.wireMetadata;
     if (metadata is Uint8List) {
       _writer.writeNameBytes(metadata);
-      return;
-    }
-    if (metadata is List<int>) {
-      final cached = _cachedWireKeys[key] ??= _compileWireKeyBytes(metadata);
-      _writer.writeNameBytes(cached);
       return;
     }
     _writer.writeName(key.name);

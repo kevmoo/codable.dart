@@ -13,7 +13,7 @@ extension type const _$CoordinateSchema(int _value) {
   static const String nameLongitude = 'longitude';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesLatitude = [
+  static final Uint8List wireNameBytesLatitude = Uint8List.fromList(const [
     34,
     108,
     97,
@@ -25,13 +25,13 @@ extension type const _$CoordinateSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLatitude = StaticKey(
+  ]);
+  static final StaticKey staticKeyLatitude = StaticKey(
     nameLatitude,
     keyLatitude,
     wireNameBytesLatitude,
   );
-  static const List<int> wireNameBytesLongitude = [
+  static final Uint8List wireNameBytesLongitude = Uint8List.fromList(const [
     34,
     108,
     111,
@@ -44,8 +44,8 @@ extension type const _$CoordinateSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLongitude = StaticKey(
+  ]);
+  static final StaticKey staticKeyLongitude = StaticKey(
     nameLongitude,
     keyLongitude,
     wireNameBytesLongitude,

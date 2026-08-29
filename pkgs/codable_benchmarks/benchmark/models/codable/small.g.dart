@@ -15,7 +15,7 @@ extension type const _$SmallLocationSchema(int _value) {
   static const String nameCountry = 'country';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesLatitude = [
+  static final Uint8List wireNameBytesLatitude = Uint8List.fromList(const [
     34,
     108,
     97,
@@ -27,13 +27,13 @@ extension type const _$SmallLocationSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLatitude = StaticKey(
+  ]);
+  static final StaticKey staticKeyLatitude = StaticKey(
     nameLatitude,
     keyLatitude,
     wireNameBytesLatitude,
   );
-  static const List<int> wireNameBytesLongitude = [
+  static final Uint8List wireNameBytesLongitude = Uint8List.fromList(const [
     34,
     108,
     111,
@@ -46,19 +46,27 @@ extension type const _$SmallLocationSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLongitude = StaticKey(
+  ]);
+  static final StaticKey staticKeyLongitude = StaticKey(
     nameLongitude,
     keyLongitude,
     wireNameBytesLongitude,
   );
-  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34, 58];
-  static const StaticKey staticKeyCity = StaticKey(
+  static final Uint8List wireNameBytesCity = Uint8List.fromList(const [
+    34,
+    99,
+    105,
+    116,
+    121,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyCity = StaticKey(
     nameCity,
     keyCity,
     wireNameBytesCity,
   );
-  static const List<int> wireNameBytesCountry = [
+  static final Uint8List wireNameBytesCountry = Uint8List.fromList(const [
     34,
     99,
     111,
@@ -69,8 +77,8 @@ extension type const _$SmallLocationSchema(int _value) {
     121,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCountry = StaticKey(
+  ]);
+  static final StaticKey staticKeyCountry = StaticKey(
     nameCountry,
     keyCountry,
     wireNameBytesCountry,
@@ -251,7 +259,7 @@ extension type const _$SmallMetadataSchema(int _value) {
   static const String nameLocation = 'location';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesLoginCount = [
+  static final Uint8List wireNameBytesLoginCount = Uint8List.fromList(const [
     34,
     108,
     111,
@@ -265,13 +273,13 @@ extension type const _$SmallMetadataSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLoginCount = StaticKey(
+  ]);
+  static final StaticKey staticKeyLoginCount = StaticKey(
     nameLoginCount,
     keyLoginCount,
     wireNameBytesLoginCount,
   );
-  static const List<int> wireNameBytesLastLogin = [
+  static final Uint8List wireNameBytesLastLogin = Uint8List.fromList(const [
     34,
     108,
     97,
@@ -284,13 +292,13 @@ extension type const _$SmallMetadataSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLastLogin = StaticKey(
+  ]);
+  static final StaticKey staticKeyLastLogin = StaticKey(
     nameLastLogin,
     keyLastLogin,
     wireNameBytesLastLogin,
   );
-  static const List<int> wireNameBytesLocation = [
+  static final Uint8List wireNameBytesLocation = Uint8List.fromList(const [
     34,
     108,
     111,
@@ -302,8 +310,8 @@ extension type const _$SmallMetadataSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyLocation = StaticKey(
+  ]);
+  static final StaticKey staticKeyLocation = StaticKey(
     nameLocation,
     keyLocation,
     wireNameBytesLocation,
@@ -471,25 +479,47 @@ extension type const _$SmallDocumentSchema(int _value) {
   static const String nameTags = 'tags';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesUuid = [34, 117, 117, 105, 100, 34, 58];
-  static const StaticKey staticKeyUuid = StaticKey(
+  static final Uint8List wireNameBytesUuid = Uint8List.fromList(const [
+    34,
+    117,
+    117,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyUuid = StaticKey(
     nameUuid,
     keyUuid,
     wireNameBytesUuid,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesEmail = [
+  static final Uint8List wireNameBytesEmail = Uint8List.fromList(const [
     34,
     101,
     109,
@@ -498,13 +528,13 @@ extension type const _$SmallDocumentSchema(int _value) {
     108,
     34,
     58,
-  ];
-  static const StaticKey staticKeyEmail = StaticKey(
+  ]);
+  static final StaticKey staticKeyEmail = StaticKey(
     nameEmail,
     keyEmail,
     wireNameBytesEmail,
   );
-  static const List<int> wireNameBytesIsActive = [
+  static final Uint8List wireNameBytesIsActive = Uint8List.fromList(const [
     34,
     105,
     115,
@@ -516,13 +546,13 @@ extension type const _$SmallDocumentSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyIsActive = StaticKey(
+  ]);
+  static final StaticKey staticKeyIsActive = StaticKey(
     nameIsActive,
     keyIsActive,
     wireNameBytesIsActive,
   );
-  static const List<int> wireNameBytesBalance = [
+  static final Uint8List wireNameBytesBalance = Uint8List.fromList(const [
     34,
     98,
     97,
@@ -533,19 +563,26 @@ extension type const _$SmallDocumentSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyBalance = StaticKey(
+  ]);
+  static final StaticKey staticKeyBalance = StaticKey(
     nameBalance,
     keyBalance,
     wireNameBytesBalance,
   );
-  static const List<int> wireNameBytesAge = [34, 97, 103, 101, 34, 58];
-  static const StaticKey staticKeyAge = StaticKey(
+  static final Uint8List wireNameBytesAge = Uint8List.fromList(const [
+    34,
+    97,
+    103,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyAge = StaticKey(
     nameAge,
     keyAge,
     wireNameBytesAge,
   );
-  static const List<int> wireNameBytesRoles = [
+  static final Uint8List wireNameBytesRoles = Uint8List.fromList(const [
     34,
     114,
     111,
@@ -554,13 +591,13 @@ extension type const _$SmallDocumentSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyRoles = StaticKey(
+  ]);
+  static final StaticKey staticKeyRoles = StaticKey(
     nameRoles,
     keyRoles,
     wireNameBytesRoles,
   );
-  static const List<int> wireNameBytesMetadata = [
+  static final Uint8List wireNameBytesMetadata = Uint8List.fromList(const [
     34,
     109,
     101,
@@ -572,14 +609,22 @@ extension type const _$SmallDocumentSchema(int _value) {
     97,
     34,
     58,
-  ];
-  static const StaticKey staticKeyMetadata = StaticKey(
+  ]);
+  static final StaticKey staticKeyMetadata = StaticKey(
     nameMetadata,
     keyMetadata,
     wireNameBytesMetadata,
   );
-  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34, 58];
-  static const StaticKey staticKeyTags = StaticKey(
+  static final Uint8List wireNameBytesTags = Uint8List.fromList(const [
+    34,
+    116,
+    97,
+    103,
+    115,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyTags = StaticKey(
     nameTags,
     keyTags,
     wireNameBytesTags,

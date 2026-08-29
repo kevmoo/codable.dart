@@ -22,7 +22,7 @@ extension type const _$CitmCatalogSchema(int _value) {
   static const String nameVenueNames = 'venueNames';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesAreaNames = [
+  static final Uint8List wireNameBytesAreaNames = Uint8List.fromList(const [
     34,
     97,
     114,
@@ -35,47 +35,48 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyAreaNames = StaticKey(
+  ]);
+  static final StaticKey staticKeyAreaNames = StaticKey(
     nameAreaNames,
     keyAreaNames,
     wireNameBytesAreaNames,
   );
-  static const List<int> wireNameBytesAudienceSubCategoryNames = [
-    34,
-    97,
-    117,
-    100,
-    105,
-    101,
-    110,
-    99,
-    101,
-    83,
-    117,
-    98,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    121,
-    78,
-    97,
-    109,
-    101,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyAudienceSubCategoryNames = StaticKey(
+  static final Uint8List wireNameBytesAudienceSubCategoryNames =
+      Uint8List.fromList(const [
+        34,
+        97,
+        117,
+        100,
+        105,
+        101,
+        110,
+        99,
+        101,
+        83,
+        117,
+        98,
+        67,
+        97,
+        116,
+        101,
+        103,
+        111,
+        114,
+        121,
+        78,
+        97,
+        109,
+        101,
+        115,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyAudienceSubCategoryNames = StaticKey(
     nameAudienceSubCategoryNames,
     keyAudienceSubCategoryNames,
     wireNameBytesAudienceSubCategoryNames,
   );
-  static const List<int> wireNameBytesBlockNames = [
+  static final Uint8List wireNameBytesBlockNames = Uint8List.fromList(const [
     34,
     98,
     108,
@@ -89,13 +90,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyBlockNames = StaticKey(
+  ]);
+  static final StaticKey staticKeyBlockNames = StaticKey(
     nameBlockNames,
     keyBlockNames,
     wireNameBytesBlockNames,
   );
-  static const List<int> wireNameBytesEvents = [
+  static final Uint8List wireNameBytesEvents = Uint8List.fromList(const [
     34,
     101,
     118,
@@ -105,13 +106,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyEvents = StaticKey(
+  ]);
+  static final StaticKey staticKeyEvents = StaticKey(
     nameEvents,
     keyEvents,
     wireNameBytesEvents,
   );
-  static const List<int> wireNameBytesPerformances = [
+  static final Uint8List wireNameBytesPerformances = Uint8List.fromList(const [
     34,
     112,
     101,
@@ -127,40 +128,42 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyPerformances = StaticKey(
+  ]);
+  static final StaticKey staticKeyPerformances = StaticKey(
     namePerformances,
     keyPerformances,
     wireNameBytesPerformances,
   );
-  static const List<int> wireNameBytesSeatCategoryNames = [
-    34,
-    115,
-    101,
-    97,
-    116,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    121,
-    78,
-    97,
-    109,
-    101,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeySeatCategoryNames = StaticKey(
+  static final Uint8List wireNameBytesSeatCategoryNames = Uint8List.fromList(
+    const [
+      34,
+      115,
+      101,
+      97,
+      116,
+      67,
+      97,
+      116,
+      101,
+      103,
+      111,
+      114,
+      121,
+      78,
+      97,
+      109,
+      101,
+      115,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeySeatCategoryNames = StaticKey(
     nameSeatCategoryNames,
     keySeatCategoryNames,
     wireNameBytesSeatCategoryNames,
   );
-  static const List<int> wireNameBytesSubTopicNames = [
+  static final Uint8List wireNameBytesSubTopicNames = Uint8List.fromList(const [
     34,
     115,
     117,
@@ -177,13 +180,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeySubTopicNames = StaticKey(
+  ]);
+  static final StaticKey staticKeySubTopicNames = StaticKey(
     nameSubTopicNames,
     keySubTopicNames,
     wireNameBytesSubTopicNames,
   );
-  static const List<int> wireNameBytesSubjectNames = [
+  static final Uint8List wireNameBytesSubjectNames = Uint8List.fromList(const [
     34,
     115,
     117,
@@ -199,13 +202,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeySubjectNames = StaticKey(
+  ]);
+  static final StaticKey staticKeySubjectNames = StaticKey(
     nameSubjectNames,
     keySubjectNames,
     wireNameBytesSubjectNames,
   );
-  static const List<int> wireNameBytesTopicNames = [
+  static final Uint8List wireNameBytesTopicNames = Uint8List.fromList(const [
     34,
     116,
     111,
@@ -219,13 +222,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyTopicNames = StaticKey(
+  ]);
+  static final StaticKey staticKeyTopicNames = StaticKey(
     nameTopicNames,
     keyTopicNames,
     wireNameBytesTopicNames,
   );
-  static const List<int> wireNameBytesTopicSynced = [
+  static final Uint8List wireNameBytesTopicSynced = Uint8List.fromList(const [
     34,
     116,
     111,
@@ -240,13 +243,13 @@ extension type const _$CitmCatalogSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyTopicSynced = StaticKey(
+  ]);
+  static final StaticKey staticKeyTopicSynced = StaticKey(
     nameTopicSynced,
     keyTopicSynced,
     wireNameBytesTopicSynced,
   );
-  static const List<int> wireNameBytesVenueNames = [
+  static final Uint8List wireNameBytesVenueNames = Uint8List.fromList(const [
     34,
     118,
     101,
@@ -260,8 +263,8 @@ extension type const _$CitmCatalogSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyVenueNames = StaticKey(
+  ]);
+  static final StaticKey staticKeyVenueNames = StaticKey(
     nameVenueNames,
     keyVenueNames,
     wireNameBytesVenueNames,
@@ -636,7 +639,7 @@ extension type const _$CitmEventSchema(int _value) {
   static const String nameTopicIds = 'topicIds';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesDescription = [
+  static final Uint8List wireNameBytesDescription = Uint8List.fromList(const [
     34,
     100,
     101,
@@ -651,31 +654,53 @@ extension type const _$CitmEventSchema(int _value) {
     110,
     34,
     58,
-  ];
-  static const StaticKey staticKeyDescription = StaticKey(
+  ]);
+  static final StaticKey staticKeyDescription = StaticKey(
     nameDescription,
     keyDescription,
     wireNameBytesDescription,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34, 58];
-  static const StaticKey staticKeyLogo = StaticKey(
+  static final Uint8List wireNameBytesLogo = Uint8List.fromList(const [
+    34,
+    108,
+    111,
+    103,
+    111,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyLogo = StaticKey(
     nameLogo,
     keyLogo,
     wireNameBytesLogo,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesSubTopicIds = [
+  static final Uint8List wireNameBytesSubTopicIds = Uint8List.fromList(const [
     34,
     115,
     117,
@@ -690,13 +715,13 @@ extension type const _$CitmEventSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeySubTopicIds = StaticKey(
+  ]);
+  static final StaticKey staticKeySubTopicIds = StaticKey(
     nameSubTopicIds,
     keySubTopicIds,
     wireNameBytesSubTopicIds,
   );
-  static const List<int> wireNameBytesSubjectCode = [
+  static final Uint8List wireNameBytesSubjectCode = Uint8List.fromList(const [
     34,
     115,
     117,
@@ -711,13 +736,13 @@ extension type const _$CitmEventSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeySubjectCode = StaticKey(
+  ]);
+  static final StaticKey staticKeySubjectCode = StaticKey(
     nameSubjectCode,
     keySubjectCode,
     wireNameBytesSubjectCode,
   );
-  static const List<int> wireNameBytesSubtitle = [
+  static final Uint8List wireNameBytesSubtitle = Uint8List.fromList(const [
     34,
     115,
     117,
@@ -729,13 +754,13 @@ extension type const _$CitmEventSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeySubtitle = StaticKey(
+  ]);
+  static final StaticKey staticKeySubtitle = StaticKey(
     nameSubtitle,
     keySubtitle,
     wireNameBytesSubtitle,
   );
-  static const List<int> wireNameBytesTopicIds = [
+  static final Uint8List wireNameBytesTopicIds = Uint8List.fromList(const [
     34,
     116,
     111,
@@ -747,8 +772,8 @@ extension type const _$CitmEventSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyTopicIds = StaticKey(
+  ]);
+  static final StaticKey staticKeyTopicIds = StaticKey(
     nameTopicIds,
     keyTopicIds,
     wireNameBytesTopicIds,
@@ -974,7 +999,7 @@ extension type const _$CitmPerformanceSchema(int _value) {
   static const String nameVenueCode = 'venueCode';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesEventId = [
+  static final Uint8List wireNameBytesEventId = Uint8List.fromList(const [
     34,
     101,
     118,
@@ -985,31 +1010,53 @@ extension type const _$CitmPerformanceSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyEventId = StaticKey(
+  ]);
+  static final StaticKey staticKeyEventId = StaticKey(
     nameEventId,
     keyEventId,
     wireNameBytesEventId,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
-  static const StaticKey staticKeyId = StaticKey(
+  static final Uint8List wireNameBytesId = Uint8List.fromList(const [
+    34,
+    105,
+    100,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34, 58];
-  static const StaticKey staticKeyLogo = StaticKey(
+  static final Uint8List wireNameBytesLogo = Uint8List.fromList(const [
+    34,
+    108,
+    111,
+    103,
+    111,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyLogo = StaticKey(
     nameLogo,
     keyLogo,
     wireNameBytesLogo,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesPrices = [
+  static final Uint8List wireNameBytesPrices = Uint8List.fromList(const [
     34,
     112,
     114,
@@ -1019,37 +1066,39 @@ extension type const _$CitmPerformanceSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyPrices = StaticKey(
+  ]);
+  static final StaticKey staticKeyPrices = StaticKey(
     namePrices,
     keyPrices,
     wireNameBytesPrices,
   );
-  static const List<int> wireNameBytesSeatCategories = [
-    34,
-    115,
-    101,
-    97,
-    116,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    105,
-    101,
-    115,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeySeatCategories = StaticKey(
+  static final Uint8List wireNameBytesSeatCategories = Uint8List.fromList(
+    const [
+      34,
+      115,
+      101,
+      97,
+      116,
+      67,
+      97,
+      116,
+      101,
+      103,
+      111,
+      114,
+      105,
+      101,
+      115,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeySeatCategories = StaticKey(
     nameSeatCategories,
     keySeatCategories,
     wireNameBytesSeatCategories,
   );
-  static const List<int> wireNameBytesStart = [
+  static final Uint8List wireNameBytesStart = Uint8List.fromList(const [
     34,
     115,
     116,
@@ -1058,13 +1107,13 @@ extension type const _$CitmPerformanceSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyStart = StaticKey(
+  ]);
+  static final StaticKey staticKeyStart = StaticKey(
     nameStart,
     keyStart,
     wireNameBytesStart,
   );
-  static const List<int> wireNameBytesVenueCode = [
+  static final Uint8List wireNameBytesVenueCode = Uint8List.fromList(const [
     34,
     118,
     101,
@@ -1077,8 +1126,8 @@ extension type const _$CitmPerformanceSchema(int _value) {
     101,
     34,
     58,
-  ];
-  static const StaticKey staticKeyVenueCode = StaticKey(
+  ]);
+  static final StaticKey staticKeyVenueCode = StaticKey(
     nameVenueCode,
     keyVenueCode,
     wireNameBytesVenueCode,
@@ -1324,7 +1373,7 @@ extension type const _$CitmPriceSchema(int _value) {
   static const String nameSeatCategoryId = 'seatCategoryId';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesAmount = [
+  static final Uint8List wireNameBytesAmount = Uint8List.fromList(const [
     34,
     97,
     109,
@@ -1334,63 +1383,66 @@ extension type const _$CitmPriceSchema(int _value) {
     116,
     34,
     58,
-  ];
-  static const StaticKey staticKeyAmount = StaticKey(
+  ]);
+  static final StaticKey staticKeyAmount = StaticKey(
     nameAmount,
     keyAmount,
     wireNameBytesAmount,
   );
-  static const List<int> wireNameBytesAudienceSubCategoryId = [
-    34,
-    97,
-    117,
-    100,
-    105,
-    101,
-    110,
-    99,
-    101,
-    83,
-    117,
-    98,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    121,
-    73,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeyAudienceSubCategoryId = StaticKey(
+  static final Uint8List wireNameBytesAudienceSubCategoryId =
+      Uint8List.fromList(const [
+        34,
+        97,
+        117,
+        100,
+        105,
+        101,
+        110,
+        99,
+        101,
+        83,
+        117,
+        98,
+        67,
+        97,
+        116,
+        101,
+        103,
+        111,
+        114,
+        121,
+        73,
+        100,
+        34,
+        58,
+      ]);
+  static final StaticKey staticKeyAudienceSubCategoryId = StaticKey(
     nameAudienceSubCategoryId,
     keyAudienceSubCategoryId,
     wireNameBytesAudienceSubCategoryId,
   );
-  static const List<int> wireNameBytesSeatCategoryId = [
-    34,
-    115,
-    101,
-    97,
-    116,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    121,
-    73,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeySeatCategoryId = StaticKey(
+  static final Uint8List wireNameBytesSeatCategoryId = Uint8List.fromList(
+    const [
+      34,
+      115,
+      101,
+      97,
+      116,
+      67,
+      97,
+      116,
+      101,
+      103,
+      111,
+      114,
+      121,
+      73,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeySeatCategoryId = StaticKey(
     nameSeatCategoryId,
     keySeatCategoryId,
     wireNameBytesSeatCategoryId,
@@ -1547,7 +1599,7 @@ extension type const _$CitmSeatCategorySchema(int _value) {
   static const String nameSeatCategoryId = 'seatCategoryId';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesAreas = [
+  static final Uint8List wireNameBytesAreas = Uint8List.fromList(const [
     34,
     97,
     114,
@@ -1556,32 +1608,34 @@ extension type const _$CitmSeatCategorySchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyAreas = StaticKey(
+  ]);
+  static final StaticKey staticKeyAreas = StaticKey(
     nameAreas,
     keyAreas,
     wireNameBytesAreas,
   );
-  static const List<int> wireNameBytesSeatCategoryId = [
-    34,
-    115,
-    101,
-    97,
-    116,
-    67,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    121,
-    73,
-    100,
-    34,
-    58,
-  ];
-  static const StaticKey staticKeySeatCategoryId = StaticKey(
+  static final Uint8List wireNameBytesSeatCategoryId = Uint8List.fromList(
+    const [
+      34,
+      115,
+      101,
+      97,
+      116,
+      67,
+      97,
+      116,
+      101,
+      103,
+      111,
+      114,
+      121,
+      73,
+      100,
+      34,
+      58,
+    ],
+  );
+  static final StaticKey staticKeySeatCategoryId = StaticKey(
     nameSeatCategoryId,
     keySeatCategoryId,
     wireNameBytesSeatCategoryId,
@@ -1701,7 +1755,7 @@ extension type const _$CitmAreaSchema(int _value) {
   static const String nameBlockIds = 'blockIds';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesAreaId = [
+  static final Uint8List wireNameBytesAreaId = Uint8List.fromList(const [
     34,
     97,
     114,
@@ -1711,13 +1765,13 @@ extension type const _$CitmAreaSchema(int _value) {
     100,
     34,
     58,
-  ];
-  static const StaticKey staticKeyAreaId = StaticKey(
+  ]);
+  static final StaticKey staticKeyAreaId = StaticKey(
     nameAreaId,
     keyAreaId,
     wireNameBytesAreaId,
   );
-  static const List<int> wireNameBytesBlockIds = [
+  static final Uint8List wireNameBytesBlockIds = Uint8List.fromList(const [
     34,
     98,
     108,
@@ -1729,8 +1783,8 @@ extension type const _$CitmAreaSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyBlockIds = StaticKey(
+  ]);
+  static final StaticKey staticKeyBlockIds = StaticKey(
     nameBlockIds,
     keyBlockIds,
     wireNameBytesBlockIds,

@@ -12,8 +12,16 @@ extension type const _$CanadaPropertiesSchema(int _value) {
   static const String nameName = 'name';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
-  static const StaticKey staticKeyName = StaticKey(
+  static final Uint8List wireNameBytesName = Uint8List.fromList(const [
+    34,
+    110,
+    97,
+    109,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
@@ -87,13 +95,21 @@ extension type const _$CanadaGeometrySchema(int _value) {
   static const String nameCoordinates = 'coordinates';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
-  static const StaticKey staticKeyType = StaticKey(
+  static final Uint8List wireNameBytesType = Uint8List.fromList(const [
+    34,
+    116,
+    121,
+    112,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
     wireNameBytesType,
   );
-  static const List<int> wireNameBytesCoordinates = [
+  static final Uint8List wireNameBytesCoordinates = Uint8List.fromList(const [
     34,
     99,
     111,
@@ -108,8 +124,8 @@ extension type const _$CanadaGeometrySchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyCoordinates = StaticKey(
+  ]);
+  static final StaticKey staticKeyCoordinates = StaticKey(
     nameCoordinates,
     keyCoordinates,
     wireNameBytesCoordinates,
@@ -225,13 +241,21 @@ extension type const _$CanadaFeatureSchema(int _value) {
   static const String nameGeometry = 'geometry';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
-  static const StaticKey staticKeyType = StaticKey(
+  static final Uint8List wireNameBytesType = Uint8List.fromList(const [
+    34,
+    116,
+    121,
+    112,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
     wireNameBytesType,
   );
-  static const List<int> wireNameBytesProperties = [
+  static final Uint8List wireNameBytesProperties = Uint8List.fromList(const [
     34,
     112,
     114,
@@ -245,13 +269,13 @@ extension type const _$CanadaFeatureSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyProperties = StaticKey(
+  ]);
+  static final StaticKey staticKeyProperties = StaticKey(
     nameProperties,
     keyProperties,
     wireNameBytesProperties,
   );
-  static const List<int> wireNameBytesGeometry = [
+  static final Uint8List wireNameBytesGeometry = Uint8List.fromList(const [
     34,
     103,
     101,
@@ -263,8 +287,8 @@ extension type const _$CanadaFeatureSchema(int _value) {
     121,
     34,
     58,
-  ];
-  static const StaticKey staticKeyGeometry = StaticKey(
+  ]);
+  static final StaticKey staticKeyGeometry = StaticKey(
     nameGeometry,
     keyGeometry,
     wireNameBytesGeometry,
@@ -420,13 +444,21 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
   static const String nameFeatures = 'features';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
-  static const StaticKey staticKeyType = StaticKey(
+  static final Uint8List wireNameBytesType = Uint8List.fromList(const [
+    34,
+    116,
+    121,
+    112,
+    101,
+    34,
+    58,
+  ]);
+  static final StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
     wireNameBytesType,
   );
-  static const List<int> wireNameBytesFeatures = [
+  static final Uint8List wireNameBytesFeatures = Uint8List.fromList(const [
     34,
     102,
     101,
@@ -438,8 +470,8 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
     115,
     34,
     58,
-  ];
-  static const StaticKey staticKeyFeatures = StaticKey(
+  ]);
+  static final StaticKey staticKeyFeatures = StaticKey(
     nameFeatures,
     keyFeatures,
     wireNameBytesFeatures,

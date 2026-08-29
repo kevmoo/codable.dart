@@ -491,25 +491,25 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
       _buffer[_cursor++] = 44; // ','
     }
     _objectStateStack.last = _ObjectState.key;
+    final len = asciiKey.length;
     final isColonTerminated =
-        asciiKey.length >= 3 && asciiKey.first == 34 && asciiKey.last == 58;
+        len >= 3 && asciiKey[0] == 34 && asciiKey[len - 1] == 58;
     if (isColonTerminated) {
-      _ensureCapacity(asciiKey.length);
-      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
-      _cursor += asciiKey.length;
+      _ensureCapacity(len);
+      _buffer.setRange(_cursor, _cursor + len, asciiKey);
+      _cursor += len;
       return;
     }
-    final isQuoted =
-        asciiKey.length >= 2 && asciiKey.first == 34 && asciiKey.last == 34;
+    final isQuoted = len >= 2 && asciiKey[0] == 34 && asciiKey[len - 1] == 34;
     if (isQuoted) {
-      _ensureCapacity(asciiKey.length + 1);
-      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
-      _cursor += asciiKey.length;
+      _ensureCapacity(len + 1);
+      _buffer.setRange(_cursor, _cursor + len, asciiKey);
+      _cursor += len;
     } else {
-      _ensureCapacity(asciiKey.length + 3);
+      _ensureCapacity(len + 3);
       _buffer[_cursor++] = 34; // '"'
-      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
-      _cursor += asciiKey.length;
+      _buffer.setRange(_cursor, _cursor + len, asciiKey);
+      _cursor += len;
       _buffer[_cursor++] = 34; // '"'
     }
     _buffer[_cursor++] = 58; // ':'
