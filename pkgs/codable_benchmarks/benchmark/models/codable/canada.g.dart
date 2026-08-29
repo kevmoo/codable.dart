@@ -4,10 +4,6 @@
 
 part of 'canada.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for CanadaProperties
 // =============================================================================
@@ -16,7 +12,7 @@ extension type const _$CanadaPropertiesSchema(int _value) {
   static const String nameName = 'name';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
@@ -91,7 +87,7 @@ extension type const _$CanadaGeometrySchema(int _value) {
   static const String nameCoordinates = 'coordinates';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
+  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
   static const StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
@@ -111,6 +107,7 @@ extension type const _$CanadaGeometrySchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyCoordinates = StaticKey(
     nameCoordinates,
@@ -228,7 +225,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
   static const String nameGeometry = 'geometry';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
+  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
   static const StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
@@ -247,6 +244,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyProperties = StaticKey(
     nameProperties,
@@ -264,6 +262,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
     114,
     121,
     34,
+    58,
   ];
   static const StaticKey staticKeyGeometry = StaticKey(
     nameGeometry,
@@ -421,7 +420,7 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
   static const String nameFeatures = 'features';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
+  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34, 58];
   static const StaticKey staticKeyType = StaticKey(
     nameType,
     keyType,
@@ -438,6 +437,7 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyFeatures = StaticKey(
     nameFeatures,

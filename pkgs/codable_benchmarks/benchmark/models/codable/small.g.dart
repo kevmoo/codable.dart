@@ -4,10 +4,6 @@
 
 part of 'small.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for SmallLocation
 // =============================================================================
@@ -30,6 +26,7 @@ extension type const _$SmallLocationSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyLatitude = StaticKey(
     nameLatitude,
@@ -48,13 +45,14 @@ extension type const _$SmallLocationSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyLongitude = StaticKey(
     nameLongitude,
     keyLongitude,
     wireNameBytesLongitude,
   );
-  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34];
+  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34, 58];
   static const StaticKey staticKeyCity = StaticKey(
     nameCity,
     keyCity,
@@ -70,6 +68,7 @@ extension type const _$SmallLocationSchema(int _value) {
     114,
     121,
     34,
+    58,
   ];
   static const StaticKey staticKeyCountry = StaticKey(
     nameCountry,
@@ -265,6 +264,7 @@ extension type const _$SmallMetadataSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyLoginCount = StaticKey(
     nameLoginCount,
@@ -283,6 +283,7 @@ extension type const _$SmallMetadataSchema(int _value) {
     105,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyLastLogin = StaticKey(
     nameLastLogin,
@@ -300,6 +301,7 @@ extension type const _$SmallMetadataSchema(int _value) {
     111,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyLocation = StaticKey(
     nameLocation,
@@ -469,25 +471,34 @@ extension type const _$SmallDocumentSchema(int _value) {
   static const String nameTags = 'tags';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesUuid = [34, 117, 117, 105, 100, 34];
+  static const List<int> wireNameBytesUuid = [34, 117, 117, 105, 100, 34, 58];
   static const StaticKey staticKeyUuid = StaticKey(
     nameUuid,
     keyUuid,
     wireNameBytesUuid,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesEmail = [34, 101, 109, 97, 105, 108, 34];
+  static const List<int> wireNameBytesEmail = [
+    34,
+    101,
+    109,
+    97,
+    105,
+    108,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyEmail = StaticKey(
     nameEmail,
     keyEmail,
@@ -504,6 +515,7 @@ extension type const _$SmallDocumentSchema(int _value) {
     118,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyIsActive = StaticKey(
     nameIsActive,
@@ -520,19 +532,29 @@ extension type const _$SmallDocumentSchema(int _value) {
     99,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyBalance = StaticKey(
     nameBalance,
     keyBalance,
     wireNameBytesBalance,
   );
-  static const List<int> wireNameBytesAge = [34, 97, 103, 101, 34];
+  static const List<int> wireNameBytesAge = [34, 97, 103, 101, 34, 58];
   static const StaticKey staticKeyAge = StaticKey(
     nameAge,
     keyAge,
     wireNameBytesAge,
   );
-  static const List<int> wireNameBytesRoles = [34, 114, 111, 108, 101, 115, 34];
+  static const List<int> wireNameBytesRoles = [
+    34,
+    114,
+    111,
+    108,
+    101,
+    115,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyRoles = StaticKey(
     nameRoles,
     keyRoles,
@@ -549,13 +571,14 @@ extension type const _$SmallDocumentSchema(int _value) {
     116,
     97,
     34,
+    58,
   ];
   static const StaticKey staticKeyMetadata = StaticKey(
     nameMetadata,
     keyMetadata,
     wireNameBytesMetadata,
   );
-  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34];
+  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34, 58];
   static const StaticKey staticKeyTags = StaticKey(
     nameTags,
     keyTags,

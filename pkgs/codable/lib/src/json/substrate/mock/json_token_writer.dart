@@ -491,6 +491,14 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
       _buffer[_cursor++] = 44; // ','
     }
     _objectStateStack.last = _ObjectState.key;
+    final isColonTerminated =
+        asciiKey.length >= 3 && asciiKey.first == 34 && asciiKey.last == 58;
+    if (isColonTerminated) {
+      _ensureCapacity(asciiKey.length);
+      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
+      _cursor += asciiKey.length;
+      return;
+    }
     final isQuoted =
         asciiKey.length >= 2 && asciiKey.first == 34 && asciiKey.last == 34;
     if (isQuoted) {

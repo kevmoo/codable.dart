@@ -4,10 +4,6 @@
 
 part of 'citm_catalog.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for CitmCatalog
 // =============================================================================
@@ -38,6 +34,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyAreaNames = StaticKey(
     nameAreaNames,
@@ -71,6 +68,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyAudienceSubCategoryNames = StaticKey(
     nameAudienceSubCategoryNames,
@@ -90,6 +88,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyBlockNames = StaticKey(
     nameBlockNames,
@@ -105,6 +104,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     116,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyEvents = StaticKey(
     nameEvents,
@@ -126,6 +126,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyPerformances = StaticKey(
     namePerformances,
@@ -152,6 +153,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeySeatCategoryNames = StaticKey(
     nameSeatCategoryNames,
@@ -174,6 +176,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeySubTopicNames = StaticKey(
     nameSubTopicNames,
@@ -195,6 +198,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeySubjectNames = StaticKey(
     nameSubjectNames,
@@ -214,6 +218,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyTopicNames = StaticKey(
     nameTopicNames,
@@ -234,6 +239,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyTopicSynced = StaticKey(
     nameTopicSynced,
@@ -253,6 +259,7 @@ extension type const _$CitmCatalogSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyVenueNames = StaticKey(
     nameVenueNames,
@@ -643,25 +650,26 @@ extension type const _$CitmEventSchema(int _value) {
     111,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyDescription = StaticKey(
     nameDescription,
     keyDescription,
     wireNameBytesDescription,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34];
+  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34, 58];
   static const StaticKey staticKeyLogo = StaticKey(
     nameLogo,
     keyLogo,
     wireNameBytesLogo,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
@@ -681,6 +689,7 @@ extension type const _$CitmEventSchema(int _value) {
     100,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeySubTopicIds = StaticKey(
     nameSubTopicIds,
@@ -701,6 +710,7 @@ extension type const _$CitmEventSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeySubjectCode = StaticKey(
     nameSubjectCode,
@@ -718,6 +728,7 @@ extension type const _$CitmEventSchema(int _value) {
     108,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeySubtitle = StaticKey(
     nameSubtitle,
@@ -735,6 +746,7 @@ extension type const _$CitmEventSchema(int _value) {
     100,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyTopicIds = StaticKey(
     nameTopicIds,
@@ -972,25 +984,26 @@ extension type const _$CitmPerformanceSchema(int _value) {
     73,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyEventId = StaticKey(
     nameEventId,
     keyEventId,
     wireNameBytesEventId,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
     wireNameBytesId,
   );
-  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34];
+  static const List<int> wireNameBytesLogo = [34, 108, 111, 103, 111, 34, 58];
   static const StaticKey staticKeyLogo = StaticKey(
     nameLogo,
     keyLogo,
     wireNameBytesLogo,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
@@ -1005,6 +1018,7 @@ extension type const _$CitmPerformanceSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyPrices = StaticKey(
     namePrices,
@@ -1028,13 +1042,23 @@ extension type const _$CitmPerformanceSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeySeatCategories = StaticKey(
     nameSeatCategories,
     keySeatCategories,
     wireNameBytesSeatCategories,
   );
-  static const List<int> wireNameBytesStart = [34, 115, 116, 97, 114, 116, 34];
+  static const List<int> wireNameBytesStart = [
+    34,
+    115,
+    116,
+    97,
+    114,
+    116,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyStart = StaticKey(
     nameStart,
     keyStart,
@@ -1052,6 +1076,7 @@ extension type const _$CitmPerformanceSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyVenueCode = StaticKey(
     nameVenueCode,
@@ -1308,6 +1333,7 @@ extension type const _$CitmPriceSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyAmount = StaticKey(
     nameAmount,
@@ -1338,6 +1364,7 @@ extension type const _$CitmPriceSchema(int _value) {
     73,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyAudienceSubCategoryId = StaticKey(
     nameAudienceSubCategoryId,
@@ -1361,6 +1388,7 @@ extension type const _$CitmPriceSchema(int _value) {
     73,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeySeatCategoryId = StaticKey(
     nameSeatCategoryId,
@@ -1519,7 +1547,16 @@ extension type const _$CitmSeatCategorySchema(int _value) {
   static const String nameSeatCategoryId = 'seatCategoryId';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesAreas = [34, 97, 114, 101, 97, 115, 34];
+  static const List<int> wireNameBytesAreas = [
+    34,
+    97,
+    114,
+    101,
+    97,
+    115,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyAreas = StaticKey(
     nameAreas,
     keyAreas,
@@ -1542,6 +1579,7 @@ extension type const _$CitmSeatCategorySchema(int _value) {
     73,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeySeatCategoryId = StaticKey(
     nameSeatCategoryId,
@@ -1672,6 +1710,7 @@ extension type const _$CitmAreaSchema(int _value) {
     73,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyAreaId = StaticKey(
     nameAreaId,
@@ -1689,6 +1728,7 @@ extension type const _$CitmAreaSchema(int _value) {
     100,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyBlockIds = StaticKey(
     nameBlockIds,

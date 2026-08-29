@@ -4,10 +4,6 @@
 
 part of 'twitter.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -31,6 +27,7 @@ extension type const _$TwitterMetadataSchema(int _value) {
     112,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyResultType = StaticKey(
     nameResultType,
@@ -57,6 +54,7 @@ extension type const _$TwitterMetadataSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyIsoLanguageCode = StaticKey(
     nameIsoLanguageCode,
@@ -169,19 +167,20 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     109,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyScreenName = StaticKey(
     nameScreenName,
     keyScreenName,
     wireNameBytesScreenName,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
     wireNameBytesName,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
@@ -196,6 +195,7 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
@@ -212,6 +212,7 @@ extension type const _$TwitterUserMentionSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyIndices = StaticKey(
     nameIndices,
@@ -414,7 +415,7 @@ extension type const _$TwitterUrlSchema(int _value) {
   static const String nameIndices = 'indices';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
+  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
   static const StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
@@ -435,6 +436,7 @@ extension type const _$TwitterUrlSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyExpandedUrl = StaticKey(
     nameExpandedUrl,
@@ -455,6 +457,7 @@ extension type const _$TwitterUrlSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyDisplayUrl = StaticKey(
     nameDisplayUrl,
@@ -471,6 +474,7 @@ extension type const _$TwitterUrlSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyIndices = StaticKey(
     nameIndices,
@@ -637,7 +641,7 @@ extension type const _$TwitterEntitiesUrlsSchema(int _value) {
   static const String nameUrls = 'urls';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34];
+  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34, 58];
   static const StaticKey staticKeyUrls = StaticKey(
     nameUrls,
     keyUrls,
@@ -721,7 +725,7 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
   static const String nameDescription = 'description';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
+  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
   static const StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
@@ -741,6 +745,7 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
     111,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyDescription = StaticKey(
     nameDescription,
@@ -846,7 +851,7 @@ extension type const _$TwitterEntitiesSchema(int _value) {
   static const String nameUserMentions = 'user_mentions';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34];
+  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34, 58];
   static const StaticKey staticKeyUrls = StaticKey(
     nameUrls,
     keyUrls,
@@ -868,6 +873,7 @@ extension type const _$TwitterEntitiesSchema(int _value) {
     110,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyUserMentions = StaticKey(
     nameUserMentions,
@@ -1005,7 +1011,7 @@ extension type const _$TwitterUserSchema(int _value) {
   static const String nameNotifications = 'notifications';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
@@ -1020,13 +1026,14 @@ extension type const _$TwitterUserSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
     keyIdStr,
     wireNameBytesIdStr,
   );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34, 58];
   static const StaticKey staticKeyName = StaticKey(
     nameName,
     keyName,
@@ -1046,6 +1053,7 @@ extension type const _$TwitterUserSchema(int _value) {
     109,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyScreenName = StaticKey(
     nameScreenName,
@@ -1063,6 +1071,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyLocation = StaticKey(
     nameLocation,
@@ -1083,13 +1092,14 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyDescription = StaticKey(
     nameDescription,
     keyDescription,
     wireNameBytesDescription,
   );
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
+  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34, 58];
   static const StaticKey staticKeyUrl = StaticKey(
     nameUrl,
     keyUrl,
@@ -1106,6 +1116,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyEntities = StaticKey(
     nameEntities,
@@ -1124,6 +1135,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyProtected = StaticKey(
     nameProtected,
@@ -1148,6 +1160,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyFollowersCount = StaticKey(
     nameFollowersCount,
@@ -1170,6 +1183,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyFriendsCount = StaticKey(
     nameFriendsCount,
@@ -1191,6 +1205,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyListedCount = StaticKey(
     nameListedCount,
@@ -1210,6 +1225,7 @@ extension type const _$TwitterUserSchema(int _value) {
     97,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyCreatedAt = StaticKey(
     nameCreatedAt,
@@ -1235,6 +1251,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyFavouritesCount = StaticKey(
     nameFavouritesCount,
@@ -1254,6 +1271,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyUtcOffset = StaticKey(
     nameUtcOffset,
@@ -1272,6 +1290,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyTimeZone = StaticKey(
     nameTimeZone,
@@ -1292,6 +1311,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyGeoEnabled = StaticKey(
     nameGeoEnabled,
@@ -1309,6 +1329,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyVerified = StaticKey(
     nameVerified,
@@ -1332,13 +1353,14 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyStatusesCount = StaticKey(
     nameStatusesCount,
     keyStatusesCount,
     wireNameBytesStatusesCount,
   );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34];
+  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34, 58];
   static const StaticKey staticKeyLang = StaticKey(
     nameLang,
     keyLang,
@@ -1367,6 +1389,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyContributorsEnabled = StaticKey(
     nameContributorsEnabled,
@@ -1389,6 +1412,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyIsTranslator = StaticKey(
     nameIsTranslator,
@@ -1420,6 +1444,7 @@ extension type const _$TwitterUserSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyIsTranslationEnabled = StaticKey(
     nameIsTranslationEnabled,
@@ -1453,6 +1478,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileBackgroundColor = StaticKey(
     nameProfileBackgroundColor,
@@ -1490,6 +1516,7 @@ extension type const _$TwitterUserSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileBackgroundImageUrl = StaticKey(
     nameProfileBackgroundImageUrl,
@@ -1533,6 +1560,7 @@ extension type const _$TwitterUserSchema(int _value) {
     112,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileBackgroundImageUrlHttps = StaticKey(
     nameProfileBackgroundImageUrlHttps,
@@ -1565,6 +1593,7 @@ extension type const _$TwitterUserSchema(int _value) {
     108,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileBackgroundTile = StaticKey(
     nameProfileBackgroundTile,
@@ -1591,6 +1620,7 @@ extension type const _$TwitterUserSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileImageUrl = StaticKey(
     nameProfileImageUrl,
@@ -1623,6 +1653,7 @@ extension type const _$TwitterUserSchema(int _value) {
     112,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileImageUrlHttps = StaticKey(
     nameProfileImageUrlHttps,
@@ -1650,6 +1681,7 @@ extension type const _$TwitterUserSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileBannerUrl = StaticKey(
     nameProfileBannerUrl,
@@ -1677,6 +1709,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileLinkColor = StaticKey(
     nameProfileLinkColor,
@@ -1714,6 +1747,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileSidebarBorderColor = StaticKey(
     nameProfileSidebarBorderColor,
@@ -1749,6 +1783,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileSidebarFillColor = StaticKey(
     nameProfileSidebarFillColor,
@@ -1776,6 +1811,7 @@ extension type const _$TwitterUserSchema(int _value) {
     111,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileTextColor = StaticKey(
     nameProfileTextColor,
@@ -1813,6 +1849,7 @@ extension type const _$TwitterUserSchema(int _value) {
     103,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyProfileUseBackgroundImage = StaticKey(
     nameProfileUseBackgroundImage,
@@ -1837,6 +1874,7 @@ extension type const _$TwitterUserSchema(int _value) {
     108,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyDefaultProfile = StaticKey(
     nameDefaultProfile,
@@ -1867,6 +1905,7 @@ extension type const _$TwitterUserSchema(int _value) {
     103,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyDefaultProfileImage = StaticKey(
     nameDefaultProfileImage,
@@ -1885,6 +1924,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     103,
     34,
+    58,
   ];
   static const StaticKey staticKeyFollowing = StaticKey(
     nameFollowing,
@@ -1913,6 +1953,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyFollowRequestSent = StaticKey(
     nameFollowRequestSent,
@@ -1935,6 +1976,7 @@ extension type const _$TwitterUserSchema(int _value) {
     110,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyNotifications = StaticKey(
     nameNotifications,
@@ -2694,6 +2736,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     97,
     34,
+    58,
   ];
   static const StaticKey staticKeyMetadata = StaticKey(
     nameMetadata,
@@ -2713,13 +2756,14 @@ extension type const _$TwitterStatusSchema(int _value) {
     97,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyCreatedAt = StaticKey(
     nameCreatedAt,
     keyCreatedAt,
     wireNameBytesCreatedAt,
   );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const List<int> wireNameBytesId = [34, 105, 100, 34, 58];
   static const StaticKey staticKeyId = StaticKey(
     nameId,
     keyId,
@@ -2734,13 +2778,14 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyIdStr = StaticKey(
     nameIdStr,
     keyIdStr,
     wireNameBytesIdStr,
   );
-  static const List<int> wireNameBytesText = [34, 116, 101, 120, 116, 34];
+  static const List<int> wireNameBytesText = [34, 116, 101, 120, 116, 34, 58];
   static const StaticKey staticKeyText = StaticKey(
     nameText,
     keyText,
@@ -2755,6 +2800,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     99,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeySource = StaticKey(
     nameSource,
@@ -2773,6 +2819,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyTruncated = StaticKey(
     nameTruncated,
@@ -2803,6 +2850,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     105,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyInReplyToStatusId = StaticKey(
     nameInReplyToStatusId,
@@ -2837,6 +2885,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyInReplyToStatusIdStr = StaticKey(
     nameInReplyToStatusIdStr,
@@ -2865,6 +2914,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     105,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyInReplyToUserId = StaticKey(
     nameInReplyToUserId,
@@ -2897,6 +2947,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyInReplyToUserIdStr = StaticKey(
     nameInReplyToUserIdStr,
@@ -2929,13 +2980,14 @@ extension type const _$TwitterStatusSchema(int _value) {
     109,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyInReplyToScreenName = StaticKey(
     nameInReplyToScreenName,
     keyInReplyToScreenName,
     wireNameBytesInReplyToScreenName,
   );
-  static const List<int> wireNameBytesUser = [34, 117, 115, 101, 114, 34];
+  static const List<int> wireNameBytesUser = [34, 117, 115, 101, 114, 34, 58];
   static const StaticKey staticKeyUser = StaticKey(
     nameUser,
     keyUser,
@@ -2957,6 +3009,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyRetweetCount = StaticKey(
     nameRetweetCount,
@@ -2980,6 +3033,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     110,
     116,
     34,
+    58,
   ];
   static const StaticKey staticKeyFavoriteCount = StaticKey(
     nameFavoriteCount,
@@ -2997,6 +3051,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyEntities = StaticKey(
     nameEntities,
@@ -3015,6 +3070,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyFavorited = StaticKey(
     nameFavorited,
@@ -3033,6 +3089,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     101,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyRetweeted = StaticKey(
     nameRetweeted,
@@ -3060,13 +3117,14 @@ extension type const _$TwitterStatusSchema(int _value) {
     118,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyPossiblySensitive = StaticKey(
     namePossiblySensitive,
     keyPossiblySensitive,
     wireNameBytesPossiblySensitive,
   );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34];
+  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34, 58];
   static const StaticKey staticKeyLang = StaticKey(
     nameLang,
     keyLang,
@@ -3091,6 +3149,7 @@ extension type const _$TwitterStatusSchema(int _value) {
     117,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyRetweetedStatus = StaticKey(
     nameRetweetedStatus,
@@ -3576,6 +3635,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     105,
     110,
     34,
+    58,
   ];
   static const StaticKey staticKeyCompletedIn = StaticKey(
     nameCompletedIn,
@@ -3591,6 +3651,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     105,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeyMaxId = StaticKey(
     nameMaxId,
@@ -3610,6 +3671,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeyMaxIdStr = StaticKey(
     nameMaxIdStr,
@@ -3631,13 +3693,23 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     116,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyNextResults = StaticKey(
     nameNextResults,
     keyNextResults,
     wireNameBytesNextResults,
   );
-  static const List<int> wireNameBytesQuery = [34, 113, 117, 101, 114, 121, 34];
+  static const List<int> wireNameBytesQuery = [
+    34,
+    113,
+    117,
+    101,
+    114,
+    121,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyQuery = StaticKey(
     nameQuery,
     keyQuery,
@@ -3657,13 +3729,23 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     114,
     108,
     34,
+    58,
   ];
   static const StaticKey staticKeyRefreshUrl = StaticKey(
     nameRefreshUrl,
     keyRefreshUrl,
     wireNameBytesRefreshUrl,
   );
-  static const List<int> wireNameBytesCount = [34, 99, 111, 117, 110, 116, 34];
+  static const List<int> wireNameBytesCount = [
+    34,
+    99,
+    111,
+    117,
+    110,
+    116,
+    34,
+    58,
+  ];
   static const StaticKey staticKeyCount = StaticKey(
     nameCount,
     keyCount,
@@ -3680,6 +3762,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     105,
     100,
     34,
+    58,
   ];
   static const StaticKey staticKeySinceId = StaticKey(
     nameSinceId,
@@ -3701,6 +3784,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
     116,
     114,
     34,
+    58,
   ];
   static const StaticKey staticKeySinceIdStr = StaticKey(
     nameSinceIdStr,
@@ -3989,6 +4073,7 @@ extension type const _$TwitterResponseSchema(int _value) {
     101,
     115,
     34,
+    58,
   ];
   static const StaticKey staticKeyStatuses = StaticKey(
     nameStatuses,
@@ -4013,6 +4098,7 @@ extension type const _$TwitterResponseSchema(int _value) {
     116,
     97,
     34,
+    58,
   ];
   static const StaticKey staticKeySearchMetadata = StaticKey(
     nameSearchMetadata,

@@ -58,7 +58,7 @@ final class DecoderGeneratorHelper {
     buffer.writeln('  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys');
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
-      final encoded = utf8.encode(jsonEncode(field.wireName));
+      final encoded = utf8.encode('${jsonEncode(field.wireName)}:');
       buffer.writeln(
         '  static const List<int> wireNameBytes$suffix = $encoded;',
       );

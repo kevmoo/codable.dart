@@ -4,10 +4,6 @@
 
 part of 'coordinate.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -28,6 +24,7 @@ extension type const _$CoordinateSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyLatitude = StaticKey(
     nameLatitude,
@@ -46,6 +43,7 @@ extension type const _$CoordinateSchema(int _value) {
     100,
     101,
     34,
+    58,
   ];
   static const StaticKey staticKeyLongitude = StaticKey(
     nameLongitude,
