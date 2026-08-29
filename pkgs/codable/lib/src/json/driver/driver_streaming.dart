@@ -812,8 +812,12 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
-      encodeValue(key.name, value, encode);
+  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) {
+    _writeFastKey(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encode(value, child);
+    child._finish();
+  }
 
   @override
   void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
@@ -827,7 +831,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
     StaticKey key,
     T? value,
     EncoderCallback<T> encode,
-  ) => encodeNullableValue(key.name, value, encode);
+  ) {
+    if (value != null) {
+      encodeValueKey(key, value, encode);
+    }
+  }
 
   @override
   void encodeEncodable(String key, Encodable value) {
@@ -838,8 +846,12 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeEncodableKey(StaticKey key, Encodable value) =>
-      encodeEncodable(key.name, value);
+  void encodeEncodableKey(StaticKey key, Encodable value) {
+    _writeFastKey(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    child._finish();
+  }
 
   @override
   void encodeNullableEncodable(String key, Encodable? value) {
@@ -849,8 +861,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
-      encodeNullableEncodable(key.name, value);
+  void encodeNullableEncodableKey(StaticKey key, Encodable? value) {
+    if (value != null) {
+      encodeEncodableKey(key, value);
+    }
+  }
 
   @override
   void encodeList<T>(
@@ -876,7 +891,19 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
     StaticKey key,
     Iterable<T> elements,
     EncoderCallback<T> encode,
-  ) => encodeList(key.name, elements, encode);
+  ) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final e in elements) {
+      final child = JsonCodableEncoder(
+        _writer,
+        userInfo: _rootEncoder.userInfo,
+      );
+      encode(e, child);
+      child._finish();
+    }
+    _writer.endArray();
+  }
 
   @override
   void encodeIntList(String key, List<int> values) {

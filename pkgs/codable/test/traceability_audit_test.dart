@@ -273,11 +273,16 @@ void main() {
         // Two quotes key (should be treated as pre-quoted empty string '""')
         w.writeNameBytes(Uint8List.fromList([34, 34]));
         w.writeInt(4);
+        // Colon-terminated key slice (e.g. '"colon_key":')
+        w.writeNameBytes(Uint8List.fromList(utf8.encode('"colon_key":')));
+        w.writeInt(5);
         w.endObject();
         w.flush();
 
         final result = utf8.decode(sink.takeBytes());
-        check(result).equals('{"unquoted":1,"already_quoted":2,""":3,"":4}');
+        check(
+          result,
+        ).equals('{"unquoted":1,"already_quoted":2,""":3,"":4,"colon_key":5}');
       }
 
       verifyWriter(JsonTokenWriter.toSink);

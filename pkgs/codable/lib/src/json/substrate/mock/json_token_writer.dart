@@ -493,7 +493,10 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
     _objectStateStack.last = _ObjectState.key;
     final len = asciiKey.length;
     final isColonTerminated =
-        len >= 3 && asciiKey[0] == 34 && asciiKey[len - 1] == 58;
+        len >= 3 &&
+        asciiKey[0] == 34 &&
+        asciiKey[len - 2] == 34 &&
+        asciiKey[len - 1] == 58;
     if (isColonTerminated) {
       _ensureCapacity(len);
       _buffer.setRange(_cursor, _cursor + len, asciiKey);
