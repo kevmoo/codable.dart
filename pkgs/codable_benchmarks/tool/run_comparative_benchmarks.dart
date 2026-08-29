@@ -40,15 +40,24 @@ String _findNewDart(String? explicitPath) {
     throw ArgumentError('Explicit new Dart SDK not found at: $explicitPath');
   }
 
-  final candidate1 = File(
-    '${Platform.environment['HOME'] ?? ''}/.local/share/dart-sdk-json-utf8-kernels/dart-sdk/bin/dart',
-  );
-  if (candidate1.existsSync()) return candidate1.path;
+  final envSdk = Platform.environment['CODABLE_NATIVE_SDK'];
+  if (envSdk != null && envSdk.isNotEmpty) {
+    final candidate = File(envSdk);
+    if (candidate.existsSync()) return candidate.path;
+    final dirCandidate = File('$envSdk/bin/dart');
+    if (dirCandidate.existsSync()) return dirCandidate.path;
+  }
 
-  final candidate2 = File(
-    '${Platform.environment['HOME'] ?? ''}/github/dart-sdk/out/ReleaseX64/dart-sdk/bin/dart',
-  );
-  if (candidate2.existsSync()) return candidate2.path;
+  final home = Platform.environment['HOME'] ?? '';
+  for (final candidate in [
+    '$home/.local/share/dart-sdk-json-utf8-kernels/dart-sdk/bin/dart',
+    '$home/github/dart-sdk/core/agent-json-utf8-kernels/sdk/out/ReleaseX64/dart-sdk/bin/dart',
+    '$home/github/dart-sdk/core/agent-json-squash/sdk/out/ReleaseX64/dart-sdk/bin/dart',
+    '$home/github/dart-sdk/out/ReleaseX64/dart-sdk/bin/dart',
+  ]) {
+    final dart = File(candidate);
+    if (dart.existsSync()) return dart.path;
+  }
 
   return Platform.resolvedExecutable;
 }
