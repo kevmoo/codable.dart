@@ -15,10 +15,28 @@ import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 
 @JS('JSON.parse')
-external JSAny? _jsonParse(String text);
+external JSAny? _jsonParse(JSString text);
 
 @JS('Object.keys')
 external JSArray<JSAny?> _objectKeys(JSObject object);
+
+@JS('Float64Array.from')
+external JSFloat64Array _float64ArrayFrom(JSArray<JSAny?> array);
+
+@JS('TextDecoder')
+extension type JSTextDecoder._(JSObject _) implements JSObject {
+  external factory JSTextDecoder();
+  external JSString decode(JSUint8Array bytes);
+}
+
+@JS('TextEncoder')
+extension type JSTextEncoder._(JSObject _) implements JSObject {
+  external factory JSTextEncoder();
+  external JSUint8Array encode(JSString text);
+}
+
+final _textDecoder = JSTextDecoder();
+final _textEncoder = JSTextEncoder();
 
 List<String> _getKeys(JSObject obj) {
   final keys = _objectKeys(obj);
@@ -26,6 +44,18 @@ List<String> _getKeys(JSObject obj) {
     keys.length,
     (i) => keys.getProperty<JSString>(i.toJS).toDart,
   );
+}
+
+Float64List _extractFloat64List(JSAny? val) {
+  if (val != null) {
+    if (val.isA<JSFloat64Array>()) {
+      return (val as JSFloat64Array).toDart;
+    }
+    if (val.isA<JSArray>()) {
+      return _float64ArrayFrom(val as JSArray<JSAny?>).toDart;
+    }
+  }
+  throw CodableException('Expected Float64List, found $val');
 }
 
 Object? _jsToDart(JSAny? value) {
@@ -53,6 +83,16 @@ Object? _jsToDart(JSAny? value) {
   return null;
 }
 
+/// Concrete high-performance DOM/JS JSON decoder connecting `package:codable`
+/// contracts directly to browser engine `JSON.parse` and native JavaScript
+/// objects.
+///
+/// NOTE: Because `JSON.parse` uses IEEE-754 64-bit floating-point numbers on
+/// Web targets, integers outside the safe integer range
+/// $[-2^{53}+1, 2^{53}-1]$ ($[-9007199254740991, 9007199254740991]$) are
+/// subject to standard JavaScript precision limits. For exact 64-bit integer
+/// parsing on standalone Wasm or Native targets, use
+/// `package:codable/codable_streaming.dart`.
 final class JsonCodableDecoder implements Decoder {
   final JSAny? _decoded;
   final Uint8List? _bytes;
@@ -67,8 +107,17 @@ final class JsonCodableDecoder implements Decoder {
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    final decoded = _jsonParse(utf8.decode(bytes));
+    final jsString = _textDecoder.decode(bytes.toJS);
+    final decoded = _jsonParse(jsString);
     return JsonCodableDecoder._(decoded, bytes, userInfo: userInfo);
+  }
+
+  factory JsonCodableDecoder.fromString(
+    String text, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final decoded = _jsonParse(text.toJS);
+    return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
   JsonCodableDecoder.fromReader(
@@ -124,6 +173,7 @@ final class JsonCodableDecoder implements Decoder {
   KeyedDecoder keyed({KeyOptions? options}) => _JsonCodableMappedKeyedDecoder(
     this,
     (_activeValue ?? _decoded) as JSObject,
+    options,
   );
 
   @override
@@ -154,33 +204,60 @@ final class JsonCodableDecoder implements Decoder {
 final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   final JsonCodableDecoder _rootDecoder;
   final JSObject _map;
-  final List<String> _keys;
-  int _currentIndex = 0;
+  KeyOptions? _options;
+  List<String>? _keys;
+  int _propertyIndex = 0;
+  String? _activeKey;
   JSAny? _activeValue;
   bool _hasActiveValue = false;
 
-  _JsonCodableMappedKeyedDecoder(this._rootDecoder, this._map)
-    : _keys = _getKeys(_map);
+  _JsonCodableMappedKeyedDecoder(this._rootDecoder, this._map, [this._options]);
+
+  bool _advanceToNextMatchingProperty() {
+    if (_hasActiveValue) return true;
+    if (_options != null) {
+      final keys = _options!.keys;
+      while (_propertyIndex < keys.length) {
+        final key = keys[_propertyIndex++];
+        final jsKey = key.toJS;
+        if (_map.hasProperty(jsKey).toDart) {
+          _activeKey = key;
+          _activeValue = _map.getProperty<JSAny?>(jsKey);
+          _hasActiveValue = true;
+          return true;
+        }
+      }
+      return false;
+    }
+    _keys ??= _getKeys(_map);
+    if (_propertyIndex < _keys!.length) {
+      final key = _keys![_propertyIndex++];
+      _activeKey = key;
+      _activeValue = _map.getProperty<JSAny?>(key.toJS);
+      _hasActiveValue = true;
+      return true;
+    }
+    return false;
+  }
 
   @override
-  bool hasNextKey() => _currentIndex < _keys.length || _hasActiveValue;
+  bool hasNextKey() => _hasActiveValue || _advanceToNextMatchingProperty();
+
+  @override
+  bool hasNext() => hasNextKey();
 
   @override
   bool isNextNull() {
-    if (_hasActiveValue) return _activeValue == null;
     if (!hasNextKey()) return false;
-    final key = _keys[_currentIndex];
-    return _map.getProperty<JSAny?>(key.toJS) == null;
+    return _activeValue == null;
   }
 
   @override
   void readNull() {
-    if (_hasActiveValue) {
-      _hasActiveValue = false;
-      _activeValue = null;
-    } else if (hasNextKey()) {
-      _currentIndex++;
+    if (!hasNextKey()) {
+      throw const CodableException('No more keys available in KeyedDecoder');
     }
+    _consumeValue();
   }
 
   @override
@@ -192,35 +269,35 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
       throw UnsupportedError('String spans not supported on JS backend');
 
   @override
-  bool hasNext() => hasNextKey();
-
-  @override
   String nextKey() {
     if (!hasNextKey()) {
       throw const CodableException('No more keys in object');
     }
-    final key = _keys[_currentIndex++];
-    _activeValue = _map.getProperty<JSAny?>(key.toJS);
-    _hasActiveValue = true;
-    return key;
+    return _activeKey!;
   }
 
   @override
-  String? peekKey() =>
-      _currentIndex < _keys.length ? _keys[_currentIndex] : null;
+  String? peekKey() {
+    if (!hasNextKey()) return null;
+    return _activeKey;
+  }
 
   @override
   int selectKeyIndex(KeyOptions options) {
+    if (_options == null &&
+        _keys == null &&
+        _propertyIndex == 0 &&
+        !_hasActiveValue) {
+      _options = options;
+    }
     if (!hasNextKey()) return -1;
-    final key = _keys[_currentIndex];
-    return options.indexOf(key);
+    return options.indexOf(_activeKey!);
   }
 
   @override
   int selectKey(List<String> keys) {
     if (!hasNextKey()) return -1;
-    final key = _keys[_currentIndex];
-    return keys.indexOf(key);
+    return keys.indexOf(_activeKey!);
   }
 
   @override
@@ -234,26 +311,19 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   void skipValue() {
-    if (_hasActiveValue) {
-      _hasActiveValue = false;
-      _activeValue = null;
-    } else if (hasNextKey()) {
-      _currentIndex++;
-    }
+    if (!hasNextKey()) return;
+    _consumeValue();
   }
 
   JSAny? _consumeValue() {
-    if (_hasActiveValue) {
-      _hasActiveValue = false;
-      final v = _activeValue;
-      _activeValue = null;
-      return v;
-    }
     if (!hasNextKey()) {
       throw const CodableException('No more keys in object');
     }
-    final key = _keys[_currentIndex++];
-    return _map.getProperty<JSAny?>(key.toJS);
+    _hasActiveValue = false;
+    final v = _activeValue;
+    _activeValue = null;
+    _activeKey = null;
+    return v;
   }
 
   @override
@@ -345,13 +415,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   Float64List decodeFloat64List() {
     final val = _consumeValue();
-    final arr = val as JSArray;
-    final result = Float64List(arr.length);
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result[i] = (e as JSNumber).toDartDouble;
-    }
-    return result;
+    return _extractFloat64List(val);
   }
 
   @override
@@ -586,13 +650,8 @@ final class _JsonCodableMappedDecoder
 
   @override
   Float64List decodeFloat64List(String key) {
-    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
-    final result = Float64List(arr.length);
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result[i] = (e as JSNumber).toDartDouble;
-    }
-    return result;
+    final val = _map.getProperty<JSAny?>(key.toJS);
+    return _extractFloat64List(val);
   }
 
   @override
@@ -697,14 +756,9 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   Float64List decodeFloat64List() {
-    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    final val = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
-    final result = Float64List(arr.length);
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result[i] = (e as JSNumber).toDartDouble;
-    }
-    return result;
+    return _extractFloat64List(val);
   }
 
   @override
@@ -895,7 +949,7 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
 }
 
 @JS('JSON.stringify')
-external String _jsonStringify(JSAny? value);
+external JSString _jsonStringify(JSAny? value);
 
 /// Concrete high-performance DOM/JS JSON encoder connecting `package:codable`
 /// contracts directly to native JavaScript objects and `JSON.stringify`.
@@ -913,7 +967,7 @@ final class JsonCodableEncoder implements Encoder {
   }) {
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encode(encoder);
-    return _jsonStringify(encoder._root);
+    return _jsonStringify(encoder._root).toDart;
   }
 
   /// Encodes a value to a newly allocated UTF-8 byte buffer.
@@ -922,8 +976,11 @@ final class JsonCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
-    final str = JsonCodableEncoder.encode(encode, userInfo: userInfo);
-    return Uint8List.fromList(utf8.encode(str));
+    final encoder = JsonCodableEncoder(userInfo: userInfo);
+    encode(encoder);
+    final jsString = _jsonStringify(encoder._root);
+    final jsBytes = _textEncoder.encode(jsString);
+    return jsBytes.toDart;
   }
 
   @override
