@@ -213,6 +213,23 @@ void main() {
       },
     );
 
+    test(
+      'generates specialized list decoders for PrimitiveCollectionsModel',
+      () {
+        final output = runGeneratorFor('PrimitiveCollectionsModel');
+
+        check(output).contains('ints = keyed.decodeIntList();');
+        check(output).contains('doubles = keyed.decodeDoubleList();');
+        check(output).contains('strings = keyed.decodeStringList();');
+        check(output).contains('bools = keyed.decodeBoolList();');
+        check(output).contains('float64s = keyed.decodeFloat64List();');
+        check(output).contains('l.add(u.decodeDoubleList());');
+        check(output).contains('matrix = l;');
+        check(output).contains('l.add(u.decodeFloat64List());');
+        check(output).contains('nestedFloats = l;');
+      },
+    );
+
     test('throws InvalidGenerationSourceError when required fields exceed 62 limit', () {
       check(() => runGeneratorFor('HugeModel63'))
           .throws<InvalidGenerationSourceError>()

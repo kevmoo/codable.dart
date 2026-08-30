@@ -132,6 +132,32 @@ final class Team {
 }
 
 @Codable()
+final class PrimitiveCollectionsModel {
+  final List<int> ints;
+  final List<double> doubles;
+  final List<String> strings;
+  final List<bool> bools;
+  final Float64List float64s;
+  final List<List<double>> matrix;
+  final List<Float64List> nestedFloats;
+
+  const PrimitiveCollectionsModel({
+    this.ints = const [],
+    this.doubles = const [],
+    this.strings = const [],
+    this.bools = const [],
+    required this.float64s,
+    this.matrix = const [],
+    this.nestedFloats = const [],
+  });
+
+  static PrimitiveCollectionsModel decode(Decoder decoder) =>
+      _$PrimitiveCollectionsModelFromDecoder(decoder);
+  void encode(Encoder encoder) =>
+      _$PrimitiveCollectionsModelToEncoder(this, encoder);
+}
+
+@Codable()
 final class HugeModel63 {
   final int f00;
   final int f01;

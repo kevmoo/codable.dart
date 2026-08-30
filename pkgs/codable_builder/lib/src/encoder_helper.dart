@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, lines_longer_than_80_chars
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -133,13 +133,24 @@ final class EncoderGeneratorHelper {
     String access, {
     required String indent,
   }) {
+    final typeName = field.type.element?.name;
+    if (typeName == 'Float64List' || typeName == 'Float32List') {
+      buffer.writeln('${indent}keyed.encodeDoubleListKey($keyExpr, $access);');
+      return;
+    } else if (typeName == 'Int64List' ||
+        typeName == 'Int32List' ||
+        typeName == 'Uint8List') {
+      buffer.writeln('${indent}keyed.encodeIntListKey($keyExpr, $access);');
+      return;
+    }
+
     final elemType = field.elementType;
     final isNullable = elemType?.isNullableType ?? false;
     if (elemType != null && elemType.isDartCoreInt && !isNullable) {
       buffer.writeln('${indent}keyed.encodeIntListKey($keyExpr, $access);');
-    } else if (elemType != null &&
-        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        !isNullable) {
+    } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
+      buffer.writeln('${indent}keyed.encodeDoubleListKey($keyExpr, $access);');
+    } else if (elemType != null && elemType.isDartCoreNum && !isNullable) {
       buffer.writeln(
         '${indent}keyed.encodeDoubleListKey($keyExpr, '
         '$access.map((e) => e.toDouble()).toList());',
@@ -344,6 +355,26 @@ final class EncoderGeneratorHelper {
     } else if (type.element is EnumElement) {
       buffer.writeln(
         '${indent}e.singleValue().encodeString($itemAccess.name);',
+      );
+    } else if (type.isDartCoreList || type.element?.name == 'List') {
+      final inner = type is InterfaceType && type.typeArguments.isNotEmpty
+          ? type.typeArguments.first
+          : null;
+      buffer.writeln(
+        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) {',
+      );
+      _writeElementEncode(buffer, inner, 'item', indent: '$indent  ');
+      buffer.writeln('$indent});');
+    } else if (type.element?.name == 'Float64List' ||
+        type.element?.name == 'Float32List') {
+      buffer.writeln(
+        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) => e2.singleValue().encodeDouble(item));',
+      );
+    } else if (type.element?.name == 'Int64List' ||
+        type.element?.name == 'Int32List' ||
+        type.element?.name == 'Uint8List') {
+      buffer.writeln(
+        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) => e2.singleValue().encodeInt(item));',
       );
     } else if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
