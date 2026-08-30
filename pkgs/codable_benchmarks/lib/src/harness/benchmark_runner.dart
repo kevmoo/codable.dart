@@ -41,14 +41,15 @@ class RunnerConfig {
 
   const RunnerConfig({
     this.targetSampleMicros = 10000, // 10 ms
-    this.minSamples = 30,
-    this.maxSamples = 100,
-    this.maxTotalMicros = 3000000, // 3 seconds
+    this.minSamples = 10,
+    this.maxSamples = 25,
+    // 1 second per tier (prevents long JS timeouts).
+    this.maxTotalMicros = 1000000,
     this.targetRelativeError = 0.05,
-    this.windowSize = 10,
-    this.stabilityRequired = 5,
+    this.windowSize = 5,
+    this.stabilityRequired = 3,
     this.trimPercentage = 0.10,
-    this.warmupMicros = 100000, // 100 ms
+    this.warmupMicros = 50000, // 50 ms
   });
 }
 
@@ -153,12 +154,14 @@ class BenchmarkRunner {
     var converged = false;
     final steadySamples = <double>[];
 
-    while (buffer.length < config.maxSamples) {
+    var totalSamplesEvaluated = buffer.length;
+    while (totalSamplesEvaluated < config.maxSamples) {
       if (totalWatch.elapsedMicroseconds > config.maxTotalMicros) {
         break;
       }
 
       final elapsed = measure();
+      totalSamplesEvaluated++;
       final perOpMicros = elapsed / iterations;
       buffer.add(perOpMicros);
 
