@@ -52,6 +52,25 @@ dart analyze --fatal-infos
 dart test pkgs/codable pkgs/codable_builder pkgs/codable_benchmarks
 ```
 
+## Benchmarking & Optimization Workflow
+
 Benchmarks: `pkgs/codable_benchmarks/tool/run_comparative_benchmarks.dart`.
 Numbers labelled "New Dart + Codable" reflect whichever substrate is active —
 state which one in any report you update.
+
+When evaluating performance optimizations, PRs, or commit deltas:
+1. **Compare Against Baseline via Git (`--diff`)**:
+   ```bash
+   # Run benchmarks and automatically diff against main branch baseline in git:
+   dart run pkgs/codable_benchmarks/tool/run_comparative_benchmarks.dart -t all --diff main
+   ```
+2. **Standalone Telemetry Diff (Zero-Token & Instant)**:
+   ```bash
+   # Diff existing local JSON against main without re-running 20-min compilations:
+   dart run pkgs/codable_benchmarks/tool/run_comparative_benchmarks.dart --from-json benchmark_comparison.json --diff main
+   ```
+3. **Primary Report Invariant**:
+   * ALWAYS lead with the isolated **Before vs. After Delta Table** on the `New Dart + Codable` target.
+   * Multi-tier ecosystem matrices (vs Stock Dart) are strictly secondary.
+   * Prominently highlight regressions (🔴) before calling out speedups (🏆).
+

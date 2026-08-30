@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:codable_benchmarks/harness.dart';
 
 final packageRoot = File(Platform.script.toFilePath()).parent.parent.path;
 
@@ -136,6 +137,15 @@ ArgParser _buildArgParser() => ArgParser()
     help: 'Concurrent benchmark worker tasks (use 1 for statistical fidelity)',
   )
   ..addOption(
+    'threshold',
+    defaultsTo: '5.0',
+    help: 'Percentage threshold for declaring a regression or speedup (e.g. 3.0, 5.0)',
+  )
+  ..addOption(
+    'diff',
+    help: 'Compare results against a baseline JSON file, stdin (-), or git ref (e.g. main, HEAD~1)',
+  )
+  ..addOption(
     'from-json',
     help: 'Path to benchmark JSON results to format into Markdown without re-running',
   )
@@ -149,7 +159,247 @@ File _resolveFile(String p) {
   return File('$packageRoot/$p');
 }
 
-void _handleFromJson(String fromJsonPath, String? outputMd) {
+Future<Map<String, dynamic>?> _loadBaselineJson(String? diffArg) async {
+  if (diffArg == null || diffArg.isEmpty) return null;
+
+  if (diffArg == '-') {
+    final input = await stdin.transform(utf8.decoder).join();
+    try {
+      return jsonDecode(input) as Map<String, dynamic>;
+    } catch (e) {
+      stderr.writeln('Error: Failed to parse baseline JSON from stdin: $e');
+      exit(1);
+    }
+  }
+
+  final localFile = _resolveFile(diffArg);
+  if (localFile.existsSync()) {
+    try {
+      return jsonDecode(localFile.readAsStringSync()) as Map<String, dynamic>;
+    } catch (e) {
+      stderr.writeln(
+        'Error: Failed to parse JSON from file ${localFile.path}: $e',
+      );
+      exit(1);
+    }
+  }
+
+  // Attempt to load via git show
+  for (final gitPath in [
+    'pkgs/codable_benchmarks/benchmark_comparison.json',
+    'benchmark_comparison.json',
+  ]) {
+    final proc = Process.runSync('git', [
+      'show',
+      '$diffArg:$gitPath',
+    ], workingDirectory: packageRoot);
+    if (proc.exitCode == 0 &&
+        proc.stdout is String &&
+        (proc.stdout as String).trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode((proc.stdout as String).trim());
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+      } catch (_) {}
+    }
+  }
+
+  stderr.writeln(
+    'Error: Could not resolve baseline JSON from file "$diffArg" or git ref "$diffArg:pkgs/codable_benchmarks/benchmark_comparison.json"',
+  );
+  exit(1);
+}
+
+String _formatLatency(double ms, [double? stddev]) {
+  if (ms <= 0) return 'N/A';
+  if (ms < 0.001) {
+    final ns = ms * 1000000.0;
+    if (stddev != null && stddev > 0) {
+      final stddevNs = stddev * 1000000.0;
+      return '${ns.toStringAsFixed(0)} ± ${stddevNs.toStringAsFixed(0)} ns';
+    }
+    return '${ns.toStringAsFixed(0)} ns';
+  } else if (ms < 1.0) {
+    final us = ms * 1000.0;
+    if (stddev != null && stddev > 0) {
+      final stddevUs = stddev * 1000.0;
+      return '${us.toStringAsFixed(1)} ± ${stddevUs.toStringAsFixed(1)} µs';
+    }
+    return '${us.toStringAsFixed(1)} µs';
+  } else {
+    if (stddev != null && stddev > 0) {
+      return '${ms.toStringAsFixed(2)} ± ${stddev.toStringAsFixed(2)} ms';
+    }
+    return '${ms.toStringAsFixed(2)} ms';
+  }
+}
+
+String _formatDeltaMs(double deltaMs) {
+  final sign = deltaMs >= 0 ? '+' : '-';
+  final absDelta = deltaMs.abs();
+  if (absDelta < 0.001) {
+    final ns = absDelta * 1000000.0;
+    return '$sign${ns.toStringAsFixed(0)} ns';
+  } else if (absDelta < 1.0) {
+    final us = absDelta * 1000.0;
+    return '$sign${us.toStringAsFixed(1)} µs';
+  } else {
+    return '$sign${absDelta.toStringAsFixed(2)} ms';
+  }
+}
+
+String _formatDiffMarkdownReport({
+  required Map<String, dynamic> baselineData,
+  required Map<String, dynamic> currentData,
+  String? baselineLabel,
+  double thresholdPct = 5.0,
+}) {
+  final sb = StringBuffer();
+  final baseTargets = baselineData['targets'] as Map<String, dynamic>? ?? {};
+  final currTargets = currentData['targets'] as Map<String, dynamic>? ?? {};
+
+  final bLabel = baselineLabel ?? 'Baseline';
+
+  sb.writeln('## 🚀 Isolated Before vs. After Benchmark Delta (vs $bLabel)');
+  sb.writeln('');
+
+  for (final tKey in ['wasm', 'aot', 'js']) {
+    if (!currTargets.containsKey(tKey) || !baseTargets.containsKey(tKey)) {
+      continue;
+    }
+
+    final tLabel = _targetLabels[tKey] ?? tKey.toUpperCase();
+    final baseTMap = baseTargets[tKey] as Map<String, dynamic>;
+    final currTMap = currTargets[tKey] as Map<String, dynamic>;
+
+    final baseT3 = (baseTMap['tier3_new_dart_codable'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final currT3 = (currTMap['tier3_new_dart_codable'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+
+    for (final mode in ['encode', 'decode']) {
+      final baseModeMap = {
+        for (var r in baseT3.where((r) => r['mode'] == mode)) r['dataset']: r,
+      };
+      final currModeMap = {
+        for (var r in currT3.where((r) => r['mode'] == mode)) r['dataset']: r,
+      };
+
+      if (currModeMap.isEmpty) continue;
+
+      final modeTitle = mode == 'encode' ? 'Encode' : 'Decode';
+      sb.writeln('### Target: $tLabel $modeTitle (`New Dart + Codable`)');
+      sb.writeln('');
+      sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
+      sb.writeln(
+        '| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) [±95% MoE] | Speedup vs $bLabel |',
+      );
+      sb.writeln('| :--- | :---: | :---: | :---: | :---: | :---: |');
+
+      for (final dataset in _canonicalDatasets) {
+        final curr = currModeMap[dataset];
+        final base = baseModeMap[dataset];
+        if (curr == null) continue;
+
+        final dsLabel = _datasetLabels[dataset] ?? dataset;
+        final currMean =
+            (curr['mean_ms'] as num?)?.toDouble() ??
+            (curr['latency_ms'] as num?)?.toDouble() ??
+            0.0;
+        final baseMean =
+            (base?['mean_ms'] as num?)?.toDouble() ??
+            (base?['latency_ms'] as num?)?.toDouble();
+
+        if (baseMean == null || baseMean <= 0) {
+          sb.writeln(
+            '| **$dsLabel** | N/A | ${_formatLatency(currMean)} | N/A | N/A | N/A |',
+          );
+          continue;
+        }
+
+        final baseStddev = (base?['stddev_ms'] as num?)?.toDouble() ?? 0.0;
+        final currStddev = (curr['stddev_ms'] as num?)?.toDouble() ?? 0.0;
+        final baseN = (base?['samples_collected'] as num?)?.toInt() ?? 20;
+        final currN = (curr['samples_collected'] as num?)?.toInt() ?? 20;
+
+        final stat = compareDistributions(
+          meanX: baseMean,
+          sX: baseStddev,
+          nX: baseN,
+          meanY: currMean,
+          sY: currStddev,
+          nY: currN,
+        );
+
+        final deltaMs = stat.deltaMean;
+        final deltaPct = stat.deltaPercentage;
+        final isSignificant = stat.isSignificant;
+        final moePct = stat.marginOfErrorPercentage;
+        final speedup = currMean > 0 ? baseMean / currMean : 1.0;
+
+        final sign = deltaPct >= 0 ? '+' : '';
+        final deltaMsFormatted = _formatDeltaMs(deltaMs);
+
+        final String deltaPctFormatted;
+        if (moePct > 0) {
+          if (deltaPct.abs() >= thresholdPct && isSignificant) {
+            deltaPctFormatted =
+                '**$sign${deltaPct.toStringAsFixed(1)}%** [±${moePct.toStringAsFixed(1)}%]';
+          } else {
+            deltaPctFormatted =
+                '$sign${deltaPct.toStringAsFixed(1)}% [±${moePct.toStringAsFixed(1)}%]';
+          }
+        } else {
+          if (deltaPct.abs() >= thresholdPct && isSignificant) {
+            deltaPctFormatted = '**$sign${deltaPct.toStringAsFixed(1)}%**';
+          } else {
+            deltaPctFormatted = '$sign${deltaPct.toStringAsFixed(1)}%';
+          }
+        }
+
+        final String preStr = _formatLatency(
+          baseMean,
+          baseStddev > 0 ? baseStddev : null,
+        );
+        final String postStr = _formatLatency(
+          currMean,
+          currStddev > 0 ? currStddev : null,
+        );
+
+        final String badge;
+        if (!isSignificant) {
+          badge = ' ${speedup.toStringAsFixed(2)}x (p ≥ 0.05)';
+        } else if (deltaPct <= -thresholdPct) {
+          badge = ' **${speedup.toStringAsFixed(2)}x faster** 🏆';
+        } else if (deltaPct >= thresholdPct) {
+          badge = ' **${speedup.toStringAsFixed(2)}x (regression)** 🔴';
+        } else {
+          badge = ' ${speedup.toStringAsFixed(2)}x (parity)';
+        }
+
+        sb.writeln(
+          '| **$dsLabel** | $preStr | $postStr | $deltaMsFormatted | $deltaPctFormatted |$badge |',
+        );
+      }
+      sb.writeln('<!-- mdformat on -->');
+      sb.writeln('');
+      sb.writeln(
+        '> **Statistical Criteria**: Effect threshold = ±${thresholdPct.toStringAsFixed(1)}% &bull; Significance = Welch\'s two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.',
+      );
+      sb.writeln('');
+    }
+  }
+
+  return sb.toString();
+}
+
+Future<void> _handleFromJson(
+  String fromJsonPath,
+  String? outputMd,
+  String? diffArg,
+  double thresholdPct,
+) async {
   final file = _resolveFile(fromJsonPath);
   if (!file.existsSync()) {
     stderr.writeln('Error: JSON file not found at: ${file.path}');
@@ -159,6 +409,22 @@ void _handleFromJson(String fromJsonPath, String? outputMd) {
   final targetsData = rawData['targets'] as Map<String, dynamic>? ?? {};
   final combinedMd = StringBuffer();
   final targetsMap = Map<String, Map<String, dynamic>>.from(targetsData);
+
+  if (diffArg != null) {
+    final baselineData = await _loadBaselineJson(diffArg);
+    if (baselineData != null) {
+      final diffReport = _formatDiffMarkdownReport(
+        baselineData: baselineData,
+        currentData: rawData,
+        baselineLabel: diffArg == '-' ? 'stdin' : diffArg,
+        thresholdPct: thresholdPct,
+      );
+      combinedMd.writeln(diffReport.trim());
+      combinedMd.writeln(
+        '\n------------------------------------------------------------------------\n',
+      );
+    }
+  }
 
   combinedMd.writeln(_formatCombined3RuntimeSummaryTable(targetsMap));
   combinedMd.writeln(
@@ -207,9 +473,12 @@ void main(List<String> rawArgs) async {
   final fromJsonPath = args['from-json'] as String?;
   final outputMd = args['output-md'] as String?;
   final outputJson = args['output-json'] as String?;
+  final diffArg = args['diff'] as String?;
+  final thresholdArg =
+      double.tryParse(args['threshold'] as String? ?? '5.0') ?? 5.0;
 
   if (fromJsonPath != null) {
-    _handleFromJson(fromJsonPath, outputMd);
+    await _handleFromJson(fromJsonPath, outputMd, diffArg, thresholdArg);
     return;
   }
 
@@ -318,6 +587,20 @@ void main(List<String> rawArgs) async {
     print('\n$report\n');
   }
 
+  String? diffReport;
+  if (diffArg != null) {
+    final baselineData = await _loadBaselineJson(diffArg);
+    if (baselineData != null) {
+      diffReport = _formatDiffMarkdownReport(
+        baselineData: baselineData,
+        currentData: {'targets': allTargetJson},
+        baselineLabel: diffArg == '-' ? 'stdin' : diffArg,
+        thresholdPct: thresholdArg,
+      );
+      print('\n$diffReport\n');
+    }
+  }
+
   _saveBenchmarkOutputs(
     outputJson: outputJson,
     outputMd: outputMd,
@@ -326,6 +609,7 @@ void main(List<String> rawArgs) async {
     stockDart: stockDart,
     newDart: newDart,
     nodeBin: nodeBin,
+    diffReport: diffReport,
   );
 }
 
@@ -424,10 +708,20 @@ _runTargetBenchmarks({
         })
       >{};
 
+  final totalUnits = workloadUnits.length;
+  var completedUnits = 0;
+  final stopwatch = Stopwatch()..start();
+
   print(
-    '🚀 Executing ${workloadUnits.length} Benchmark Units across $concurrency workers...',
+    '🚀 Executing $totalUnits Benchmark Units (${target.toUpperCase()}) across $concurrency workers...',
   );
   await _runInParallel(workloadUnits, concurrency, (unit) async {
+    final unitLabel = '${target.toUpperCase()} ${unit.dataset} ${unit.mode}';
+    final unitStartMs = stopwatch.elapsedMilliseconds;
+    stdout.writeln(
+      '  ⏳ [${completedUnits + 1}/$totalUnits] Starting $unitLabel...',
+    );
+
     final t1Res = await _runBenchmarkTier(
       target: target,
       dartBin: stockDart,
@@ -459,6 +753,12 @@ _runTargetBenchmarks({
       engineLabel: 'new_dart_codable',
       dataset: unit.dataset,
       mode: unit.mode,
+    );
+
+    completedUnits++;
+    final durationSec = (stopwatch.elapsedMilliseconds - unitStartMs) / 1000.0;
+    stdout.writeln(
+      '  ✅ [$completedUnits/$totalUnits] Finished $unitLabel (${durationSec.toStringAsFixed(1)}s)',
     );
 
     resultsByUnit['${unit.dataset}:${unit.mode}'] = (
@@ -609,8 +909,17 @@ void _saveMarkdownReport({
   required String stockDart,
   required String newDart,
   required String nodeBin,
+  String? diffReport,
 }) {
   final combinedMd = StringBuffer();
+
+  if (diffReport != null && diffReport.trim().isNotEmpty) {
+    combinedMd.writeln(diffReport.trim());
+    combinedMd.writeln(
+      '\n------------------------------------------------------------------------\n',
+    );
+  }
+
   final targetsMap = <String, Map<String, dynamic>>{};
   for (final entry in mergedTargets.entries) {
     if (entry.value is Map) {
@@ -672,6 +981,7 @@ void _saveBenchmarkOutputs({
   required String stockDart,
   required String newDart,
   required String nodeBin,
+  String? diffReport,
 }) {
   final mergedTargets = _saveJsonReport(
     outputJson: outputJson,
@@ -687,6 +997,7 @@ void _saveBenchmarkOutputs({
       stockDart: stockDart,
       newDart: newDart,
       nodeBin: nodeBin,
+      diffReport: diffReport,
     );
   }
 }
@@ -922,17 +1233,17 @@ Map<String, Map<String, List<double>>> _calculateTargetEfficiencyStats(
 String _formatEfficiencyStats(List<double> scores) {
   if (scores.isEmpty) return 'N/A';
   final worst = scores.reduce((a, b) => a < b ? a : b).round();
-  final avg = (scores.reduce((a, b) => a + b) / scores.length).round();
+  final geoMean = calculateGeometricMean(scores).round();
   final best = scores.reduce((a, b) => a > b ? a : b).round();
 
-  final emoji = switch ((worst, avg)) {
+  final emoji = switch ((worst, geoMean)) {
     (100, 100) when best == 100 => '🥇 ',
     (_, >= 90) => '🟢 ',
     (_, >= 70) => '🟡 ',
     _ => '🔴 ',
   };
 
-  return '$emoji`[ $worst / $avg / $best ]`';
+  return '$emoji`[ $worst / $geoMean / $best ]`';
 }
 
 String _formatCombined3RuntimeSummaryTable(
@@ -943,7 +1254,7 @@ String _formatCombined3RuntimeSummaryTable(
   sb.writeln('');
   sb.writeln('<!-- mdformat off(prevent table wrapping) -->');
   sb.writeln(
-    '| Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / Avg / Best ] | 📤 Encode Efficiency<br/>[ Worst / Avg / Best ] |',
+    '| Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] |',
   );
   sb.writeln('| :--- | :--- | :---: | :---: |');
 
@@ -985,8 +1296,8 @@ String _formatCombined3RuntimeSummaryTable(
   sb.writeln(
     '> **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). '
     'Calculated as `round((MinLatency / Latency) * 100)` per workload, '
-    'measuring the percentage of maximum achievable throughput delivered.\n'
-    '> - **`[ Worst / Avg / Best ]`**: Range from lowest score (worst workload) to the average and peak dataset score across the 5 canonical benchmarks (`coordinates`, `canada`, `citm_catalog`, `small`, `twitter`).\n'
+    'aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).\n'
+    '> - **`[ Worst / GeoMean / Best ]`**: Range from lowest score (worst workload) to the geometric mean and peak dataset score across the 5 canonical benchmarks (`coordinates`, `canada`, `citm_catalog`, `small`, `twitter`).\n'
     '> - **Badges**: 🥇 Peak across all workloads (`100`) &bull; 🟢 `≥ 90` (Within 10% of peak) &bull; 🟡 `70–89` (Good / moderate) &bull; 🔴 `< 70` (Significant performance gap).',
   );
   sb.writeln('');
@@ -1038,9 +1349,12 @@ String _formatDetailedBreakdownTable({
         : 'N/A';
 
     final dsLabel = _datasetLabels[dataset] ?? dataset;
+    final t1Str = _formatLatency(t1Ms);
+    final t2Str = _formatLatency(t2Ms);
+    final t3Str = _formatLatency(t3Ms);
 
     sb.writeln(
-      '| **$dsLabel** | ${t1Ms.toStringAsFixed(2)} ms | ${t2Ms.toStringAsFixed(2)} ms | **${t3Ms.toStringAsFixed(2)} ms** | **${speedupVsOld}** | **${speedupVsNewSerial}** |',
+      '| **$dsLabel** | $t1Str | $t2Str | **$t3Str** | **${speedupVsOld}** | **${speedupVsNewSerial}** |',
     );
   }
   sb.writeln('<!-- mdformat on -->');

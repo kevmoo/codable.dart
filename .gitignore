@@ -6,3 +6,7 @@ build/
 .agents/
 .deslop/
 *.exe
+benchmark_*.json
+BENCHMARK_REPORT_*.md
+pkgs/codable_benchmarks/benchmark_*.json
+pkgs/codable_benchmarks/BENCHMARK_REPORT_*.md
