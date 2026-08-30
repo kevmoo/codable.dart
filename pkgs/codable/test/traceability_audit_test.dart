@@ -277,7 +277,7 @@ void main() {
         w.flush();
 
         final result = utf8.decode(sink.takeBytes());
-        check(result).equals('{"unquoted":1,"already_quoted":2,""":3,"":4}');
+        check(result).equals('{"unquoted":1,"already_quoted":2,"\\"":3,"":4}');
       }
 
       verifyWriter(JsonTokenWriter.toSink);

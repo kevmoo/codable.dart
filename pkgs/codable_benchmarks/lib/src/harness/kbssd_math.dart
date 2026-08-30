@@ -212,3 +212,181 @@ bool checkSEM(List<double> data, {double targetRelativeError = 0.05}) {
   final marginOfError = tCrit * sem;
   return (marginOfError / mean) <= targetRelativeError;
 }
+
+/// Calculates the Geometric Mean of positive [values] (Fleming & Wallace 1986).
+///
+/// Uses log-space summation to prevent floating-point underflow or overflow.
+double calculateGeometricMean(List<double> values) {
+  if (values.isEmpty) return 0.0;
+  var sumLog = 0.0;
+  var validCount = 0;
+  var singleVal = 0.0;
+  for (var i = 0; i < values.length; i++) {
+    final v = values[i];
+    if (v > 0.0) {
+      sumLog += math.log(v);
+      validCount++;
+      singleVal = v;
+    }
+  }
+  if (validCount == 0) return 0.0;
+  if (validCount == 1) return singleVal;
+  return math.exp(sumLog / validCount);
+}
+
+/// Computes the Welch-Satterthwaite degrees of freedom for two independent
+/// samples with sample standard deviations [s1], [s2] and sample sizes
+/// [n1], [n2].
+double calculateWelchDegreesOfFreedom({
+  required double s1,
+  required int n1,
+  required double s2,
+  required int n2,
+}) {
+  if (n1 < 2 || n2 < 2) return 1.0;
+  final v1 = (s1 * s1) / n1;
+  final v2 = (s2 * s2) / n2;
+  final sumV = v1 + v2;
+  if (sumV <= 0.0) return (n1 + n2 - 2).toDouble();
+  final numerator = sumV * sumV;
+  final denom1 = (v1 * v1) / (n1 - 1);
+  final denom2 = (v2 * v2) / (n2 - 1);
+  final denominator = denom1 + denom2;
+  if (denominator <= 0.0) return (n1 + n2 - 2).toDouble();
+  return numerator / denominator;
+}
+
+/// Computes the standard error of percentage change
+/// Delta (%) = 100 * (Y_bar / X_bar - 1)
+/// using the first-order Taylor expansion (Delta Method) for ratio variance.
+///
+/// Var(Y/X) ≈ (1 / mu_X^2) * [ (s_Y^2 / n_Y) + (mu_Y / mu_X)^2 * (s_X^2 / n_X) ]
+double calculateDeltaMethodPercentageStandardError({
+  required double meanX,
+  required double sX,
+  required int nX,
+  required double meanY,
+  required double sY,
+  required int nY,
+}) {
+  if (meanX <= 0.0 || nX < 2 || nY < 2) return 0.0;
+  final vX = (sX * sX) / nX;
+  final vY = (sY * sY) / nY;
+  final ratio = meanY / meanX;
+  final ratioVar = (vY + (ratio * ratio * vX)) / (meanX * meanX);
+  if (ratioVar <= 0.0) return 0.0;
+  return 100.0 * math.sqrt(ratioVar);
+}
+
+/// Statistical comparison between baseline (pre) and candidate (post).
+class StatisticalComparison {
+  final double deltaMean;
+  final double deltaPercentage;
+  final double standardErrorDiff;
+  final double standardErrorPercentage;
+  final double degreesOfFreedom;
+  final double tCritical;
+  final double tStatistic;
+  final double marginOfErrorPercentage;
+  final double ciLowerPercentage;
+  final double ciUpperPercentage;
+  final bool isSignificant;
+
+  const StatisticalComparison({
+    required this.deltaMean,
+    required this.deltaPercentage,
+    required this.standardErrorDiff,
+    required this.standardErrorPercentage,
+    required this.degreesOfFreedom,
+    required this.tCritical,
+    required this.tStatistic,
+    required this.marginOfErrorPercentage,
+    required this.ciLowerPercentage,
+    required this.ciUpperPercentage,
+    required this.isSignificant,
+  });
+}
+
+/// Compares distributions of baseline ([meanX], [sX], [nX]) and
+/// candidate ([meanY], [sY], [nY]).
+StatisticalComparison compareDistributions({
+  required double meanX,
+  required double sX,
+  required int nX,
+  required double meanY,
+  required double sY,
+  required int nY,
+}) {
+  final deltaMean = meanY - meanX;
+  final deltaPercentage = meanX > 0 ? (deltaMean / meanX) * 100.0 : 0.0;
+
+  if (nX < 2 || nY < 2 || meanX <= 0.0) {
+    return StatisticalComparison(
+      deltaMean: deltaMean,
+      deltaPercentage: deltaPercentage,
+      standardErrorDiff: 0.0,
+      standardErrorPercentage: 0.0,
+      degreesOfFreedom: 1.0,
+      tCritical: 1.96,
+      tStatistic: 0.0,
+      marginOfErrorPercentage: 0.0,
+      ciLowerPercentage: deltaPercentage,
+      ciUpperPercentage: deltaPercentage,
+      isSignificant: false,
+    );
+  }
+
+  final vX = (sX * sX) / nX;
+  final vY = (sY * sY) / nY;
+  final seDiff = math.sqrt(vX + vY);
+
+  if (seDiff <= 0.0) {
+    return StatisticalComparison(
+      deltaMean: deltaMean,
+      deltaPercentage: deltaPercentage,
+      standardErrorDiff: 0.0,
+      standardErrorPercentage: 0.0,
+      degreesOfFreedom: (nX + nY - 2).toDouble(),
+      tCritical: getStudentTCriticalValue(nX + nY - 2),
+      tStatistic: 0.0,
+      marginOfErrorPercentage: 0.0,
+      ciLowerPercentage: deltaPercentage,
+      ciUpperPercentage: deltaPercentage,
+      isSignificant: false,
+    );
+  }
+
+  final nu = calculateWelchDegreesOfFreedom(s1: sX, n1: nX, s2: sY, n2: nY);
+  final dfInt = math.max(1, nu.floor());
+  final tCrit = getStudentTCriticalValue(dfInt);
+  final tStat = deltaMean.abs() / seDiff;
+
+  final sePct = calculateDeltaMethodPercentageStandardError(
+    meanX: meanX,
+    sX: sX,
+    nX: nX,
+    meanY: meanY,
+    sY: sY,
+    nY: nY,
+  );
+  final moePct = tCrit * sePct;
+  final ciLower = deltaPercentage - moePct;
+  final ciUpper = deltaPercentage + moePct;
+
+  // Significant at alpha = 0.05 if tStat >= tCrit (or CI does not include 0)
+  final isSignificant = tStat >= tCrit;
+
+  return StatisticalComparison(
+    deltaMean: deltaMean,
+    deltaPercentage: deltaPercentage,
+    standardErrorDiff: seDiff,
+    standardErrorPercentage: sePct,
+    degreesOfFreedom: nu,
+    tCritical: tCrit,
+    tStatistic: tStat,
+    marginOfErrorPercentage: moePct,
+    ciLowerPercentage: ciLower,
+    ciUpperPercentage: ciUpper,
+    isSignificant: isSignificant,
+  );
+}

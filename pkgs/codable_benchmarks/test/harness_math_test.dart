@@ -88,5 +88,90 @@ void main() {
       blackhole({'key': 'value'});
       Blackhole.preventDCE();
     });
+
+    test('calculateGeometricMean computes multiplicative central tendency', () {
+      check(calculateGeometricMean([])).equals(0.0);
+      check(calculateGeometricMean([42.0])).equals(42.0);
+      check((calculateGeometricMean([100.0, 100.0, 100.0]) - 100.0).abs())
+          .isLessThan(1e-9);
+      check((calculateGeometricMean([2.0, 8.0]) - 4.0).abs()).isLessThan(1e-9);
+      check((calculateGeometricMean([10.0, 100.0, 1000.0]) - 100.0).abs())
+          .isLessThan(1e-9);
+    });
+
+    test(
+      'calculateWelchDegreesOfFreedom computes Satterthwaite approximation',
+      () {
+        // Equal variances and sample sizes reduce to
+        // pooled df = n1 + n2 - 2 = 18
+        final dfEqual = calculateWelchDegreesOfFreedom(
+          s1: 2.0,
+          n1: 10,
+          s2: 2.0,
+          n2: 10,
+        );
+        check(dfEqual).equals(18.0);
+
+        // Unequal variances: s1 = 1, n1 = 10, s2 = 5, n2 = 20
+        final dfUnequal = calculateWelchDegreesOfFreedom(
+          s1: 1.0,
+          n1: 10,
+          s2: 5.0,
+          n2: 20,
+        );
+        check(dfUnequal).isGreaterThan(19.0);
+        check(dfUnequal).isLessThan(28.0);
+      },
+    );
+
+    test(
+      'calculateDeltaMethodPercentageStandardError scales variance by ratio',
+      () {
+        // Baseline 100 ms ± 10 ms (N=20), Candidate 50 ms ± 5 ms (N=20) (2x)
+        final sePct = calculateDeltaMethodPercentageStandardError(
+          meanX: 100.0,
+          sX: 10.0,
+          nX: 20,
+          meanY: 50.0,
+          sY: 5.0,
+          nY: 20,
+        );
+        check(sePct).isGreaterThan(0.0);
+        check(sePct).isLessThan(10.0);
+      },
+    );
+
+    test(
+      'compareDistributions evaluates two-sample significance and bounds',
+      () {
+        // Clear significant speedup
+        final sigSpeedup = compareDistributions(
+          meanX: 100.0,
+          sX: 2.0,
+          nX: 20,
+          meanY: 50.0,
+          sY: 2.0,
+          nY: 20,
+        );
+        check(sigSpeedup.isSignificant).isTrue();
+        check(sigSpeedup.deltaPercentage).equals(-50.0);
+        check(sigSpeedup.tStatistic).isGreaterThan(sigSpeedup.tCritical);
+        check(sigSpeedup.ciUpperPercentage).isLessThan(0.0); // CI excludes zero
+
+        // Clear non-significant noise (overlapping distributions)
+        final nonSig = compareDistributions(
+          meanX: 100.0,
+          sX: 10.0,
+          nX: 20,
+          meanY: 100.2,
+          sY: 10.0,
+          nY: 20,
+        );
+        check(nonSig.isSignificant).isFalse();
+        check(nonSig.tStatistic).isLessThan(nonSig.tCritical);
+        check(nonSig.ciLowerPercentage).isLessThan(0.0);
+        check(nonSig.ciUpperPercentage).isGreaterThan(0.0); // CI contains zero
+      },
+    );
   });
 }

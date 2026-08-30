@@ -1,10 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-enum _ContainerType { object, array }
-
-enum _ObjectState { empty, key, value }
-
 const String _digitPairs =
     '00010203040506070809'
     '10111213141516171819'
@@ -350,9 +346,12 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
   Uint8List _buffer = Uint8List(_chunkSize);
   int _cursor = 0;
 
-  final List<_ContainerType> _stateStack = [];
-  final List<_ObjectState> _objectStateStack = [];
-  final List<bool> _isArrayFirstStack = [];
+  Uint8List _typeStack = Uint8List(64);
+  Uint8List _stateStack = Uint8List(64);
+  int _stackLength = 0;
+  int _topType = -1; // -1: none, 0: object, 1: array
+  // in object: 0: empty, 1: key, 2: value; in array: 0: first, 1: not first
+  int _topState = 0;
   bool _hasRootValue = false;
 
   JsonUtf8TokenWriter(this._sink);
@@ -361,7 +360,7 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
     if (_cursor + needed > _buffer.length) {
       _flushBuffer();
       if (needed > _buffer.length) {
-        _buffer = Uint8List(needed * 2);
+        _buffer = Uint8List(needed > _chunkSize ? needed : _chunkSize);
       }
     }
   }
@@ -374,20 +373,28 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
     }
   }
 
+  void _writeDirectByte(int byte) {
+    if (_cursor >= _buffer.length) {
+      _flushBuffer();
+    }
+    _buffer[_cursor++] = byte;
+  }
+
+  @override
+  void flush() => _flushBuffer();
+
   void _beforeValue() {
-    if (_stateStack.isNotEmpty) {
-      final inObject = _stateStack.last == _ContainerType.object;
-      if (inObject) {
-        if (_objectStateStack.last != _ObjectState.key) {
+    if (_stackLength > 0) {
+      if (_topType == 0) {
+        if (_topState != 1) {
           throw StateError('Expected property name before value in object');
         }
-        _objectStateStack.last = _ObjectState.value;
+        _topState = 2;
       } else {
-        if (!_isArrayFirstStack.last) {
-          _ensureCapacity(1);
-          _buffer[_cursor++] = 44; // ','
+        if (_topState != 0) {
+          _writeDirectByte(44); // ','
         }
-        _isArrayFirstStack.last = false;
+        _topState = 1;
       }
     } else {
       if (_hasRootValue) {
@@ -399,143 +406,262 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
 
   @override
   void beginObject() {
-    if (_stateStack.length >= _maxDepth) {
+    if (_stackLength >= _maxDepth) {
       throw StateError('Nesting depth exceeds limit of $_maxDepth');
     }
     _beforeValue();
-    _ensureCapacity(1);
-    _buffer[_cursor++] = 123; // '{'
-    _stateStack.add(_ContainerType.object);
-    _objectStateStack.add(_ObjectState.empty);
+    _writeDirectByte(123); // '{'
+    if (_stackLength > 0) {
+      if (_stackLength >= _typeStack.length) {
+        final newCap = _typeStack.length * 2;
+        final newTypeStack = Uint8List(newCap);
+        newTypeStack.setRange(0, _typeStack.length, _typeStack);
+        _typeStack = newTypeStack;
+        final newStateStack = Uint8List(newCap);
+        newStateStack.setRange(0, _stateStack.length, _stateStack);
+        _stateStack = newStateStack;
+      }
+      _typeStack[_stackLength - 1] = _topType;
+      _stateStack[_stackLength - 1] = _topState;
+    }
+    _stackLength++;
+    _topType = 0;
+    _topState = 0;
   }
 
   @override
   void endObject() {
-    if (_stateStack.isEmpty || _stateStack.last != _ContainerType.object) {
+    if (_stackLength == 0 || _topType != 0) {
       throw StateError('Cannot endObject: not inside an object');
     }
-    if (_objectStateStack.last == _ObjectState.key) {
+    if (_topState == 1) {
       throw StateError('Cannot endObject: expected value after property name');
     }
-    _ensureCapacity(1);
-    _buffer[_cursor++] = 125; // '}'
-    _stateStack.removeLast();
-    _objectStateStack.removeLast();
-    if (_stateStack.isEmpty) {
+    _writeDirectByte(125); // '}'
+    _stackLength--;
+    if (_stackLength > 0) {
+      _topType = _typeStack[_stackLength - 1];
+      _topState = _stateStack[_stackLength - 1];
+    } else {
+      _topType = -1;
+      _topState = 0;
       _flushBuffer();
     }
   }
 
   @override
   void beginArray() {
-    if (_stateStack.length >= _maxDepth) {
+    if (_stackLength >= _maxDepth) {
       throw StateError('Nesting depth exceeds limit of $_maxDepth');
     }
     _beforeValue();
-    _ensureCapacity(1);
-    _buffer[_cursor++] = 91; // '['
-    _stateStack.add(_ContainerType.array);
-    _isArrayFirstStack.add(true);
+    _writeDirectByte(91); // '['
+    if (_stackLength > 0) {
+      if (_stackLength >= _typeStack.length) {
+        final newCap = _typeStack.length * 2;
+        final newTypeStack = Uint8List(newCap);
+        newTypeStack.setRange(0, _typeStack.length, _typeStack);
+        _typeStack = newTypeStack;
+        final newStateStack = Uint8List(newCap);
+        newStateStack.setRange(0, _stateStack.length, _stateStack);
+        _stateStack = newStateStack;
+      }
+      _typeStack[_stackLength - 1] = _topType;
+      _stateStack[_stackLength - 1] = _topState;
+    }
+    _stackLength++;
+    _topType = 1;
+    _topState = 0;
   }
 
   @override
   void endArray() {
-    if (_stateStack.isEmpty || _stateStack.last != _ContainerType.array) {
+    if (_stackLength == 0 || _topType != 1) {
       throw StateError('Cannot endArray: not inside an array');
     }
-    _ensureCapacity(1);
-    _buffer[_cursor++] = 93; // ']'
-    _stateStack.removeLast();
-    _isArrayFirstStack.removeLast();
-    if (_stateStack.isEmpty) {
+    _writeDirectByte(93); // ']'
+    _stackLength--;
+    if (_stackLength > 0) {
+      _topType = _typeStack[_stackLength - 1];
+      _topState = _stateStack[_stackLength - 1];
+    } else {
+      _topType = -1;
+      _topState = 0;
       _flushBuffer();
     }
   }
 
   @override
   void writeName(String name) {
-    if (_stateStack.isEmpty || _stateStack.last != _ContainerType.object) {
+    if (_stackLength == 0 || _topType != 0) {
       throw StateError('Cannot writeName: not inside an object');
     }
-    final objState = _objectStateStack.last;
-    if (objState == _ObjectState.key) {
+    if (_topState == 1) {
       throw StateError(
         'Cannot writeName: already expecting a value for previous property',
       );
     }
-    if (objState == _ObjectState.value) {
-      _ensureCapacity(1);
-      _buffer[_cursor++] = 44; // ','
+    if (_topState == 2) {
+      _writeDirectByte(44); // ','
     }
-    _objectStateStack.last = _ObjectState.key;
+    _topState = 1;
     final len = name.length;
+    if (len <= 32) {
+      var isAscii = true;
+      for (var i = 0; i < len; i++) {
+        final c = name.codeUnitAt(i);
+        if (c < 0x20 || c == 0x22 || c == 0x5C || c >= 0x80) {
+          isAscii = false;
+          break;
+        }
+      }
+      if (isAscii) {
+        _ensureCapacity(len + 3);
+        _buffer[_cursor++] = 0x22; // '"'
+        for (var i = 0; i < len; i++) {
+          _buffer[_cursor++] = name.codeUnitAt(i);
+        }
+        _buffer[_cursor++] = 0x22; // '"'
+        _buffer[_cursor++] = 0x3A; // ':'
+        return;
+      }
+    }
     _ensureCapacity(len * 6 + 4);
-    _cursor += _writeStringToBuffer(name, _buffer, _cursor);
-    _buffer[_cursor++] = 58; // ':'
+    final written = _writeStringToBuffer(name, _buffer, _cursor);
+    _cursor += written;
+    _buffer[_cursor++] = 0x3A; // ':'
   }
 
   @override
   void writeNameBytes(Uint8List asciiKey) {
-    if (_stateStack.isEmpty || _stateStack.last != _ContainerType.object) {
+    if (_stackLength == 0 || _topType != 0) {
       throw StateError('Cannot writeNameBytes: not inside an object');
     }
-    final objState = _objectStateStack.last;
-    if (objState == _ObjectState.key) {
+    if (_topState == 1) {
       throw StateError(
         'Cannot writeNameBytes: already expecting a value for previous '
         'property',
       );
     }
-    if (objState == _ObjectState.value) {
-      _ensureCapacity(1);
-      _buffer[_cursor++] = 44; // ','
+    if (_topState == 2) {
+      _writeDirectByte(44); // ','
     }
-    _objectStateStack.last = _ObjectState.key;
-    final isQuoted =
-        asciiKey.length >= 2 && asciiKey.first == 34 && asciiKey.last == 34;
+    _topState = 1;
+    final isColonTerminated =
+        asciiKey.length >= 3 &&
+        asciiKey.first == 0x22 &&
+        asciiKey.last == 0x3A &&
+        _isSingleQuotedSlice(asciiKey, 0, asciiKey.length - 1);
+    if (isColonTerminated) {
+      final len = asciiKey.length;
+      _ensureCapacity(len);
+      _buffer.setRange(_cursor, _cursor + len, asciiKey);
+      _cursor += len;
+      return;
+    }
+    final isQuoted = _isSingleQuotedString(asciiKey);
     if (isQuoted) {
-      _ensureCapacity(asciiKey.length + 1);
-      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
-      _cursor += asciiKey.length;
+      final len = asciiKey.length;
+      _ensureCapacity(len + 1);
+      _buffer.setRange(_cursor, _cursor + len, asciiKey);
+      _cursor += len;
+      _buffer[_cursor++] = 0x3A; // ':'
     } else {
-      _ensureCapacity(asciiKey.length + 3);
-      _buffer[_cursor++] = 34; // '"'
-      _buffer.setRange(_cursor, _cursor + asciiKey.length, asciiKey);
-      _cursor += asciiKey.length;
-      _buffer[_cursor++] = 34; // '"'
+      final len = asciiKey.length;
+      _ensureCapacity(len * 6 + 3);
+      _buffer[_cursor++] = 0x22; // '"'
+      for (var i = 0; i < len; i++) {
+        final b = asciiKey[i];
+        if (b == 0x22) {
+          _buffer[_cursor++] = 0x5C;
+          _buffer[_cursor++] = 0x22;
+        } else if (b == 0x5C) {
+          _buffer[_cursor++] = 0x5C;
+          _buffer[_cursor++] = 0x5C;
+        } else if (b < 0x20) {
+          _buffer[_cursor++] = 0x5C;
+          _buffer[_cursor++] = 0x75; // 'u'
+          _buffer[_cursor++] = 0x30; // '0'
+          _buffer[_cursor++] = 0x30; // '0'
+          _buffer[_cursor++] = _hexDigits.codeUnitAt((b >> 4) & 0xF);
+          _buffer[_cursor++] = _hexDigits.codeUnitAt(b & 0xF);
+        } else {
+          _buffer[_cursor++] = b;
+        }
+      }
+      _buffer[_cursor++] = 0x22; // '"'
+      _buffer[_cursor++] = 0x3A; // ':'
     }
-    _buffer[_cursor++] = 58; // ':'
   }
 
   @override
   void writeAsciiLiteral(Uint8List preEncoded) {
     _beforeValue();
-    _ensureCapacity(preEncoded.length);
-    _buffer.setRange(_cursor, _cursor + preEncoded.length, preEncoded);
-    _cursor += preEncoded.length;
+    final len = preEncoded.length;
+    _ensureCapacity(len);
+    _buffer.setRange(_cursor, _cursor + len, preEncoded);
+    _cursor += len;
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
   void writeRawJson(Uint8List rawJson) {
     _beforeValue();
-    _ensureCapacity(rawJson.length);
-    _buffer.setRange(_cursor, _cursor + rawJson.length, rawJson);
-    _cursor += rawJson.length;
+    final len = rawJson.length;
+    _ensureCapacity(len);
+    _buffer.setRange(_cursor, _cursor + len, rawJson);
+    _cursor += len;
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
   void writeString(String value) {
-    _beforeValue();
     final len = value.length;
+    if (len <= 32) {
+      var isAscii = true;
+      for (var i = 0; i < len; i++) {
+        final c = value.codeUnitAt(i);
+        if (c < 0x20 || c == 0x22 || c == 0x5C || c >= 0x80) {
+          isAscii = false;
+          break;
+        }
+      }
+      if (isAscii) {
+        _beforeValue();
+        _ensureCapacity(len + 2);
+        _buffer[_cursor++] = 0x22; // '"'
+        for (var i = 0; i < len; i++) {
+          _buffer[_cursor++] = value.codeUnitAt(i);
+        }
+        _buffer[_cursor++] = 0x22; // '"'
+        if (_stackLength == 0) {
+          _flushBuffer();
+        }
+        return;
+      }
+    }
+    _beforeValue();
     _ensureCapacity(len * 6 + 2);
-    _cursor += _writeStringToBuffer(value, _buffer, _cursor);
+    final written = _writeStringToBuffer(value, _buffer, _cursor);
+    _cursor += written;
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
   void writeInt(int value) {
     _beforeValue();
-    _ensureCapacity(32);
-    _cursor += _writeIntToBuffer(value, _buffer, _cursor);
+    _ensureCapacity(24);
+    final written = _writeIntToBuffer(value, _buffer, _cursor);
+    _cursor += written;
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
@@ -548,7 +674,11 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
       );
     }
     _ensureCapacity(32);
-    _cursor += _writeDoubleToBuffer(value, _buffer, _cursor);
+    final written = _writeDoubleToBuffer(value, _buffer, _cursor);
+    _cursor += written;
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
@@ -568,6 +698,9 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
       _buffer[_cursor++] = 115; // 's'
       _buffer[_cursor++] = 101; // 'e'
     }
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
 
   @override
@@ -578,10 +711,62 @@ final class JsonUtf8TokenWriter implements JsonTokenWriter {
     _buffer[_cursor++] = 117; // 'u'
     _buffer[_cursor++] = 108; // 'l'
     _buffer[_cursor++] = 108; // 'l'
+    if (_stackLength == 0) {
+      _flushBuffer();
+    }
   }
+}
 
-  @override
-  void flush() {
-    _flushBuffer();
+bool _isSingleQuotedString(Uint8List bytes) {
+  return _isSingleQuotedSlice(bytes, 0, bytes.length);
+}
+
+bool _isSingleQuotedSlice(Uint8List bytes, int start, int end) {
+  if (start < 0 ||
+      end > bytes.length ||
+      end - start < 2 ||
+      bytes[start] != 0x22 ||
+      bytes[end - 1] != 0x22) {
+    return false;
   }
+  var i = start + 1;
+  final last = end - 1;
+  while (i < last) {
+    final b = bytes[i];
+    if (b == 0x22 || b < 0x20) {
+      return false;
+    }
+    if (b == 0x5C) {
+      if (i + 1 >= last) return false;
+      final next = bytes[i + 1];
+      if (next == 0x22 || // '"'
+          next == 0x5C || // '\'
+          next == 0x2F || // '/'
+          next == 0x62 || // 'b'
+          next == 0x66 || // 'f'
+          next == 0x6E || // 'n'
+          next == 0x72 || // 'r'
+          next == 0x74) {
+        // 't'
+        i += 2;
+      } else if (next == 0x75) {
+        // 'u'
+        if (i + 5 >= last + 1) return false;
+        for (var j = i + 2; j <= i + 5; j++) {
+          final c = bytes[j];
+          final isHex =
+              (c >= 48 && c <= 57) ||
+              (c >= 65 && c <= 70) ||
+              (c >= 97 && c <= 102);
+          if (!isHex) return false;
+        }
+        i += 6;
+      } else {
+        return false;
+      }
+    } else {
+      i++;
+    }
+  }
+  return true;
 }
