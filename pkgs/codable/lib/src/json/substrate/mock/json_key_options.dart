@@ -12,7 +12,9 @@ final class JsonKeyOptions {
   /// The pre-encoded UTF-8 byte representations of each key.
   final List<Uint8List> _utf8Keys;
 
-  JsonKeyOptions._(this.keys, this._utf8Keys);
+  final Map<String, int> _indexMap;
+
+  JsonKeyOptions._(this.keys, this._utf8Keys, this._indexMap);
 
   /// Creates a [JsonKeyOptions] lookup table from the given [keys].
   ///
@@ -26,8 +28,12 @@ final class JsonKeyOptions {
       (i) => Uint8List.fromList(utf8.encode(keys[i])),
       growable: false,
     );
-    return JsonKeyOptions._(List.unmodifiable(keys), utf8Keys);
+    final indexMap = {for (var i = 0; i < keys.length; i++) keys[i]: i};
+    return JsonKeyOptions._(List.unmodifiable(keys), utf8Keys, indexMap);
   }
+
+  /// The index of [key], or `-1` if not recognized.
+  int indexOf(String key) => _indexMap[key] ?? -1;
 
   /// The number of registered keys in this options table.
   int get length => keys.length;

@@ -12,6 +12,12 @@ extension type const _$PointSchema(int _value) {
   static const String nameX = 'x';
   static const String nameY = 'y';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesX = [34, 120, 34];
+  static const StaticKey staticKeyX = StaticKey(nameX, keyX, wireNameBytesX);
+  static const List<int> wireNameBytesY = [34, 121, 34];
+  static const StaticKey staticKeyY = StaticKey(nameY, keyY, wireNameBytesY);
+
   // Key Indices for selectKeyIndex()
   static const int keyX = 0;
   static const int keyY = 1;
@@ -111,8 +117,8 @@ Point _$PointFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$PointToEncoder(Point instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDouble(_$PointSchema.nameX, instance.x);
-  keyed.encodeDouble(_$PointSchema.nameY, instance.y);
+  keyed.encodeDoubleKey(_$PointSchema.staticKeyX, instance.x);
+  keyed.encodeDoubleKey(_$PointSchema.staticKeyY, instance.y);
 }
 
 // =============================================================================
@@ -122,16 +128,75 @@ extension type const _$UserAccountSchema(int _value) {
   // String Name Constants
   static const String nameId = 'id';
   static const String nameEmailAddress = 'email_address';
+  static const String aliasEmailAddressEmail = 'email';
+  static const String aliasEmailAddressContactEmail = 'contact_email';
   static const String nameRole = 'role';
   static const String nameTags = 'tags';
   static const String nameLocation = 'location';
 
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesEmailAddress = [
+    34,
+    101,
+    109,
+    97,
+    105,
+    108,
+    95,
+    97,
+    100,
+    100,
+    114,
+    101,
+    115,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyEmailAddress = StaticKey(
+    nameEmailAddress,
+    keyEmailAddress,
+    wireNameBytesEmailAddress,
+  );
+  static const List<int> wireNameBytesRole = [34, 114, 111, 108, 101, 34];
+  static const StaticKey staticKeyRole = StaticKey(
+    nameRole,
+    keyRole,
+    wireNameBytesRole,
+  );
+  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34];
+  static const StaticKey staticKeyTags = StaticKey(
+    nameTags,
+    keyTags,
+    wireNameBytesTags,
+  );
+  static const List<int> wireNameBytesLocation = [
+    34,
+    108,
+    111,
+    99,
+    97,
+    116,
+    105,
+    111,
+    110,
+    34,
+  ];
+  static const StaticKey staticKeyLocation = StaticKey(
+    nameLocation,
+    keyLocation,
+    wireNameBytesLocation,
+  );
+
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
   static const int keyEmailAddress = 1;
-  static const String aliasEmailAddressEmail = 'email';
   static const int aliasKeyEmailAddressEmail = 2;
-  static const String aliasEmailAddressContactEmail = 'contact_email';
   static const int aliasKeyEmailAddressContactEmail = 3;
   static const int keyRole = 4;
   static const int keyTags = 5;
@@ -255,7 +320,6 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
           );
           if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
             role = UserRole.values[enumIndex];
-            seen |= _$UserAccountSchema.role;
           } else {
             throw const CodableException('Unknown UserRole value');
           }
@@ -301,16 +365,16 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserAccountToEncoder(UserAccount instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
-  keyed.encodeString(
-    _$UserAccountSchema.nameEmailAddress,
+  keyed.encodeStringKey(_$UserAccountSchema.staticKeyId, instance.id);
+  keyed.encodeStringKey(
+    _$UserAccountSchema.staticKeyEmailAddress,
     instance.emailAddress,
   );
-  keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
-  keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
+  keyed.encodeStringKey(_$UserAccountSchema.staticKeyRole, instance.role.name);
+  keyed.encodeStringListKey(_$UserAccountSchema.staticKeyTags, instance.tags);
   if (instance.location != null) {
-    keyed.encodeList<double>(
-      _$UserAccountSchema.nameLocation,
+    keyed.encodeListKey<double>(
+      _$UserAccountSchema.staticKeyLocation,
       List.generate(2, (i) => instance.location![i]),
       (v, e) => e.singleValue().encodeDouble(v),
     );
@@ -324,6 +388,29 @@ extension type const _$AddressSchema(int _value) {
   // String Name Constants
   static const String nameCity = 'city';
   static const String nameStreet = 'street';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34];
+  static const StaticKey staticKeyCity = StaticKey(
+    nameCity,
+    keyCity,
+    wireNameBytesCity,
+  );
+  static const List<int> wireNameBytesStreet = [
+    34,
+    115,
+    116,
+    114,
+    101,
+    101,
+    116,
+    34,
+  ];
+  static const StaticKey staticKeyStreet = StaticKey(
+    nameStreet,
+    keyStreet,
+    wireNameBytesStreet,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyCity = 0;
@@ -424,8 +511,8 @@ Address _$AddressFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$AddressToEncoder(Address instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$AddressSchema.nameCity, instance.city);
-  keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
+  keyed.encodeStringKey(_$AddressSchema.staticKeyCity, instance.city);
+  keyed.encodeStringKey(_$AddressSchema.staticKeyStreet, instance.street);
 }
 
 // =============================================================================
@@ -438,6 +525,94 @@ extension type const _$EnterpriseSchema(int _value) {
   static const String nameBranches = 'branches';
   static const String nameCategories = 'categories';
   static const String nameHeadcountByDept = 'headcountByDept';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const StaticKey staticKeyName = StaticKey(
+    nameName,
+    keyName,
+    wireNameBytesName,
+  );
+  static const List<int> wireNameBytesHeadquarter = [
+    34,
+    104,
+    101,
+    97,
+    100,
+    113,
+    117,
+    97,
+    114,
+    116,
+    101,
+    114,
+    34,
+  ];
+  static const StaticKey staticKeyHeadquarter = StaticKey(
+    nameHeadquarter,
+    keyHeadquarter,
+    wireNameBytesHeadquarter,
+  );
+  static const List<int> wireNameBytesBranches = [
+    34,
+    98,
+    114,
+    97,
+    110,
+    99,
+    104,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyBranches = StaticKey(
+    nameBranches,
+    keyBranches,
+    wireNameBytesBranches,
+  );
+  static const List<int> wireNameBytesCategories = [
+    34,
+    99,
+    97,
+    116,
+    101,
+    103,
+    111,
+    114,
+    105,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyCategories = StaticKey(
+    nameCategories,
+    keyCategories,
+    wireNameBytesCategories,
+  );
+  static const List<int> wireNameBytesHeadcountByDept = [
+    34,
+    104,
+    101,
+    97,
+    100,
+    99,
+    111,
+    117,
+    110,
+    116,
+    66,
+    121,
+    68,
+    101,
+    112,
+    116,
+    34,
+  ];
+  static const StaticKey staticKeyHeadcountByDept = StaticKey(
+    nameHeadcountByDept,
+    keyHeadcountByDept,
+    wireNameBytesHeadcountByDept,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyName = 0;
@@ -586,23 +761,23 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$EnterpriseToEncoder(Enterprise instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
-  keyed.encodeValue(
-    _$EnterpriseSchema.nameHeadquarter,
+  keyed.encodeStringKey(_$EnterpriseSchema.staticKeyName, instance.name);
+  keyed.encodeValueKey(
+    _$EnterpriseSchema.staticKeyHeadquarter,
     instance.headquarter,
     _$AddressToEncoder,
   );
-  keyed.encodeList(
-    _$EnterpriseSchema.nameBranches,
+  keyed.encodeListKey(
+    _$EnterpriseSchema.staticKeyBranches,
     instance.branches,
     _$AddressToEncoder,
   );
-  keyed.encodeStringList(
-    _$EnterpriseSchema.nameCategories,
+  keyed.encodeStringListKey(
+    _$EnterpriseSchema.staticKeyCategories,
     instance.categories.toList(),
   );
-  keyed.encodeValue(
-    _$EnterpriseSchema.nameHeadcountByDept,
+  keyed.encodeValueKey(
+    _$EnterpriseSchema.staticKeyHeadcountByDept,
     instance.headcountByDept,
     (map, e) {
       final k = e.keyed();
@@ -620,6 +795,20 @@ extension type const _$UserProfileCustomSchema(int _value) {
   // String Name Constants
   static const String nameId = 'id';
   static const String nameZip = 'zip';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesId = [34, 105, 100, 34];
+  static const StaticKey staticKeyId = StaticKey(
+    nameId,
+    keyId,
+    wireNameBytesId,
+  );
+  static const List<int> wireNameBytesZip = [34, 122, 105, 112, 34];
+  static const StaticKey staticKeyZip = StaticKey(
+    nameZip,
+    keyZip,
+    wireNameBytesZip,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -724,9 +913,9 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserProfileCustomToEncoder(UserProfileCustom instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
-  keyed.encodeValue(
-    _$UserProfileCustomSchema.nameZip,
+  keyed.encodeStringKey(_$UserProfileCustomSchema.staticKeyId, instance.id);
+  keyed.encodeValueKey(
+    _$UserProfileCustomSchema.staticKeyZip,
     instance.zip,
     (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e),
   );
@@ -741,6 +930,56 @@ extension type const _$TeamSchema(int _value) {
   static const String nameRoles = 'roles';
   static const String nameNullableTags = 'nullableTags';
   static const String nameScores = 'scores';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
+  static const StaticKey staticKeyName = StaticKey(
+    nameName,
+    keyName,
+    wireNameBytesName,
+  );
+  static const List<int> wireNameBytesRoles = [34, 114, 111, 108, 101, 115, 34];
+  static const StaticKey staticKeyRoles = StaticKey(
+    nameRoles,
+    keyRoles,
+    wireNameBytesRoles,
+  );
+  static const List<int> wireNameBytesNullableTags = [
+    34,
+    110,
+    117,
+    108,
+    108,
+    97,
+    98,
+    108,
+    101,
+    84,
+    97,
+    103,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyNullableTags = StaticKey(
+    nameNullableTags,
+    keyNullableTags,
+    wireNameBytesNullableTags,
+  );
+  static const List<int> wireNameBytesScores = [
+    34,
+    115,
+    99,
+    111,
+    114,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyScores = StaticKey(
+    nameScores,
+    keyScores,
+    wireNameBytesScores,
+  );
 
   // Key Indices for selectKeyIndex()
   static const int keyName = 0;
@@ -874,21 +1113,22 @@ Team _$TeamFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TeamToEncoder(Team instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeString(_$TeamSchema.nameName, instance.name);
-  keyed.encodeList(_$TeamSchema.nameRoles, instance.roles, (item, e) {
+  keyed.encodeStringKey(_$TeamSchema.staticKeyName, instance.name);
+  keyed.encodeListKey(_$TeamSchema.staticKeyRoles, instance.roles, (item, e) {
     e.singleValue().encodeString(item.name);
   });
-  keyed.encodeList(_$TeamSchema.nameNullableTags, instance.nullableTags, (
-    item,
-    e,
-  ) {
-    if (item == null) {
-      e.singleValue().encodeNull();
-    } else {
-      e.singleValue().encodeString(item);
-    }
-  });
-  keyed.encodeValue(_$TeamSchema.nameScores, instance.scores, (map, e) {
+  keyed.encodeListKey(
+    _$TeamSchema.staticKeyNullableTags,
+    instance.nullableTags,
+    (item, e) {
+      if (item == null) {
+        e.singleValue().encodeNull();
+      } else {
+        e.singleValue().encodeString(item);
+      }
+    },
+  );
+  keyed.encodeValueKey(_$TeamSchema.staticKeyScores, instance.scores, (map, e) {
     final k = e.keyed();
     for (final entry in map.entries) {
       k.encodeNullableInt(entry.key, entry.value);

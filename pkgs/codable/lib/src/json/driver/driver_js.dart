@@ -213,7 +213,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   int selectKeyIndex(KeyOptions options) {
     if (!hasNextKey()) return -1;
     final key = _keys[_currentIndex];
-    return options.keys.indexOf(key);
+    return options.indexOf(key);
   }
 
   @override
@@ -226,7 +226,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   int selectStringIndex(KeyOptions options) {
     final str = readString();
-    return options.keys.indexOf(str);
+    return options.indexOf(str);
   }
 
   @override

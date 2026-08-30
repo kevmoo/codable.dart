@@ -14,7 +14,9 @@ part of 'coordinate.dart';
 extension type const _$CoordinateSchema(int _value) {
   // String Name Constants
   static const String nameLatitude = 'latitude';
+  static const String aliasLatitudeLat = 'lat';
   static const String nameLongitude = 'longitude';
+  static const String aliasLongitudeLon = 'lon';
 
   // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
   static const List<int> wireNameBytesLatitude = [
@@ -55,10 +57,8 @@ extension type const _$CoordinateSchema(int _value) {
 
   // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
-  static const String aliasLatitudeLat = 'lat';
   static const int aliasKeyLatitudeLat = 1;
   static const int keyLongitude = 2;
-  static const String aliasLongitudeLon = 'lon';
   static const int aliasKeyLongitudeLon = 3;
 
   // KeyOptions Table

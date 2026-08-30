@@ -52,6 +52,13 @@ final class DecoderGeneratorHelper {
       buffer.writeln(
         "  static const String name$suffix = '${field.wireName}';",
       );
+      for (var i = 0; i < field.aliases.length; i++) {
+        final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+        buffer.writeln(
+          '  static const String alias$suffix$aliasSuffix = '
+          "'${field.aliases[i]}';",
+        );
+      }
     }
 
     buffer.writeln();
@@ -75,10 +82,6 @@ final class DecoderGeneratorHelper {
       buffer.writeln('  static const int key$suffix = ${field.keyIndex};');
       for (var i = 0; i < field.aliases.length; i++) {
         final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
-        buffer.writeln(
-          '  static const String alias$suffix$aliasSuffix = '
-          "'${field.aliases[i]}';",
-        );
         buffer.writeln(
           '  static const int aliasKey$suffix$aliasSuffix = '
           '${field.aliasIndices[i]};',

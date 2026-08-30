@@ -16,6 +16,7 @@ extension type const _$PersonSchema(int _value) {
   static const String nameFirstName = 'firstName';
   static const String nameLastName = 'lastName';
   static const String nameDateOfBirth = 'date-of-birth';
+  static const String aliasDateOfBirthDob = 'dob';
   static const String nameMiddleName = 'middleName';
   static const String nameLastOrder = 'last-order';
   static const String nameOrders = 'orders';
@@ -136,7 +137,6 @@ extension type const _$PersonSchema(int _value) {
   static const int keyFirstName = 0;
   static const int keyLastName = 1;
   static const int keyDateOfBirth = 2;
-  static const String aliasDateOfBirthDob = 'dob';
   static const int aliasKeyDateOfBirthDob = 3;
   static const int keyMiddleName = 4;
   static const int keyLastOrder = 5;
