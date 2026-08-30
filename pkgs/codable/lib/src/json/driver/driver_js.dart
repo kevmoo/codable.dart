@@ -672,6 +672,7 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  @override
   List<int> decodeIntList() {
     final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
     _currentIndex++;
@@ -703,6 +704,30 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
     for (var i = 0; i < arr.length; i++) {
       final e = arr.getProperty<JSAny?>(i.toJS);
       result[i] = (e as JSNumber).toDartDouble;
+    }
+    return result;
+  }
+
+  @override
+  List<String> decodeStringList() {
+    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    _currentIndex++;
+    final result = <String>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSString).toDart);
+    }
+    return result;
+  }
+
+  @override
+  List<bool> decodeBoolList() {
+    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    _currentIndex++;
+    final result = <bool>[];
+    for (var i = 0; i < arr.length; i++) {
+      final e = arr.getProperty<JSAny?>(i.toJS);
+      result.add((e as JSBoolean).toDart);
     }
     return result;
   }

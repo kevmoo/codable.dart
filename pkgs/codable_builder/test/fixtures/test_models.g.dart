@@ -1135,3 +1135,332 @@ void _$TeamToEncoder(Team instance, Encoder encoder) {
     }
   });
 }
+
+// =============================================================================
+// 1. Unified Schema Descriptor for PrimitiveCollectionsModel
+// =============================================================================
+extension type const _$PrimitiveCollectionsModelSchema(int _value) {
+  // String Name Constants
+  static const String nameInts = 'ints';
+  static const String nameDoubles = 'doubles';
+  static const String nameStrings = 'strings';
+  static const String nameBools = 'bools';
+  static const String nameFloat64s = 'float64s';
+  static const String nameMatrix = 'matrix';
+  static const String nameNestedFloats = 'nestedFloats';
+
+  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
+  static const List<int> wireNameBytesInts = [34, 105, 110, 116, 115, 34];
+  static const StaticKey staticKeyInts = StaticKey(
+    nameInts,
+    keyInts,
+    wireNameBytesInts,
+  );
+  static const List<int> wireNameBytesDoubles = [
+    34,
+    100,
+    111,
+    117,
+    98,
+    108,
+    101,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyDoubles = StaticKey(
+    nameDoubles,
+    keyDoubles,
+    wireNameBytesDoubles,
+  );
+  static const List<int> wireNameBytesStrings = [
+    34,
+    115,
+    116,
+    114,
+    105,
+    110,
+    103,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyStrings = StaticKey(
+    nameStrings,
+    keyStrings,
+    wireNameBytesStrings,
+  );
+  static const List<int> wireNameBytesBools = [34, 98, 111, 111, 108, 115, 34];
+  static const StaticKey staticKeyBools = StaticKey(
+    nameBools,
+    keyBools,
+    wireNameBytesBools,
+  );
+  static const List<int> wireNameBytesFloat64s = [
+    34,
+    102,
+    108,
+    111,
+    97,
+    116,
+    54,
+    52,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyFloat64s = StaticKey(
+    nameFloat64s,
+    keyFloat64s,
+    wireNameBytesFloat64s,
+  );
+  static const List<int> wireNameBytesMatrix = [
+    34,
+    109,
+    97,
+    116,
+    114,
+    105,
+    120,
+    34,
+  ];
+  static const StaticKey staticKeyMatrix = StaticKey(
+    nameMatrix,
+    keyMatrix,
+    wireNameBytesMatrix,
+  );
+  static const List<int> wireNameBytesNestedFloats = [
+    34,
+    110,
+    101,
+    115,
+    116,
+    101,
+    100,
+    70,
+    108,
+    111,
+    97,
+    116,
+    115,
+    34,
+  ];
+  static const StaticKey staticKeyNestedFloats = StaticKey(
+    nameNestedFloats,
+    keyNestedFloats,
+    wireNameBytesNestedFloats,
+  );
+
+  // Key Indices for selectKeyIndex()
+  static const int keyInts = 0;
+  static const int keyDoubles = 1;
+  static const int keyStrings = 2;
+  static const int keyBools = 3;
+  static const int keyFloat64s = 4;
+  static const int keyMatrix = 5;
+  static const int keyNestedFloats = 6;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PrimitiveCollectionsModelSchema.nameInts,
+    _$PrimitiveCollectionsModelSchema.nameDoubles,
+    _$PrimitiveCollectionsModelSchema.nameStrings,
+    _$PrimitiveCollectionsModelSchema.nameBools,
+    _$PrimitiveCollectionsModelSchema.nameFloat64s,
+    _$PrimitiveCollectionsModelSchema.nameMatrix,
+    _$PrimitiveCollectionsModelSchema.nameNestedFloats,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PrimitiveCollectionsModelSchema none =
+      _$PrimitiveCollectionsModelSchema(0);
+  static const int _float64sBit = 1 << 0;
+  static const _$PrimitiveCollectionsModelSchema float64s =
+      _$PrimitiveCollectionsModelSchema(_float64sBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PrimitiveCollectionsModelSchema golden =
+      _$PrimitiveCollectionsModelSchema(_float64sBit);
+
+  @pragma('vm:prefer-inline')
+  _$PrimitiveCollectionsModelSchema operator |(
+    _$PrimitiveCollectionsModelSchema other,
+  ) => _$PrimitiveCollectionsModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _float64sBit) == 0) {
+      missing.add(nameFloat64s);
+    }
+    throw CodableException(
+      'Missing required fields for PrimitiveCollectionsModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Universal Keyed Deserializer for PrimitiveCollectionsModel
+// =============================================================================
+PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
+  Decoder decoder,
+) {
+  final keyed = decoder.keyed(
+    options: _$PrimitiveCollectionsModelSchema.keyOptions,
+  );
+
+  var ints = const <int>[];
+  var doubles = const <double>[];
+  var strings = const <String>[];
+  var bools = const <bool>[];
+  Float64List? float64s;
+  var matrix = const <List<double>>[];
+  var nestedFloats = const <Float64List>[];
+  var seen = _$PrimitiveCollectionsModelSchema.none;
+
+  while (keyed.hasNextKey()) {
+    switch (keyed.selectKeyIndex(
+      _$PrimitiveCollectionsModelSchema.keyOptions,
+    )) {
+      case _$PrimitiveCollectionsModelSchema.keyInts:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          ints = keyed.decodeIntList();
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyDoubles:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          doubles = keyed.decodeDoubleList();
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyStrings:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          strings = keyed.decodeStringList();
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyBools:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          bools = keyed.decodeBoolList();
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyFloat64s:
+        if ((seen._value & _$PrimitiveCollectionsModelSchema.float64s._value) !=
+            0) {
+          throw const CodableException('Duplicate field "float64s"');
+        }
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          float64s = keyed.decodeFloat64List();
+          seen |= _$PrimitiveCollectionsModelSchema.float64s;
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyMatrix:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          {
+            final u = keyed.decodeValue((d) => d.unkeyed());
+            final l = <List<double>>[];
+            while (u.hasNext()) {
+              l.add(u.decodeDoubleList());
+            }
+            matrix = l;
+          }
+        }
+        break;
+      case _$PrimitiveCollectionsModelSchema.keyNestedFloats:
+        if (keyed.isNextNull()) {
+          keyed.readNull();
+        } else {
+          {
+            final u = keyed.decodeValue((d) => d.unkeyed());
+            final l = <Float64List>[];
+            while (u.hasNext()) {
+              l.add(u.decodeFloat64List());
+            }
+            nestedFloats = l;
+          }
+        }
+        break;
+      default:
+        keyed.skipValue();
+        break;
+    }
+  }
+
+  // Inlined fast-path check
+  seen.validate();
+
+  return PrimitiveCollectionsModel(
+    ints: ints,
+    doubles: doubles,
+    strings: strings,
+    bools: bools,
+    float64s: float64s!,
+    matrix: matrix,
+    nestedFloats: nestedFloats,
+  );
+}
+
+// =============================================================================
+// 3. Universal Serializer for PrimitiveCollectionsModel
+// =============================================================================
+void _$PrimitiveCollectionsModelToEncoder(
+  PrimitiveCollectionsModel instance,
+  Encoder encoder,
+) {
+  final keyed = encoder.keyed();
+  keyed.encodeIntListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyInts,
+    instance.ints,
+  );
+  keyed.encodeDoubleListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyDoubles,
+    instance.doubles.map((e) => e.toDouble()).toList(),
+  );
+  keyed.encodeStringListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyStrings,
+    instance.strings,
+  );
+  keyed.encodeBoolListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyBools,
+    instance.bools,
+  );
+  keyed.encodeDoubleListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyFloat64s,
+    instance.float64s,
+  );
+  keyed.encodeListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyMatrix,
+    instance.matrix,
+    (item, e) {
+      e.unkeyed().encodeList(item, (item, e2) {
+        e.singleValue().encodeDouble(item);
+      });
+    },
+  );
+  keyed.encodeListKey(
+    _$PrimitiveCollectionsModelSchema.staticKeyNestedFloats,
+    instance.nestedFloats,
+    (item, e) {
+      e.unkeyed().encodeList(
+        item,
+        (item, e2) => e2.singleValue().encodeDouble(item),
+      );
+    },
+  );
+}

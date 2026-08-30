@@ -369,6 +369,12 @@ abstract interface class UnkeyedDecoder {
   /// Decodes a nested contiguous list of doubles directly as an unboxed
   /// [Float64List].
   Float64List decodeFloat64List();
+
+  /// Decodes a nested contiguous list of Strings.
+  List<String> decodeStringList();
+
+  /// Decodes a nested contiguous list of booleans.
+  List<bool> decodeBoolList();
 }
 
 /// Decoder for standalone scalar values or primitive wrappers.

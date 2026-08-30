@@ -760,6 +760,30 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
     }
     throw CodableException('Expected Float64List, found ${v.runtimeType}');
   }
+
+  @override
+  List<String> decodeStringList() {
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
+    final v = _list[_index++];
+    if (v is List<dynamic>) {
+      return v.map((e) => e as String).toList();
+    }
+    throw CodableException('Expected List<String>, found ${v.runtimeType}');
+  }
+
+  @override
+  List<bool> decodeBoolList() {
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
+    final v = _list[_index++];
+    if (v is List<dynamic>) {
+      return v.map((e) => e as bool).toList();
+    }
+    throw CodableException('Expected List<bool>, found ${v.runtimeType}');
+  }
 }
 
 final class _TestSingleValueDecoder implements SingleValueDecoder {

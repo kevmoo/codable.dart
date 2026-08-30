@@ -49,8 +49,8 @@ Future<void> generateForFile(String sourceRelPath, String targetRelPath) async {
         buffer.writeln(encoderCode);
         buffer.writeln();
       }
-    } catch (_) {
-      // Skip invalid test models (e.g. InvalidIgnoredField)
+    } catch (e, st) {
+      print('Skipping ${element.name}: $e\n$st');
     }
   }
 

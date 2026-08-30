@@ -376,6 +376,47 @@ void main() {
           check(team.scores['b']).isNull();
         },
       );
+
+      test('PrimitiveCollectionsModel roundtrips specialized primitive and nested lists', () {
+        final floats = Float64List.fromList([1.1, 2.2, 3.3]);
+        final matrix = [
+          [10.0, 20.0],
+          [30.0, 40.0],
+        ];
+        final nestedFloats = [
+          Float64List.fromList([100.0, 200.0]),
+          Float64List.fromList([300.0, 400.0]),
+        ];
+        final model = PrimitiveCollectionsModel(
+          ints: [1, 2, 3],
+          doubles: [4.5, 6.7],
+          strings: ['alpha', 'beta'],
+          bools: [true, false, true],
+          float64s: floats,
+          matrix: matrix,
+          nestedFloats: nestedFloats,
+        );
+
+        final bytes = _encodeObject(model.encode);
+        final decoded = PrimitiveCollectionsModel.decode(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
+
+        check(decoded.ints).deepEquals([1, 2, 3]);
+        check(decoded.doubles).deepEquals([4.5, 6.7]);
+        check(decoded.strings).deepEquals(['alpha', 'beta']);
+        check(decoded.bools).deepEquals([true, false, true]);
+        check(decoded.float64s.length).equals(3);
+        check(decoded.float64s[0]).equals(1.1);
+        check(decoded.float64s[1]).equals(2.2);
+        check(decoded.float64s[2]).equals(3.3);
+        check(decoded.matrix.length).equals(2);
+        check(decoded.matrix[0]).deepEquals([10.0, 20.0]);
+        check(decoded.matrix[1]).deepEquals([30.0, 40.0]);
+        check(decoded.nestedFloats.length).equals(2);
+        check(decoded.nestedFloats[0][0]).equals(100.0);
+        check(decoded.nestedFloats[1][1]).equals(400.0);
+      });
     });
   });
 }

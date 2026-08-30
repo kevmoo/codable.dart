@@ -169,8 +169,15 @@ final class TypeClassifier {
     const typedDataNames = {
       'Float64List',
       'Float32List',
+      'Int64List',
       'Int32List',
+      'Int16List',
+      'Int8List',
+      'Uint64List',
+      'Uint32List',
+      'Uint16List',
       'Uint8List',
+      'Uint8ClampedList',
     };
     if (element == null || !typedDataNames.contains(element.name)) return null;
     return (

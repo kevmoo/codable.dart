@@ -566,6 +566,30 @@ final class _JsonCodableUnkeyedDecoder
     _reader.endArray();
     return Float64List.fromList(list);
   }
+
+  @override
+  List<String> decodeStringList() {
+    _ensureStarted();
+    final list = <String>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readString());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<bool> decodeBoolList() {
+    _ensureStarted();
+    final list = <bool>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readBool());
+    }
+    _reader.endArray();
+    return list;
+  }
 }
 
 final class _JsonCodableSingleValueDecoder
