@@ -450,7 +450,7 @@ final class DecoderGeneratorHelper {
       buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
     } else if (elemType.isDartCoreBool && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
-    } else if (elemType.element?.name == 'Float64List') {
+    } else if (elemType.element?.name == 'Float64List' && !isNullable) {
       buffer.writeln(
         '$indent{\n'
         '$indent  final u = keyed.decodeValue((d) => d.unkeyed());\n'
@@ -461,7 +461,7 @@ final class DecoderGeneratorHelper {
         '$indent  ${field.name} = l;\n'
         '$indent}',
       );
-    } else if (elemType.element?.name == 'Int64List') {
+    } else if (elemType.element?.name == 'Int64List' && !isNullable) {
       buffer.writeln(
         '$indent{\n'
         '$indent  final u = keyed.decodeValue((d) => d.unkeyed());\n'
@@ -472,7 +472,8 @@ final class DecoderGeneratorHelper {
         '$indent  ${field.name} = l;\n'
         '$indent}',
       );
-    } else if (elemType.isDartCoreList || elemType.element?.name == 'List') {
+    } else if (!isNullable &&
+        (elemType.isDartCoreList || elemType.element?.name == 'List')) {
       final inner =
           elemType is InterfaceType && elemType.typeArguments.isNotEmpty
           ? elemType.typeArguments.first
@@ -608,6 +609,12 @@ final class DecoderGeneratorHelper {
       final inner = type is InterfaceType && type.typeArguments.isNotEmpty
           ? type.typeArguments.first
           : null;
+      if (type.isNullableType) {
+        if (inner == null) {
+          return '(d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList((d) => d.singleValue().readString() as dynamic); }';
+        }
+        return '(d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}); }';
+      }
       if (inner == null) {
         return '(d) => d.unkeyed().decodeList((d) => d.singleValue().readString() as dynamic)';
       }

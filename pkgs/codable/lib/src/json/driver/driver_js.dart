@@ -672,7 +672,6 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  @override
   List<int> decodeIntList() {
     final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
     _currentIndex++;

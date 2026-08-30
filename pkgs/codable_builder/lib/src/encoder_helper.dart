@@ -148,9 +148,9 @@ final class EncoderGeneratorHelper {
     final isNullable = elemType?.isNullableType ?? false;
     if (elemType != null && elemType.isDartCoreInt && !isNullable) {
       buffer.writeln('${indent}keyed.encodeIntListKey($keyExpr, $access);');
-    } else if (elemType != null &&
-        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        !isNullable) {
+    } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
+      buffer.writeln('${indent}keyed.encodeDoubleListKey($keyExpr, $access);');
+    } else if (elemType != null && elemType.isDartCoreNum && !isNullable) {
       buffer.writeln(
         '${indent}keyed.encodeDoubleListKey($keyExpr, '
         '$access.map((e) => e.toDouble()).toList());',

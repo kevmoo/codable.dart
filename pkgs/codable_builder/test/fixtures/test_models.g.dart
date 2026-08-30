@@ -1430,7 +1430,7 @@ void _$PrimitiveCollectionsModelToEncoder(
   );
   keyed.encodeDoubleListKey(
     _$PrimitiveCollectionsModelSchema.staticKeyDoubles,
-    instance.doubles.map((e) => e.toDouble()).toList(),
+    instance.doubles,
   );
   keyed.encodeStringListKey(
     _$PrimitiveCollectionsModelSchema.staticKeyStrings,
