@@ -493,7 +493,10 @@ final class _TestMappedDecoder implements MappedDecoder {
     }
     final v = _map[key];
     if (v is List<dynamic>) {
-      return v.map((e) => e as int).toList();
+      return v.map((e) {
+        if (e is int) return e;
+        throw CodableException('Expected int in list for key "$key", found $e');
+      }).toList();
     }
     throw CodableException(
       'Expected List<int> for key "$key", found ${v.runtimeType}',
@@ -510,7 +513,12 @@ final class _TestMappedDecoder implements MappedDecoder {
     }
     final v = _map[key];
     if (v is List<dynamic>) {
-      return v.map((e) => (e as num).toDouble()).toList();
+      return v.map((e) {
+        if (e is num) return e.toDouble();
+        throw CodableException(
+          'Expected double in list for key "$key", found $e',
+        );
+      }).toList();
     }
     throw CodableException(
       'Expected List<double> for key "$key", found ${v.runtimeType}',
@@ -529,7 +537,14 @@ final class _TestMappedDecoder implements MappedDecoder {
     if (v is List<dynamic>) {
       final list = Float64List(v.length);
       for (var i = 0; i < v.length; i++) {
-        list[i] = (v[i] as num).toDouble();
+        final e = v[i];
+        if (e is num) {
+          list[i] = e.toDouble();
+        } else {
+          throw CodableException(
+            'Expected double in list for key "$key", found $e',
+          );
+        }
       }
       return list;
     }
@@ -549,7 +564,12 @@ final class _TestMappedDecoder implements MappedDecoder {
     }
     final v = _map[key];
     if (v is List<dynamic>) {
-      return v.map((e) => e as String).toList();
+      return v.map((e) {
+        if (e is String) return e;
+        throw CodableException(
+          'Expected String in list for key "$key", found $e',
+        );
+      }).toList();
     }
     throw CodableException(
       'Expected List<String> for key "$key", found ${v.runtimeType}',
@@ -566,7 +586,12 @@ final class _TestMappedDecoder implements MappedDecoder {
     }
     final v = _map[key];
     if (v is List<dynamic>) {
-      return v.map((e) => e as bool).toList();
+      return v.map((e) {
+        if (e is bool) return e;
+        throw CodableException(
+          'Expected bool in list for key "$key", found $e',
+        );
+      }).toList();
     }
     throw CodableException(
       'Expected List<bool> for key "$key", found ${v.runtimeType}',
@@ -2510,6 +2535,79 @@ void main() {
       check(reDecoded).equals(original);
       check(reDecoded.profile.zip).equals('94043');
       check(reDecoded.location.latitude).equals(37.4220);
+    });
+
+    group('Defensive validation & error handling regression tests', () {
+      test('decodeIntList throws CodableException on malformed non-array', () {
+        const jsonStr = '{"nums": "not_an_array"}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeIntList('nums');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('decodeIntList throws CodableException on missing key', () {
+        const jsonStr = '{"other": [1, 2, 3]}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeIntList('missing');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('decodeIntList throws CodableException on invalid element type', () {
+        const jsonStr = '{"nums": [1, "two", 3]}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeIntList('nums');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('decodeDoubleList throws CodableException on malformed type', () {
+        const jsonStr = '{"doubles": false}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeDoubleList('doubles');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('decodeStringList throws CodableException on malformed type', () {
+        const jsonStr = '{"tags": 123}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeStringList('tags');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('decodeBoolList throws CodableException on malformed type', () {
+        const jsonStr = '{"flags": "true"}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeBoolList('flags');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('readNull throws CodableException on non-null field value', () {
+        const jsonStr = '{"count": 42}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final keyed = decoder.keyed();
+            keyed.nextKey();
+            keyed.readNull();
+          });
+        }).throws<CodableException>();
+      });
     });
   });
 }

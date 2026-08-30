@@ -8,3 +8,4 @@ library;
 
 export 'codable.dart';
 export 'src/json/driver/driver_streaming.dart';
+export 'src/json/substrate/substrate.dart';

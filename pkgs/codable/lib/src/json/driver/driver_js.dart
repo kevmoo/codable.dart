@@ -257,6 +257,9 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
     if (!hasNextKey()) {
       throw const CodableException('No more keys available in KeyedDecoder');
     }
+    if (_activeValue != null) {
+      throw CodableException('Expected null, found $_activeValue');
+    }
     _consumeValue();
   }
 
@@ -391,25 +394,39 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   List<int> decodeIntList() {
     final val = _consumeValue();
-    final arr = val as JSArray;
-    final result = <int>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble.toInt());
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <int>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble.toInt());
+        } else {
+          throw CodableException('Expected int in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
   List<double> decodeDoubleList() {
     final val = _consumeValue();
-    final arr = val as JSArray;
-    final result = <double>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <double>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble);
+        } else {
+          throw CodableException('Expected double in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
@@ -421,25 +438,39 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   @override
   List<String> decodeStringList() {
     final val = _consumeValue();
-    final arr = val as JSArray;
-    final result = <String>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSString).toDart);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <String>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSString>()) {
+          result.add((e as JSString).toDart);
+        } else {
+          throw CodableException('Expected String in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
   List<bool> decodeBoolList() {
     final val = _consumeValue();
-    final arr = val as JSArray;
-    final result = <bool>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSBoolean).toDart);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <bool>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSBoolean>()) {
+          result.add((e as JSBoolean).toDart);
+        } else {
+          throw CodableException('Expected bool in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
@@ -628,24 +659,44 @@ final class _JsonCodableMappedDecoder
 
   @override
   List<int> decodeIntList(String key) {
-    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
-    final result = <int>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble.toInt());
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSArray>()) {
+      final arr = v as JSArray;
+      final result = <int>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble.toInt());
+        } else {
+          throw CodableException(
+            'Expected int in list for key "$key", found $e',
+          );
+        }
+      }
+      return result;
     }
-    return result;
+    throw CodableException('Expected List for key "$key", found $v');
   }
 
   @override
   List<double> decodeDoubleList(String key) {
-    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
-    final result = <double>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble);
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSArray>()) {
+      final arr = v as JSArray;
+      final result = <double>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble);
+        } else {
+          throw CodableException(
+            'Expected double in list for key "$key", found $e',
+          );
+        }
+      }
+      return result;
     }
-    return result;
+    throw CodableException('Expected List for key "$key", found $v');
   }
 
   @override
@@ -656,24 +707,44 @@ final class _JsonCodableMappedDecoder
 
   @override
   List<String> decodeStringList(String key) {
-    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
-    final result = <String>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSString).toDart);
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSArray>()) {
+      final arr = v as JSArray;
+      final result = <String>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSString>()) {
+          result.add((e as JSString).toDart);
+        } else {
+          throw CodableException(
+            'Expected String in list for key "$key", found $e',
+          );
+        }
+      }
+      return result;
     }
-    return result;
+    throw CodableException('Expected List for key "$key", found $v');
   }
 
   @override
   List<bool> decodeBoolList(String key) {
-    final arr = _map.getProperty<JSAny?>(key.toJS) as JSArray;
-    final result = <bool>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSBoolean).toDart);
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSArray>()) {
+      final arr = v as JSArray;
+      final result = <bool>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSBoolean>()) {
+          result.add((e as JSBoolean).toDart);
+        } else {
+          throw CodableException(
+            'Expected bool in list for key "$key", found $e',
+          );
+        }
+      }
+      return result;
     }
-    return result;
+    throw CodableException('Expected List for key "$key", found $v');
   }
 }
 
@@ -732,26 +803,42 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<int> decodeIntList() {
-    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    final val = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
-    final result = <int>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble.toInt());
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <int>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble.toInt());
+        } else {
+          throw CodableException('Expected int in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
   List<double> decodeDoubleList() {
-    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    final val = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
-    final result = <double>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSNumber).toDartDouble);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <double>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSNumber>()) {
+          result.add((e as JSNumber).toDartDouble);
+        } else {
+          throw CodableException('Expected double in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
@@ -763,26 +850,42 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<String> decodeStringList() {
-    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    final val = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
-    final result = <String>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSString).toDart);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <String>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSString>()) {
+          result.add((e as JSString).toDart);
+        } else {
+          throw CodableException('Expected String in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
   List<bool> decodeBoolList() {
-    final arr = _list.getProperty<JSAny?>(_currentIndex.toJS) as JSArray;
+    final val = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
-    final result = <bool>[];
-    for (var i = 0; i < arr.length; i++) {
-      final e = arr.getProperty<JSAny?>(i.toJS);
-      result.add((e as JSBoolean).toDart);
+    if (val != null && val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      final result = <bool>[];
+      for (var i = 0; i < arr.length; i++) {
+        final e = arr.getProperty<JSAny?>(i.toJS);
+        if (e != null && e.isA<JSBoolean>()) {
+          result.add((e as JSBoolean).toDart);
+        } else {
+          throw CodableException('Expected bool in list, found $e');
+        }
+      }
+      return result;
     }
-    return result;
+    throw const CodableException('Expected List');
   }
 
   @override
