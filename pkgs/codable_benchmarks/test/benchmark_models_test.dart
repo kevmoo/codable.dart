@@ -47,6 +47,25 @@ void main() {
         check(coordinates.first.longitude).equals(-120.0);
         check(coordinates.last.latitude).equals(39.9);
       });
+
+      test('decodes coordinates array using Coordinate.decodeList', () {
+        final list = List.generate(
+          100,
+          (i) =>
+              '{"latitude": ${40.0 + i * 0.1}, '
+              '"longitude": ${-70.0 + i * 0.1}}',
+        ).join(',');
+        final jsonStr = '[$list]';
+        final bytes = Uint8List.fromList(utf8.encode(jsonStr));
+
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final coordinates = Coordinate.decodeList(decoder);
+
+        check(coordinates.length).equals(100);
+        check(coordinates.first.latitude).equals(40.0);
+        check(coordinates.first.longitude).equals(-70.0);
+        check(coordinates.last.latitude).equals(49.9);
+      });
     });
 
     group('canada.json real dataset parsing', () {

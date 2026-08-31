@@ -264,7 +264,7 @@ Person _$PersonFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          orders = keyed.decodeList(_$OrderFromDecoder);
+          orders = keyed.decodeValue(_$OrderListFromDecoder);
         }
         break;
       default:
@@ -284,6 +284,18 @@ Person _$PersonFromDecoder(Decoder decoder) {
     lastOrder: lastOrder,
     orders: orders,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Person
+// =============================================================================
+List<Person> _$PersonListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Person>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$PersonFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -552,6 +564,18 @@ Order _$OrderFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Order
+// =============================================================================
+List<Order> _$OrderListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Order>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$OrderFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Order
 // =============================================================================
 void _$OrderToEncoder(Order instance, Encoder encoder) {
@@ -703,6 +727,18 @@ Item _$ItemFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Item(count: count, itemNumber: itemNumber, isRushed: isRushed);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Item
+// =============================================================================
+List<Item> _$ItemListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Item>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$ItemFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

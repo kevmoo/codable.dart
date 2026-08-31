@@ -132,6 +132,18 @@ Car _$CarFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Car
+// =============================================================================
+List<Car> _$CarListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Car>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CarFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Car
 // =============================================================================
 void _$CarToEncoder(Car instance, Encoder encoder) {
@@ -277,6 +289,18 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Bicycle
+// =============================================================================
+List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Bicycle>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$BicycleFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

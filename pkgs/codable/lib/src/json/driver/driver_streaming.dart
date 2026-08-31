@@ -79,6 +79,10 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   SingleValueDecoder singleValueContainer() => singleValue();
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      null;
 }
 
 mixin _JsonPrimitiveDecoderMixin {

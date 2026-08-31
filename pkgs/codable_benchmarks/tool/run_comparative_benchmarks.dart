@@ -1002,14 +1002,28 @@ void _saveBenchmarkOutputs({
   }
 }
 
+String _findPackageConfig() {
+  for (final dir in [
+    packageRoot,
+    Directory(packageRoot).parent.path,
+    Directory(packageRoot).parent.parent.path,
+  ]) {
+    final candidate = File('$dir/.dart_tool/package_config.json');
+    if (candidate.existsSync()) return candidate.path;
+  }
+  return '$packageRoot/.dart_tool/package_config.json';
+}
+
 Future<void> _compileExe(
   String dartBin,
   String script,
   String outputExe,
 ) async {
+  final packageConfig = _findPackageConfig();
   final proc = await Process.run(dartBin, [
     'compile',
     'exe',
+    '--packages=$packageConfig',
     script,
     '-o',
     outputExe,

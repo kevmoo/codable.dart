@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'coordinate.dart';
 
@@ -151,6 +151,34 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Coordinate(latitude: latitude!, longitude: longitude!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Coordinate
+// =============================================================================
+List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
+  final flatDoubles = decoder.decodeUniformDoubleList(const [
+    ['latitude', 'lat'],
+    ['longitude', 'lon'],
+  ]);
+  if (flatDoubles != null) {
+    final count = flatDoubles.length ~/ 2;
+    return List<Coordinate>.generate(
+      count,
+      (i) => Coordinate(
+        latitude: flatDoubles[i * 2 + 0],
+        longitude: flatDoubles[i * 2 + 1],
+      ),
+      growable: true,
+    );
+  }
+
+  final unkeyed = decoder.unkeyed();
+  final list = <Coordinate>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CoordinateFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

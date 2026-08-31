@@ -177,7 +177,7 @@ void main() {
           .contains('headquarter = keyed.decodeValue(_\$AddressFromDecoder);');
       // List of nested codable
       check(output)
-          .contains('branches = keyed.decodeList(_\$AddressFromDecoder);');
+          .contains('branches = keyed.decodeValue(_\$AddressListFromDecoder);');
       // Set of string
       check(output).contains('categories = keyed.decodeStringList().toSet();');
       // Map of string to int

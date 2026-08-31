@@ -14,6 +14,8 @@ final class Point {
   const Point(this.x, this.y);
 
   static Point decode(Decoder decoder) => _$PointFromDecoder(decoder);
+  static List<Point> decodeList(Decoder decoder) =>
+      _$PointListFromDecoder(decoder);
   void encode(Encoder encoder) => _$PointToEncoder(this, encoder);
 }
 

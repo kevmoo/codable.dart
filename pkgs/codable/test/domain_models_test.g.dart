@@ -154,6 +154,34 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Coordinate
+// =============================================================================
+List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
+  final flatDoubles = decoder.decodeUniformDoubleList(const [
+    ['latitude', 'lat'],
+    ['longitude', 'lon'],
+  ]);
+  if (flatDoubles != null) {
+    final count = flatDoubles.length ~/ 2;
+    return List<Coordinate>.generate(
+      count,
+      (i) => Coordinate(
+        latitude: flatDoubles[i * 2 + 0],
+        longitude: flatDoubles[i * 2 + 1],
+      ),
+      growable: true,
+    );
+  }
+
+  final unkeyed = decoder.unkeyed();
+  final list = <Coordinate>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CoordinateFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Coordinate
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
@@ -377,6 +405,18 @@ UserProfile _$UserProfileFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for UserProfile
+// =============================================================================
+List<UserProfile> _$UserProfileListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <UserProfile>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$UserProfileFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for UserProfile
 // =============================================================================
 void _$UserProfileToEncoder(UserProfile instance, Encoder encoder) {
@@ -517,6 +557,18 @@ Car _$CarFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Car(maxSpeed: maxSpeed!, doors: doors!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Car
+// =============================================================================
+List<Car> _$CarListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Car>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CarFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -665,6 +717,18 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Bicycle
+// =============================================================================
+List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Bicycle>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$BicycleFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -817,6 +881,18 @@ UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
   seen.validate();
 
   return UserWithLocation(profile: profile!, location: location!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for UserWithLocation
+// =============================================================================
+List<UserWithLocation> _$UserWithLocationListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <UserWithLocation>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$UserWithLocationFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

@@ -18,6 +18,8 @@ class Coordinate implements Encodable {
   const Coordinate({required this.latitude, required this.longitude});
 
   static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
+  static List<Coordinate> decodeList(Decoder decoder) =>
+      _$CoordinateListFromDecoder(decoder);
   @override
   void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
 

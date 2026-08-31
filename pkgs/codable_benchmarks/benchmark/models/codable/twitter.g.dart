@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'twitter.dart';
 
@@ -122,6 +122,18 @@ TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
     resultType: resultType,
     isoLanguageCode: isoLanguageCode,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for TwitterMetadata
+// =============================================================================
+List<TwitterMetadata> _$TwitterMetadataListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterMetadata>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterMetadataFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -373,6 +385,18 @@ TwitterUserMention _$TwitterUserMentionFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterUserMention
+// =============================================================================
+List<TwitterUserMention> _$TwitterUserMentionListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterUserMention>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterUserMentionFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterUserMention
 // =============================================================================
 void _$TwitterUserMentionToEncoder(
@@ -609,6 +633,18 @@ TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterUrl
+// =============================================================================
+List<TwitterUrl> _$TwitterUrlListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterUrl>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterUrlFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterUrl
 // =============================================================================
 void _$TwitterUrlToEncoder(TwitterUrl instance, Encoder encoder) {
@@ -678,7 +714,7 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          urls = keyed.decodeList(_$TwitterUrlFromDecoder);
+          urls = keyed.decodeValue(_$TwitterUrlListFromDecoder);
         }
         break;
       default:
@@ -691,6 +727,20 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
   seen.validate();
 
   return TwitterEntitiesUrls(urls: urls);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for TwitterEntitiesUrls
+// =============================================================================
+List<TwitterEntitiesUrls> _$TwitterEntitiesUrlsListFromDecoder(
+  Decoder decoder,
+) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterEntitiesUrls>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterEntitiesUrlsFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -810,6 +860,20 @@ TwitterUserEntities _$TwitterUserEntitiesFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterUserEntities
+// =============================================================================
+List<TwitterUserEntities> _$TwitterUserEntitiesListFromDecoder(
+  Decoder decoder,
+) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterUserEntities>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterUserEntitiesFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterUserEntities
 // =============================================================================
 void _$TwitterUserEntitiesToEncoder(
@@ -910,14 +974,14 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          urls = keyed.decodeList(_$TwitterUrlFromDecoder);
+          urls = keyed.decodeValue(_$TwitterUrlListFromDecoder);
         }
         break;
       case _$TwitterEntitiesSchema.keyUserMentions:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          userMentions = keyed.decodeList(_$TwitterUserMentionFromDecoder);
+          userMentions = keyed.decodeValue(_$TwitterUserMentionListFromDecoder);
         }
         break;
       default:
@@ -930,6 +994,18 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
   seen.validate();
 
   return TwitterEntities(urls: urls, userMentions: userMentions);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for TwitterEntities
+// =============================================================================
+List<TwitterEntities> _$TwitterEntitiesListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterEntities>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterEntitiesFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -2492,6 +2568,18 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterUser
+// =============================================================================
+List<TwitterUser> _$TwitterUserListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterUser>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterUserFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterUser
 // =============================================================================
 void _$TwitterUserToEncoder(TwitterUser instance, Encoder encoder) {
@@ -3442,6 +3530,18 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterStatus
+// =============================================================================
+List<TwitterStatus> _$TwitterStatusListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterStatus>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterStatusFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterStatus
 // =============================================================================
 void _$TwitterStatusToEncoder(TwitterStatus instance, Encoder encoder) {
@@ -3920,6 +4020,20 @@ TwitterSearchMetadata _$TwitterSearchMetadataFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for TwitterSearchMetadata
+// =============================================================================
+List<TwitterSearchMetadata> _$TwitterSearchMetadataListFromDecoder(
+  Decoder decoder,
+) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterSearchMetadata>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterSearchMetadataFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for TwitterSearchMetadata
 // =============================================================================
 void _$TwitterSearchMetadataToEncoder(
@@ -4079,7 +4193,7 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          statuses = keyed.decodeList(_$TwitterStatusFromDecoder);
+          statuses = keyed.decodeValue(_$TwitterStatusListFromDecoder);
         }
         break;
       case _$TwitterResponseSchema.keySearchMetadata:
@@ -4106,6 +4220,18 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
   seen.validate();
 
   return TwitterResponse(statuses: statuses, searchMetadata: searchMetadata!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for TwitterResponse
+// =============================================================================
+List<TwitterResponse> _$TwitterResponseListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <TwitterResponse>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TwitterResponseFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

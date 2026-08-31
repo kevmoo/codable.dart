@@ -97,6 +97,18 @@ DateTimeExample _$DateTimeExampleFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for DateTimeExample
+// =============================================================================
+List<DateTimeExample> _$DateTimeExampleListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <DateTimeExample>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$DateTimeExampleFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for DateTimeExample
 // =============================================================================
 void _$DateTimeExampleToEncoder(DateTimeExample instance, Encoder encoder) {

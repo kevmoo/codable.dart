@@ -160,4 +160,21 @@ final class ModelDescriptor {
     required this.requiredFields,
     required this.allOptionsKeys,
   });
+
+  /// Whether all non-ignored fields in this model are homogeneous, non-nullable
+  /// double primitives.
+  bool get isUniformDoubleModel {
+    final activeFields = fields.where((f) => !f.ignore).toList();
+    if (activeFields.isEmpty) return false;
+    return activeFields.every(
+      (f) =>
+          (f.category == TypeCategory.primitiveDouble ||
+              f.category == TypeCategory.primitiveNum ||
+              f.type.isDartCoreDouble ||
+              f.type.isDartCoreNum) &&
+          !f.isNullable &&
+          f.customDecoderCode == null &&
+          f.tupleLength == null,
+    );
+  }
 }

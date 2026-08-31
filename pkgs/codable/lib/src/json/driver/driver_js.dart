@@ -20,8 +20,114 @@ external JSAny? _jsonParse(JSString text);
 @JS('Object.keys')
 external JSArray<JSAny?> _objectKeys(JSObject object);
 
-@JS('Float64Array.from')
-external JSFloat64Array _float64ArrayFrom(JSArray<JSAny?> array);
+@JS('Function')
+external JSFunction? _createFunction(JSString arg1, JSString body);
+
+final _extractors = <String, JSFunction>{};
+final _extractorsFailed = <String>{};
+
+JSFunction? _getExtractor(List<List<String>> propertyAliases) {
+  final cacheKey = propertyAliases.map((a) => a.join(',')).join('|');
+  if (_extractorsFailed.contains(cacheKey)) return null;
+  var fn = _extractors[cacheKey];
+  if (fn != null) return fn;
+
+  final kCount = propertyAliases.length;
+  final body = StringBuffer();
+  body.writeln('if (!arr || !arr.length) return new Float64Array(0);');
+  body.writeln('const len = arr.length;');
+  body.writeln('const out = new Float64Array(len * $kCount);');
+  body.writeln('let idx = 0;');
+  body.writeln('for (let i = 0; i < len; i++) {');
+  body.writeln('  const o = arr[i];');
+  body.writeln('  if (!o || typeof o !== "object") return null;');
+  for (var k = 0; k < kCount; k++) {
+    final aliases = propertyAliases[k];
+    final conditions = aliases.map((String a) {
+      final escaped = jsonEncode(a);
+      return 'o[$escaped] !== undefined ? o[$escaped] : ';
+    }).join();
+    body.writeln('  const v$k = ${conditions}undefined;');
+    body.writeln('  if (typeof v$k !== "number" || isNaN(v$k)) return null;');
+    body.writeln('  out[idx++] = v$k;');
+  }
+  body.writeln('}');
+  body.writeln('return out;');
+
+  try {
+    fn = _createFunction('arr'.toJS, body.toString().toJS);
+    if (fn != null) {
+      _extractors[cacheKey] = fn;
+      return fn;
+    }
+  } catch (_) {
+    _extractorsFailed.add(cacheKey);
+  }
+  return null;
+}
+
+Float64List? _extractUniformFloat64Array(
+  JSAny? val,
+  List<List<String>> propertyAliases,
+) {
+  if (val != null) {
+    if (val.isA<JSFloat64Array>()) {
+      return (val as JSFloat64Array).toDart;
+    }
+    if (val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      if (propertyAliases.isEmpty) {
+        return _extractFloat64List(val);
+      }
+      final fn = _getExtractor(propertyAliases);
+      if (fn != null) {
+        try {
+          final res = fn.callAsFunction(null, arr);
+          if (res != null && res.isA<JSFloat64Array>()) {
+            return (res as JSFloat64Array).toDart;
+          }
+          if (res == null) {
+            return null;
+          }
+        } catch (_) {
+          // CSP or runtime error; fallback to static traversal
+        }
+      }
+      return _extractUniformStaticFallback(arr, propertyAliases);
+    }
+  }
+  return null;
+}
+
+Float64List? _extractUniformStaticFallback(
+  JSArray arr,
+  List<List<String>> propertyAliases,
+) {
+  final len = arr.length;
+  final kCount = propertyAliases.length;
+  final out = Float64List(len * kCount);
+  var idx = 0;
+  for (var i = 0; i < len; i++) {
+    final elem = arr.getProperty<JSAny?>(i.toJS);
+    if (elem == null || !elem.isA<JSObject>()) return null;
+    final obj = elem as JSObject;
+    for (var k = 0; k < kCount; k++) {
+      JSAny? propVal;
+      for (final alias in propertyAliases[k]) {
+        final jsKey = alias.toJS;
+        if (obj.hasProperty(jsKey).toDart) {
+          propVal = obj.getProperty<JSAny?>(jsKey);
+          break;
+        }
+      }
+      if (propVal == null || !propVal.isA<JSNumber>()) return null;
+      final numVal = (propVal as JSNumber).toDartDouble;
+      if (numVal.isNaN) return null;
+      out[idx++] = numVal;
+    }
+  }
+  return out;
+}
 
 @JS('TextDecoder')
 extension type JSTextDecoder._(JSObject _) implements JSObject {
@@ -52,7 +158,23 @@ Float64List _extractFloat64List(JSAny? val) {
       return (val as JSFloat64Array).toDart;
     }
     if (val.isA<JSArray>()) {
-      return _float64ArrayFrom(val as JSArray<JSAny?>).toDart;
+      final arr = val as JSArray;
+      final len = arr.length;
+      final out = Float64List(len);
+      for (var i = 0; i < len; i++) {
+        final elem = arr.getProperty<JSAny?>(i.toJS);
+        if (elem == null || !elem.isA<JSNumber>()) {
+          throw CodableException('Expected double in Float64List, found $elem');
+        }
+        final d = (elem as JSNumber).toDartDouble;
+        if (d.isNaN) {
+          throw const CodableException(
+            'Expected double in Float64List, found NaN',
+          );
+        }
+        out[i] = d;
+      }
+      return out;
     }
   }
   throw CodableException('Expected Float64List, found $val');
@@ -199,6 +321,16 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   UnkeyedDecoder unkeyedContainer() => unkeyed();
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {
+    final target = _activeValue ?? _decoded;
+    if (target != null && target.isA<JSArray>()) {
+      _activeValue = null;
+      return _extractUniformFloat64Array(target, propertyAliases);
+    }
+    return null;
+  }
 }
 
 final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {

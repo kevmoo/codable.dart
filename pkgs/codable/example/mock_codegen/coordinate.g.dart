@@ -154,6 +154,34 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Coordinate
+// =============================================================================
+List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
+  final flatDoubles = decoder.decodeUniformDoubleList(const [
+    ['latitude', 'lat'],
+    ['longitude', 'lon'],
+  ]);
+  if (flatDoubles != null) {
+    final count = flatDoubles.length ~/ 2;
+    return List<Coordinate>.generate(
+      count,
+      (i) => Coordinate(
+        latitude: flatDoubles[i * 2 + 0],
+        longitude: flatDoubles[i * 2 + 1],
+      ),
+      growable: true,
+    );
+  }
+
+  final unkeyed = decoder.unkeyed();
+  final list = <Coordinate>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CoordinateFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Coordinate
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {

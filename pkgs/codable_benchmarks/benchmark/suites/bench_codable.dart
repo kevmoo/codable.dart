@@ -78,15 +78,7 @@ void main(List<String> rawArgs) {
 
 Object? _preDecodeModel(String dataset, Uint8List bytes) {
   return switch (dataset) {
-    'coordinates' => () {
-      final list = <Coordinate>[];
-      final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final unkeyed = decoder.unkeyed();
-      while (unkeyed.hasNext()) {
-        list.add(unkeyed.decodeElement(Coordinate.decode));
-      }
-      return list;
-    }(),
+    'coordinates' => Coordinate.decodeList(JsonCodableDecoder.fromBytes(bytes)),
     'canada' => CanadaFeatureCollection.decode(
       JsonCodableDecoder.fromBytes(bytes),
     ),
@@ -100,12 +92,7 @@ Object? _preDecodeModel(String dataset, Uint8List bytes) {
 void Function() _createDecodeBenchmark(String dataset, Uint8List bytes) {
   return switch (dataset) {
     'coordinates' => () {
-      final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final unkeyed = decoder.unkeyed();
-      final list = <Coordinate>[];
-      while (unkeyed.hasNext()) {
-        list.add(unkeyed.decodeElement(Coordinate.decode));
-      }
+      final list = Coordinate.decodeList(JsonCodableDecoder.fromBytes(bytes));
       blackhole(list);
     },
     'canada' => () {
