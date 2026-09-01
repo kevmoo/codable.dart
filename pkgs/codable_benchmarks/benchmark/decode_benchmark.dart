@@ -39,6 +39,7 @@ BenchmarkGroup _createDecodeGroup(
   return switch (dataset) {
     'coordinates' => BenchmarkGroup.compare(
       name: 'coordinates_decode',
+      config: const BenchmarkConfig(forceRun: true),
       throughput: Throughput.bytes(bytes.length),
       baseline: (
         'json_serializable',
@@ -72,6 +73,7 @@ BenchmarkGroup _createDecodeGroup(
     ),
     'canada' => BenchmarkGroup.compare(
       name: 'canada_decode',
+      config: const BenchmarkConfig(forceRun: true),
       throughput: Throughput.bytes(bytes.length),
       baseline: (
         'json_serializable',
@@ -100,6 +102,7 @@ BenchmarkGroup _createDecodeGroup(
     ),
     'citm_catalog' => BenchmarkGroup.compare(
       name: 'citm_catalog_decode',
+      config: const BenchmarkConfig(forceRun: true),
       throughput: Throughput.bytes(bytes.length),
       baseline: (
         'json_serializable',
@@ -128,6 +131,7 @@ BenchmarkGroup _createDecodeGroup(
     ),
     'small' => BenchmarkGroup.compare(
       name: 'small_decode',
+      config: const BenchmarkConfig(forceRun: true),
       throughput: Throughput.bytes(bytes.length),
       baseline: (
         'json_serializable',
@@ -156,6 +160,7 @@ BenchmarkGroup _createDecodeGroup(
     ),
     'twitter' => BenchmarkGroup.compare(
       name: 'twitter_decode',
+      config: const BenchmarkConfig(forceRun: true),
       throughput: Throughput.bytes(bytes.length),
       baseline: (
         'json_serializable',

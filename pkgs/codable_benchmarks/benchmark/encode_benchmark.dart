@@ -46,6 +46,7 @@ BenchmarkGroup _createEncodeGroup(
       );
       return BenchmarkGroup.compare(
         name: 'coordinates_encode',
+        config: const BenchmarkConfig(forceRun: true),
         throughput: Throughput.bytes(bytes.length),
         baseline: (
           'json_serializable',
@@ -77,6 +78,7 @@ BenchmarkGroup _createEncodeGroup(
       );
       return BenchmarkGroup.compare(
         name: 'canada_encode',
+        config: const BenchmarkConfig(forceRun: true),
         throughput: Throughput.bytes(bytes.length),
         baseline: (
           'json_serializable',
@@ -102,6 +104,7 @@ BenchmarkGroup _createEncodeGroup(
       );
       return BenchmarkGroup.compare(
         name: 'citm_catalog_encode',
+        config: const BenchmarkConfig(forceRun: true),
         throughput: Throughput.bytes(bytes.length),
         baseline: (
           'json_serializable',
@@ -127,6 +130,7 @@ BenchmarkGroup _createEncodeGroup(
       );
       return BenchmarkGroup.compare(
         name: 'small_encode',
+        config: const BenchmarkConfig(forceRun: true),
         throughput: Throughput.bytes(bytes.length),
         baseline: (
           'json_serializable',
@@ -152,6 +156,7 @@ BenchmarkGroup _createEncodeGroup(
       );
       return BenchmarkGroup.compare(
         name: 'twitter_encode',
+        config: const BenchmarkConfig(forceRun: true),
         throughput: Throughput.bytes(bytes.length),
         baseline: (
           'json_serializable',
