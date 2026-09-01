@@ -225,7 +225,7 @@ List<SmallLocation> _$SmallLocationListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <SmallLocation>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$SmallLocationFromDecoder));
+    list.add(_$SmallLocationFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -420,7 +420,7 @@ SmallMetadata _$SmallMetadataFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          location = keyed.decodeValue(_$SmallLocationFromDecoder);
+          location = _$SmallLocationFromDecoder(keyed.nestedDecoder());
           seen |= _$SmallMetadataSchema.location;
         }
         break;
@@ -447,7 +447,7 @@ List<SmallMetadata> _$SmallMetadataListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <SmallMetadata>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$SmallMetadataFromDecoder));
+    list.add(_$SmallMetadataFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -818,7 +818,7 @@ SmallDocument _$SmallDocumentFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          metadata = keyed.decodeValue(_$SmallMetadataFromDecoder);
+          metadata = _$SmallMetadataFromDecoder(keyed.nestedDecoder());
           seen |= _$SmallDocumentSchema.metadata;
         }
         break;
@@ -863,7 +863,7 @@ List<SmallDocument> _$SmallDocumentListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <SmallDocument>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$SmallDocumentFromDecoder));
+    list.add(_$SmallDocumentFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

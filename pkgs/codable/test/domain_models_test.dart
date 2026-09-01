@@ -235,6 +235,10 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  Decoder nestedDecoder() =>
+      _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo);
+
+  @override
   T decodeValue<T>(DecoderCallback<T> decoder) =>
       decoder(_TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo));
 
@@ -334,7 +338,7 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 }
 
-final class _TestMappedDecoder implements MappedDecoder {
+final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   final Map<String, dynamic> _map;
   final _TestDecoder _rootDecoder;
 
@@ -447,6 +451,10 @@ final class _TestMappedDecoder implements MappedDecoder {
 
   @override
   bool isNullKey(StaticKey key) => isNull(key.name);
+
+  @override
+  Decoder nestedDecoder(String key) =>
+      _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo);
 
   @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) {
@@ -732,6 +740,15 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  Decoder nestedDecoder() {
+    if (!hasNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
+    final v = _list[_index++];
+    return _TestDecoder(v, userInfo: _rootDecoder.userInfo);
+  }
+
+  @override
   T decodeElement<T>(DecoderCallback<T> decoder) {
     if (!hasNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
@@ -896,6 +913,10 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
 
   @override
   bool isNull() => _value == null;
+
+  @override
+  Decoder nestedDecoder() =>
+      _TestDecoder(_value, userInfo: _rootDecoder.userInfo);
 
   @override
   void readNull() {
