@@ -3,26 +3,14 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable_json.dart';
+import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
+import 'package:codable_benchmarks/src/models/codable/canada.dart';
+import 'package:codable_benchmarks/src/models/codable/citm_catalog.dart';
+import 'package:codable_benchmarks/src/models/codable/coordinate.dart';
 import 'package:test/test.dart';
-
-import '../benchmark/models/codable/canada.dart';
-import '../benchmark/models/codable/citm_catalog.dart';
-import '../benchmark/models/codable/coordinate.dart';
-
-File _findDataFile(String relativePath) {
-  final candidate1 = File(relativePath);
-  if (candidate1.existsSync()) return candidate1;
-  final candidate2 = File('pkgs/codable_benchmarks/$relativePath');
-  if (candidate2.existsSync()) return candidate2;
-  final scriptDir = File.fromUri(Platform.script).parent;
-  final candidate3 = File('${scriptDir.path}/../$relativePath');
-  if (candidate3.existsSync()) return candidate3;
-  throw StateError('Data file not found: "$relativePath"');
-}
 
 void main() {
   group('Benchmark Models Verification Suite', () {
@@ -70,8 +58,7 @@ void main() {
 
     group('canada.json real dataset parsing', () {
       test('deserializes entire canada.json and validates polygons', () {
-        final file = _findDataFile('benchmark/data/canada.json');
-        final bytes = file.readAsBytesSync();
+        final bytes = getDatasetBytes('canada');
         final decoder = JsonCodableDecoder.fromBytes(bytes);
         final fc = CanadaFeatureCollection.decode(decoder);
 
@@ -89,8 +76,7 @@ void main() {
       test(
         'deserializes entire citm_catalog.json and validates relational maps',
         () {
-          final file = _findDataFile('benchmark/data/citm_catalog.json');
-          final bytes = file.readAsBytesSync();
+          final bytes = getDatasetBytes('citm_catalog');
           final decoder = JsonCodableDecoder.fromBytes(bytes);
           final catalog = CitmCatalog.decode(decoder);
 

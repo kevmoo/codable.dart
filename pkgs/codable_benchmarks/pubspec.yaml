@@ -9,8 +9,10 @@ environment:
 resolution: workspace
 
 dependencies:
-  args: ^2.6.0
-  benchmark_harness: ^2.3.1
+  bench_press:
+    git:
+      url: https://github.com/kevmoo/bench_press.git
+      ref: 2c9e8315673d72c2c9a9c4e6ac0de772f8d53a7e
   codable: ^0.1.0-dev
   json_annotation: ^4.9.0
 
@@ -21,3 +23,5 @@ dev_dependencies:
   dart_flutter_team_lints: ^3.0.0
   json_serializable: ^6.9.0
   test: ^1.25.8
+  analyzer: any
+  source_gen: any
