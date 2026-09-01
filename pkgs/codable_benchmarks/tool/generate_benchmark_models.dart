@@ -1,5 +1,4 @@
 // ignore_for_file: depend_on_referenced_packages, deprecated_member_use
-// ignore_for_file: prefer_single_quotes
 
 import 'dart:io';
 
@@ -20,7 +19,9 @@ Future<void> _generateModelPart(File file) async {
 
   final buffer = StringBuffer();
   buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND\n');
-  buffer.writeln("// ignore_for_file: lines_longer_than_80_chars\n");
+  buffer.writeln(
+    '// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element\n',
+  );
   final partName = file.uri.pathSegments.last;
   buffer.writeln("part of '$partName';\n");
 
@@ -50,7 +51,10 @@ Future<void> _generateModelPart(File file) async {
 }
 
 void main() async {
-  final modelsDir = Directory('benchmark/models/codable');
+  var modelsDir = Directory('benchmark/models/codable');
+  if (!modelsDir.existsSync()) {
+    modelsDir = Directory('pkgs/codable_benchmarks/benchmark/models/codable');
+  }
   final modelFiles = modelsDir
       .listSync()
       .whereType<File>()

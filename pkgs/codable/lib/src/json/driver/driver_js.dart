@@ -20,8 +20,114 @@ external JSAny? _jsonParse(JSString text);
 @JS('Object.keys')
 external JSArray<JSAny?> _objectKeys(JSObject object);
 
-@JS('Float64Array.from')
-external JSFloat64Array _float64ArrayFrom(JSArray<JSAny?> array);
+@JS('Function')
+external JSFunction? _createFunction(JSString arg1, JSString body);
+
+final _extractors = <String, JSFunction>{};
+final _extractorsFailed = <String>{};
+
+JSFunction? _getExtractor(List<List<String>> propertyAliases) {
+  final cacheKey = propertyAliases.map((a) => a.join(',')).join('|');
+  if (_extractorsFailed.contains(cacheKey)) return null;
+  var fn = _extractors[cacheKey];
+  if (fn != null) return fn;
+
+  final kCount = propertyAliases.length;
+  final body = StringBuffer();
+  body.writeln('if (!arr || !arr.length) return new Float64Array(0);');
+  body.writeln('const len = arr.length;');
+  body.writeln('const out = new Float64Array(len * $kCount);');
+  body.writeln('let idx = 0;');
+  body.writeln('for (let i = 0; i < len; i++) {');
+  body.writeln('  const o = arr[i];');
+  body.writeln('  if (!o || typeof o !== "object") return null;');
+  for (var k = 0; k < kCount; k++) {
+    final aliases = propertyAliases[k];
+    final conditions = aliases.map((String a) {
+      final escaped = jsonEncode(a);
+      return 'o[$escaped] !== undefined ? o[$escaped] : ';
+    }).join();
+    body.writeln('  const v$k = ${conditions}undefined;');
+    body.writeln('  if (typeof v$k !== "number" || isNaN(v$k)) return null;');
+    body.writeln('  out[idx++] = v$k;');
+  }
+  body.writeln('}');
+  body.writeln('return out;');
+
+  try {
+    fn = _createFunction('arr'.toJS, body.toString().toJS);
+    if (fn != null) {
+      _extractors[cacheKey] = fn;
+      return fn;
+    }
+  } catch (_) {
+    _extractorsFailed.add(cacheKey);
+  }
+  return null;
+}
+
+Float64List? _extractUniformFloat64Array(
+  JSAny? val,
+  List<List<String>> propertyAliases,
+) {
+  if (val != null) {
+    if (val.isA<JSFloat64Array>()) {
+      return (val as JSFloat64Array).toDart;
+    }
+    if (val.isA<JSArray>()) {
+      final arr = val as JSArray;
+      if (propertyAliases.isEmpty) {
+        return _extractFloat64List(val);
+      }
+      final fn = _getExtractor(propertyAliases);
+      if (fn != null) {
+        try {
+          final res = fn.callAsFunction(null, arr);
+          if (res != null && res.isA<JSFloat64Array>()) {
+            return (res as JSFloat64Array).toDart;
+          }
+          if (res == null) {
+            return null;
+          }
+        } catch (_) {
+          // CSP or runtime error; fallback to static traversal
+        }
+      }
+      return _extractUniformStaticFallback(arr, propertyAliases);
+    }
+  }
+  return null;
+}
+
+Float64List? _extractUniformStaticFallback(
+  JSArray arr,
+  List<List<String>> propertyAliases,
+) {
+  final len = arr.length;
+  final kCount = propertyAliases.length;
+  final out = Float64List(len * kCount);
+  var idx = 0;
+  for (var i = 0; i < len; i++) {
+    final elem = arr.getProperty<JSAny?>(i.toJS);
+    if (elem == null || !elem.isA<JSObject>()) return null;
+    final obj = elem as JSObject;
+    for (var k = 0; k < kCount; k++) {
+      JSAny? propVal;
+      for (final alias in propertyAliases[k]) {
+        final jsKey = alias.toJS;
+        if (obj.hasProperty(jsKey).toDart) {
+          propVal = obj.getProperty<JSAny?>(jsKey);
+          break;
+        }
+      }
+      if (propVal == null || !propVal.isA<JSNumber>()) return null;
+      final numVal = (propVal as JSNumber).toDartDouble;
+      if (numVal.isNaN) return null;
+      out[idx++] = numVal;
+    }
+  }
+  return out;
+}
 
 @JS('TextDecoder')
 extension type JSTextDecoder._(JSObject _) implements JSObject {
@@ -52,7 +158,23 @@ Float64List _extractFloat64List(JSAny? val) {
       return (val as JSFloat64Array).toDart;
     }
     if (val.isA<JSArray>()) {
-      return _float64ArrayFrom(val as JSArray<JSAny?>).toDart;
+      final arr = val as JSArray;
+      final len = arr.length;
+      final out = Float64List(len);
+      for (var i = 0; i < len; i++) {
+        final elem = arr.getProperty<JSAny?>(i.toJS);
+        if (elem == null || !elem.isA<JSNumber>()) {
+          throw CodableException('Expected double in Float64List, found $elem');
+        }
+        final d = (elem as JSNumber).toDartDouble;
+        if (d.isNaN) {
+          throw const CodableException(
+            'Expected double in Float64List, found NaN',
+          );
+        }
+        out[i] = d;
+      }
+      return out;
     }
   }
   throw CodableException('Expected Float64List, found $val');
@@ -95,18 +217,33 @@ Object? _jsToDart(JSAny? value) {
 /// `package:codable/codable_streaming.dart`.
 final class JsonCodableDecoder implements Decoder {
   final JSAny? _decoded;
+  final JsonTokenReader? _reader;
   final Uint8List? _bytes;
   @override
   final Map<Object, Object?> userInfo;
 
   JSAny? _activeValue;
 
-  JsonCodableDecoder._(this._decoded, this._bytes, {this.userInfo = const {}});
+  JsonCodableDecoder._(this._decoded, this._bytes, {this.userInfo = const {}})
+    : _reader = null;
+
+  JsonCodableDecoder.fromReader(
+    JsonTokenReader reader, {
+    this.userInfo = const {},
+  }) : _bytes = null,
+       _decoded = null,
+       _reader = reader;
 
   factory JsonCodableDecoder.fromBytes(
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
+    if (bytes.length <= 2048) {
+      return JsonCodableDecoder.fromReader(
+        JsonTokenReader.fromBytes(bytes),
+        userInfo: userInfo,
+      );
+    }
     final jsString = _textDecoder.decode(bytes.toJS);
     final decoded = _jsonParse(jsString);
     return JsonCodableDecoder._(decoded, bytes, userInfo: userInfo);
@@ -120,47 +257,8 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
-  JsonCodableDecoder.fromReader(
-    JsonTokenReader reader, {
-    this.userInfo = const {},
-  }) : _bytes = null,
-       _decoded = _readAll(reader);
-
-  static JSAny? _readAll(JsonTokenReader reader) {
-    if (!reader.hasNext()) return null;
-    switch (reader.peek()) {
-      case JsonTokenType.beginObject:
-        reader.beginObject();
-        final map = JSObject();
-        while (reader.hasNext()) {
-          final key = reader.nextName();
-          map.setProperty(key.toJS, _readAll(reader));
-        }
-        reader.endObject();
-        return map;
-      case JsonTokenType.beginArray:
-        reader.beginArray();
-        final list = JSArray<JSAny?>();
-        while (reader.hasNext()) {
-          list.add(_readAll(reader));
-        }
-        reader.endArray();
-        return list;
-      case JsonTokenType.string:
-        return reader.readString().toJS;
-      case JsonTokenType.number:
-        return reader.readDouble().toJS;
-      case JsonTokenType.boolean:
-        return reader.readBool().toJS;
-      case JsonTokenType.nullValue:
-        reader.readNull();
-        return null;
-      default:
-        return null;
-    }
-  }
-
   JsonTokenReader get reader {
+    if (_reader != null) return _reader;
     final target = _activeValue ?? _decoded;
     final bytes = (target == _decoded && _bytes != null)
         ? _bytes
@@ -170,35 +268,602 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   @override
-  KeyedDecoder keyed({KeyOptions? options}) => _JsonCodableMappedKeyedDecoder(
-    this,
-    (_activeValue ?? _decoded) as JSObject,
-    options,
-  );
+  KeyedDecoder keyed({KeyOptions? options}) {
+    if (_reader != null) {
+      return _JsonCodableStreamingKeyedDecoder(_reader, this, options: options);
+    }
+    return _JsonCodableMappedKeyedDecoder(
+      this,
+      (_activeValue ?? _decoded) as JSObject,
+      options,
+    );
+  }
 
   @override
-  MappedDecoder mapped() =>
-      _JsonCodableMappedDecoder(this, (_activeValue ?? _decoded) as JSObject);
+  MappedDecoder mapped() {
+    if (_reader != null) {
+      return _JsonCodableStreamingMappedDecoder(this);
+    }
+    return _JsonCodableMappedDecoder(
+      this,
+      (_activeValue ?? _decoded) as JSObject,
+    );
+  }
 
   @override
-  UnkeyedDecoder unkeyed() =>
-      _JsonCodableUnkeyedDecoder(this, (_activeValue ?? _decoded) as JSArray);
+  UnkeyedDecoder unkeyed() {
+    if (_reader != null) {
+      return _JsonCodableStreamingUnkeyedDecoder(_reader, this);
+    }
+    return _JsonCodableUnkeyedDecoder(
+      this,
+      (_activeValue ?? _decoded) as JSArray,
+    );
+  }
 
   @override
-  SingleValueDecoder singleValue() =>
-      _JsonCodableSingleValueDecoder(this, _activeValue ?? _decoded);
+  SingleValueDecoder singleValue() {
+    if (_reader != null) {
+      return _JsonCodableStreamingSingleValueDecoder(_reader, this);
+    }
+    return _JsonCodableSingleValueDecoder(this, _activeValue ?? _decoded);
+  }
 
   @override
   KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
 
   @override
-  Uint8List? get payload => _bytes;
+  Uint8List? get payload => _bytes ?? _reader?.bytes;
 
   @override
   SingleValueDecoder singleValueContainer() => singleValue();
 
   @override
   UnkeyedDecoder unkeyedContainer() => unkeyed();
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {
+    if (_reader != null) return null;
+    final target = _activeValue ?? _decoded;
+    if (target != null && target.isA<JSArray>()) {
+      _activeValue = null;
+      return _extractUniformFloat64Array(target, propertyAliases);
+    }
+    return null;
+  }
+}
+
+mixin _JsonPrimitiveDecoderMixin {
+  JsonTokenReader get _reader;
+  void _ensureStarted();
+
+  bool isNextNull() {
+    _ensureStarted();
+    return _reader.peek() == JsonTokenType.nullValue;
+  }
+
+  void readNull() {
+    _ensureStarted();
+    _reader.readNull();
+  }
+
+  int readInt() {
+    _ensureStarted();
+    return _reader.readInt();
+  }
+
+  int? readNullableInt() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readInt();
+  }
+
+  double readDouble() {
+    _ensureStarted();
+    return _reader.readDouble();
+  }
+
+  double? readNullableDouble() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readDouble();
+  }
+
+  String readString() {
+    _ensureStarted();
+    return _reader.readString();
+  }
+
+  String? readNullableString() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readString();
+  }
+
+  (int start, int end) readStringSpan() {
+    _ensureStarted();
+    return _reader.readStringSpan();
+  }
+
+  (int start, int end)? readNullableStringSpan() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
+  }
+
+  bool readBool() {
+    _ensureStarted();
+    return _reader.readBool();
+  }
+
+  bool? readNullableBool() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readBool();
+  }
+}
+
+final class _JsonCodableStreamingKeyedDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements KeyedDecoder {
+  @override
+  final JsonTokenReader _reader;
+  final JsonCodableDecoder _rootDecoder;
+  bool _started = false;
+  bool _ended = false;
+
+  _JsonCodableStreamingKeyedDecoder(
+    this._reader,
+    this._rootDecoder, {
+    KeyOptions? options,
+  });
+
+  @override
+  void _ensureStarted() {
+    if (!_started) {
+      _reader.beginObject();
+      _started = true;
+    }
+  }
+
+  @override
+  bool hasNextKey() {
+    if (_ended) return false;
+    _ensureStarted();
+    final has = _reader.hasNext();
+    if (!has) {
+      _reader.endObject();
+      _ended = true;
+    }
+    return has;
+  }
+
+  @override
+  bool hasNext() => hasNextKey();
+
+  @override
+  String nextKey() {
+    _ensureStarted();
+    return _reader.nextName();
+  }
+
+  @override
+  String? peekKey() {
+    _ensureStarted();
+    return null;
+  }
+
+  @override
+  int selectKeyIndex(KeyOptions options) {
+    _ensureStarted();
+    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
+    return _reader.selectName(compiled as JsonKeyOptions);
+  }
+
+  @override
+  int selectKey(List<String> keys) {
+    _ensureStarted();
+    return _reader.selectName(JsonKeyOptions.of(keys));
+  }
+
+  @override
+  int selectStringIndex(KeyOptions options) {
+    _ensureStarted();
+    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
+    return _reader.selectString(compiled as JsonKeyOptions);
+  }
+
+  @override
+  void skipField() => skipValue();
+
+  @override
+  void skipValue() {
+    _ensureStarted();
+    _reader.skipValue();
+  }
+
+  @override
+  T decodeValue<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+
+  @override
+  T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decodeValue(decoder);
+  }
+
+  @override
+  List<T> decodeList<T>(DecoderCallback<T> decoder) {
+    _ensureStarted();
+    final list = <T>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(decoder(_rootDecoder));
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decodeList(decoder);
+  }
+
+  @override
+  List<int> decodeIntList() {
+    _ensureStarted();
+    final list = <int>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readInt());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<double> decodeDoubleList() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  Float64List decodeFloat64List() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return Float64List.fromList(list);
+  }
+
+  @override
+  List<String> decodeStringList() {
+    _ensureStarted();
+    final list = <String>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readString());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<bool> decodeBoolList() {
+    _ensureStarted();
+    final list = <bool>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readBool());
+    }
+    _reader.endArray();
+    return list;
+  }
+}
+
+final class _JsonCodableStreamingMappedDecoder
+    with MappedDecoderBase
+    implements MappedDecoder {
+  final JsonCodableDecoder _rootDecoder;
+  late final Map<String, Object?> _map;
+
+  _JsonCodableStreamingMappedDecoder(this._rootDecoder) {
+    _map = _readObject(_rootDecoder._reader!);
+  }
+
+  static Map<String, Object?> _readObject(JsonTokenReader reader) {
+    reader.beginObject();
+    final map = <String, Object?>{};
+    while (reader.hasNext()) {
+      final key = reader.nextName();
+      map[key] = _readValue(reader);
+    }
+    reader.endObject();
+    return map;
+  }
+
+  static Object? _readValue(JsonTokenReader reader) {
+    final type = reader.peek();
+    switch (type) {
+      case JsonTokenType.nullValue:
+        reader.readNull();
+        return null;
+      case JsonTokenType.boolean:
+        return reader.readBool();
+      case JsonTokenType.number:
+        return reader.readDouble();
+      case JsonTokenType.string:
+        return reader.readString();
+      case JsonTokenType.beginObject:
+        return _readObject(reader);
+      case JsonTokenType.beginArray:
+        reader.beginArray();
+        final list = <Object?>[];
+        while (reader.hasNext()) {
+          list.add(_readValue(reader));
+        }
+        reader.endArray();
+        return list;
+      default:
+        reader.skipValue();
+        return null;
+    }
+  }
+
+  @override
+  bool containsKey(String key) => _map.containsKey(key);
+
+  @override
+  bool isNull(String key) => _map[key] == null;
+
+  @override
+  int readInt(String key) {
+    final v = _map[key];
+    if (v is num) return v.toInt();
+    throw CodableException('Expected int for $key, found $v');
+  }
+
+  @override
+  int? readNullableInt(String key) => _map[key] == null ? null : readInt(key);
+
+  @override
+  double readDouble(String key) {
+    final v = _map[key];
+    if (v is num) return v.toDouble();
+    throw CodableException('Expected double for $key, found $v');
+  }
+
+  @override
+  double? readNullableDouble(String key) =>
+      _map[key] == null ? null : readDouble(key);
+
+  @override
+  String readString(String key) {
+    final v = _map[key];
+    if (v is String) return v;
+    throw CodableException('Expected String for $key, found $v');
+  }
+
+  @override
+  String? readNullableString(String key) =>
+      _map[key] == null ? null : readString(key);
+
+  @override
+  bool readBool(String key) {
+    final v = _map[key];
+    if (v is bool) return v;
+    throw CodableException('Expected bool for $key, found $v');
+  }
+
+  @override
+  bool? readNullableBool(String key) =>
+      _map[key] == null ? null : readBool(key);
+
+  @override
+  T decodeKey<T>(String key, DecoderCallback<T> decoder) {
+    final v = _map[key];
+    if (v == null) {
+      throw CodableException('Missing required key $key in mapped decoder');
+    }
+    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
+  }
+
+  @override
+  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
+    final v = _map[key];
+    if (v == null) return null;
+    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
+  }
+
+  @override
+  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
+    final v = _map[key];
+    if (v is List) {
+      return v
+          .map((e) => decoder(JsonCodableDecoder.fromString(jsonEncode(e))))
+          .toList();
+    }
+    throw CodableException('Expected list for $key, found $v');
+  }
+
+  @override
+  List<int> decodeIntList(String key) => (_map[key] as List).cast<int>();
+
+  @override
+  List<double> decodeDoubleList(String key) =>
+      (_map[key] as List).map((e) => (e as num).toDouble()).toList();
+
+  @override
+  Float64List decodeFloat64List(String key) => Float64List.fromList(
+    (_map[key] as List).map((e) => (e as num).toDouble()).toList(),
+  );
+
+  @override
+  List<String> decodeStringList(String key) =>
+      (_map[key] as List).cast<String>();
+
+  @override
+  List<bool> decodeBoolList(String key) => (_map[key] as List).cast<bool>();
+}
+
+final class _JsonCodableStreamingUnkeyedDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements UnkeyedDecoder {
+  @override
+  final JsonTokenReader _reader;
+  final JsonCodableDecoder _rootDecoder;
+  bool _started = false;
+
+  _JsonCodableStreamingUnkeyedDecoder(this._reader, this._rootDecoder);
+
+  @override
+  void _ensureStarted() {
+    if (!_started) {
+      _reader.beginArray();
+      _started = true;
+    }
+  }
+
+  @override
+  bool hasNext() {
+    _ensureStarted();
+    final has = _reader.hasNext();
+    if (!has) {
+      _reader.endArray();
+    }
+    return has;
+  }
+
+  @override
+  void skipElement() {
+    _ensureStarted();
+    _reader.skipValue();
+  }
+
+  @override
+  T decodeElement<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+
+  @override
+  T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decodeElement(decoder);
+  }
+
+  @override
+  List<int> decodeIntList() {
+    _ensureStarted();
+    final list = <int>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readInt());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<double> decodeDoubleList() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  Float64List decodeFloat64List() {
+    _ensureStarted();
+    final list = <double>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readDouble());
+    }
+    _reader.endArray();
+    return Float64List.fromList(list);
+  }
+
+  @override
+  List<String> decodeStringList() {
+    _ensureStarted();
+    final list = <String>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readString());
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<bool> decodeBoolList() {
+    _ensureStarted();
+    final list = <bool>[];
+    _reader.beginArray();
+    while (_reader.hasNext()) {
+      list.add(_reader.readBool());
+    }
+    _reader.endArray();
+    return list;
+  }
+}
+
+final class _JsonCodableStreamingSingleValueDecoder
+    with _JsonPrimitiveDecoderMixin
+    implements SingleValueDecoder {
+  @override
+  final JsonTokenReader _reader;
+  final JsonCodableDecoder _rootDecoder;
+
+  _JsonCodableStreamingSingleValueDecoder(this._reader, this._rootDecoder);
+
+  @override
+  void _ensureStarted() {}
+
+  @override
+  bool isNull() => isNextNull();
+
+  @override
+  T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+
+  @override
+  T? decodeNullable<T>(DecoderCallback<T> decoder) =>
+      isNull() ? null : decode(decoder);
 }
 
 final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {

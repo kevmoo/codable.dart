@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'canada.dart';
 
@@ -68,6 +68,18 @@ CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
   seen.validate();
 
   return CanadaProperties(name: name);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CanadaProperties
+// =============================================================================
+List<CanadaProperties> _$CanadaPropertiesListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CanadaProperties>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CanadaPropertiesFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -199,6 +211,18 @@ CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
   seen.validate();
 
   return CanadaGeometry(type: type!, coordinates: coordinates);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CanadaGeometry
+// =============================================================================
+List<CanadaGeometry> _$CanadaGeometryListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CanadaGeometry>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CanadaGeometryFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -391,6 +415,18 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for CanadaFeature
+// =============================================================================
+List<CanadaFeature> _$CanadaFeatureListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CanadaFeature>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CanadaFeatureFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for CanadaFeature
 // =============================================================================
 void _$CanadaFeatureToEncoder(CanadaFeature instance, Encoder encoder) {
@@ -517,7 +553,7 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          features = keyed.decodeList(_$CanadaFeatureFromDecoder);
+          features = keyed.decodeValue(_$CanadaFeatureListFromDecoder);
         }
         break;
       default:
@@ -530,6 +566,20 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
   seen.validate();
 
   return CanadaFeatureCollection(type: type!, features: features);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CanadaFeatureCollection
+// =============================================================================
+List<CanadaFeatureCollection> _$CanadaFeatureCollectionListFromDecoder(
+  Decoder decoder,
+) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CanadaFeatureCollection>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CanadaFeatureCollectionFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

@@ -113,6 +113,31 @@ Point _$PointFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Point
+// =============================================================================
+List<Point> _$PointListFromDecoder(Decoder decoder) {
+  final flatDoubles = decoder.decodeUniformDoubleList(const [
+    ['x'],
+    ['y'],
+  ]);
+  if (flatDoubles != null) {
+    final count = flatDoubles.length ~/ 2;
+    return List<Point>.generate(
+      count,
+      (i) => Point(flatDoubles[i * 2 + 0], flatDoubles[i * 2 + 1]),
+      growable: true,
+    );
+  }
+
+  final unkeyed = decoder.unkeyed();
+  final list = <Point>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$PointFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Point
 // =============================================================================
 void _$PointToEncoder(Point instance, Encoder encoder) {
@@ -361,6 +386,18 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for UserAccount
+// =============================================================================
+List<UserAccount> _$UserAccountListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <UserAccount>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$UserAccountFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for UserAccount
 // =============================================================================
 void _$UserAccountToEncoder(UserAccount instance, Encoder encoder) {
@@ -504,6 +541,18 @@ Address _$AddressFromDecoder(Decoder decoder) {
   seen.validate();
 
   return Address(city: city!, street: street!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Address
+// =============================================================================
+List<Address> _$AddressListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Address>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$AddressFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -713,7 +762,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          branches = keyed.decodeList(_$AddressFromDecoder);
+          branches = keyed.decodeValue(_$AddressListFromDecoder);
         }
         break;
       case _$EnterpriseSchema.keyCategories:
@@ -754,6 +803,18 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
     categories: categories,
     headcountByDept: headcountByDept,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Enterprise
+// =============================================================================
+List<Enterprise> _$EnterpriseListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Enterprise>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$EnterpriseFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -906,6 +967,18 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
   seen.validate();
 
   return UserProfileCustom(id: id!, zip: zip!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for UserProfileCustom
+// =============================================================================
+List<UserProfileCustom> _$UserProfileCustomListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <UserProfileCustom>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$UserProfileCustomFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -1106,6 +1179,18 @@ Team _$TeamFromDecoder(Decoder decoder) {
     nullableTags: nullableTags,
     scores: scores,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for Team
+// =============================================================================
+List<Team> _$TeamListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Team>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$TeamFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -1414,6 +1499,20 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
     matrix: matrix,
     nestedFloats: nestedFloats,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for PrimitiveCollectionsModel
+// =============================================================================
+List<PrimitiveCollectionsModel> _$PrimitiveCollectionsModelListFromDecoder(
+  Decoder decoder,
+) {
+  final unkeyed = decoder.unkeyed();
+  final list = <PrimitiveCollectionsModel>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$PrimitiveCollectionsModelFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

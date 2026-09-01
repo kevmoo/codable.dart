@@ -28,6 +28,8 @@ final class DecoderGeneratorHelper {
     buffer.writeln();
     if (model.createDecoder) {
       _writeDecoder(buffer);
+      buffer.writeln();
+      _writeListDecoder(buffer);
     }
     return buffer.toString();
   }
@@ -571,7 +573,7 @@ final class DecoderGeneratorHelper {
       } else {
         buffer.writeln(
           '$indent${field.name} = '
-          'keyed.decodeList(_\$${nestedName}FromDecoder);',
+          'keyed.decodeValue(_\$${nestedName}ListFromDecoder);',
         );
       }
     } else if (elemType.isDartCoreString && isNullable) {
@@ -807,6 +809,65 @@ final class DecoderGeneratorHelper {
       }
     }
     buffer.writeln('  );');
+    buffer.writeln('}');
+  }
+
+  void _writeListDecoder(StringBuffer buffer) {
+    final listDecoderFuncName = '_\$${model.className}ListFromDecoder';
+    final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
+    final isUniformDouble = model.isUniformDoubleModel;
+
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln('// 2b. Universal List Deserializer for ${model.className}');
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln(
+      'List<${model.className}> $listDecoderFuncName(Decoder decoder) {',
+    );
+
+    if (isUniformDouble) {
+      final kCount = nonIgnoredFields.length;
+      buffer.writeln(
+        '  final flatDoubles = decoder.decodeUniformDoubleList(const [',
+      );
+      for (final field in nonIgnoredFields) {
+        final allAliases = [field.wireName, ...field.aliases];
+        final formatted = allAliases.map((a) => "'$a'").join(', ');
+        buffer.writeln('    [$formatted],');
+      }
+      buffer.writeln('  ]);');
+      buffer.writeln('  if (flatDoubles != null) {');
+      buffer.writeln('    final count = flatDoubles.length ~/ $kCount;');
+      buffer.writeln('    return List<${model.className}>.generate(');
+      buffer.writeln('      count,');
+      buffer.writeln('      (i) => ${model.className}(');
+      for (var k = 0; k < kCount; k++) {
+        final field = nonIgnoredFields[k];
+        final access = 'flatDoubles[i * $kCount + $k]';
+        if (field.isPositional) {
+          buffer.writeln('        $access,');
+        } else {
+          buffer.writeln('        ${field.name}: $access,');
+        }
+      }
+      buffer.writeln('      ),');
+      buffer.writeln('      growable: true,');
+      buffer.writeln('    );');
+      buffer.writeln('  }');
+      buffer.writeln();
+    }
+
+    buffer.writeln('  final unkeyed = decoder.unkeyed();');
+    buffer.writeln('  final list = <${model.className}>[];');
+    buffer.writeln('  while (unkeyed.hasNext()) {');
+    buffer.writeln(
+      '    list.add(unkeyed.decodeElement(_\$${model.className}FromDecoder));',
+    );
+    buffer.writeln('  }');
+    buffer.writeln('  return list;');
     buffer.writeln('}');
   }
 }

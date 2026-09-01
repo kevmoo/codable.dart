@@ -83,6 +83,18 @@ CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for CoordinatePair
+// =============================================================================
+List<CoordinatePair> _$CoordinatePairListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CoordinatePair>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CoordinatePairFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for CoordinatePair
 // =============================================================================
 void _$CoordinatePairToEncoder(CoordinatePair instance, Encoder encoder) {

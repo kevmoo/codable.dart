@@ -35,6 +35,11 @@ abstract interface class Decoder {
 
   /// Swift-ergonomic alias for [singleValue].
   SingleValueDecoder singleValueContainer();
+
+  /// Decodes a flat [Float64List] from a uniform array of numeric objects
+  /// using [propertyAliases] for each field, or `null` if the underlying
+  /// driver does not support vectorized/interop extraction.
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases);
 }
 
 /// Sequential streaming decoder matching keys in incoming stream order.

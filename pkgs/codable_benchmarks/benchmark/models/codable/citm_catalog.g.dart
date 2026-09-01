@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'citm_catalog.dart';
 
@@ -382,7 +382,7 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          performances = keyed.decodeList(_$CitmPerformanceFromDecoder);
+          performances = keyed.decodeValue(_$CitmPerformanceListFromDecoder);
         }
         break;
       case _$CitmCatalogSchema.keySeatCategoryNames:
@@ -497,6 +497,18 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
     topicSynced: topicSynced,
     venueNames: venueNames,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CitmCatalog
+// =============================================================================
+List<CitmCatalog> _$CitmCatalogListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmCatalog>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmCatalogFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -906,6 +918,18 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for CitmEvent
+// =============================================================================
+List<CitmEvent> _$CitmEventListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmEvent>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmEventFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for CitmEvent
 // =============================================================================
 void _$CitmEventToEncoder(CitmEvent instance, Encoder encoder) {
@@ -1193,14 +1217,14 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          prices = keyed.decodeList(_$CitmPriceFromDecoder);
+          prices = keyed.decodeValue(_$CitmPriceListFromDecoder);
         }
         break;
       case _$CitmPerformanceSchema.keySeatCategories:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          seatCategories = keyed.decodeList(_$CitmSeatCategoryFromDecoder);
+          seatCategories = keyed.decodeValue(_$CitmSeatCategoryListFromDecoder);
         }
         break;
       case _$CitmPerformanceSchema.keyStart:
@@ -1244,6 +1268,18 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
     start: start!,
     venueCode: venueCode!,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CitmPerformance
+// =============================================================================
+List<CitmPerformance> _$CitmPerformanceListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmPerformance>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmPerformanceFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -1491,6 +1527,18 @@ CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for CitmPrice
+// =============================================================================
+List<CitmPrice> _$CitmPriceListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmPrice>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmPriceFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for CitmPrice
 // =============================================================================
 void _$CitmPriceToEncoder(CitmPrice instance, Encoder encoder) {
@@ -1607,7 +1655,7 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          areas = keyed.decodeList(_$CitmAreaFromDecoder);
+          areas = keyed.decodeValue(_$CitmAreaListFromDecoder);
         }
         break;
       case _$CitmSeatCategorySchema.keySeatCategoryId:
@@ -1632,6 +1680,18 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
   seen.validate();
 
   return CitmSeatCategory(areas: areas, seatCategoryId: seatCategoryId!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CitmSeatCategory
+// =============================================================================
+List<CitmSeatCategory> _$CitmSeatCategoryListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmSeatCategory>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmSeatCategoryFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -1775,6 +1835,18 @@ CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
   seen.validate();
 
   return CitmArea(areaId: areaId!, blockIds: blockIds);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for CitmArea
+// =============================================================================
+List<CitmArea> _$CitmAreaListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <CitmArea>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$CitmAreaFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

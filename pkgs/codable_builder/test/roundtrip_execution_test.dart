@@ -85,6 +85,20 @@ void main() {
             .has((e) => e.message, 'message')
             .contains('Duplicate field "x"');
       });
+
+      test('deserializes list of points via Point.decodeList', () {
+        final bytes = Uint8List.fromList(
+          utf8.encode('[{"x": 1.0, "y": 2.0}, {"x": 3.5, "y": 4.5}]'),
+        );
+        final decoder = JsonCodableDecoder.fromBytes(bytes);
+        final points = Point.decodeList(decoder);
+
+        check(points.length).equals(2);
+        check(points[0].x).equals(1.0);
+        check(points[0].y).equals(2.0);
+        check(points[1].x).equals(3.5);
+        check(points[1].y).equals(4.5);
+      });
     });
 
     group('UserAccount (Enums, Aliases, Tuples, Renaming, Ignored Fields)', () {

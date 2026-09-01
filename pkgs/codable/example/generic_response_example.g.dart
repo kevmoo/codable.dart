@@ -148,6 +148,18 @@ Article _$ArticleFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for Article
+// =============================================================================
+List<Article> _$ArticleListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <Article>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$ArticleFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for Article
 // =============================================================================
 void _$ArticleToEncoder(Article instance, Encoder encoder) {
@@ -277,6 +289,18 @@ User _$UserFromDecoder(Decoder decoder) {
   seen.validate();
 
   return User(id: id!, email: email!);
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for User
+// =============================================================================
+List<User> _$UserListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <User>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$UserFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================

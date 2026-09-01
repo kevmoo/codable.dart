@@ -86,6 +86,10 @@ final class _TestDecoder implements Decoder {
 
   @override
   SingleValueDecoder singleValueContainer() => singleValue();
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      null;
 }
 
 final class _TestKeyedDecoder implements KeyedDecoder {
@@ -2608,6 +2612,66 @@ void main() {
           });
         }).throws<CodableException>();
       });
+
+      test('uniform double list decoding throws on missing required field', () {
+        const jsonStr = '[{"x": 1.0, "y": 2.0}]';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+        }).throws<CodableException>();
+      });
+
+      test('uniform double list decoding throws on explicit null field', () {
+        const jsonStr = '[{"x": 1.0, "y": 2.0, "z": null}]';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+        }).throws<CodableException>();
+      });
+
+      test(
+        'uniform double list decoding throws on non-numeric string field',
+        () {
+          const jsonStr = '[{"x": "not_a_number", "y": 2.0, "z": 3.0}]';
+          check(() {
+            TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+          }).throws<CodableException>();
+        },
+      );
+
+      test('Float64List decoding throws on non-numeric element', () {
+        const jsonStr = '{"coordinates": [1.0, "invalid", 3.0]}';
+        check(() {
+          TestJsonDriver.decodeString(jsonStr, (decoder) {
+            final mapped = decoder.mapped();
+            return mapped.decodeFloat64List('coordinates');
+          });
+        }).throws<CodableException>();
+      });
+
+      test('adaptive payload thresholding <= 2048 bytes fast-path parity', () {
+        final smallJson = utf8.encode('{"id": 42, "name": "Alice"}');
+        check(smallJson.length).isLessOrEqual(2048);
+        final decoder = JsonCodableDecoder.fromBytes(
+          Uint8List.fromList(smallJson),
+        );
+        final mapped = decoder.mapped();
+        check(mapped.readInt('id')).equals(42);
+        check(mapped.readString('name')).equals('Alice');
+      });
+
+      test(
+        'adaptive payload thresholding > 2048 bytes large payload parity',
+        () {
+          final padding = 'a' * 2100;
+          final largeJson = utf8.encode('{"id": 100, "data": "$padding"}');
+          check(largeJson.length).isGreaterThan(2048);
+          final decoder = JsonCodableDecoder.fromBytes(
+            Uint8List.fromList(largeJson),
+          );
+          final mapped = decoder.mapped();
+          check(mapped.readInt('id')).equals(100);
+          check(mapped.readString('data')).equals(padding);
+        },
+      );
     });
   });
 }

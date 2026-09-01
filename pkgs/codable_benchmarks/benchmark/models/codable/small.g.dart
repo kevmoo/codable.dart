@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars
+// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'small.dart';
 
@@ -219,6 +219,18 @@ SmallLocation _$SmallLocationFromDecoder(Decoder decoder) {
 }
 
 // =============================================================================
+// 2b. Universal List Deserializer for SmallLocation
+// =============================================================================
+List<SmallLocation> _$SmallLocationListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <SmallLocation>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$SmallLocationFromDecoder));
+  }
+  return list;
+}
+
+// =============================================================================
 // 3. Universal Serializer for SmallLocation
 // =============================================================================
 void _$SmallLocationToEncoder(SmallLocation instance, Encoder encoder) {
@@ -426,6 +438,18 @@ SmallMetadata _$SmallMetadataFromDecoder(Decoder decoder) {
     lastLogin: lastLogin!,
     location: location!,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for SmallMetadata
+// =============================================================================
+List<SmallMetadata> _$SmallMetadataListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <SmallMetadata>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$SmallMetadataFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
@@ -830,6 +854,18 @@ SmallDocument _$SmallDocumentFromDecoder(Decoder decoder) {
     metadata: metadata!,
     tags: tags!,
   );
+}
+
+// =============================================================================
+// 2b. Universal List Deserializer for SmallDocument
+// =============================================================================
+List<SmallDocument> _$SmallDocumentListFromDecoder(Decoder decoder) {
+  final unkeyed = decoder.unkeyed();
+  final list = <SmallDocument>[];
+  while (unkeyed.hasNext()) {
+    list.add(unkeyed.decodeElement(_$SmallDocumentFromDecoder));
+  }
+  return list;
 }
 
 // =============================================================================
