@@ -105,7 +105,7 @@ List<CanadaProperties> _$CanadaPropertiesListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaProperties>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CanadaPropertiesFromDecoder));
+    list.add(_$CanadaPropertiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -248,7 +248,7 @@ List<CanadaGeometry> _$CanadaGeometryListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaGeometry>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CanadaGeometryFromDecoder));
+    list.add(_$CanadaGeometryFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -411,7 +411,7 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          properties = keyed.decodeValue(_$CanadaPropertiesFromDecoder);
+          properties = _$CanadaPropertiesFromDecoder(keyed.nestedDecoder());
           seen |= _$CanadaFeatureSchema.properties;
         }
         break;
@@ -422,7 +422,7 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          geometry = keyed.decodeValue(_$CanadaGeometryFromDecoder);
+          geometry = _$CanadaGeometryFromDecoder(keyed.nestedDecoder());
           seen |= _$CanadaFeatureSchema.geometry;
         }
         break;
@@ -449,7 +449,7 @@ List<CanadaFeature> _$CanadaFeatureListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaFeature>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CanadaFeatureFromDecoder));
+    list.add(_$CanadaFeatureFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -581,7 +581,7 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          features = keyed.decodeValue(_$CanadaFeatureListFromDecoder);
+          features = _$CanadaFeatureListFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -605,7 +605,7 @@ List<CanadaFeatureCollection> _$CanadaFeatureCollectionListFromDecoder(
   final unkeyed = decoder.unkeyed();
   final list = <CanadaFeatureCollection>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CanadaFeatureCollectionFromDecoder));
+    list.add(_$CanadaFeatureCollectionFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

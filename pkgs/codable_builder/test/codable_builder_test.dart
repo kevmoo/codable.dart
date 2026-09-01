@@ -173,15 +173,17 @@ void main() {
       final output = runGeneratorFor('Enterprise');
 
       // Nested decoder call
-      check(output)
-          .contains('headquarter = keyed.decodeValue(_\$AddressFromDecoder);');
+      check(
+        output,
+      ).contains('headquarter = _\$AddressFromDecoder(keyed.nestedDecoder());');
       // List of nested codable
-      check(output)
-          .contains('branches = keyed.decodeValue(_\$AddressListFromDecoder);');
+      check(output).contains(
+        'branches = _\$AddressListFromDecoder(keyed.nestedDecoder());',
+      );
       // Set of string
       check(output).contains('categories = keyed.decodeStringList().toSet();');
       // Map of string to int
-      check(output).contains('headcountByDept = keyed.decodeValue((d) {');
+      check(output).contains('final k = keyed.nestedDecoder().keyed();');
       // Nested encoder call
       check(output).contains(
         'keyed.encodeValueKey(_\$EnterpriseSchema.staticKeyHeadquarter, instance.headquarter, _\$AddressToEncoder);',
@@ -206,7 +208,7 @@ void main() {
         check(output)
             .contains('UserRole.values.byName(d.singleValue().readString())');
         check(output).contains('nullableTags = keyed.decodeList<String?>');
-        check(output).contains('scores = keyed.decodeValue((d) {');
+        check(output).contains('final k = keyed.nestedDecoder().keyed();');
         check(output).contains(
           'keyed.encodeListKey(_\$TeamSchema.staticKeyRoles, instance.roles, (item, e) {',
         );

@@ -176,7 +176,7 @@ List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Coordinate>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CoordinateFromDecoder));
+    list.add(_$CoordinateFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

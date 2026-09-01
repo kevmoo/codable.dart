@@ -89,7 +89,7 @@ List<CoordinatePair> _$CoordinatePairListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CoordinatePair>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CoordinatePairFromDecoder));
+    list.add(_$CoordinatePairFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

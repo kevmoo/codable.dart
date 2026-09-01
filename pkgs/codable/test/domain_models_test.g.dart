@@ -176,7 +176,7 @@ List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Coordinate>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CoordinateFromDecoder));
+    list.add(_$CoordinateFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -411,7 +411,7 @@ List<UserProfile> _$UserProfileListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserProfile>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$UserProfileFromDecoder));
+    list.add(_$UserProfileFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -566,7 +566,7 @@ List<Car> _$CarListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Car>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CarFromDecoder));
+    list.add(_$CarFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -726,7 +726,7 @@ List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Bicycle>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$BicycleFromDecoder));
+    list.add(_$BicycleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -856,7 +856,7 @@ UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          profile = keyed.decodeValue(_$UserProfileFromDecoder);
+          profile = _$UserProfileFromDecoder(keyed.nestedDecoder());
           seen |= _$UserWithLocationSchema.profile;
         }
         break;
@@ -867,7 +867,7 @@ UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          location = keyed.decodeValue(_$CoordinateFromDecoder);
+          location = _$CoordinateFromDecoder(keyed.nestedDecoder());
           seen |= _$UserWithLocationSchema.location;
         }
         break;
@@ -890,7 +890,7 @@ List<UserWithLocation> _$UserWithLocationListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserWithLocation>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$UserWithLocationFromDecoder));
+    list.add(_$UserWithLocationFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

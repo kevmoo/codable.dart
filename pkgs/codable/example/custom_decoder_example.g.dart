@@ -103,7 +103,7 @@ List<DateTimeExample> _$DateTimeExampleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <DateTimeExample>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$DateTimeExampleFromDecoder));
+    list.add(_$DateTimeExampleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

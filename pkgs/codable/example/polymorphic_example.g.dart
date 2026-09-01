@@ -138,7 +138,7 @@ List<Car> _$CarListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Car>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CarFromDecoder));
+    list.add(_$CarFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -298,7 +298,7 @@ List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Bicycle>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$BicycleFromDecoder));
+    list.add(_$BicycleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

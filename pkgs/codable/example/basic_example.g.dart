@@ -264,7 +264,7 @@ Person _$PersonFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          orders = keyed.decodeValue(_$OrderListFromDecoder);
+          orders = _$OrderListFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -293,7 +293,7 @@ List<Person> _$PersonListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Person>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$PersonFromDecoder));
+    list.add(_$PersonFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -533,7 +533,7 @@ Order _$OrderFromDecoder(Decoder decoder) {
           keyed.readNull();
           item = null;
         } else {
-          item = keyed.decodeValue(_$ItemFromDecoder);
+          item = _$ItemFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$OrderSchema.keyPrepTimeMs:
@@ -570,7 +570,7 @@ List<Order> _$OrderListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Order>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$OrderFromDecoder));
+    list.add(_$OrderFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -736,7 +736,7 @@ List<Item> _$ItemListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Item>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$ItemFromDecoder));
+    list.add(_$ItemFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

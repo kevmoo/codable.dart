@@ -498,6 +498,9 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
+  Decoder nestedDecoder() => _rootDecoder;
+
+  @override
   T decodeValue<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
 
   @override
@@ -690,6 +693,15 @@ final class _JsonCodableStreamingMappedDecoder
       _map[key] == null ? null : readBool(key);
 
   @override
+  Decoder nestedDecoder(String key) {
+    final v = _map[key];
+    if (v == null) {
+      throw CodableException('Missing required key $key in mapped decoder');
+    }
+    return JsonCodableDecoder.fromString(jsonEncode(v));
+  }
+
+  @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) {
     final v = _map[key];
     if (v == null) {
@@ -769,6 +781,9 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     _reader.skipValue();
   }
+
+  @override
+  Decoder nestedDecoder() => _rootDecoder;
 
   @override
   T decodeElement<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
@@ -857,6 +872,9 @@ final class _JsonCodableStreamingSingleValueDecoder
 
   @override
   bool isNull() => isNextNull();
+
+  @override
+  Decoder nestedDecoder() => _rootDecoder;
 
   @override
   T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
@@ -992,6 +1010,12 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
     _activeValue = null;
     _activeKey = null;
     return v;
+  }
+
+  @override
+  Decoder nestedDecoder() {
+    final val = _consumeValue();
+    return JsonCodableDecoder._(val, null, userInfo: _rootDecoder.userInfo);
   }
 
   @override
@@ -1288,6 +1312,13 @@ final class _JsonCodableMappedDecoder
   }
 
   @override
+  Decoder nestedDecoder(String key) => JsonCodableDecoder._(
+    _map.getProperty<JSAny?>(key.toJS),
+    null,
+    userInfo: _rootDecoder.userInfo,
+  );
+
+  @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) => decoder(
     JsonCodableDecoder._(
       _map.getProperty<JSAny?>(key.toJS),
@@ -1445,6 +1476,13 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   @override
   void skipElement() {
     _currentIndex++;
+  }
+
+  @override
+  Decoder nestedDecoder() {
+    final value = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    _currentIndex++;
+    return JsonCodableDecoder._(value, null, userInfo: _rootDecoder.userInfo);
   }
 
   @override
@@ -1705,6 +1743,10 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
 
   @override
   bool isNull() => _val == null;
+
+  @override
+  Decoder nestedDecoder() =>
+      JsonCodableDecoder._(_val, null, userInfo: _rootDecoder.userInfo);
 
   @override
   T decode<T>(DecoderCallback<T> decoder) => decoder(

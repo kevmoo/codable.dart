@@ -244,6 +244,9 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  Decoder nestedDecoder() => _rootDecoder;
+
+  @override
   T decodeValue<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
 
   @override
@@ -436,6 +439,15 @@ final class _JsonCodableMappedDecoder
       _map[key] == null ? null : readBool(key);
 
   @override
+  Decoder nestedDecoder(String key) {
+    final v = _map[key];
+    if (v == null) {
+      throw CodableException('Missing required key $key in mapped decoder');
+    }
+    return JsonCodableDecoder.fromString(jsonEncode(v));
+  }
+
+  @override
   T decodeKey<T>(String key, DecoderCallback<T> decoder) {
     final v = _map[key];
     if (v == null) {
@@ -515,6 +527,9 @@ final class _JsonCodableUnkeyedDecoder
     _ensureStarted();
     _reader.skipValue();
   }
+
+  @override
+  Decoder nestedDecoder() => _rootDecoder;
 
   @override
   T decodeElement<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
@@ -603,6 +618,9 @@ final class _JsonCodableSingleValueDecoder
 
   @override
   bool isNull() => isNextNull();
+
+  @override
+  Decoder nestedDecoder() => _rootDecoder;
 
   @override
   T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);

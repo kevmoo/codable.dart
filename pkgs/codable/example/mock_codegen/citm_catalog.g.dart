@@ -322,157 +322,159 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          areaNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            areaNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyAudienceSubCategoryNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          audienceSubCategoryNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            audienceSubCategoryNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyBlockNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          blockNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            blockNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyEvents:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          events = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, CitmEvent>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
-              m[key] = k.decodeValue(_$CitmEventFromDecoder);
+              m[key] = _$CitmEventFromDecoder(k.nestedDecoder());
             }
-            return m;
-          });
+            events = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyPerformances:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          performances = keyed.decodeValue(_$CitmPerformanceListFromDecoder);
+          performances = _$CitmPerformanceListFromDecoder(
+            keyed.nestedDecoder(),
+          );
         }
         break;
       case _$CitmCatalogSchema.keySeatCategoryNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          seatCategoryNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            seatCategoryNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keySubTopicNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          subTopicNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            subTopicNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keySubjectNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          subjectNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            subjectNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyTopicNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          topicNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            topicNames = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyTopicSynced:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          topicSynced = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, bool>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readBool();
             }
-            return m;
-          });
+            topicSynced = m;
+          }
         }
         break;
       case _$CitmCatalogSchema.keyVenueNames:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          venueNames = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, String>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readString();
             }
-            return m;
-          });
+            venueNames = m;
+          }
         }
         break;
       default:
@@ -506,7 +508,7 @@ List<CitmCatalog> _$CitmCatalogListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmCatalog>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmCatalogFromDecoder));
+    list.add(_$CitmCatalogFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -924,7 +926,7 @@ List<CitmEvent> _$CitmEventListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmEvent>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmEventFromDecoder));
+    list.add(_$CitmEventFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1217,14 +1219,16 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          prices = keyed.decodeValue(_$CitmPriceListFromDecoder);
+          prices = _$CitmPriceListFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$CitmPerformanceSchema.keySeatCategories:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          seatCategories = keyed.decodeValue(_$CitmSeatCategoryListFromDecoder);
+          seatCategories = _$CitmSeatCategoryListFromDecoder(
+            keyed.nestedDecoder(),
+          );
         }
         break;
       case _$CitmPerformanceSchema.keyStart:
@@ -1277,7 +1281,7 @@ List<CitmPerformance> _$CitmPerformanceListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmPerformance>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmPerformanceFromDecoder));
+    list.add(_$CitmPerformanceFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1533,7 +1537,7 @@ List<CitmPrice> _$CitmPriceListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmPrice>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmPriceFromDecoder));
+    list.add(_$CitmPriceFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1655,7 +1659,7 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          areas = keyed.decodeValue(_$CitmAreaListFromDecoder);
+          areas = _$CitmAreaListFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$CitmSeatCategorySchema.keySeatCategoryId:
@@ -1689,7 +1693,7 @@ List<CitmSeatCategory> _$CitmSeatCategoryListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmSeatCategory>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmSeatCategoryFromDecoder));
+    list.add(_$CitmSeatCategoryFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1844,7 +1848,7 @@ List<CitmArea> _$CitmAreaListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CitmArea>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$CitmAreaFromDecoder));
+    list.add(_$CitmAreaFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

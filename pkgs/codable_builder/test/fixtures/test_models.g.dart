@@ -132,7 +132,7 @@ List<Point> _$PointListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Point>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$PointFromDecoder));
+    list.add(_$PointFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -392,7 +392,7 @@ List<UserAccount> _$UserAccountListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserAccount>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$UserAccountFromDecoder));
+    list.add(_$UserAccountFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -550,7 +550,7 @@ List<Address> _$AddressListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Address>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$AddressFromDecoder));
+    list.add(_$AddressFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -754,7 +754,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          headquarter = keyed.decodeValue(_$AddressFromDecoder);
+          headquarter = _$AddressFromDecoder(keyed.nestedDecoder());
           seen |= _$EnterpriseSchema.headquarter;
         }
         break;
@@ -762,7 +762,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          branches = keyed.decodeValue(_$AddressListFromDecoder);
+          branches = _$AddressListFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$EnterpriseSchema.keyCategories:
@@ -776,15 +776,15 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          headcountByDept = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, int>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               m[key] = k.readInt();
             }
-            return m;
-          });
+            headcountByDept = m;
+          }
         }
         break;
       default:
@@ -812,7 +812,7 @@ List<Enterprise> _$EnterpriseListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Enterprise>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$EnterpriseFromDecoder));
+    list.add(_$EnterpriseFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -976,7 +976,7 @@ List<UserProfileCustom> _$UserProfileCustomListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserProfileCustom>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$UserProfileCustomFromDecoder));
+    list.add(_$UserProfileCustomFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1148,9 +1148,9 @@ Team _$TeamFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          scores = keyed.decodeValue((d) {
+          {
+            final k = keyed.nestedDecoder().keyed();
             final m = <String, int?>{};
-            final k = d.keyed();
             while (k.hasNextKey()) {
               final key = k.nextKey();
               if (k.isNextNull()) {
@@ -1160,8 +1160,8 @@ Team _$TeamFromDecoder(Decoder decoder) {
                 m[key] = k.readInt();
               }
             }
-            return m;
-          });
+            scores = m;
+          }
         }
         break;
       default:
@@ -1188,7 +1188,7 @@ List<Team> _$TeamListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Team>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TeamFromDecoder));
+    list.add(_$TeamFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -1458,7 +1458,7 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
           keyed.readNull();
         } else {
           {
-            final u = keyed.decodeValue((d) => d.unkeyed());
+            final u = keyed.nestedDecoder().unkeyed();
             final l = <List<double>>[];
             while (u.hasNext()) {
               l.add(u.decodeDoubleList());
@@ -1472,7 +1472,7 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
           keyed.readNull();
         } else {
           {
-            final u = keyed.decodeValue((d) => d.unkeyed());
+            final u = keyed.nestedDecoder().unkeyed();
             final l = <Float64List>[];
             while (u.hasNext()) {
               l.add(u.decodeFloat64List());
@@ -1510,7 +1510,7 @@ List<PrimitiveCollectionsModel> _$PrimitiveCollectionsModelListFromDecoder(
   final unkeyed = decoder.unkeyed();
   final list = <PrimitiveCollectionsModel>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$PrimitiveCollectionsModelFromDecoder));
+    list.add(_$PrimitiveCollectionsModelFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

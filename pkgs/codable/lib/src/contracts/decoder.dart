@@ -111,6 +111,10 @@ abstract interface class KeyedDecoder {
   /// Reads a nullable boolean value.
   bool? readNullableBool();
 
+  /// Returns a child [Decoder] positioned at the current field value for
+  /// direct inlined decoding of nested models without closure allocation.
+  Decoder nestedDecoder();
+
   /// Decodes a nested value using [decoder].
   T decodeValue<T>(DecoderCallback<T> decoder);
 
@@ -201,6 +205,14 @@ abstract interface class MappedDecoder {
   /// Reads a nullable boolean value by [key].
   bool? readNullableBoolKey(StaticKey key);
 
+  /// Returns a child [Decoder] positioned at [key] for direct inlined decoding
+  /// of nested models without closure allocation.
+  Decoder nestedDecoder(String key);
+
+  /// Returns a child [Decoder] positioned at [key] for direct inlined decoding
+  /// of nested models without closure allocation.
+  Decoder nestedStaticKeyDecoder(StaticKey key);
+
   /// Decodes a value associated with [key] using [decoder].
   T decodeKey<T>(String key, DecoderCallback<T> decoder);
 
@@ -285,6 +297,9 @@ mixin MappedDecoderBase implements MappedDecoder {
   bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
 
   @override
+  Decoder nestedStaticKeyDecoder(StaticKey key) => nestedDecoder(key.name);
+
+  @override
   T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
       decodeKey(key.name, decoder);
 
@@ -359,6 +374,10 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable boolean element.
   bool? readNullableBool();
 
+  /// Returns a child [Decoder] positioned at the current array element for
+  /// direct inlined decoding of nested models without closure allocation.
+  Decoder nestedDecoder();
+
   /// Decodes an element using [decoder].
   T decodeElement<T>(DecoderCallback<T> decoder);
 
@@ -420,6 +439,10 @@ abstract interface class SingleValueDecoder {
 
   /// Reads a nullable boolean value.
   bool? readNullableBool();
+
+  /// Returns a child [Decoder] for direct inlined decoding of nested models
+  /// without closure allocation.
+  Decoder nestedDecoder();
 
   /// Decodes a single value using [decoder].
   T decode<T>(DecoderCallback<T> decoder);

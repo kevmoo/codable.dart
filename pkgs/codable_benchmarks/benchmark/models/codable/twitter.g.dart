@@ -131,7 +131,7 @@ List<TwitterMetadata> _$TwitterMetadataListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterMetadata>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterMetadataFromDecoder));
+    list.add(_$TwitterMetadataFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -391,7 +391,7 @@ List<TwitterUserMention> _$TwitterUserMentionListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUserMention>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterUserMentionFromDecoder));
+    list.add(_$TwitterUserMentionFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -639,7 +639,7 @@ List<TwitterUrl> _$TwitterUrlListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUrl>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterUrlFromDecoder));
+    list.add(_$TwitterUrlFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -714,7 +714,7 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          urls = keyed.decodeValue(_$TwitterUrlListFromDecoder);
+          urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -738,7 +738,7 @@ List<TwitterEntitiesUrls> _$TwitterEntitiesUrlsListFromDecoder(
   final unkeyed = decoder.unkeyed();
   final list = <TwitterEntitiesUrls>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterEntitiesUrlsFromDecoder));
+    list.add(_$TwitterEntitiesUrlsFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -836,7 +836,7 @@ TwitterUserEntities _$TwitterUserEntitiesFromDecoder(Decoder decoder) {
           keyed.readNull();
           url = null;
         } else {
-          url = keyed.decodeValue(_$TwitterEntitiesUrlsFromDecoder);
+          url = _$TwitterEntitiesUrlsFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterUserEntitiesSchema.keyDescription:
@@ -844,7 +844,7 @@ TwitterUserEntities _$TwitterUserEntitiesFromDecoder(Decoder decoder) {
           keyed.readNull();
           description = null;
         } else {
-          description = keyed.decodeValue(_$TwitterEntitiesUrlsFromDecoder);
+          description = _$TwitterEntitiesUrlsFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -868,7 +868,7 @@ List<TwitterUserEntities> _$TwitterUserEntitiesListFromDecoder(
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUserEntities>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterUserEntitiesFromDecoder));
+    list.add(_$TwitterUserEntitiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -974,14 +974,16 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          urls = keyed.decodeValue(_$TwitterUrlListFromDecoder);
+          urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterEntitiesSchema.keyUserMentions:
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          userMentions = keyed.decodeValue(_$TwitterUserMentionListFromDecoder);
+          userMentions = _$TwitterUserMentionListFromDecoder(
+            keyed.nestedDecoder(),
+          );
         }
         break;
       default:
@@ -1003,7 +1005,7 @@ List<TwitterEntities> _$TwitterEntitiesListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterEntities>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterEntitiesFromDecoder));
+    list.add(_$TwitterEntitiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -2280,7 +2282,7 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
           keyed.readNull();
           entities = null;
         } else {
-          entities = keyed.decodeValue(_$TwitterUserEntitiesFromDecoder);
+          entities = _$TwitterUserEntitiesFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterUserSchema.keyProtected:
@@ -2574,7 +2576,7 @@ List<TwitterUser> _$TwitterUserListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUser>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterUserFromDecoder));
+    list.add(_$TwitterUserFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -3323,7 +3325,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
           keyed.readNull();
           metadata = null;
         } else {
-          metadata = keyed.decodeValue(_$TwitterMetadataFromDecoder);
+          metadata = _$TwitterMetadataFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterStatusSchema.keyCreatedAt:
@@ -3433,7 +3435,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
           keyed.readNull();
           user = null;
         } else {
-          user = keyed.decodeValue(_$TwitterUserFromDecoder);
+          user = _$TwitterUserFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterStatusSchema.keyRetweetCount:
@@ -3455,7 +3457,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
           keyed.readNull();
           entities = null;
         } else {
-          entities = keyed.decodeValue(_$TwitterEntitiesFromDecoder);
+          entities = _$TwitterEntitiesFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterStatusSchema.keyFavorited:
@@ -3492,7 +3494,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
           keyed.readNull();
           retweetedStatus = null;
         } else {
-          retweetedStatus = keyed.decodeValue(_$TwitterStatusFromDecoder);
+          retweetedStatus = _$TwitterStatusFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -3536,7 +3538,7 @@ List<TwitterStatus> _$TwitterStatusListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterStatus>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterStatusFromDecoder));
+    list.add(_$TwitterStatusFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -4028,7 +4030,7 @@ List<TwitterSearchMetadata> _$TwitterSearchMetadataListFromDecoder(
   final unkeyed = decoder.unkeyed();
   final list = <TwitterSearchMetadata>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterSearchMetadataFromDecoder));
+    list.add(_$TwitterSearchMetadataFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -4193,7 +4195,7 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          statuses = keyed.decodeValue(_$TwitterStatusListFromDecoder);
+          statuses = _$TwitterStatusListFromDecoder(keyed.nestedDecoder());
         }
         break;
       case _$TwitterResponseSchema.keySearchMetadata:
@@ -4204,8 +4206,8 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
         if (keyed.isNextNull()) {
           keyed.readNull();
         } else {
-          searchMetadata = keyed.decodeValue(
-            _$TwitterSearchMetadataFromDecoder,
+          searchMetadata = _$TwitterSearchMetadataFromDecoder(
+            keyed.nestedDecoder(),
           );
           seen |= _$TwitterResponseSchema.searchMetadata;
         }
@@ -4229,7 +4231,7 @@ List<TwitterResponse> _$TwitterResponseListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterResponse>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$TwitterResponseFromDecoder));
+    list.add(_$TwitterResponseFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }

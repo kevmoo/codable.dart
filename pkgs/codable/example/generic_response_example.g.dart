@@ -132,7 +132,7 @@ Article _$ArticleFromDecoder(Decoder decoder) {
           keyed.readNull();
           author = null;
         } else {
-          author = keyed.decodeValue(_$UserFromDecoder);
+          author = _$UserFromDecoder(keyed.nestedDecoder());
         }
         break;
       default:
@@ -154,7 +154,7 @@ List<Article> _$ArticleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Article>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$ArticleFromDecoder));
+    list.add(_$ArticleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
@@ -298,7 +298,7 @@ List<User> _$UserListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <User>[];
   while (unkeyed.hasNext()) {
-    list.add(unkeyed.decodeElement(_$UserFromDecoder));
+    list.add(_$UserFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
 }
