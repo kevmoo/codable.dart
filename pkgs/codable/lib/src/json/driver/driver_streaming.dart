@@ -1,4 +1,6 @@
-// ignore_for_file: avoid_dynamic_calls
+// Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -23,15 +25,7 @@ final class JsonCodableDecoder implements Decoder {
   JsonTokenReader get reader => _reader;
 
   @override
-  Uint8List? get payload {
-    if (_bytes != null) return _bytes;
-    final dynamic r = _reader;
-    try {
-      return r.bytes as Uint8List?;
-    } catch (_) {
-      return null;
-    }
-  }
+  Uint8List? get payload => _bytes ?? _reader.bytes;
 
   JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}})
     : _bytes = null;
@@ -143,8 +137,7 @@ mixin _JsonPrimitiveDecoderMixin {
 
   (int start, int end) readStringSpan() {
     _ensureStarted();
-    final dynamic r = _reader;
-    return r.readStringSpan() as (int, int);
+    return _reader.readStringSpan();
   }
 
   (int start, int end)? readNullableStringSpan() {

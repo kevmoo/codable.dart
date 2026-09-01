@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: avoid_dynamic_calls
-
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -315,18 +313,7 @@ final class JsonCodableDecoder implements Decoder {
   KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
 
   @override
-  Uint8List? get payload {
-    if (_bytes != null) return _bytes;
-    if (_reader != null) {
-      final dynamic r = _reader;
-      try {
-        return r.bytes as Uint8List?;
-      } catch (_) {
-        return null;
-      }
-    }
-    return null;
-  }
+  Uint8List? get payload => _bytes ?? _reader?.bytes;
 
   @override
   SingleValueDecoder singleValueContainer() => singleValue();
@@ -404,8 +391,7 @@ mixin _JsonPrimitiveDecoderMixin {
 
   (int start, int end) readStringSpan() {
     _ensureStarted();
-    final dynamic r = _reader;
-    return r.readStringSpan() as (int, int);
+    return _reader.readStringSpan();
   }
 
   (int start, int end)? readNullableStringSpan() {
