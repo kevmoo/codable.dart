@@ -3,34 +3,28 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable_json.dart';
+import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
+import 'package:codable_benchmarks/src/models/codable/canada.dart' as c_can;
+import 'package:codable_benchmarks/src/models/codable/citm_catalog.dart'
+    as c_citm;
+import 'package:codable_benchmarks/src/models/codable/coordinate.dart'
+    as c_coord;
+import 'package:codable_benchmarks/src/models/codable/small.dart' as c_small;
+import 'package:codable_benchmarks/src/models/codable/twitter.dart' as c_twit;
+import 'package:codable_benchmarks/src/models/json_serializable/canada.dart'
+    as js_can;
+import 'package:codable_benchmarks/src/models/json_serializable/citm_catalog.dart'
+    as js_citm;
+import 'package:codable_benchmarks/src/models/json_serializable/coordinate.dart'
+    as js_coord;
+import 'package:codable_benchmarks/src/models/json_serializable/small.dart'
+    as js_small;
+import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
+    as js_twit;
 import 'package:test/test.dart';
-
-import '../benchmark/models/codable/canada.dart' as c_can;
-import '../benchmark/models/codable/citm_catalog.dart' as c_citm;
-import '../benchmark/models/codable/coordinate.dart' as c_coord;
-import '../benchmark/models/codable/small.dart' as c_small;
-import '../benchmark/models/codable/twitter.dart' as c_twit;
-
-import '../benchmark/models/json_serializable/canada.dart' as js_can;
-import '../benchmark/models/json_serializable/citm_catalog.dart' as js_citm;
-import '../benchmark/models/json_serializable/coordinate.dart' as js_coord;
-import '../benchmark/models/json_serializable/small.dart' as js_small;
-import '../benchmark/models/json_serializable/twitter.dart' as js_twit;
-
-File _findDataFile(String relativePath) {
-  final candidate1 = File(relativePath);
-  if (candidate1.existsSync()) return candidate1;
-  final candidate2 = File('pkgs/codable_benchmarks/$relativePath');
-  if (candidate2.existsSync()) return candidate2;
-  final scriptDir = File.fromUri(Platform.script).parent;
-  final candidate3 = File('${scriptDir.path}/../$relativePath');
-  if (candidate3.existsSync()) return candidate3;
-  throw StateError('Data file not found: "$relativePath"');
-}
 
 void main() {
   group('Model Parity Suite (Codable vs json_serializable)', () {
@@ -51,8 +45,7 @@ void main() {
     });
 
     test('canada.json parity', () {
-      final file = _findDataFile('benchmark/data/canada.json');
-      final bytes = file.readAsBytesSync();
+      final bytes = getDatasetBytes('canada');
       final stringSource = utf8.decode(bytes);
 
       final jsMap = jsonDecode(stringSource) as Map<String, dynamic>;
@@ -68,8 +61,7 @@ void main() {
     });
 
     test('citm_catalog.json parity', () {
-      final file = _findDataFile('benchmark/data/citm_catalog.json');
-      final bytes = file.readAsBytesSync();
+      final bytes = getDatasetBytes('citm_catalog');
       final stringSource = utf8.decode(bytes);
 
       final jsMap = jsonDecode(stringSource) as Map<String, dynamic>;
@@ -85,8 +77,7 @@ void main() {
     });
 
     test('small.json parity', () {
-      final file = _findDataFile('benchmark/data/small.json');
-      final bytes = file.readAsBytesSync();
+      final bytes = getDatasetBytes('small');
       final stringSource = utf8.decode(bytes);
 
       final jsMap = jsonDecode(stringSource) as Map<String, dynamic>;
@@ -102,8 +93,7 @@ void main() {
     });
 
     test('twitter.json parity', () {
-      final file = _findDataFile('benchmark/data/twitter.json');
-      final bytes = file.readAsBytesSync();
+      final bytes = getDatasetBytes('twitter');
       final stringSource = utf8.decode(bytes);
 
       final jsMap = jsonDecode(stringSource) as Map<String, dynamic>;
