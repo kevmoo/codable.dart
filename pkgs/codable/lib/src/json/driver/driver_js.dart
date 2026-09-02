@@ -14,6 +14,8 @@ import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 
+const bool _isWasm = bool.fromEnvironment('dart.tool.dart2wasm');
+
 @JS('JSON.parse')
 external JSAny? _jsonParse(JSString text);
 
@@ -238,7 +240,7 @@ final class JsonCodableDecoder implements Decoder {
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    if (bytes.length <= 2048) {
+    if (_isWasm || bytes.length <= 2048) {
       return JsonCodableDecoder.fromReader(
         JsonTokenReader.fromBytes(bytes),
         userInfo: userInfo,
@@ -253,6 +255,10 @@ final class JsonCodableDecoder implements Decoder {
     String text, {
     Map<Object, Object?> userInfo = const {},
   }) {
+    if (_isWasm) {
+      final bytes = Uint8List.fromList(utf8.encode(text));
+      return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
+    }
     final decoded = _jsonParse(text.toJS);
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }

@@ -2,4 +2,4 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-export 'driver_streaming.dart' if (dart.library.js) 'driver_js.dart';
+export 'driver_streaming.dart' if (dart.library.js_interop) 'driver_js.dart';
