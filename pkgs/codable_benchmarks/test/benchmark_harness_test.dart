@@ -38,6 +38,18 @@ void main() {
           );
         });
 
+        test('$b runs codable_reader implementation', () {
+          expect(
+            () => runBenchmark(
+              b,
+              iterations: 1,
+              impl: 'codable_reader',
+              warmupIterations: 0,
+            ),
+            returnsNormally,
+          );
+        });
+
         test('$b runs json_serializable implementation', () {
           expect(
             () => runBenchmark(

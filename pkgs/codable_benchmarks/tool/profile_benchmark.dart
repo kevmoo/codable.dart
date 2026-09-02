@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,8 +49,18 @@ void main(List<String> arguments) async {
     ..addOption(
       'impl',
       defaultsTo: 'codable',
-      allowed: ['codable', 'json_serializable'],
-      help: 'Implementation candidate to profile.',
+      allowed: ['codable', 'json_serializable', 'codable_reader'],
+      help:
+          'Implementation candidate to profile (codable, json_serializable, '
+          'codable_reader).',
+    )
+    ..addFlag(
+      'force-reader',
+      defaultsTo: false,
+      negatable: false,
+      help:
+          'Force using JsonCodableDecoder.fromReader (pure Wasm token '
+          'streaming).',
     )
     ..addOption(
       'iterations',
@@ -133,7 +144,8 @@ void main(List<String> arguments) async {
     return;
   }
 
-  final impl = results['impl'] as String;
+  final rawImpl = results['impl'] as String;
+  final impl = (results['force-reader'] as bool) ? 'codable_reader' : rawImpl;
   final iterationsStr = results['iterations'] as String?;
   final iterations = iterationsStr != null
       ? int.tryParse(iterationsStr)
@@ -262,6 +274,8 @@ void main(List<String> arguments) async {
 
   // Step 4: Launch Chrome & CDP Controller
   final controller = ChromeController();
+  StreamSubscription<ProcessSignal>? sigintSub;
+  StreamSubscription<ProcessSignal>? sigtermSub;
   if (!Platform.isWindows) {
     void handleSignal(ProcessSignal signal) async {
       try {
@@ -275,8 +289,8 @@ void main(List<String> arguments) async {
       }
     }
 
-    ProcessSignal.sigint.watch().listen(handleSignal);
-    ProcessSignal.sigterm.watch().listen(handleSignal);
+    sigintSub = ProcessSignal.sigint.watch().listen(handleSignal);
+    sigtermSub = ProcessSignal.sigterm.watch().listen(handleSignal);
   }
 
   final queryArgs = [
@@ -399,7 +413,10 @@ void main(List<String> arguments) async {
     stderr.writeln('\n❌ Profiler error: $e');
     exitCode = 1;
   } finally {
+    await sigintSub?.cancel();
+    await sigtermSub?.cancel();
     await controller.stop();
     await server.stop();
   }
+  exit(exitCode);
 }
