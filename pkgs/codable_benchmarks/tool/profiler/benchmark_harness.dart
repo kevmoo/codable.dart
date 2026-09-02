@@ -92,70 +92,72 @@ int defaultIterationsFor(String benchmark) {
   return 500;
 }
 
+JsonCodableDecoder _createDecoder(Uint8List bytes, String impl) {
+  if (impl == 'codable_reader' || impl == 'reader') {
+    return JsonCodableDecoder.fromReader(JsonTokenReader.fromBytes(bytes));
+  }
+  return JsonCodableDecoder.fromBytes(bytes);
+}
+
 void Function() resolveBenchmarkAction(
   String benchmark, {
   String impl = 'codable',
 }) {
-  final isCodable = impl.toLowerCase() != 'json_serializable';
+  final isJsonSerializable = impl.toLowerCase() == 'json_serializable';
+  final isCodable = !isJsonSerializable;
   final normalized = benchmark.toLowerCase().replaceAll('-', '_');
 
   return switch (normalized) {
     'twitter_decode' || 'twitter' =>
-      isCodable
+      isJsonSerializable
           ? () {
-              final decoder = JsonCodableDecoder.fromBytes(twitterBytes);
-              final model = codable_twitter.TwitterResponse.decode(decoder);
-              Blackhole.consume(model);
-            }
-          : () {
               final dynamic jsonAst = utf8JsonDecoder.convert(twitterBytes);
               final model = js_twitter.TwitterResponse.fromJson(
                 jsonAst as Map<String, dynamic>,
               );
               Blackhole.consume(model);
+            }
+          : () {
+              final decoder = _createDecoder(twitterBytes, impl);
+              final model = codable_twitter.TwitterResponse.decode(decoder);
+              Blackhole.consume(model);
             },
 
     'citm_catalog_decode' || 'citm_catalog' || 'citm_decode' || 'citm' =>
-      isCodable
+      isJsonSerializable
           ? () {
-              final decoder = JsonCodableDecoder.fromBytes(citmBytes);
-              final model = codable_citm.CitmCatalog.decode(decoder);
-              Blackhole.consume(model);
-            }
-          : () {
               final dynamic jsonAst = utf8JsonDecoder.convert(citmBytes);
               final model = js_citm.CitmCatalog.fromJson(
                 jsonAst as Map<String, dynamic>,
               );
               Blackhole.consume(model);
+            }
+          : () {
+              final decoder = _createDecoder(citmBytes, impl);
+              final model = codable_citm.CitmCatalog.decode(decoder);
+              Blackhole.consume(model);
             },
 
     'canada_decode' || 'canada' =>
-      isCodable
+      isJsonSerializable
           ? () {
-              final decoder = JsonCodableDecoder.fromBytes(canadaBytes);
-              final model = codable_canada.CanadaFeatureCollection.decode(
-                decoder,
-              );
-              Blackhole.consume(model);
-            }
-          : () {
               final dynamic jsonAst = utf8JsonDecoder.convert(canadaBytes);
               final model = js_canada.CanadaFeatureCollection.fromJson(
                 jsonAst as Map<String, dynamic>,
               );
               Blackhole.consume(model);
+            }
+          : () {
+              final decoder = _createDecoder(canadaBytes, impl);
+              final model = codable_canada.CanadaFeatureCollection.decode(
+                decoder,
+              );
+              Blackhole.consume(model);
             },
 
     'coordinates_decode' || 'coordinates' || 'coord_decode' || 'coord' =>
-      isCodable
+      isJsonSerializable
           ? () {
-              final list = codable_coord.Coordinate.decodeList(
-                JsonCodableDecoder.fromBytes(coordinatesBytes),
-              );
-              Blackhole.consume(list);
-            }
-          : () {
               final dynamic jsonAst = utf8JsonDecoder.convert(coordinatesBytes);
               final list = (jsonAst as List<dynamic>)
                   .map(
@@ -164,20 +166,26 @@ void Function() resolveBenchmarkAction(
                   )
                   .toList();
               Blackhole.consume(list);
+            }
+          : () {
+              final list = codable_coord.Coordinate.decodeList(
+                _createDecoder(coordinatesBytes, impl),
+              );
+              Blackhole.consume(list);
             },
 
     'small_decode' || 'small' =>
-      isCodable
+      isJsonSerializable
           ? () {
-              final decoder = JsonCodableDecoder.fromBytes(smallBytes);
-              final model = codable_small.SmallDocument.decode(decoder);
-              Blackhole.consume(model);
-            }
-          : () {
               final dynamic jsonAst = utf8JsonDecoder.convert(smallBytes);
               final model = js_small.SmallDocument.fromJson(
                 jsonAst as Map<String, dynamic>,
               );
+              Blackhole.consume(model);
+            }
+          : () {
+              final decoder = _createDecoder(smallBytes, impl);
+              final model = codable_small.SmallDocument.decode(decoder);
               Blackhole.consume(model);
             },
 
