@@ -240,7 +240,7 @@ final class JsonCodableDecoder implements Decoder {
     Uint8List bytes, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    if (_isWasm || bytes.length <= 2048) {
+    if ((_isWasm && userInfo[#forceJsDom] != true) || bytes.length <= 2048) {
       return JsonCodableDecoder.fromReader(
         JsonTokenReader.fromBytes(bytes),
         userInfo: userInfo,
