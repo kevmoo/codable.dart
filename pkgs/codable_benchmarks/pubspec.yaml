@@ -12,7 +12,7 @@ dependencies:
   bench_press:
     git:
       url: https://github.com/kevmoo/bench_press.git
-      ref: 2c9e8315673d72c2c9a9c4e6ac0de772f8d53a7e
+      ref: d6f14393fcb18724cf182e68d1538ae2787da332
   codable: ^0.1.0-dev
   json_annotation: ^4.9.0
 
