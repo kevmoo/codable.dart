@@ -263,11 +263,20 @@ void main(List<String> arguments) async {
   // Step 4: Launch Chrome & CDP Controller
   final controller = ChromeController();
   if (!Platform.isWindows) {
-    ProcessSignal.sigint.watch().listen((_) async {
-      await controller.stop();
-      await server.stop();
-      exit(130);
-    });
+    void handleSignal(ProcessSignal signal) async {
+      try {
+        stderr.writeln('\nReceived $signal, aborting profiler...');
+        await controller.stop();
+        await server.stop();
+      } catch (_) {
+        // Ignore cleanup errors on abort
+      } finally {
+        exit(signal == ProcessSignal.sigint ? 130 : 143);
+      }
+    }
+
+    ProcessSignal.sigint.watch().listen(handleSignal);
+    ProcessSignal.sigterm.watch().listen(handleSignal);
   }
 
   final queryArgs = [

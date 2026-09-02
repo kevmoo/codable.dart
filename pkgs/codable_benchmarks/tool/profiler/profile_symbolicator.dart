@@ -100,9 +100,9 @@ Future<Map<String, dynamic>> symbolicateProfile({
 
         // Wasm source maps often don't have an entry for the prologue.
         // If spanFor returns null (meaning we are before the first entry),
-        // scan forward up to 100 bytes to snap to the first mapped instruction.
+        // scan forward up to 512 bytes to snap to the first mapped instruction.
         if (span == null) {
-          for (var offset = column; offset < column + 100; offset++) {
+          for (var offset = column; offset < column + 512; offset++) {
             span = mapping.spanFor(targetLine, offset);
             if (span != null) break;
           }

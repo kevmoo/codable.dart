@@ -62,11 +62,30 @@ class ChromeController {
     return 'google-chrome';
   }
 
+  Future<void> _cleanupStaleTempDirs() async {
+    try {
+      final tempRoot = Directory.systemTemp;
+      final now = DateTime.now();
+      await for (final entity in tempRoot.list()) {
+        if (entity is Directory &&
+            p.basename(entity.path).startsWith('chrome_profiler_')) {
+          final stat = await entity.stat();
+          if (now.difference(stat.modified) > const Duration(hours: 1)) {
+            await entity.delete(recursive: true);
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore background cleanup errors.
+    }
+  }
+
   Future<void> start(
     String url, {
     void Function(String type, String message)? onConsoleMessage,
     bool verbose = false,
   }) async {
+    await _cleanupStaleTempDirs();
     final chromePath = _resolveChromePath();
     _tempDir = await Directory.systemTemp.createTemp('chrome_profiler_');
 

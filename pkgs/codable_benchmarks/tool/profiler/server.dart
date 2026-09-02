@@ -8,13 +8,15 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_static/shelf_static.dart';
 
+import 'exceptions.dart';
+
 class BenchmarkServer {
   HttpServer? _server;
 
   int get port => _server?.port ?? 0;
   String get url => 'http://127.0.0.1:$port';
 
-  Future<int> start(String path) async {
+  Future<int> start(String path, {int port = 0}) async {
     final staticHandler = createStaticHandler(
       path,
       defaultDocument: 'index.html',
@@ -41,7 +43,14 @@ class BenchmarkServer {
         )
         .addHandler(staticHandler);
 
-    _server = await io.serve(handler, '127.0.0.1', 0);
+    try {
+      _server = await io.serve(handler, '127.0.0.1', port);
+    } on SocketException catch (e) {
+      throw ProfilerException(
+        'Failed to bind benchmark server on port $port: ${e.message}. '
+        'Omit --port or pass port 0 to allocate an ephemeral port.',
+      );
+    }
     return _server!.port;
   }
 
