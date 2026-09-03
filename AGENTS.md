@@ -1,14 +1,25 @@
 # Agent Instructions for `codable.dart`
 
+## ⚡ Active Substrate Verification & Layer Targeting Invariant
+
+When developing, optimizing, or benchmarking `package:codable`, **ALWAYS VERIFY** that the `native` substrate is active and that your modifications are targeting the underlying Dart SDK (`dart:convert` layer), not the `mock/` substrate.
+The `mock/` substrate is ONLY a compilation stub for unmodified SDKs and CI; it is a false target for any performance optimizations or architectural improvements.
+
+**Mandatory Verification Step:**
+Before generating PRs, writing optimization code, or running benchmarks, check the substrate state:
+1. Ensure `pkgs/codable/lib/src/json/substrate/substrate.dart` points to `substrate_native.dart`.
+2. Ensure you are targeting the right codebase. Performance changes should be applied to `dart-sdk` (`sdk/lib/convert/...`) rather than `pkgs/codable/lib/src/json/substrate/mock/...`.
+3. Do not run benchmarks on mock without explicitly providing `--allow-mock`.
+
 ## Two substrates, one API
 
 `pkgs/codable/lib/src/json/substrate/substrate.dart` selects which
 implementation of `JsonTokenReader`/`JsonTokenWriter`/`JsonUtf8Decoder` the
 package compiles against:
 
-- **mock** (default, what CI runs): the pure-Dart copy in `substrate/mock/`.
-- **native**: `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
+- **native** (default): `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
   (`kevmoo/dart-sdk-json-next` `main` branch).
+- **mock** (what CI runs): the pure-Dart copy in `substrate/mock/`.
 
 The mock exists so the package builds on a stock SDK. It must stay
 source-compatible with the SDK API: same names, same positional/named
@@ -17,8 +28,8 @@ throws `RangeError` on non-positive values; `toBytes()` returns a copy).
 When you add or change a member in `substrate/mock/`, check the corresponding
 declaration in the SDK's `sdk/lib/convert/json_utf8.dart` first.
 
-Switch with `dart run tool/switch_substrate.dart mock|native`. Never commit
-`substrate.dart` in the `native` state.
+CI automatically switches `substrate.dart` to the mock substrate in `.github/workflows/dart.yml`.
+For local testing on a stock SDK, switch with `dart run tool/switch_substrate.dart mock|native`.
 
 ## Native-substrate check
 

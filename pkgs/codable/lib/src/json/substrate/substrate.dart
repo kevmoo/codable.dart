@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-/// Active substrate dispatcher (switched to mock mode).
+/// Active substrate dispatcher (switched to native mode).
 library;
 
-export 'mock/substrate_mock.dart';
+export 'substrate_native.dart';

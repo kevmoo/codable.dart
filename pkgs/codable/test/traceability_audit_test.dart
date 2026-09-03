@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable_json.dart';
+import 'package:codable/codable.dart';
+import 'package:codable/src/json/driver/json_codable_driver.dart';
+import 'package:codable/src/json/substrate/mock/substrate_mock.dart';
 import 'package:test/scaffolding.dart';
 
 void main() {
@@ -247,7 +249,7 @@ void main() {
     });
 
     test('JsonCodableEncoder.toBytes with capacityHint', () {
-      final bytes = JsonCodableEncoder.toBytes((encoder) {
+      final bytes = JsonCodableEncoder.toBytes((Encoder encoder) {
         final k = encoder.keyed();
         k.encodeInt('count', 42);
       }, capacityHint: 0);

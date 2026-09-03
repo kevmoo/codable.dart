@@ -287,8 +287,45 @@ void runBenchmark(
   }
 }
 
+void runAllBenchmarks() {
+  final results = <String, Map<String, double>>{};
+  for (final b in supportedBenchmarks) {
+    results[b] = {};
+    for (final impl in ['json_serializable', 'codable']) {
+      final iters = defaultIterationsFor(b);
+      final action = resolveBenchmarkAction(b, impl: impl);
+      for (var i = 0; i < 5; i++) {
+        action();
+      }
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < iters; i++) {
+        action();
+      }
+      sw.stop();
+      final usPerIter = sw.elapsedMicroseconds / iters;
+      results[b]![impl] = usPerIter;
+    }
+  }
+  print('<<<BENCHMARK_RESULTS_JSON_START>>>');
+  print(jsonEncode(results));
+  print('<<<BENCHMARK_RESULTS_JSON_END>>>');
+}
+
 void main(List<String> args) {
-  final benchmark = args.isNotEmpty ? args[0] : 'twitter_decode';
+  if (isMockSubstrate) {
+    throw StateError(
+      'Fatal: benchmark_harness cannot execute on the pure-Dart MOCK '
+      'substrate.\n'
+      'Canonical benchmarks MUST run against the native SDK substrate.\n'
+      'Switch with: dart run tool/switch_substrate.dart native',
+    );
+  }
+
+  if (args.isEmpty || args[0] == 'all') {
+    runAllBenchmarks();
+    return;
+  }
+  final benchmark = args[0];
   final count = args.length > 1
       ? int.tryParse(args[1]) ?? defaultIterationsFor(benchmark)
       : defaultIterationsFor(benchmark);
