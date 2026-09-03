@@ -198,8 +198,23 @@ void main(List<String> args) async {
   print(
     'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
   );
-  print('SDK Binary: ${Platform.resolvedExecutable}');
-  print('SDK Version: ${Platform.version}');
+  final sdkBinary = () {
+    try {
+      return Platform.resolvedExecutable;
+    } catch (_) {
+      return 'N/A (Web/JS)';
+    }
+  }();
+  final sdkVersion = () {
+    try {
+      return Platform.version;
+    } catch (_) {
+      return 'N/A (Web/JS)';
+    }
+  }();
+
+  print('SDK Binary: $sdkBinary');
+  print('SDK Version: $sdkVersion');
   print('${'=' * 60}\n');
 
   final benchmarkArgs = args.where((arg) => arg != '--allow-mock').toList();
