@@ -17,9 +17,9 @@ Before generating PRs, writing optimization code, or running benchmarks, check t
 implementation of `JsonTokenReader`/`JsonTokenWriter`/`JsonUtf8Decoder` the
 package compiles against:
 
-- **mock** (default, what CI runs): the pure-Dart copy in `substrate/mock/`.
-- **native**: `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
+- **native** (default): `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
   (`kevmoo/dart-sdk-json-next` `main` branch).
+- **mock** (what CI runs): the pure-Dart copy in `substrate/mock/`.
 
 The mock exists so the package builds on a stock SDK. It must stay
 source-compatible with the SDK API: same names, same positional/named
@@ -28,8 +28,8 @@ throws `RangeError` on non-positive values; `toBytes()` returns a copy).
 When you add or change a member in `substrate/mock/`, check the corresponding
 declaration in the SDK's `sdk/lib/convert/json_utf8.dart` first.
 
-Switch with `dart run tool/switch_substrate.dart mock|native`. Never commit
-`substrate.dart` in the `native` state.
+CI automatically switches `substrate.dart` to the mock substrate in `.github/workflows/dart.yml`.
+For local testing on a stock SDK, switch with `dart run tool/switch_substrate.dart mock|native`.
 
 ## Native-substrate check
 

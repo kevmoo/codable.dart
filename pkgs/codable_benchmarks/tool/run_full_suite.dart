@@ -7,16 +7,39 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:codable/codable_json.dart';
 import 'package:path/path.dart' as p;
 
-const nodeExecutable =
-    '/usr/local/google/home/kevmoo/.local/share/mise/installs/node/24/bin/node';
+String _resolveNodeExecutable() {
+  final envNode = Platform.environment['NODE_PATH'];
+  if (envNode != null && File(envNode).existsSync()) return envNode;
+  const miseNode =
+      '/usr/local/google/home/kevmoo/.local/share/mise/installs/node/24/bin/node';
+  if (File(miseNode).existsSync()) return miseNode;
+  final whichRes = Process.runSync('which', ['node']);
+  if (whichRes.exitCode == 0) {
+    final path = (whichRes.stdout as String).trim();
+    if (path.isNotEmpty && File(path).existsSync()) return path;
+  }
+  return 'node';
+}
 
 Future<void> main(List<String> args) async {
+  if (isMockSubstrate) {
+    stderr.writeln(
+      '⚠️ FATAL: run_full_suite.dart cannot run on the mock substrate.\n'
+      'Canonical benchmarks MUST run against the native SDK substrate.\n'
+      'Switch with: dart run tool/switch_substrate.dart native\n',
+    );
+    exit(1);
+  }
+
+  final nodeExecutable = _resolveNodeExecutable();
   final sdkDart = Platform.resolvedExecutable;
   print('============================================================');
   print('🚀 UNIFIED MULTI-RUNTIME BENCHMARK SWEEP (AOT, JS, WASM)');
   print('SDK: $sdkDart');
+  print('Node: $nodeExecutable');
   print('Version: ${Platform.version}');
   print('============================================================\n');
 

@@ -4,7 +4,6 @@ analyzer:
   exclude:
     - pkgs/codable_benchmarks/benchmark/data/embedded_datasets.dart
   errors:
-    undefined_shown_name: ignore
     unnecessary_ignore: ignore
     unnecessary_import: ignore
   language:

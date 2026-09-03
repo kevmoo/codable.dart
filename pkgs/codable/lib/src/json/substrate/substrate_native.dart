@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 /// Native substrate re-exporting Layer 1 SDK atoms from `dart:convert`.
+// ignore_for_file: undefined_shown_name
 library;
 
 export 'dart:convert'

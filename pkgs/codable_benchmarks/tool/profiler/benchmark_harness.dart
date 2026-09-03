@@ -312,6 +312,15 @@ void runAllBenchmarks() {
 }
 
 void main(List<String> args) {
+  if (isMockSubstrate) {
+    throw StateError(
+      'Fatal: benchmark_harness cannot execute on the pure-Dart MOCK '
+      'substrate.\n'
+      'Canonical benchmarks MUST run against the native SDK substrate.\n'
+      'Switch with: dart run tool/switch_substrate.dart native',
+    );
+  }
+
   if (args.isEmpty || args[0] == 'all') {
     runAllBenchmarks();
     return;
