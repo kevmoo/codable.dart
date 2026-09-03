@@ -10,7 +10,6 @@ import '../../contracts/decoder.dart';
 import '../../contracts/encoder.dart';
 import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
-// ignore: unnecessary_import
 import '../substrate/substrate.dart';
 
 /// Concrete high-performance driver connecting `package:codable` contracts
