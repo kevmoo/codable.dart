@@ -17,12 +17,13 @@
 ### Target: WASM (`dart2wasm` / d8) Decode (`New Dart + Codable`)
 
 <!-- mdformat off(prevent table wrapping) -->
-| Workload / Dataset | Pre-Change Latency (`driver_js` / JS DOM) | Post-Change Latency (`driver_streaming` / Pure Wasm) | Absolute Delta | Delta (%) | Speedup Multiplier vs Baseline |
+| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) | Speedup vs Baseline |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **citm_catalog.json (1.73 MB)** | 4,403.07 ms (200 iter) | 1,453.22 ms (200 iter) | -2,949.85 ms | **-67.0%** | **3.03x faster** 🏆 |
-| **canada.json (2.25 MB)** | 4,695.64 ms (100 iter) | 2,081.40 ms (100 iter) | -2,614.24 ms | **-55.7%** | **2.26x faster** 🏆 |
-| **twitter.json (0.62 MB)** | 4,163.97 ms (500 iter) | 3,006.23 ms (500 iter) | -1,157.74 ms | **-27.8%** | **1.39x faster** 🏆 |
-| **10k Coordinates (0.39 MB)** | 1,181.00 ms (300 iter) | 1,203.07 ms (300 iter) | +22.07 ms | +1.9% | 0.98x (parity) |
+| **10k Coordinates (0.39 MB)** | 3.94 ms | 4.01 ms | +0.07 ms | +1.9% | 0.98x (parity) |
+| **canada.json (2.25 MB)** | 33.10 ms | 14.65 ms | -18.45 ms | **-55.7%** | **2.26x faster** 🏆 |
+| **citm_catalog.json (1.73 MB)** | 13.25 ms | 4.37 ms | -8.88 ms | **-67.0%** | **3.03x faster** 🏆 |
+| **small.json (0.55 KB)** | 7.9 µs | 3.5 µs | -4.4 µs | **-55.7%** | **2.26x faster** 🏆 |
+| **twitter.json (0.62 MB)** | 6.09 ms | 4.40 ms | -1.69 ms | **-27.8%** | **1.39x faster** 🏆 |
 <!-- mdformat on -->
 
 > **Statistical Criteria**: Effect threshold = ±5.0% &bull; Significance = Welch's two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.
