@@ -50,6 +50,18 @@ void main() {
           );
         });
 
+        test('$b runs codable_js implementation', () {
+          expect(
+            () => runBenchmark(
+              b,
+              iterations: 1,
+              impl: 'codable_js',
+              warmupIterations: 0,
+            ),
+            returnsNormally,
+          );
+        });
+
         test('$b runs json_serializable implementation', () {
           expect(
             () => runBenchmark(

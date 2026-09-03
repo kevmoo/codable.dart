@@ -49,18 +49,22 @@ void main(List<String> arguments) async {
     ..addOption(
       'impl',
       defaultsTo: 'codable',
-      allowed: ['codable', 'json_serializable', 'codable_reader'],
+      allowed: ['codable', 'json_serializable', 'codable_reader', 'codable_js'],
       help:
           'Implementation candidate to profile (codable, json_serializable, '
-          'codable_reader).',
+          'codable_reader, codable_js).',
     )
     ..addFlag(
       'force-reader',
       defaultsTo: false,
       negatable: false,
-      help:
-          'Force using JsonCodableDecoder.fromReader (pure Wasm token '
-          'streaming).',
+      help: 'Force using JsonCodableDecoder.fromReader (now default on Wasm).',
+    )
+    ..addFlag(
+      'force-js',
+      defaultsTo: false,
+      negatable: false,
+      help: 'Force using legacy browser JS DOM / JSON.parse driver on Wasm.',
     )
     ..addOption(
       'iterations',
@@ -145,7 +149,11 @@ void main(List<String> arguments) async {
   }
 
   final rawImpl = results['impl'] as String;
-  final impl = (results['force-reader'] as bool) ? 'codable_reader' : rawImpl;
+  final impl = (results['force-js'] as bool)
+      ? 'codable_js'
+      : (results['force-reader'] as bool)
+      ? 'codable_reader'
+      : rawImpl;
   final iterationsStr = results['iterations'] as String?;
   final iterations = iterationsStr != null
       ? int.tryParse(iterationsStr)

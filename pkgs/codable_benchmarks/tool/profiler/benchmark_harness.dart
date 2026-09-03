@@ -93,6 +93,12 @@ int defaultIterationsFor(String benchmark) {
 }
 
 JsonCodableDecoder _createDecoder(Uint8List bytes, String impl) {
+  if (impl == 'codable_js' || impl == 'js') {
+    return JsonCodableDecoder.fromBytes(
+      bytes,
+      userInfo: const {#forceJsDom: true},
+    );
+  }
   if (impl == 'codable_reader' || impl == 'reader') {
     return JsonCodableDecoder.fromReader(JsonTokenReader.fromBytes(bytes));
   }

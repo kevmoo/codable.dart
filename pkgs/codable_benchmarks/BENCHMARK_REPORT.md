@@ -17,13 +17,13 @@
 ### Target: WASM (`dart2wasm` / d8) Decode (`New Dart + Codable`)
 
 <!-- mdformat off(prevent table wrapping) -->
-| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) [±95% MoE] | Speedup vs pkgs/codable_benchmarks/benchmark_comparison_baseline.json |
+| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) | Speedup vs Baseline |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 12.53 ± 3.37 ms | 9.66 ± 1.76 ms | -2.87 ms | **-22.9%** [±17.1%] | **1.30x faster** 🏆 |
-| **canada.json (2.25 MB)** | 32.04 ± 4.09 ms | 33.59 ± 6.41 ms | +1.56 ms | +4.9% [±16.2%] | 0.95x (p ≥ 0.05) |
-| **citm_catalog.json (1.73 MB)** | 22.45 ± 4.02 ms | 14.89 ± 4.78 ms | -7.57 ms | **-33.7%** [±16.3%] | **1.51x faster** 🏆 |
-| **small.json (0.55 KB)** | 7.6 ± 0.1 µs | 8.0 ± 0.3 µs | +362 ns | +4.8% [±2.6%] | 0.95x (parity) |
-| **twitter.json (0.62 MB)** | 10.09 ± 3.93 ms | 6.09 ± 0.61 ms | -3.99 ms | **-39.6%** [±17.4%] | **1.66x faster** 🏆 |
+| **10k Coordinates (0.39 MB)** | 3.94 ms | 4.01 ms | +0.07 ms | +1.9% | 0.98x (parity) |
+| **canada.json (2.25 MB)** | 33.10 ms | 14.65 ms | -18.45 ms | **-55.7%** | **2.26x faster** 🏆 |
+| **citm_catalog.json (1.73 MB)** | 13.25 ms | 4.37 ms | -8.88 ms | **-67.0%** | **3.03x faster** 🏆 |
+| **small.json (0.55 KB)** | 7.9 µs | 3.5 µs | -4.4 µs | **-55.7%** | **2.26x faster** 🏆 |
+| **twitter.json (0.62 MB)** | 6.09 ms | 4.40 ms | -1.69 ms | **-27.8%** | **1.39x faster** 🏆 |
 <!-- mdformat on -->
 
 > **Statistical Criteria**: Effect threshold = ±5.0% &bull; Significance = Welch's two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.
@@ -43,7 +43,7 @@
 |  | **`New Dart + Codable`** | 🟢 `[ 84 / 97 / 100 ]` | 🟢 `[ 73 / 92 / 100 ]` |
 | **WASM (`dart2wasm` / d8)** | **`Old Dart + json_serial`** | 🟢 `[ 89 / 95 / 100 ]` | 🔴 `[ 27 / 52 / 69 ]` |
 |  | **`New Dart + json_serial`** | 🟢 `[ 90 / 97 / 100 ]` | 🟡 `[ 61 / 79 / 100 ]` |
-|  | **`New Dart + Codable`** | 🔴 `[ 37 / 51 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
+|  | **`New Dart + Codable`** | 🟢 `[ 88 / 94 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
@@ -118,11 +118,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Old Dart + json_serial | New Dart + json_serial | New Dart + Codable | Speedup vs Old Dart | Speedup vs New json_serial |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **9.06 ms** | **0.37x** | **0.39x** |
-| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **33.10 ms** | **1.10x** | **1.11x** |
-| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **13.25 ms** | **0.50x** | **0.44x** |
-| **small.json (0.55 KB)** | 3.2 µs | 3.1 µs | **7.9 µs** | **0.40x** | **0.39x** |
-| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **6.09 ms** | **0.56x** | **0.54x** |
+| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **4.01 ms** | **0.85x** | **0.87x** |
+| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **14.65 ms** | **2.49x** | **2.51x** |
+| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **4.37 ms** | **1.51x** | **1.34x** |
+| **small.json (0.55 KB)** | 3.2 µs | 3.1 µs | **3.5 µs** | **0.91x** | **0.89x** |
+| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **4.40 ms** | **0.77x** | **0.75x** |
 <!-- mdformat on -->
 
 

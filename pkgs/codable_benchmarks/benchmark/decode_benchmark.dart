@@ -69,6 +69,15 @@ BenchmarkGroup _createDecodeGroup(
           );
           Blackhole.consume(list);
         },
+        'codable_js': () {
+          final list = codable_coord.Coordinate.decodeList(
+            JsonCodableDecoder.fromBytes(
+              bytes,
+              userInfo: const {#forceJsDom: true},
+            ),
+          );
+          Blackhole.consume(list);
+        },
       },
     ),
     'canada' => BenchmarkGroup.compare(
@@ -95,6 +104,14 @@ BenchmarkGroup _createDecodeGroup(
         },
         'codable': () {
           final decoder = JsonCodableDecoder.fromBytes(bytes);
+          final model = codable_canada.CanadaFeatureCollection.decode(decoder);
+          Blackhole.consume(model);
+        },
+        'codable_js': () {
+          final decoder = JsonCodableDecoder.fromBytes(
+            bytes,
+            userInfo: const {#forceJsDom: true},
+          );
           final model = codable_canada.CanadaFeatureCollection.decode(decoder);
           Blackhole.consume(model);
         },
@@ -127,6 +144,14 @@ BenchmarkGroup _createDecodeGroup(
           final model = codable_citm.CitmCatalog.decode(decoder);
           Blackhole.consume(model);
         },
+        'codable_js': () {
+          final decoder = JsonCodableDecoder.fromBytes(
+            bytes,
+            userInfo: const {#forceJsDom: true},
+          );
+          final model = codable_citm.CitmCatalog.decode(decoder);
+          Blackhole.consume(model);
+        },
       },
     ),
     'small' => BenchmarkGroup.compare(
@@ -156,6 +181,14 @@ BenchmarkGroup _createDecodeGroup(
           final model = codable_small.SmallDocument.decode(decoder);
           Blackhole.consume(model);
         },
+        'codable_js': () {
+          final decoder = JsonCodableDecoder.fromBytes(
+            bytes,
+            userInfo: const {#forceJsDom: true},
+          );
+          final model = codable_small.SmallDocument.decode(decoder);
+          Blackhole.consume(model);
+        },
       },
     ),
     'twitter' => BenchmarkGroup.compare(
@@ -182,6 +215,14 @@ BenchmarkGroup _createDecodeGroup(
         },
         'codable': () {
           final decoder = JsonCodableDecoder.fromBytes(bytes);
+          final model = codable_twitter.TwitterResponse.decode(decoder);
+          Blackhole.consume(model);
+        },
+        'codable_js': () {
+          final decoder = JsonCodableDecoder.fromBytes(
+            bytes,
+            userInfo: const {#forceJsDom: true},
+          );
           final model = codable_twitter.TwitterResponse.decode(decoder);
           Blackhole.consume(model);
         },
