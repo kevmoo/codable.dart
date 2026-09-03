@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'dart:io';
+
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable_json.dart';
 
@@ -233,6 +235,29 @@ BenchmarkGroup _createDecodeGroup(
 }
 
 void main(List<String> args) async {
+  if (isMockSubstrate && !args.contains('--allow-mock')) {
+    stderr.writeln(
+      '❌ ERROR: Running benchmarks on the MOCK substrate is prohibited to '
+      'prevent false optimization targets.',
+    );
+    stderr.writeln(
+      '   Pass --allow-mock to bypass this guard if you explicitly intend to '
+      'benchmark the mock payload.',
+    );
+    exit(1);
+  }
+
+  print('\n${'=' * 60}');
+  print('🎯 SUBSTRATE METADATA');
+  print(
+    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
+  );
+  print('SDK Binary: ${Platform.resolvedExecutable}');
+  print('SDK Version: ${Platform.version}');
+  print('${'=' * 60}\n');
+
+  final benchmarkArgs = args.where((arg) => arg != '--allow-mock').toList();
+
   final datasets = [
     'coordinates',
     'canada',
@@ -248,5 +273,5 @@ void main(List<String> args) async {
     groups.add(_createDecodeGroup(ds, bytes, jsonString));
   }
 
-  await mainBenchmarkSuite(groups, args);
+  await mainBenchmarkSuite(groups, benchmarkArgs);
 }

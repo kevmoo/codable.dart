@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:codable/codable_json.dart' show isMockSubstrate;
 import 'package:path/path.dart' as p;
 
 import 'profiler/benchmark_harness.dart'
@@ -101,6 +102,12 @@ void main(List<String> arguments) async {
       help: 'Show verbose output (browser logs, compilation output).',
     )
     ..addFlag(
+      'allow-mock',
+      defaultsTo: false,
+      negatable: false,
+      help: 'Allow running benchmarks on the MOCK substrate.',
+    )
+    ..addFlag(
       'help',
       abbr: 'h',
       negatable: false,
@@ -111,7 +118,7 @@ void main(List<String> arguments) async {
   try {
     results = parser.parse(arguments);
   } catch (e) {
-    stderr.writeln('Error: $e\n');
+    stderr.writeln('Error: $e\\n');
     stderr.writeln(parser.usage);
     exitCode = 64;
     return;
@@ -122,6 +129,28 @@ void main(List<String> arguments) async {
     print(parser.usage);
     return;
   }
+
+  if (isMockSubstrate && !(results['allow-mock'] as bool)) {
+    stderr.writeln(
+      '❌ ERROR: Running benchmarks on the MOCK substrate is prohibited to '
+      'prevent false optimization targets.',
+    );
+    stderr.writeln(
+      '   Pass --allow-mock to bypass this guard if you explicitly intend to '
+      'benchmark the mock payload.',
+    );
+    exitCode = 1;
+    return;
+  }
+
+  print('\n${'=' * 60}');
+  print('🎯 SUBSTRATE METADATA');
+  print(
+    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
+  );
+  print('SDK Binary: ${Platform.resolvedExecutable}');
+  print('SDK Version: ${Platform.version}');
+  print('${'=' * 60}\n');
 
   final benchmark = results['benchmark'] as String;
   final normalizedBenchmark = benchmark.toLowerCase().replaceAll('-', '_');

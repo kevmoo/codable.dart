@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: undefined_shown_name
-
 /// Native substrate re-exporting Layer 1 SDK atoms from `dart:convert`.
 library;
 
@@ -17,3 +15,5 @@ export 'dart:convert'
         jsonUtf8,
         jsonUtf8Decode,
         jsonUtf8Encode;
+
+const bool isMockSubstrate = false;
