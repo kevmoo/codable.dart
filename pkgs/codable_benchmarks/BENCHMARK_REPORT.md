@@ -11,7 +11,7 @@
 |  | **`New Dart + Codable`** | 🟢 `[ 84 / 97 / 100 ]` | 🟢 `[ 73 / 92 / 100 ]` |
 | **WASM (`dart2wasm` / d8)** | **`Old Dart + json_serial`** | 🟢 `[ 89 / 95 / 100 ]` | 🔴 `[ 27 / 52 / 69 ]` |
 |  | **`New Dart + json_serial`** | 🟢 `[ 90 / 97 / 100 ]` | 🟡 `[ 61 / 79 / 100 ]` |
-|  | **`New Dart + Codable`** | 🟢 `[ 85 / 94 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
+|  | **`New Dart + Codable`** | 🟢 `[ 95 / 97 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
@@ -86,11 +86,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Old Dart + json_serial | New Dart + json_serial | New Dart + Codable | Speedup vs Old Dart | Speedup vs New json_serial |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **3.56 ms** | **0.95x** | **0.98x** |
-| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **13.20 ms** | **2.76x** | **2.78x** |
-| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **3.92 ms** | **1.68x** | **1.49x** |
-| **small.json (0.55 KB)** | 3.2 µs | 3.1 µs | **3.5 µs** | **0.91x** | **0.89x** |
-| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **3.91 ms** | **0.87x** | **0.85x** |
+| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **3.50 ms** | **0.97x** | **1.00x** |
+| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **12.77 ms** | **2.86x** | **2.88x** |
+| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **3.87 ms** | **1.70x** | **1.51x** |
+| **small.json (0.55 KB)** | 3.2 µs | 3.1 µs | **3.1 µs** | **1.03x** | **1.00x** |
+| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **3.50 ms** | **0.97x** | **0.95x** |
 <!-- mdformat on -->
 
 

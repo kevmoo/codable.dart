@@ -265,11 +265,32 @@ String decodeStringUtf8(
   int end, {
   bool allowMalformed = false,
 }) {
-  if (start == end) return '';
   if (start < 0 || end > source.length || start > end) {
     throw RangeError('Invalid byte span [$start, $end)');
   }
-  if (isVerbatimUtf8(source, start, end)) {
+  if (start == end) return '';
+
+  // Single-pass scan for escapes and non-ASCII characters.
+  var isAscii = true;
+  var isVerbatim = true;
+  for (var i = start; i < end; i++) {
+    final b = source[i];
+    if (b == 92) {
+      // '\\' escape present
+      isVerbatim = false;
+      break;
+    }
+    if (b >= 128) {
+      isAscii = false;
+    }
+  }
+
+  if (isVerbatim) {
+    if (isAscii) {
+      // Pure ASCII fast-path: zero heap view allocation, zero multi-byte
+      // state machine.
+      return String.fromCharCodes(source, start, end);
+    }
     return utf8.decode(
       Uint8List.sublistView(source, start, end),
       allowMalformed: allowMalformed,
@@ -331,6 +352,9 @@ String decodeStringUtf8(
             i - 1,
           );
       }
+    } else if (byte <= 0x7F) {
+      buffer.writeCharCode(byte);
+      i++;
     } else {
       final charLen = _utf8SequenceLength(byte);
       if (i + charLen > end) {
