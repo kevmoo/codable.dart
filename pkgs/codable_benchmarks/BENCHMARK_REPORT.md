@@ -3,9 +3,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] |
 | :--- | :--- | :---: | :---: |
-| **AOT (`dart compile exe`)** | **`New Dart + Codable`** | 🔴 `[ 42 / 55 / 69 ]` | 🟢 `[ 86 / 137 / 199 ]` |
-| **JS (`dart2js` / Node 24 / V8)** | **`New Dart + Codable`** | 🟡 `[ 36 / 117 / 185 ]` | 🟢 `[ 128 / 260 / 568 ]` |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **`New Dart + Codable`** | 🔴 `[ 50 / 89 / 293 ]` | 🟢 `[ 94 / 135 / 186 ]` |
+| **AOT (`dart compile exe`)** | **`New Dart + Codable`** | 🔴 `[ 42 / 55 / 69 ]` | 🟢 `[ 86 / 98 / 100 ]` |
+| **JS (`dart2js` / Node 24 / V8)** | **`New Dart + Codable`** | 🟡 `[ 36 / 80 / 100 ]` | 🟢 `[ 100 / 100 / 100 ]` |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **`New Dart + Codable`** | 🔴 `[ 50 / 72 / 100 ]` | 🟢 `[ 94 / 99 / 100 ]` |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).

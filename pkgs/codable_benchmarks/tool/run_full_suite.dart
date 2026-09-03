@@ -192,17 +192,19 @@ inst.invokeMain('all', '', '');
   ];
 
   // Compute efficiency indices
+  // Relative Throughput Efficiency: 100 = Peak Speed
   for (final target in ['aot', 'js', 'wasm']) {
-    final decodeRatios = <double>[];
-    final encodeRatios = <double>[];
+    final decodeScores = <double>[];
+    final encodeScores = <double>[];
     for (final b in benchmarks) {
       final jsTime = results[target]![b]!['json_serializable'] ?? 1.0;
       final codableTime = results[target]![b]!['codable'] ?? 1.0;
-      final speedup = jsTime / codableTime;
+      final minTime = min(jsTime, codableTime);
+      final score = (minTime / codableTime) * 100.0;
       if (b.endsWith('_decode')) {
-        decodeRatios.add(speedup);
+        decodeScores.add(score);
       } else {
-        encodeRatios.add(speedup);
+        encodeScores.add(score);
       }
     }
     double geomean(List<double> list) {
@@ -210,15 +212,15 @@ inst.invokeMain('all', '', '');
       return pow(prod, 1.0 / list.length).toDouble();
     }
 
-    final decGeo = geomean(decodeRatios);
-    final encGeo = geomean(encodeRatios);
+    final decGeo = geomean(decodeScores);
+    final encGeo = geomean(encodeScores);
 
-    final decWorst = decodeRatios.reduce(min);
-    final decBest = decodeRatios.reduce(max);
-    final encWorst = encodeRatios.reduce(min);
-    final encBest = encodeRatios.reduce(max);
+    final decWorst = decodeScores.reduce(min);
+    final decBest = decodeScores.reduce(max);
+    final encWorst = encodeScores.reduce(min);
+    final encBest = encodeScores.reduce(max);
 
-    String badge(double g) => g >= 1.2 ? '🟢' : (g >= 0.9 ? '🟡' : '🔴');
+    String badge(double g) => g >= 90.0 ? '🟢' : (g >= 70.0 ? '🟡' : '🔴');
 
     final targetLabel = switch (target) {
       'aot' => '**AOT (`dart compile exe`)**',
@@ -227,12 +229,12 @@ inst.invokeMain('all', '', '');
       _ => target,
     };
 
-    final decW = (decWorst * 100).round();
-    final decG = (decGeo * 100).round();
-    final decB = (decBest * 100).round();
-    final encW = (encWorst * 100).round();
-    final encG = (encGeo * 100).round();
-    final encB = (encBest * 100).round();
+    final decW = decWorst.round();
+    final decG = decGeo.round();
+    final decB = decBest.round();
+    final encW = encWorst.round();
+    final encG = encGeo.round();
+    final encB = encBest.round();
 
     reportBuffer.writeln(
       '| $targetLabel | **`New Dart + Codable`** | '
