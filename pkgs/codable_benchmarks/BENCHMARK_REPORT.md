@@ -1,35 +1,3 @@
-## 🚀 Isolated Before vs. After Benchmark Delta (vs pkgs/codable_benchmarks/benchmark_comparison_baseline.json)
-
-### Target: WASM (`dart2wasm` / d8) Encode (`New Dart + Codable`)
-
-<!-- mdformat off(prevent table wrapping) -->
-| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) [±95% MoE] | Speedup vs pkgs/codable_benchmarks/benchmark_comparison_baseline.json |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 7.12 ± 0.64 ms | 3.69 ± 0.38 ms | -3.43 ms | **-48.2%** [±4.8%] | **1.93x faster** 🏆 |
-| **canada.json (2.25 MB)** | 43.43 ± 4.99 ms | 26.33 ± 3.93 ms | -17.10 ms | **-39.4%** [±7.6%] | **1.65x faster** 🏆 |
-| **citm_catalog.json (1.73 MB)** | 9.67 ± 0.92 ms | 5.57 ± 0.56 ms | -4.10 ms | **-42.4%** [±5.4%] | **1.74x faster** 🏆 |
-| **small.json (0.55 KB)** | 3.8 ± 0.1 µs | 3.6 ± 0.2 µs | -211 ns | **-5.6%** [±4.3%] | **1.06x faster** 🏆 |
-| **twitter.json (0.62 MB)** | 8.46 ± 0.90 ms | 4.16 ± 0.93 ms | -4.30 ms | **-50.8%** [±8.1%] | **2.03x faster** 🏆 |
-<!-- mdformat on -->
-
-> **Statistical Criteria**: Effect threshold = ±5.0% &bull; Significance = Welch's two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.
-
-### Target: WASM (`dart2wasm` / d8) Decode (`New Dart + Codable`)
-
-<!-- mdformat off(prevent table wrapping) -->
-| Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) | Speedup vs Baseline |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.01 ms | **3.56 ms** | -0.45 ms | **-11.3%** | **1.13x faster** 🏆 |
-| **canada.json (2.25 MB)** | 14.65 ms | **13.20 ms** | -1.45 ms | **-9.9%** | **1.11x faster** 🏆 |
-| **citm_catalog.json (1.73 MB)** | 4.37 ms | **3.92 ms** | -0.45 ms | **-10.3%** | **1.11x faster** 🏆 |
-| **small.json (0.55 KB)** | 3.5 µs | **3.5 µs** | -0.04 µs | -1.1% | 1.01x (parity) |
-| **twitter.json (0.62 MB)** | 4.40 ms | **3.91 ms** | -0.49 ms | **-11.2%** | **1.13x faster** 🏆 |
-<!-- mdformat on -->
-
-> **Statistical Criteria**: Effect threshold = ±5.0% &bull; Significance = Welch's two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.
-
-------------------------------------------------------------------------
-
 ### 📊 3-Runtime Summary (Relative Efficiency Index)
 
 <!-- mdformat off(prevent table wrapping) -->
