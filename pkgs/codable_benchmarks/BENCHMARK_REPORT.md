@@ -19,11 +19,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Pre-Change Latency | Post-Change Latency | Absolute Delta | Delta (%) | Speedup vs Baseline |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 3.94 ms | 4.01 ms | +0.07 ms | +1.9% | 0.98x (parity) |
-| **canada.json (2.25 MB)** | 33.10 ms | 14.65 ms | -18.45 ms | **-55.7%** | **2.26x faster** 🏆 |
-| **citm_catalog.json (1.73 MB)** | 13.25 ms | 4.37 ms | -8.88 ms | **-67.0%** | **3.03x faster** 🏆 |
-| **small.json (0.55 KB)** | 7.9 µs | 3.5 µs | -4.4 µs | **-55.7%** | **2.26x faster** 🏆 |
-| **twitter.json (0.62 MB)** | 6.09 ms | 4.40 ms | -1.69 ms | **-27.8%** | **1.39x faster** 🏆 |
+| **10k Coordinates (0.39 MB)** | 4.01 ms | **3.56 ms** | -0.45 ms | **-11.3%** | **1.13x faster** 🏆 |
+| **canada.json (2.25 MB)** | 14.65 ms | **13.20 ms** | -1.45 ms | **-9.9%** | **1.11x faster** 🏆 |
+| **citm_catalog.json (1.73 MB)** | 4.37 ms | **3.92 ms** | -0.45 ms | **-10.3%** | **1.11x faster** 🏆 |
+| **small.json (0.55 KB)** | 3.5 µs | **3.5 µs** | -0.04 µs | -1.1% | 1.01x (parity) |
+| **twitter.json (0.62 MB)** | 4.40 ms | **3.91 ms** | -0.49 ms | **-11.2%** | **1.13x faster** 🏆 |
 <!-- mdformat on -->
 
 > **Statistical Criteria**: Effect threshold = ±5.0% &bull; Significance = Welch's two-sample t-test with Welch–Satterthwaite df (p < 0.05) &bull; MoE = 95% CI via Delta Method for ratio variance.
@@ -118,11 +118,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Old Dart + json_serial | New Dart + json_serial | New Dart + Codable | Speedup vs Old Dart | Speedup vs New json_serial |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **4.01 ms** | **0.85x** | **0.87x** |
-| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **14.65 ms** | **2.49x** | **2.51x** |
-| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **4.37 ms** | **1.51x** | **1.34x** |
+| **10k Coordinates (0.39 MB)** | 3.39 ms | 3.50 ms | **3.56 ms** | **0.95x** | **0.98x** |
+| **canada.json (2.25 MB)** | 36.47 ms | 36.75 ms | **13.20 ms** | **2.76x** | **2.78x** |
+| **citm_catalog.json (1.73 MB)** | 6.58 ms | 5.86 ms | **3.92 ms** | **1.68x** | **1.49x** |
 | **small.json (0.55 KB)** | 3.2 µs | 3.1 µs | **3.5 µs** | **0.91x** | **0.89x** |
-| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **4.40 ms** | **0.77x** | **0.75x** |
+| **twitter.json (0.62 MB)** | 3.39 ms | 3.32 ms | **3.91 ms** | **0.87x** | **0.85x** |
 <!-- mdformat on -->
 
 
