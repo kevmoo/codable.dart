@@ -33,6 +33,9 @@ final class JsonKeyOptions {
   final Int32List _tableKeyIndices;
   final int _hashMask;
 
+  static final Uint8List _emptyUint8 = Uint8List(0);
+  static final Int32List _emptyInt32 = Int32List(0);
+
   JsonKeyOptions._(
     this.keys,
     this._indexMap,
@@ -78,14 +81,7 @@ final class JsonKeyOptions {
       if (len > maxLen) maxLen = len;
     }
 
-    // Filter duplicates preserving the first occurrence index.
-    final seen = <String>{};
-    final uniqueIndices = <int>[];
-    for (var i = 0; i < keys.length; i++) {
-      if (seen.add(keys[i])) {
-        uniqueIndices.add(i);
-      }
-    }
+    final uniqueIndices = indexMap.values.toList(growable: false);
 
     if (uniqueIndices.length == 1) {
       final firstIdx = uniqueIndices[0];
@@ -99,12 +95,12 @@ final class JsonKeyOptions {
         firstIdx,
         keyBytes.isEmpty ? 0 : keyBytes[0],
         keyBytes.isEmpty ? 0 : keyBytes[keyBytes.length - 1],
-        Uint8List(0),
-        Int32List(0),
-        Int32List(0),
-        Uint8List(0),
-        Uint8List(0),
-        Int32List(0),
+        _emptyUint8,
+        _emptyInt32,
+        _emptyInt32,
+        _emptyUint8,
+        _emptyUint8,
+        _emptyInt32,
         0,
       );
     }
@@ -246,12 +242,14 @@ final class JsonKeyOptions {
       for (var i = start; i < end; i++) {
         h = (h * 31) ^ source[i];
       }
-      return h;
+      return h ^ (h >> 16) ^ (h >> 8);
     }
-    return len ^
+    final h =
+        len ^
         (source[start] << 24) ^
         (source[start + 1] << 16) ^
         (source[start + (len >> 1)] << 8) ^
         source[end - 1];
+    return h ^ (h >> 16) ^ (h >> 8);
   }
 }

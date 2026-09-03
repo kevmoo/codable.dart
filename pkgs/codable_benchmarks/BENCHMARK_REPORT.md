@@ -11,7 +11,7 @@
 |  | **`New Dart + Codable`** | 🟢 `[ 84 / 97 / 100 ]` | 🟢 `[ 73 / 92 / 100 ]` |
 | **WASM (`dart2wasm` / d8)** | **`Old Dart + json_serial`** | 🟢 `[ 89 / 95 / 100 ]` | 🔴 `[ 27 / 52 / 69 ]` |
 |  | **`New Dart + json_serial`** | 🟢 `[ 90 / 97 / 100 ]` | 🟡 `[ 61 / 79 / 100 ]` |
-|  | **`New Dart + Codable`** | 🟢 `[ 88 / 94 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
+|  | **`New Dart + Codable`** | 🟢 `[ 85 / 94 / 100 ]` | 🟢 `[ 97 / 99 / 100 ]` |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
