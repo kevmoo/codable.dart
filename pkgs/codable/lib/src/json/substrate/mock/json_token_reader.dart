@@ -124,6 +124,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     return span;
   }
 
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   void _skipWs() {
     while (_offset < _bytes.length && _bytes[_offset] <= 32) {
       _offset++;
@@ -218,20 +220,63 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     return b != 125 && b != 93; // not '}' and not ']'
   }
 
-  void _consumeColon() {
-    _skipWs();
-    if (_offset < _bytes.length && _bytes[_offset] == 58) {
-      _offset++;
-    } else {
-      throw FormatException('Expected ":" at offset $_offset');
-    }
-  }
-
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   void _consumeTrailingComma() {
     _skipWs();
     if (_offset < _bytes.length && _bytes[_offset] == 44) {
       _offset++;
+      _skipWs();
     }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  (int, int, bool) _scanPropertyName() {
+    var i = _offset;
+    while (i < _bytes.length && _bytes[i] <= 32) {
+      i++;
+    }
+    if (i >= _bytes.length || _bytes[i] != 34) {
+      throw FormatException('Expected string at offset $i');
+    }
+    final start = i + 1;
+    i = start;
+    var hasEscapes = false;
+    while (i < _bytes.length) {
+      final b = _bytes[i];
+      if (b == 92) {
+        hasEscapes = true;
+        i += 2;
+      } else if (b == 34) {
+        break;
+      } else {
+        i++;
+      }
+    }
+    if (i >= _bytes.length) {
+      throw FormatException('Unterminated string literal at offset $start');
+    }
+    final end = i;
+    i++; // Advance past closing quote
+
+    // Fused colon consumption & trailing whitespace
+    if (i < _bytes.length && _bytes[i] == 58) {
+      i++;
+    } else {
+      while (i < _bytes.length && _bytes[i] <= 32) {
+        i++;
+      }
+      if (i >= _bytes.length || _bytes[i] != 58) {
+        throw FormatException('Expected ":" at offset $i');
+      }
+      i++;
+    }
+    while (i < _bytes.length && _bytes[i] <= 32) {
+      i++;
+    }
+    _offset = i;
+    return (start, end, hasEscapes);
   }
 
   (int, int) _scanStringSpan() {
@@ -257,24 +302,45 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   String nextName() {
-    final (start, end) = _scanStringSpan();
-    _consumeColon();
+    final (start, end, _) = _scanPropertyName();
     return _decodeCachedString(start, end);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   int selectName(JsonKeyOptions options) {
-    final (start, end) = _scanStringSpan();
-    _consumeColon();
-    return options.selectKey(_bytes, start, end);
+    final (start, end, hasEscapes) = _scanPropertyName();
+    if (!hasEscapes) {
+      return options.selectKey(_bytes, start, end);
+    }
+    final unescaped = _decodeCachedString(start, end);
+    return options.indexOf(unescaped);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   int selectString(JsonKeyOptions options) {
     final (start, end) = _scanStringSpan();
     _consumeTrailingComma();
-    return options.selectKey(_bytes, start, end);
+    if (_isVerbatimUtf8(start, end)) {
+      return options.selectKey(_bytes, start, end);
+    }
+    final unescaped = _decodeCachedString(start, end);
+    return options.indexOf(unescaped);
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool _isVerbatimUtf8(int start, int end) {
+    for (var i = start; i < end; i++) {
+      if (_bytes[i] == 92) return false;
+    }
+    return true;
   }
 
   @override
