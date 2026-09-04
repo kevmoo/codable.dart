@@ -238,5 +238,14 @@ void main() {
           .has((e) => e.message, 'message')
           .contains('exceeds the maximum golden mask limit of 62');
     });
+
+    test('omits isNextNull() for non-nullable fields and retains it for nullable fields', () {
+      final pointOutput = runGeneratorFor('Point');
+      check(pointOutput).not((s) => s.contains('isNextNull()'));
+
+      final userAccountOutput = runGeneratorFor('UserAccount');
+      // UserAccount has 1 nullable field (`location`) and 4 non-nullable fields
+      check('isNextNull()'.allMatches(userAccountOutput).length).equals(1);
+    });
   });
 }

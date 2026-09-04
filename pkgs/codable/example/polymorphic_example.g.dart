@@ -4,6 +4,10 @@
 
 part of 'polymorphic_example.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Car
 // =============================================================================
@@ -101,23 +105,15 @@ Car _$CarFromDecoder(Decoder decoder) {
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxSpeed = keyed.readInt();
-          seen |= _$CarSchema.maxSpeed;
-        }
+        maxSpeed = keyed.readInt();
+        seen |= _$CarSchema.maxSpeed;
         break;
       case _$CarSchema.keyDoors:
         if ((seen._value & _$CarSchema.doors._value) != 0) {
           throw const CodableException('Duplicate field "doors"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          doors = keyed.readInt();
-          seen |= _$CarSchema.doors;
-        }
+        doors = keyed.readInt();
+        seen |= _$CarSchema.doors;
         break;
       default:
         keyed.skipValue();
@@ -261,23 +257,15 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxSpeed = keyed.readInt();
-          seen |= _$BicycleSchema.maxSpeed;
-        }
+        maxSpeed = keyed.readInt();
+        seen |= _$BicycleSchema.maxSpeed;
         break;
       case _$BicycleSchema.keyHasBell:
         if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
           throw const CodableException('Duplicate field "hasBell"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          hasBell = keyed.readBool();
-          seen |= _$BicycleSchema.hasBell;
-        }
+        hasBell = keyed.readBool();
+        seen |= _$BicycleSchema.hasBell;
         break;
       default:
         keyed.skipValue();

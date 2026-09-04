@@ -4,6 +4,10 @@
 
 part of 'test_models.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Point
 // =============================================================================
@@ -82,23 +86,15 @@ Point _$PointFromDecoder(Decoder decoder) {
         if ((seen._value & _$PointSchema.x._value) != 0) {
           throw const CodableException('Duplicate field "x"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          x = keyed.readDouble();
-          seen |= _$PointSchema.x;
-        }
+        x = keyed.readDouble();
+        seen |= _$PointSchema.x;
         break;
       case _$PointSchema.keyY:
         if ((seen._value & _$PointSchema.y._value) != 0) {
           throw const CodableException('Duplicate field "y"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          y = keyed.readDouble();
-          seen |= _$PointSchema.y;
-        }
+        y = keyed.readDouble();
+        seen |= _$PointSchema.y;
         break;
       default:
         keyed.skipValue();
@@ -313,12 +309,8 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserAccountSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readString();
-          seen |= _$UserAccountSchema.id;
-        }
+        id = keyed.readString();
+        seen |= _$UserAccountSchema.id;
         break;
       case _$UserAccountSchema.keyEmailAddress:
       case _$UserAccountSchema.aliasKeyEmailAddressEmail:
@@ -326,37 +318,25 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserAccountSchema.emailAddress._value) != 0) {
           throw const CodableException('Duplicate field "email_address"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          emailAddress = keyed.readString();
-          seen |= _$UserAccountSchema.emailAddress;
-        }
+        emailAddress = keyed.readString();
+        seen |= _$UserAccountSchema.emailAddress;
         break;
       case _$UserAccountSchema.keyRole:
         if ((seen._value & _$UserAccountSchema.role._value) != 0) {
           throw const CodableException('Duplicate field "role"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
+        final enumIndex = keyed.selectStringIndex(
+          _$UserAccountSchema.roleKeyOptions,
+        );
+        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+          role = UserRole.values[enumIndex];
         } else {
-          final enumIndex = keyed.selectStringIndex(
-            _$UserAccountSchema.roleKeyOptions,
-          );
-          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-            role = UserRole.values[enumIndex];
-          } else {
-            throw const CodableException('Unknown UserRole value');
-          }
-          seen |= _$UserAccountSchema.role;
+          throw const CodableException('Unknown UserRole value');
         }
+        seen |= _$UserAccountSchema.role;
         break;
       case _$UserAccountSchema.keyTags:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          tags = keyed.decodeStringList();
-        }
+        tags = keyed.decodeStringList();
         break;
       case _$UserAccountSchema.keyLocation:
         if (keyed.isNextNull()) {
@@ -513,23 +493,15 @@ Address _$AddressFromDecoder(Decoder decoder) {
         if ((seen._value & _$AddressSchema.city._value) != 0) {
           throw const CodableException('Duplicate field "city"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          city = keyed.readString();
-          seen |= _$AddressSchema.city;
-        }
+        city = keyed.readString();
+        seen |= _$AddressSchema.city;
         break;
       case _$AddressSchema.keyStreet:
         if ((seen._value & _$AddressSchema.street._value) != 0) {
           throw const CodableException('Duplicate field "street"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          street = keyed.readString();
-          seen |= _$AddressSchema.street;
-        }
+        street = keyed.readString();
+        seen |= _$AddressSchema.street;
         break;
       default:
         keyed.skipValue();
@@ -740,51 +712,31 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$EnterpriseSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$EnterpriseSchema.name;
         break;
       case _$EnterpriseSchema.keyHeadquarter:
         if ((seen._value & _$EnterpriseSchema.headquarter._value) != 0) {
           throw const CodableException('Duplicate field "headquarter"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          headquarter = _$AddressFromDecoder(keyed.nestedDecoder());
-          seen |= _$EnterpriseSchema.headquarter;
-        }
+        headquarter = _$AddressFromDecoder(keyed.nestedDecoder());
+        seen |= _$EnterpriseSchema.headquarter;
         break;
       case _$EnterpriseSchema.keyBranches:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          branches = _$AddressListFromDecoder(keyed.nestedDecoder());
-        }
+        branches = _$AddressListFromDecoder(keyed.nestedDecoder());
         break;
       case _$EnterpriseSchema.keyCategories:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          categories = keyed.decodeStringList().toSet();
-        }
+        categories = keyed.decodeStringList().toSet();
         break;
       case _$EnterpriseSchema.keyHeadcountByDept:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, int>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readInt();
-            }
-            headcountByDept = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, int>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readInt();
           }
+          headcountByDept = m;
         }
         break;
       default:
@@ -939,23 +891,15 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readString();
-          seen |= _$UserProfileCustomSchema.id;
-        }
+        id = keyed.readString();
+        seen |= _$UserProfileCustomSchema.id;
         break;
       case _$UserProfileCustomSchema.keyZip:
         if ((seen._value & _$UserProfileCustomSchema.zip._value) != 0) {
           throw const CodableException('Duplicate field "zip"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          zip = keyed.decodeValue(const ZipCodeDecoder().decode);
-          seen |= _$UserProfileCustomSchema.zip;
-        }
+        zip = keyed.decodeValue(const ZipCodeDecoder().decode);
+        seen |= _$UserProfileCustomSchema.zip;
         break;
       default:
         keyed.skipValue();
@@ -1119,49 +1063,33 @@ Team _$TeamFromDecoder(Decoder decoder) {
         if ((seen._value & _$TeamSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$TeamSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$TeamSchema.name;
         break;
       case _$TeamSchema.keyRoles:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          roles = keyed.decodeList(
-            (d) => UserRole.values.byName(d.singleValue().readString()),
-          );
-        }
+        roles = keyed.decodeList(
+          (d) => UserRole.values.byName(d.singleValue().readString()),
+        );
         break;
       case _$TeamSchema.keyNullableTags:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          nullableTags = keyed
-              .decodeList<String?>((d) => d.singleValue().readNullableString())
-              .toSet();
-        }
+        nullableTags = keyed
+            .decodeList<String?>((d) => d.singleValue().readNullableString())
+            .toSet();
         break;
       case _$TeamSchema.keyScores:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, int?>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              if (k.isNextNull()) {
-                k.readNull();
-                m[key] = null as int?;
-              } else {
-                m[key] = k.readInt();
-              }
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, int?>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            if (k.isNextNull()) {
+              k.readNull();
+              m[key] = null as int?;
+            } else {
+              m[key] = k.readInt();
             }
-            scores = m;
           }
+          scores = m;
         }
         break;
       default:
@@ -1414,71 +1342,43 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
       _$PrimitiveCollectionsModelSchema.keyOptions,
     )) {
       case _$PrimitiveCollectionsModelSchema.keyInts:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          ints = keyed.decodeIntList();
-        }
+        ints = keyed.decodeIntList();
         break;
       case _$PrimitiveCollectionsModelSchema.keyDoubles:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          doubles = keyed.decodeDoubleList();
-        }
+        doubles = keyed.decodeDoubleList();
         break;
       case _$PrimitiveCollectionsModelSchema.keyStrings:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          strings = keyed.decodeStringList();
-        }
+        strings = keyed.decodeStringList();
         break;
       case _$PrimitiveCollectionsModelSchema.keyBools:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          bools = keyed.decodeBoolList();
-        }
+        bools = keyed.decodeBoolList();
         break;
       case _$PrimitiveCollectionsModelSchema.keyFloat64s:
         if ((seen._value & _$PrimitiveCollectionsModelSchema.float64s._value) !=
             0) {
           throw const CodableException('Duplicate field "float64s"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          float64s = keyed.decodeFloat64List();
-          seen |= _$PrimitiveCollectionsModelSchema.float64s;
-        }
+        float64s = keyed.decodeFloat64List();
+        seen |= _$PrimitiveCollectionsModelSchema.float64s;
         break;
       case _$PrimitiveCollectionsModelSchema.keyMatrix:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final u = keyed.nestedDecoder().unkeyed();
-            final l = <List<double>>[];
-            while (u.hasNext()) {
-              l.add(u.decodeDoubleList());
-            }
-            matrix = l;
+        {
+          final u = keyed.nestedDecoder().unkeyed();
+          final l = <List<double>>[];
+          while (u.hasNext()) {
+            l.add(u.decodeDoubleList());
           }
+          matrix = l;
         }
         break;
       case _$PrimitiveCollectionsModelSchema.keyNestedFloats:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final u = keyed.nestedDecoder().unkeyed();
-            final l = <Float64List>[];
-            while (u.hasNext()) {
-              l.add(u.decodeFloat64List());
-            }
-            nestedFloats = l;
+        {
+          final u = keyed.nestedDecoder().unkeyed();
+          final l = <Float64List>[];
+          while (u.hasNext()) {
+            l.add(u.decodeFloat64List());
           }
+          nestedFloats = l;
         }
         break;
       default:

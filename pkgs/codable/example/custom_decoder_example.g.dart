@@ -4,6 +4,10 @@
 
 part of 'custom_decoder_example.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for DateTimeExample
 // =============================================================================
@@ -77,12 +81,8 @@ DateTimeExample _$DateTimeExampleFromDecoder(Decoder decoder) {
         if ((seen._value & _$DateTimeExampleSchema.when._value) != 0) {
           throw const CodableException('Duplicate field "when"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          when = keyed.decodeValue(const DateTimeEpochDecoder().decode);
-          seen |= _$DateTimeExampleSchema.when;
-        }
+        when = keyed.decodeValue(const DateTimeEpochDecoder().decode);
+        seen |= _$DateTimeExampleSchema.when;
         break;
       default:
         keyed.skipValue();

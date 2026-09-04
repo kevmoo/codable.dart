@@ -4,6 +4,10 @@
 
 part of 'twitter.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -96,18 +100,10 @@ TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterMetadataSchema.keyOptions)) {
       case _$TwitterMetadataSchema.keyResultType:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          resultType = keyed.readString();
-        }
+        resultType = keyed.readString();
         break;
       case _$TwitterMetadataSchema.keyIsoLanguageCode:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          isoLanguageCode = keyed.readString();
-        }
+        isoLanguageCode = keyed.readString();
         break;
       default:
         keyed.skipValue();
@@ -319,52 +315,32 @@ TwitterUserMention _$TwitterUserMentionFromDecoder(Decoder decoder) {
         if ((seen._value & _$TwitterUserMentionSchema.screenName._value) != 0) {
           throw const CodableException('Duplicate field "screen_name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          screenName = keyed.readString();
-          seen |= _$TwitterUserMentionSchema.screenName;
-        }
+        screenName = keyed.readString();
+        seen |= _$TwitterUserMentionSchema.screenName;
         break;
       case _$TwitterUserMentionSchema.keyName:
         if ((seen._value & _$TwitterUserMentionSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$TwitterUserMentionSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$TwitterUserMentionSchema.name;
         break;
       case _$TwitterUserMentionSchema.keyId:
         if ((seen._value & _$TwitterUserMentionSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$TwitterUserMentionSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$TwitterUserMentionSchema.id;
         break;
       case _$TwitterUserMentionSchema.keyIdStr:
         if ((seen._value & _$TwitterUserMentionSchema.idStr._value) != 0) {
           throw const CodableException('Duplicate field "id_str"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          idStr = keyed.readString();
-          seen |= _$TwitterUserMentionSchema.idStr;
-        }
+        idStr = keyed.readString();
+        seen |= _$TwitterUserMentionSchema.idStr;
         break;
       case _$TwitterUserMentionSchema.keyIndices:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          indices = keyed.decodeIntList();
-        }
+        indices = keyed.decodeIntList();
         break;
       default:
         keyed.skipValue();
@@ -579,41 +555,25 @@ TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
         if ((seen._value & _$TwitterUrlSchema.url._value) != 0) {
           throw const CodableException('Duplicate field "url"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          url = keyed.readString();
-          seen |= _$TwitterUrlSchema.url;
-        }
+        url = keyed.readString();
+        seen |= _$TwitterUrlSchema.url;
         break;
       case _$TwitterUrlSchema.keyExpandedUrl:
         if ((seen._value & _$TwitterUrlSchema.expandedUrl._value) != 0) {
           throw const CodableException('Duplicate field "expanded_url"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          expandedUrl = keyed.readString();
-          seen |= _$TwitterUrlSchema.expandedUrl;
-        }
+        expandedUrl = keyed.readString();
+        seen |= _$TwitterUrlSchema.expandedUrl;
         break;
       case _$TwitterUrlSchema.keyDisplayUrl:
         if ((seen._value & _$TwitterUrlSchema.displayUrl._value) != 0) {
           throw const CodableException('Duplicate field "display_url"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          displayUrl = keyed.readString();
-          seen |= _$TwitterUrlSchema.displayUrl;
-        }
+        displayUrl = keyed.readString();
+        seen |= _$TwitterUrlSchema.displayUrl;
         break;
       case _$TwitterUrlSchema.keyIndices:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          indices = keyed.decodeIntList();
-        }
+        indices = keyed.decodeIntList();
         break;
       default:
         keyed.skipValue();
@@ -711,11 +671,7 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterEntitiesUrlsSchema.keyOptions)) {
       case _$TwitterEntitiesUrlsSchema.keyUrls:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
-        }
+        urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
         break;
       default:
         keyed.skipValue();
@@ -971,20 +927,12 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterEntitiesSchema.keyOptions)) {
       case _$TwitterEntitiesSchema.keyUrls:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
-        }
+        urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
         break;
       case _$TwitterEntitiesSchema.keyUserMentions:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          userMentions = _$TwitterUserMentionListFromDecoder(
-            keyed.nestedDecoder(),
-          );
-        }
+        userMentions = _$TwitterUserMentionListFromDecoder(
+          keyed.nestedDecoder(),
+        );
         break;
       default:
         keyed.skipValue();
@@ -2215,59 +2163,35 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
         if ((seen._value & _$TwitterUserSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$TwitterUserSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$TwitterUserSchema.id;
         break;
       case _$TwitterUserSchema.keyIdStr:
         if ((seen._value & _$TwitterUserSchema.idStr._value) != 0) {
           throw const CodableException('Duplicate field "id_str"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          idStr = keyed.readString();
-          seen |= _$TwitterUserSchema.idStr;
-        }
+        idStr = keyed.readString();
+        seen |= _$TwitterUserSchema.idStr;
         break;
       case _$TwitterUserSchema.keyName:
         if ((seen._value & _$TwitterUserSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$TwitterUserSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$TwitterUserSchema.name;
         break;
       case _$TwitterUserSchema.keyScreenName:
         if ((seen._value & _$TwitterUserSchema.screenName._value) != 0) {
           throw const CodableException('Duplicate field "screen_name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          screenName = keyed.readString();
-          seen |= _$TwitterUserSchema.screenName;
-        }
+        screenName = keyed.readString();
+        seen |= _$TwitterUserSchema.screenName;
         break;
       case _$TwitterUserSchema.keyLocation:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          location = keyed.readString();
-        }
+        location = keyed.readString();
         break;
       case _$TwitterUserSchema.keyDescription:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          description = keyed.readString();
-        }
+        description = keyed.readString();
         break;
       case _$TwitterUserSchema.keyUrl:
         if (keyed.isNextNull()) {
@@ -2286,50 +2210,26 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterUserSchema.keyProtected:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          protected = keyed.readBool();
-        }
+        protected = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyFollowersCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          followersCount = keyed.readInt();
-        }
+        followersCount = keyed.readInt();
         break;
       case _$TwitterUserSchema.keyFriendsCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          friendsCount = keyed.readInt();
-        }
+        friendsCount = keyed.readInt();
         break;
       case _$TwitterUserSchema.keyListedCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          listedCount = keyed.readInt();
-        }
+        listedCount = keyed.readInt();
         break;
       case _$TwitterUserSchema.keyCreatedAt:
         if ((seen._value & _$TwitterUserSchema.createdAt._value) != 0) {
           throw const CodableException('Duplicate field "created_at"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          createdAt = keyed.readString();
-          seen |= _$TwitterUserSchema.createdAt;
-        }
+        createdAt = keyed.readString();
+        seen |= _$TwitterUserSchema.createdAt;
         break;
       case _$TwitterUserSchema.keyFavouritesCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          favouritesCount = keyed.readInt();
-        }
+        favouritesCount = keyed.readInt();
         break;
       case _$TwitterUserSchema.keyUtcOffset:
         if (keyed.isNextNull()) {
@@ -2348,95 +2248,43 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterUserSchema.keyGeoEnabled:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          geoEnabled = keyed.readBool();
-        }
+        geoEnabled = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyVerified:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          verified = keyed.readBool();
-        }
+        verified = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyStatusesCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          statusesCount = keyed.readInt();
-        }
+        statusesCount = keyed.readInt();
         break;
       case _$TwitterUserSchema.keyLang:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          lang = keyed.readString();
-        }
+        lang = keyed.readString();
         break;
       case _$TwitterUserSchema.keyContributorsEnabled:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          contributorsEnabled = keyed.readBool();
-        }
+        contributorsEnabled = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyIsTranslator:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          isTranslator = keyed.readBool();
-        }
+        isTranslator = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyIsTranslationEnabled:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          isTranslationEnabled = keyed.readBool();
-        }
+        isTranslationEnabled = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyProfileBackgroundColor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileBackgroundColor = keyed.readString();
-        }
+        profileBackgroundColor = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileBackgroundImageUrl:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileBackgroundImageUrl = keyed.readString();
-        }
+        profileBackgroundImageUrl = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileBackgroundImageUrlHttps:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileBackgroundImageUrlHttps = keyed.readString();
-        }
+        profileBackgroundImageUrlHttps = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileBackgroundTile:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileBackgroundTile = keyed.readBool();
-        }
+        profileBackgroundTile = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyProfileImageUrl:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileImageUrl = keyed.readString();
-        }
+        profileImageUrl = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileImageUrlHttps:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileImageUrlHttps = keyed.readString();
-        }
+        profileImageUrlHttps = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileBannerUrl:
         if (keyed.isNextNull()) {
@@ -2447,74 +2295,34 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterUserSchema.keyProfileLinkColor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileLinkColor = keyed.readString();
-        }
+        profileLinkColor = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileSidebarBorderColor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileSidebarBorderColor = keyed.readString();
-        }
+        profileSidebarBorderColor = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileSidebarFillColor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileSidebarFillColor = keyed.readString();
-        }
+        profileSidebarFillColor = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileTextColor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileTextColor = keyed.readString();
-        }
+        profileTextColor = keyed.readString();
         break;
       case _$TwitterUserSchema.keyProfileUseBackgroundImage:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profileUseBackgroundImage = keyed.readBool();
-        }
+        profileUseBackgroundImage = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyDefaultProfile:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          defaultProfile = keyed.readBool();
-        }
+        defaultProfile = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyDefaultProfileImage:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          defaultProfileImage = keyed.readBool();
-        }
+        defaultProfileImage = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyFollowing:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          following = keyed.readBool();
-        }
+        following = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyFollowRequestSent:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          followRequestSent = keyed.readBool();
-        }
+        followRequestSent = keyed.readBool();
         break;
       case _$TwitterUserSchema.keyNotifications:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          notifications = keyed.readBool();
-        }
+        notifications = keyed.readBool();
         break;
       default:
         keyed.skipValue();
@@ -3332,63 +3140,39 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
         if ((seen._value & _$TwitterStatusSchema.createdAt._value) != 0) {
           throw const CodableException('Duplicate field "created_at"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          createdAt = keyed.readString();
-          seen |= _$TwitterStatusSchema.createdAt;
-        }
+        createdAt = keyed.readString();
+        seen |= _$TwitterStatusSchema.createdAt;
         break;
       case _$TwitterStatusSchema.keyId:
         if ((seen._value & _$TwitterStatusSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$TwitterStatusSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$TwitterStatusSchema.id;
         break;
       case _$TwitterStatusSchema.keyIdStr:
         if ((seen._value & _$TwitterStatusSchema.idStr._value) != 0) {
           throw const CodableException('Duplicate field "id_str"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          idStr = keyed.readString();
-          seen |= _$TwitterStatusSchema.idStr;
-        }
+        idStr = keyed.readString();
+        seen |= _$TwitterStatusSchema.idStr;
         break;
       case _$TwitterStatusSchema.keyText:
         if ((seen._value & _$TwitterStatusSchema.text._value) != 0) {
           throw const CodableException('Duplicate field "text"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          text = keyed.readString();
-          seen |= _$TwitterStatusSchema.text;
-        }
+        text = keyed.readString();
+        seen |= _$TwitterStatusSchema.text;
         break;
       case _$TwitterStatusSchema.keySource:
         if ((seen._value & _$TwitterStatusSchema.source._value) != 0) {
           throw const CodableException('Duplicate field "source"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          source = keyed.readString();
-          seen |= _$TwitterStatusSchema.source;
-        }
+        source = keyed.readString();
+        seen |= _$TwitterStatusSchema.source;
         break;
       case _$TwitterStatusSchema.keyTruncated:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          truncated = keyed.readBool();
-        }
+        truncated = keyed.readBool();
         break;
       case _$TwitterStatusSchema.keyInReplyToStatusId:
         if (keyed.isNextNull()) {
@@ -3439,18 +3223,10 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterStatusSchema.keyRetweetCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          retweetCount = keyed.readInt();
-        }
+        retweetCount = keyed.readInt();
         break;
       case _$TwitterStatusSchema.keyFavoriteCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          favoriteCount = keyed.readInt();
-        }
+        favoriteCount = keyed.readInt();
         break;
       case _$TwitterStatusSchema.keyEntities:
         if (keyed.isNextNull()) {
@@ -3461,18 +3237,10 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterStatusSchema.keyFavorited:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          favorited = keyed.readBool();
-        }
+        favorited = keyed.readBool();
         break;
       case _$TwitterStatusSchema.keyRetweeted:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          retweeted = keyed.readBool();
-        }
+        retweeted = keyed.readBool();
         break;
       case _$TwitterStatusSchema.keyPossiblySensitive:
         if (keyed.isNextNull()) {
@@ -3483,11 +3251,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
         }
         break;
       case _$TwitterStatusSchema.keyLang:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          lang = keyed.readString();
-        }
+        lang = keyed.readString();
         break;
       case _$TwitterStatusSchema.keyRetweetedStatus:
         if (keyed.isNextNull()) {
@@ -3919,85 +3683,49 @@ TwitterSearchMetadata _$TwitterSearchMetadataFromDecoder(Decoder decoder) {
             0) {
           throw const CodableException('Duplicate field "completed_in"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          completedIn = keyed.readDouble();
-          seen |= _$TwitterSearchMetadataSchema.completedIn;
-        }
+        completedIn = keyed.readDouble();
+        seen |= _$TwitterSearchMetadataSchema.completedIn;
         break;
       case _$TwitterSearchMetadataSchema.keyMaxId:
         if ((seen._value & _$TwitterSearchMetadataSchema.maxId._value) != 0) {
           throw const CodableException('Duplicate field "max_id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxId = keyed.readInt();
-          seen |= _$TwitterSearchMetadataSchema.maxId;
-        }
+        maxId = keyed.readInt();
+        seen |= _$TwitterSearchMetadataSchema.maxId;
         break;
       case _$TwitterSearchMetadataSchema.keyMaxIdStr:
         if ((seen._value & _$TwitterSearchMetadataSchema.maxIdStr._value) !=
             0) {
           throw const CodableException('Duplicate field "max_id_str"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxIdStr = keyed.readString();
-          seen |= _$TwitterSearchMetadataSchema.maxIdStr;
-        }
+        maxIdStr = keyed.readString();
+        seen |= _$TwitterSearchMetadataSchema.maxIdStr;
         break;
       case _$TwitterSearchMetadataSchema.keyNextResults:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          nextResults = keyed.readString();
-        }
+        nextResults = keyed.readString();
         break;
       case _$TwitterSearchMetadataSchema.keyQuery:
         if ((seen._value & _$TwitterSearchMetadataSchema.query._value) != 0) {
           throw const CodableException('Duplicate field "query"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          query = keyed.readString();
-          seen |= _$TwitterSearchMetadataSchema.query;
-        }
+        query = keyed.readString();
+        seen |= _$TwitterSearchMetadataSchema.query;
         break;
       case _$TwitterSearchMetadataSchema.keyRefreshUrl:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          refreshUrl = keyed.readString();
-        }
+        refreshUrl = keyed.readString();
         break;
       case _$TwitterSearchMetadataSchema.keyCount:
         if ((seen._value & _$TwitterSearchMetadataSchema.count._value) != 0) {
           throw const CodableException('Duplicate field "count"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          count = keyed.readInt();
-          seen |= _$TwitterSearchMetadataSchema.count;
-        }
+        count = keyed.readInt();
+        seen |= _$TwitterSearchMetadataSchema.count;
         break;
       case _$TwitterSearchMetadataSchema.keySinceId:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          sinceId = keyed.readInt();
-        }
+        sinceId = keyed.readInt();
         break;
       case _$TwitterSearchMetadataSchema.keySinceIdStr:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          sinceIdStr = keyed.readString();
-        }
+        sinceIdStr = keyed.readString();
         break;
       default:
         keyed.skipValue();
@@ -4192,25 +3920,17 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterResponseSchema.keyOptions)) {
       case _$TwitterResponseSchema.keyStatuses:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          statuses = _$TwitterStatusListFromDecoder(keyed.nestedDecoder());
-        }
+        statuses = _$TwitterStatusListFromDecoder(keyed.nestedDecoder());
         break;
       case _$TwitterResponseSchema.keySearchMetadata:
         if ((seen._value & _$TwitterResponseSchema.searchMetadata._value) !=
             0) {
           throw const CodableException('Duplicate field "search_metadata"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          searchMetadata = _$TwitterSearchMetadataFromDecoder(
-            keyed.nestedDecoder(),
-          );
-          seen |= _$TwitterResponseSchema.searchMetadata;
-        }
+        searchMetadata = _$TwitterSearchMetadataFromDecoder(
+          keyed.nestedDecoder(),
+        );
+        seen |= _$TwitterResponseSchema.searchMetadata;
         break;
       default:
         keyed.skipValue();

@@ -1391,10 +1391,6 @@ class ZipCodeDecoder {
 
   String decode(Decoder decoder) {
     final single = decoder.singleValue();
-    if (single.isNull()) {
-      single.readNull();
-      return '';
-    }
     try {
       return single.readString();
     } catch (_) {

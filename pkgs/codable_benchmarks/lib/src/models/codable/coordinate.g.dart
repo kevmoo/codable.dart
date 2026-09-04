@@ -4,6 +4,10 @@
 
 part of 'coordinate.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -122,24 +126,16 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
         if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
           throw const CodableException('Duplicate field "latitude"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          latitude = keyed.readDouble();
-          seen |= _$CoordinateSchema.latitude;
-        }
+        latitude = keyed.readDouble();
+        seen |= _$CoordinateSchema.latitude;
         break;
       case _$CoordinateSchema.keyLongitude:
       case _$CoordinateSchema.aliasKeyLongitudeLon:
         if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
           throw const CodableException('Duplicate field "longitude"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          longitude = keyed.readDouble();
-          seen |= _$CoordinateSchema.longitude;
-        }
+        longitude = keyed.readDouble();
+        seen |= _$CoordinateSchema.longitude;
         break;
       default:
         keyed.skipValue();

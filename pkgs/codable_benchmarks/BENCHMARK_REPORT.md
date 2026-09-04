@@ -3,9 +3,9 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] |
 | :--- | :--- | :---: | :---: |
-| **AOT (`dart compile exe`)** | **`New Dart + Codable`** | 🔴 `[ 42 / 54 / 72 ]` | 🟢 `[ 88 / 96 / 100 ]` |
+| **AOT (`dart compile exe`)** | **`New Dart + Codable`** | 🔴 `[ 40 / 55 / 69 ]` | 🟢 `[ 95 / 98 / 100 ]` |
 | **JS (`dart2js` / Node 24 / V8)** | **`New Dart + Codable`** | 🟡 `[ 37 / 82 / 100 ]` | 🟢 `[ 100 / 100 / 100 ]` |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **`New Dart + Codable`** | 🟡 `[ 69 / 83 / 100 ]` | 🟢 `[ 96 / 99 / 100 ]` |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **`New Dart + Codable`** | 🟡 `[ 74 / 85 / 100 ]` | 🟢 `[ 96 / 99 / 100 ]` |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
@@ -22,11 +22,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 5.02 ms | **8.14 ms** | **0.62x** |
-| **canada.json (2.25 MB)** | 41.33 ms | **57.59 ms** | **0.72x** |
-| **citm_catalog.json (1.73 MB)** | 8.66 ms | **17.13 ms** | **0.51x** |
-| **small.json (0.55 KB)** | 2.7 µs | **5.7 µs** | **0.48x** |
-| **twitter.json (0.62 MB)** | 3.68 ms | **8.73 ms** | **0.42x** |
+| **10k Coordinates (0.39 MB)** | 4.85 ms | **8.28 ms** | **0.59x** |
+| **canada.json (2.25 MB)** | 41.03 ms | **59.08 ms** | **0.69x** |
+| **citm_catalog.json (1.73 MB)** | 8.91 ms | **16.95 ms** | **0.53x** |
+| **small.json (0.55 KB)** | 3.5 µs | **6.2 µs** | **0.57x** |
+| **twitter.json (0.62 MB)** | 3.44 ms | **8.65 ms** | **0.40x** |
 <!-- mdformat on -->
 
 
@@ -35,11 +35,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.88 ms | **2.94 ms** | **1.66x** |
-| **canada.json (2.25 MB)** | 31.45 ms | **33.14 ms** | **0.95x** |
-| **citm_catalog.json (1.73 MB)** | 6.13 ms | **3.24 ms** | **1.89x** |
-| **small.json (0.55 KB)** | 5.3 µs | **6.1 µs** | **0.88x** |
-| **twitter.json (0.62 MB)** | 3.27 ms | **1.76 ms** | **1.85x** |
+| **10k Coordinates (0.39 MB)** | 4.87 ms | **2.86 ms** | **1.70x** |
+| **canada.json (2.25 MB)** | 31.07 ms | **32.70 ms** | **0.95x** |
+| **citm_catalog.json (1.73 MB)** | 6.58 ms | **3.09 ms** | **2.13x** |
+| **small.json (0.55 KB)** | 5.4 µs | **5.7 µs** | **0.95x** |
+| **twitter.json (0.62 MB)** | 3.21 ms | **1.93 ms** | **1.67x** |
 <!-- mdformat on -->
 
 
@@ -52,11 +52,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 5.17 ms | **2.56 ms** | **2.02x** |
-| **canada.json (2.25 MB)** | 42.55 ms | **25.14 ms** | **1.69x** |
-| **citm_catalog.json (1.73 MB)** | 10.79 ms | **7.19 ms** | **1.50x** |
-| **small.json (0.55 KB)** | 5.5 µs | **15.2 µs** | **0.37x** |
-| **twitter.json (0.62 MB)** | 4.06 ms | **3.41 ms** | **1.19x** |
+| **10k Coordinates (0.39 MB)** | 5.03 ms | **2.60 ms** | **1.93x** |
+| **canada.json (2.25 MB)** | 44.86 ms | **25.34 ms** | **1.77x** |
+| **citm_catalog.json (1.73 MB)** | 10.52 ms | **6.88 ms** | **1.53x** |
+| **small.json (0.55 KB)** | 5.5 µs | **14.8 µs** | **0.37x** |
+| **twitter.json (0.62 MB)** | 4.18 ms | **3.31 ms** | **1.26x** |
 <!-- mdformat on -->
 
 
@@ -65,11 +65,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 12.96 ms | **2.59 ms** | **5.01x** |
-| **canada.json (2.25 MB)** | 36.05 ms | **27.41 ms** | **1.32x** |
-| **citm_catalog.json (1.73 MB)** | 13.75 ms | **5.51 ms** | **2.50x** |
-| **small.json (0.55 KB)** | 18.8 µs | **3.4 µs** | **5.51x** |
-| **twitter.json (0.62 MB)** | 4.60 ms | **3.50 ms** | **1.32x** |
+| **10k Coordinates (0.39 MB)** | 13.24 ms | **2.75 ms** | **4.82x** |
+| **canada.json (2.25 MB)** | 36.83 ms | **25.45 ms** | **1.45x** |
+| **citm_catalog.json (1.73 MB)** | 14.11 ms | **5.79 ms** | **2.44x** |
+| **small.json (0.55 KB)** | 18.8 µs | **3.4 µs** | **5.53x** |
+| **twitter.json (0.62 MB)** | 4.81 ms | **3.68 ms** | **1.31x** |
 <!-- mdformat on -->
 
 
@@ -82,11 +82,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.37 ms | **4.91 ms** | **0.89x** |
-| **canada.json (2.25 MB)** | 58.96 ms | **20.23 ms** | **2.91x** |
-| **citm_catalog.json (1.73 MB)** | 6.78 ms | **8.20 ms** | **0.83x** |
-| **small.json (0.55 KB)** | 3.5 µs | **5.0 µs** | **0.69x** |
-| **twitter.json (0.62 MB)** | 3.61 ms | **4.61 ms** | **0.78x** |
+| **10k Coordinates (0.39 MB)** | 4.35 ms | **4.92 ms** | **0.88x** |
+| **canada.json (2.25 MB)** | 58.62 ms | **20.24 ms** | **2.90x** |
+| **citm_catalog.json (1.73 MB)** | 6.85 ms | **7.91 ms** | **0.87x** |
+| **small.json (0.55 KB)** | 3.6 µs | **4.9 µs** | **0.74x** |
+| **twitter.json (0.62 MB)** | 3.55 ms | **4.48 ms** | **0.79x** |
 <!-- mdformat on -->
 
 
@@ -95,11 +95,11 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | json_serializable | package:codable | Speedup vs json_serializable |
 | :--- | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.85 ms | **3.33 ms** | **1.45x** |
-| **canada.json (2.25 MB)** | 38.78 ms | **24.84 ms** | **1.56x** |
-| **citm_catalog.json (1.73 MB)** | 6.05 ms | **5.27 ms** | **1.15x** |
-| **small.json (0.55 KB)** | 6.1 µs | **3.4 µs** | **1.80x** |
-| **twitter.json (0.62 MB)** | 3.46 ms | **3.60 ms** | **0.96x** |
+| **10k Coordinates (0.39 MB)** | 4.97 ms | **3.69 ms** | **1.35x** |
+| **canada.json (2.25 MB)** | 39.83 ms | **25.61 ms** | **1.56x** |
+| **citm_catalog.json (1.73 MB)** | 5.69 ms | **5.26 ms** | **1.08x** |
+| **small.json (0.55 KB)** | 6.2 µs | **3.4 µs** | **1.84x** |
+| **twitter.json (0.62 MB)** | 3.47 ms | **3.61 ms** | **0.96x** |
 <!-- mdformat on -->
 
 
