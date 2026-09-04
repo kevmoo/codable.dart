@@ -4,6 +4,10 @@
 
 part of 'domain_models_test.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -122,24 +126,16 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
         if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
           throw const CodableException('Duplicate field "latitude"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          latitude = keyed.readDouble();
-          seen |= _$CoordinateSchema.latitude;
-        }
+        latitude = keyed.readDouble();
+        seen |= _$CoordinateSchema.latitude;
         break;
       case _$CoordinateSchema.keyLongitude:
       case _$CoordinateSchema.aliasKeyLongitudeLon:
         if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
           throw const CodableException('Duplicate field "longitude"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          longitude = keyed.readDouble();
-          seen |= _$CoordinateSchema.longitude;
-        }
+        longitude = keyed.readDouble();
+        seen |= _$CoordinateSchema.longitude;
         break;
       default:
         keyed.skipValue();
@@ -332,59 +328,39 @@ UserProfile _$UserProfileFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserProfileSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readString();
-          seen |= _$UserProfileSchema.id;
-        }
+        id = keyed.readString();
+        seen |= _$UserProfileSchema.id;
         break;
       case _$UserProfileSchema.keyEmail:
         if ((seen._value & _$UserProfileSchema.email._value) != 0) {
           throw const CodableException('Duplicate field "email"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          email = keyed.readString();
-          seen |= _$UserProfileSchema.email;
-        }
+        email = keyed.readString();
+        seen |= _$UserProfileSchema.email;
         break;
       case _$UserProfileSchema.keyRole:
         if ((seen._value & _$UserProfileSchema.role._value) != 0) {
           throw const CodableException('Duplicate field "role"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
+        final enumIndex = keyed.selectStringIndex(
+          _$UserProfileSchema.roleKeyOptions,
+        );
+        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+          role = UserRole.values[enumIndex];
         } else {
-          final enumIndex = keyed.selectStringIndex(
-            _$UserProfileSchema.roleKeyOptions,
-          );
-          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-            role = UserRole.values[enumIndex];
-          } else {
-            throw const CodableException('Unknown UserRole value');
-          }
-          seen |= _$UserProfileSchema.role;
+          throw const CodableException('Unknown UserRole value');
         }
+        seen |= _$UserProfileSchema.role;
         break;
       case _$UserProfileSchema.keyZip:
         if ((seen._value & _$UserProfileSchema.zip._value) != 0) {
           throw const CodableException('Duplicate field "zip"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          zip = keyed.decodeValue(const ZipCodeDecoder().decode);
-          seen |= _$UserProfileSchema.zip;
-        }
+        zip = keyed.decodeValue(const ZipCodeDecoder().decode);
+        seen |= _$UserProfileSchema.zip;
         break;
       case _$UserProfileSchema.keyTags:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          tags = keyed.decodeStringList();
-        }
+        tags = keyed.decodeStringList();
         break;
       default:
         keyed.skipValue();
@@ -529,23 +505,15 @@ Car _$CarFromDecoder(Decoder decoder) {
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxSpeed = keyed.readInt();
-          seen |= _$CarSchema.maxSpeed;
-        }
+        maxSpeed = keyed.readInt();
+        seen |= _$CarSchema.maxSpeed;
         break;
       case _$CarSchema.keyDoors:
         if ((seen._value & _$CarSchema.doors._value) != 0) {
           throw const CodableException('Duplicate field "doors"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          doors = keyed.readInt();
-          seen |= _$CarSchema.doors;
-        }
+        doors = keyed.readInt();
+        seen |= _$CarSchema.doors;
         break;
       default:
         keyed.skipValue();
@@ -689,23 +657,15 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
           throw const CodableException('Duplicate field "maxSpeed"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          maxSpeed = keyed.readInt();
-          seen |= _$BicycleSchema.maxSpeed;
-        }
+        maxSpeed = keyed.readInt();
+        seen |= _$BicycleSchema.maxSpeed;
         break;
       case _$BicycleSchema.keyHasBell:
         if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
           throw const CodableException('Duplicate field "hasBell"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          hasBell = keyed.readBool();
-          seen |= _$BicycleSchema.hasBell;
-        }
+        hasBell = keyed.readBool();
+        seen |= _$BicycleSchema.hasBell;
         break;
       default:
         keyed.skipValue();
@@ -853,23 +813,15 @@ UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserWithLocationSchema.profile._value) != 0) {
           throw const CodableException('Duplicate field "profile"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          profile = _$UserProfileFromDecoder(keyed.nestedDecoder());
-          seen |= _$UserWithLocationSchema.profile;
-        }
+        profile = _$UserProfileFromDecoder(keyed.nestedDecoder());
+        seen |= _$UserWithLocationSchema.profile;
         break;
       case _$UserWithLocationSchema.keyLocation:
         if ((seen._value & _$UserWithLocationSchema.location._value) != 0) {
           throw const CodableException('Duplicate field "location"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          location = _$CoordinateFromDecoder(keyed.nestedDecoder());
-          seen |= _$UserWithLocationSchema.location;
-        }
+        location = _$CoordinateFromDecoder(keyed.nestedDecoder());
+        seen |= _$UserWithLocationSchema.location;
         break;
       default:
         keyed.skipValue();

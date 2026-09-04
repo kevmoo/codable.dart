@@ -325,14 +325,10 @@ final class DecoderGeneratorHelper {
       }
       buffer.writeln('        }');
     } else {
-      buffer.writeln('        if (keyed.isNextNull()) {');
-      buffer.writeln('          keyed.readNull();');
-      buffer.writeln('        } else {');
-      _writeKeyedFieldRead(buffer, field, indent: '          ');
+      _writeKeyedFieldRead(buffer, field, indent: '        ');
       if (field.participatesInGoldenMask) {
-        buffer.writeln('          seen |= $schemaName.${field.name};');
+        buffer.writeln('        seen |= $schemaName.${field.name};');
       }
-      buffer.writeln('        }');
     }
     buffer.writeln('        break;');
   }
@@ -745,11 +741,18 @@ final class DecoderGeneratorHelper {
       );
     } else if (elemType != null && elemType.element is EnumElement) {
       final enumName = elemType.element!.name;
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList((d) { '
-        'final v = d.singleValue().readNullableString(); '
-        'return v == null ? null : $enumName.values.byName(v); }).toSet();',
-      );
+      if (isNullable) {
+        buffer.writeln(
+          '$indent${field.name} = keyed.decodeList((d) { '
+          'final v = d.singleValue().readNullableString(); '
+          'return v == null ? null : $enumName.values.byName(v); }).toSet();',
+        );
+      } else {
+        buffer.writeln(
+          '$indent${field.name} = keyed.decodeList('
+          '(d) => $enumName.values.byName(d.singleValue().readString())).toSet();',
+        );
+      }
     } else if (elemType != null &&
         elemType.element != null &&
         const TypeClassifier().isCodableElement(elemType.element!)) {

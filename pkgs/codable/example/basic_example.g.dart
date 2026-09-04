@@ -4,6 +4,10 @@
 
 part of 'basic_example.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Person
 // =============================================================================
@@ -214,35 +218,23 @@ Person _$PersonFromDecoder(Decoder decoder) {
         if ((seen._value & _$PersonSchema.firstName._value) != 0) {
           throw const CodableException('Duplicate field "firstName"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          firstName = keyed.readString();
-          seen |= _$PersonSchema.firstName;
-        }
+        firstName = keyed.readString();
+        seen |= _$PersonSchema.firstName;
         break;
       case _$PersonSchema.keyLastName:
         if ((seen._value & _$PersonSchema.lastName._value) != 0) {
           throw const CodableException('Duplicate field "lastName"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          lastName = keyed.readString();
-          seen |= _$PersonSchema.lastName;
-        }
+        lastName = keyed.readString();
+        seen |= _$PersonSchema.lastName;
         break;
       case _$PersonSchema.keyDateOfBirth:
       case _$PersonSchema.aliasKeyDateOfBirthDob:
         if ((seen._value & _$PersonSchema.dateOfBirth._value) != 0) {
           throw const CodableException('Duplicate field "date-of-birth"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          dateOfBirth = keyed.decodeValue(const DateTimeIsoDecoder().decode);
-          seen |= _$PersonSchema.dateOfBirth;
-        }
+        dateOfBirth = keyed.decodeValue(const DateTimeIsoDecoder().decode);
+        seen |= _$PersonSchema.dateOfBirth;
         break;
       case _$PersonSchema.keyMiddleName:
         if (keyed.isNextNull()) {
@@ -261,11 +253,7 @@ Person _$PersonFromDecoder(Decoder decoder) {
         }
         break;
       case _$PersonSchema.keyOrders:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          orders = _$OrderListFromDecoder(keyed.nestedDecoder());
-        }
+        orders = _$OrderListFromDecoder(keyed.nestedDecoder());
         break;
       default:
         keyed.skipValue();
@@ -497,12 +485,8 @@ Order _$OrderFromDecoder(Decoder decoder) {
         if ((seen._value & _$OrderSchema.dateUs._value) != 0) {
           throw const CodableException('Duplicate field "dateUs"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          dateUs = keyed.readInt();
-          seen |= _$OrderSchema.dateUs;
-        }
+        dateUs = keyed.readInt();
+        seen |= _$OrderSchema.dateUs;
         break;
       case _$OrderSchema.keyCount:
         if (keyed.isNextNull()) {

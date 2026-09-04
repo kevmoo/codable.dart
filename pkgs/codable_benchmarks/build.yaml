@@ -8,13 +8,18 @@ targets:
     builders:
       codable_builder|codable:
         generate_for:
+          - "lib/**"
           - "benchmark/**"
           - "test/**"
       json_serializable:
         generate_for:
+          - "lib/**"
           - "benchmark/**"
           - "test/**"
       source_gen|combining_builder:
         options:
           ignore_for_file:
             - lines_longer_than_80_chars
+            - unnecessary_lambdas
+            - deprecated_member_use
+            - unused_element

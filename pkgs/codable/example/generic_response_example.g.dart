@@ -4,6 +4,10 @@
 
 part of 'generic_response_example.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Article
 // =============================================================================
@@ -109,23 +113,15 @@ Article _$ArticleFromDecoder(Decoder decoder) {
         if ((seen._value & _$ArticleSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$ArticleSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$ArticleSchema.id;
         break;
       case _$ArticleSchema.keyTitle:
         if ((seen._value & _$ArticleSchema.title._value) != 0) {
           throw const CodableException('Duplicate field "title"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          title = keyed.readString();
-          seen |= _$ArticleSchema.title;
-        }
+        title = keyed.readString();
+        seen |= _$ArticleSchema.title;
         break;
       case _$ArticleSchema.keyAuthor:
         if (keyed.isNextNull()) {
@@ -261,23 +257,15 @@ User _$UserFromDecoder(Decoder decoder) {
         if ((seen._value & _$UserSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$UserSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$UserSchema.id;
         break;
       case _$UserSchema.keyEmail:
         if ((seen._value & _$UserSchema.email._value) != 0) {
           throw const CodableException('Duplicate field "email"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          email = keyed.readString();
-          seen |= _$UserSchema.email;
-        }
+        email = keyed.readString();
+        seen |= _$UserSchema.email;
         break;
       default:
         keyed.skipValue();

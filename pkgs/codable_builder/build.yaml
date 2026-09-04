@@ -7,6 +7,9 @@ targets:
         options:
           ignore_for_file:
             - lines_longer_than_80_chars
+            - unnecessary_lambdas
+            - deprecated_member_use
+            - unused_element
 
 builders:
   codable:

@@ -4,6 +4,10 @@
 
 part of 'citm_catalog.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CitmCatalog
 // =============================================================================
@@ -319,162 +323,116 @@ CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$CitmCatalogSchema.keyOptions)) {
       case _$CitmCatalogSchema.keyAreaNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            areaNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          areaNames = m;
         }
         break;
       case _$CitmCatalogSchema.keyAudienceSubCategoryNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            audienceSubCategoryNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          audienceSubCategoryNames = m;
         }
         break;
       case _$CitmCatalogSchema.keyBlockNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            blockNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          blockNames = m;
         }
         break;
       case _$CitmCatalogSchema.keyEvents:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, CitmEvent>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = _$CitmEventFromDecoder(k.nestedDecoder());
-            }
-            events = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, CitmEvent>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = _$CitmEventFromDecoder(k.nestedDecoder());
           }
+          events = m;
         }
         break;
       case _$CitmCatalogSchema.keyPerformances:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          performances = _$CitmPerformanceListFromDecoder(
-            keyed.nestedDecoder(),
-          );
-        }
+        performances = _$CitmPerformanceListFromDecoder(keyed.nestedDecoder());
         break;
       case _$CitmCatalogSchema.keySeatCategoryNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            seatCategoryNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          seatCategoryNames = m;
         }
         break;
       case _$CitmCatalogSchema.keySubTopicNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            subTopicNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          subTopicNames = m;
         }
         break;
       case _$CitmCatalogSchema.keySubjectNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            subjectNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          subjectNames = m;
         }
         break;
       case _$CitmCatalogSchema.keyTopicNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            topicNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          topicNames = m;
         }
         break;
       case _$CitmCatalogSchema.keyTopicSynced:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, bool>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readBool();
-            }
-            topicSynced = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, bool>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readBool();
           }
+          topicSynced = m;
         }
         break;
       case _$CitmCatalogSchema.keyVenueNames:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          {
-            final k = keyed.nestedDecoder().keyed();
-            final m = <String, String>{};
-            while (k.hasNextKey()) {
-              final key = k.nextKey();
-              m[key] = k.readString();
-            }
-            venueNames = m;
+        {
+          final k = keyed.nestedDecoder().keyed();
+          final m = <String, String>{};
+          while (k.hasNextKey()) {
+            final key = k.nextKey();
+            m[key] = k.readString();
           }
+          venueNames = m;
         }
         break;
       default:
@@ -842,12 +800,8 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
         if ((seen._value & _$CitmEventSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$CitmEventSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$CitmEventSchema.id;
         break;
       case _$CitmEventSchema.keyLogo:
         if (keyed.isNextNull()) {
@@ -861,19 +815,11 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
         if ((seen._value & _$CitmEventSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$CitmEventSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$CitmEventSchema.name;
         break;
       case _$CitmEventSchema.keySubTopicIds:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          subTopicIds = keyed.decodeIntList();
-        }
+        subTopicIds = keyed.decodeIntList();
         break;
       case _$CitmEventSchema.keySubjectCode:
         if (keyed.isNextNull()) {
@@ -892,11 +838,7 @@ CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
         }
         break;
       case _$CitmEventSchema.keyTopicIds:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          topicIds = keyed.decodeIntList();
-        }
+        topicIds = keyed.decodeIntList();
         break;
       default:
         keyed.skipValue();
@@ -1181,23 +1123,15 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
         if ((seen._value & _$CitmPerformanceSchema.eventId._value) != 0) {
           throw const CodableException('Duplicate field "eventId"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          eventId = keyed.readInt();
-          seen |= _$CitmPerformanceSchema.eventId;
-        }
+        eventId = keyed.readInt();
+        seen |= _$CitmPerformanceSchema.eventId;
         break;
       case _$CitmPerformanceSchema.keyId:
         if ((seen._value & _$CitmPerformanceSchema.id._value) != 0) {
           throw const CodableException('Duplicate field "id"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          id = keyed.readInt();
-          seen |= _$CitmPerformanceSchema.id;
-        }
+        id = keyed.readInt();
+        seen |= _$CitmPerformanceSchema.id;
         break;
       case _$CitmPerformanceSchema.keyLogo:
         if (keyed.isNextNull()) {
@@ -1216,42 +1150,26 @@ CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
         }
         break;
       case _$CitmPerformanceSchema.keyPrices:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          prices = _$CitmPriceListFromDecoder(keyed.nestedDecoder());
-        }
+        prices = _$CitmPriceListFromDecoder(keyed.nestedDecoder());
         break;
       case _$CitmPerformanceSchema.keySeatCategories:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          seatCategories = _$CitmSeatCategoryListFromDecoder(
-            keyed.nestedDecoder(),
-          );
-        }
+        seatCategories = _$CitmSeatCategoryListFromDecoder(
+          keyed.nestedDecoder(),
+        );
         break;
       case _$CitmPerformanceSchema.keyStart:
         if ((seen._value & _$CitmPerformanceSchema.start._value) != 0) {
           throw const CodableException('Duplicate field "start"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          start = keyed.readInt();
-          seen |= _$CitmPerformanceSchema.start;
-        }
+        start = keyed.readInt();
+        seen |= _$CitmPerformanceSchema.start;
         break;
       case _$CitmPerformanceSchema.keyVenueCode:
         if ((seen._value & _$CitmPerformanceSchema.venueCode._value) != 0) {
           throw const CodableException('Duplicate field "venueCode"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          venueCode = keyed.readString();
-          seen |= _$CitmPerformanceSchema.venueCode;
-        }
+        venueCode = keyed.readString();
+        seen |= _$CitmPerformanceSchema.venueCode;
         break;
       default:
         keyed.skipValue();
@@ -1482,12 +1400,8 @@ CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
         if ((seen._value & _$CitmPriceSchema.amount._value) != 0) {
           throw const CodableException('Duplicate field "amount"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          amount = keyed.readInt();
-          seen |= _$CitmPriceSchema.amount;
-        }
+        amount = keyed.readInt();
+        seen |= _$CitmPriceSchema.amount;
         break;
       case _$CitmPriceSchema.keyAudienceSubCategoryId:
         if ((seen._value & _$CitmPriceSchema.audienceSubCategoryId._value) !=
@@ -1496,23 +1410,15 @@ CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
             'Duplicate field "audienceSubCategoryId"',
           );
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          audienceSubCategoryId = keyed.readInt();
-          seen |= _$CitmPriceSchema.audienceSubCategoryId;
-        }
+        audienceSubCategoryId = keyed.readInt();
+        seen |= _$CitmPriceSchema.audienceSubCategoryId;
         break;
       case _$CitmPriceSchema.keySeatCategoryId:
         if ((seen._value & _$CitmPriceSchema.seatCategoryId._value) != 0) {
           throw const CodableException('Duplicate field "seatCategoryId"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          seatCategoryId = keyed.readInt();
-          seen |= _$CitmPriceSchema.seatCategoryId;
-        }
+        seatCategoryId = keyed.readInt();
+        seen |= _$CitmPriceSchema.seatCategoryId;
         break;
       default:
         keyed.skipValue();
@@ -1656,23 +1562,15 @@ CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
   while (keyed.hasNextKey()) {
     switch (keyed.selectKeyIndex(_$CitmSeatCategorySchema.keyOptions)) {
       case _$CitmSeatCategorySchema.keyAreas:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          areas = _$CitmAreaListFromDecoder(keyed.nestedDecoder());
-        }
+        areas = _$CitmAreaListFromDecoder(keyed.nestedDecoder());
         break;
       case _$CitmSeatCategorySchema.keySeatCategoryId:
         if ((seen._value & _$CitmSeatCategorySchema.seatCategoryId._value) !=
             0) {
           throw const CodableException('Duplicate field "seatCategoryId"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          seatCategoryId = keyed.readInt();
-          seen |= _$CitmSeatCategorySchema.seatCategoryId;
-        }
+        seatCategoryId = keyed.readInt();
+        seen |= _$CitmSeatCategorySchema.seatCategoryId;
         break;
       default:
         keyed.skipValue();
@@ -1815,19 +1713,11 @@ CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
         if ((seen._value & _$CitmAreaSchema.areaId._value) != 0) {
           throw const CodableException('Duplicate field "areaId"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          areaId = keyed.readInt();
-          seen |= _$CitmAreaSchema.areaId;
-        }
+        areaId = keyed.readInt();
+        seen |= _$CitmAreaSchema.areaId;
         break;
       case _$CitmAreaSchema.keyBlockIds:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          blockIds = keyed.decodeIntList();
-        }
+        blockIds = keyed.decodeIntList();
         break;
       default:
         keyed.skipValue();

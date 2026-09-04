@@ -4,6 +4,10 @@
 
 part of 'canada.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CanadaProperties
 // =============================================================================
@@ -79,12 +83,8 @@ CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
         if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
           throw const CodableException('Duplicate field "name"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          name = keyed.readString();
-          seen |= _$CanadaPropertiesSchema.name;
-        }
+        name = keyed.readString();
+        seen |= _$CanadaPropertiesSchema.name;
         break;
       default:
         keyed.skipValue();
@@ -213,21 +213,13 @@ CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
         if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          type = keyed.readString();
-          seen |= _$CanadaGeometrySchema.type;
-        }
+        type = keyed.readString();
+        seen |= _$CanadaGeometrySchema.type;
         break;
       case _$CanadaGeometrySchema.keyCoordinates:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          coordinates = keyed.decodeValue(
-            const CanadaCoordinatesDecoder().decode,
-          );
-        }
+        coordinates = keyed.decodeValue(
+          const CanadaCoordinatesDecoder().decode,
+        );
         break;
       default:
         keyed.skipValue();
@@ -397,34 +389,22 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
         if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          type = keyed.readString();
-          seen |= _$CanadaFeatureSchema.type;
-        }
+        type = keyed.readString();
+        seen |= _$CanadaFeatureSchema.type;
         break;
       case _$CanadaFeatureSchema.keyProperties:
         if ((seen._value & _$CanadaFeatureSchema.properties._value) != 0) {
           throw const CodableException('Duplicate field "properties"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          properties = _$CanadaPropertiesFromDecoder(keyed.nestedDecoder());
-          seen |= _$CanadaFeatureSchema.properties;
-        }
+        properties = _$CanadaPropertiesFromDecoder(keyed.nestedDecoder());
+        seen |= _$CanadaFeatureSchema.properties;
         break;
       case _$CanadaFeatureSchema.keyGeometry:
         if ((seen._value & _$CanadaFeatureSchema.geometry._value) != 0) {
           throw const CodableException('Duplicate field "geometry"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          geometry = _$CanadaGeometryFromDecoder(keyed.nestedDecoder());
-          seen |= _$CanadaFeatureSchema.geometry;
-        }
+        geometry = _$CanadaGeometryFromDecoder(keyed.nestedDecoder());
+        seen |= _$CanadaFeatureSchema.geometry;
         break;
       default:
         keyed.skipValue();
@@ -570,19 +550,11 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
         if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
           throw const CodableException('Duplicate field "type"');
         }
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          type = keyed.readString();
-          seen |= _$CanadaFeatureCollectionSchema.type;
-        }
+        type = keyed.readString();
+        seen |= _$CanadaFeatureCollectionSchema.type;
         break;
       case _$CanadaFeatureCollectionSchema.keyFeatures:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-        } else {
-          features = _$CanadaFeatureListFromDecoder(keyed.nestedDecoder());
-        }
+        features = _$CanadaFeatureListFromDecoder(keyed.nestedDecoder());
         break;
       default:
         keyed.skipValue();
