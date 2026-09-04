@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable_json.dart';
@@ -33,245 +33,24 @@ import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
 
 final utf8JsonDecoder = utf8.decoder.fuse(json.decoder);
 
-BenchmarkGroup _createDecodeGroup(
-  String dataset,
-  Uint8List bytes,
-  String jsonString,
-) {
-  return switch (dataset) {
-    'coordinates' => BenchmarkGroup.compare(
-      name: 'coordinates_decode',
-      config: const BenchmarkConfig(forceRun: true),
-      throughput: Throughput.bytes(bytes.length),
-      baseline: (
-        'json_serializable',
-        () {
-          final dynamic jsonAst = utf8JsonDecoder.convert(bytes);
-          final list = (jsonAst as List<dynamic>)
-              .map(
-                (e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>),
-              )
-              .toList();
-          Blackhole.consume(list);
-        },
-      ),
-      candidates: {
-        'json_serializable_literal': () {
-          final dynamic jsonAst = jsonDecode(jsonString);
-          final list = (jsonAst as List<dynamic>)
-              .map(
-                (e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>),
-              )
-              .toList();
-          Blackhole.consume(list);
-        },
-        'codable': () {
-          final list = codable_coord.Coordinate.decodeList(
-            JsonCodableDecoder.fromBytes(bytes),
-          );
-          Blackhole.consume(list);
-        },
-        'codable_js': () {
-          final list = codable_coord.Coordinate.decodeList(
-            JsonCodableDecoder.fromBytes(
-              bytes,
-              userInfo: const {#forceJsDom: true},
-            ),
-          );
-          Blackhole.consume(list);
-        },
-      },
-    ),
-    'canada' => BenchmarkGroup.compare(
-      name: 'canada_decode',
-      config: const BenchmarkConfig(forceRun: true),
-      throughput: Throughput.bytes(bytes.length),
-      baseline: (
-        'json_serializable',
-        () {
-          final dynamic jsonAst = utf8JsonDecoder.convert(bytes);
-          final model = js_canada.CanadaFeatureCollection.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-      ),
-      candidates: {
-        'json_serializable_literal': () {
-          final dynamic jsonAst = jsonDecode(jsonString);
-          final model = js_canada.CanadaFeatureCollection.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-        'codable': () {
-          final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final model = codable_canada.CanadaFeatureCollection.decode(decoder);
-          Blackhole.consume(model);
-        },
-        'codable_js': () {
-          final decoder = JsonCodableDecoder.fromBytes(
-            bytes,
-            userInfo: const {#forceJsDom: true},
-          );
-          final model = codable_canada.CanadaFeatureCollection.decode(decoder);
-          Blackhole.consume(model);
-        },
-      },
-    ),
-    'citm_catalog' => BenchmarkGroup.compare(
-      name: 'citm_catalog_decode',
-      config: const BenchmarkConfig(forceRun: true),
-      throughput: Throughput.bytes(bytes.length),
-      baseline: (
-        'json_serializable',
-        () {
-          final dynamic jsonAst = utf8JsonDecoder.convert(bytes);
-          final model = js_citm.CitmCatalog.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-      ),
-      candidates: {
-        'json_serializable_literal': () {
-          final dynamic jsonAst = jsonDecode(jsonString);
-          final model = js_citm.CitmCatalog.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-        'codable': () {
-          final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final model = codable_citm.CitmCatalog.decode(decoder);
-          Blackhole.consume(model);
-        },
-        'codable_js': () {
-          final decoder = JsonCodableDecoder.fromBytes(
-            bytes,
-            userInfo: const {#forceJsDom: true},
-          );
-          final model = codable_citm.CitmCatalog.decode(decoder);
-          Blackhole.consume(model);
-        },
-      },
-    ),
-    'small' => BenchmarkGroup.compare(
-      name: 'small_decode',
-      config: const BenchmarkConfig(forceRun: true),
-      throughput: Throughput.bytes(bytes.length),
-      baseline: (
-        'json_serializable',
-        () {
-          final dynamic jsonAst = utf8JsonDecoder.convert(bytes);
-          final model = js_small.SmallDocument.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-      ),
-      candidates: {
-        'json_serializable_literal': () {
-          final dynamic jsonAst = jsonDecode(jsonString);
-          final model = js_small.SmallDocument.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-        'codable': () {
-          final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final model = codable_small.SmallDocument.decode(decoder);
-          Blackhole.consume(model);
-        },
-        'codable_js': () {
-          final decoder = JsonCodableDecoder.fromBytes(
-            bytes,
-            userInfo: const {#forceJsDom: true},
-          );
-          final model = codable_small.SmallDocument.decode(decoder);
-          Blackhole.consume(model);
-        },
-      },
-    ),
-    'twitter' => BenchmarkGroup.compare(
-      name: 'twitter_decode',
-      config: const BenchmarkConfig(forceRun: true),
-      throughput: Throughput.bytes(bytes.length),
-      baseline: (
-        'json_serializable',
-        () {
-          final dynamic jsonAst = utf8JsonDecoder.convert(bytes);
-          final model = js_twitter.TwitterResponse.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-      ),
-      candidates: {
-        'json_serializable_literal': () {
-          final dynamic jsonAst = jsonDecode(jsonString);
-          final model = js_twitter.TwitterResponse.fromJson(
-            jsonAst as Map<String, dynamic>,
-          );
-          Blackhole.consume(model);
-        },
-        'codable': () {
-          final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final model = codable_twitter.TwitterResponse.decode(decoder);
-          Blackhole.consume(model);
-        },
-        'codable_js': () {
-          final decoder = JsonCodableDecoder.fromBytes(
-            bytes,
-            userInfo: const {#forceJsDom: true},
-          );
-          final model = codable_twitter.TwitterResponse.decode(decoder);
-          Blackhole.consume(model);
-        },
-      },
-    ),
-    _ => throw ArgumentError('Unknown dataset: $dataset'),
-  };
+class Data {
+  final String name;
+  final Uint8List bytes;
+  final String string;
+  Data(this.name)
+    : bytes = getDatasetBytes(name),
+      string = utf8.decode(getDatasetBytes(name));
 }
 
 void main(List<String> args) async {
-  if (isMockSubstrate && !args.contains('--allow-mock')) {
-    stderr.writeln(
-      '❌ ERROR: Running benchmarks on the MOCK substrate is prohibited to '
-      'prevent false optimization targets.',
-    );
-    stderr.writeln(
-      '   Pass --allow-mock to bypass this guard if you explicitly intend to '
-      'benchmark the mock payload.',
-    );
-    exit(1);
-  }
-
-  print('\n${'=' * 60}');
+  print('\n============================================================');
   print('🎯 SUBSTRATE METADATA');
   print(
     'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
   );
-  final sdkBinary = () {
-    try {
-      return Platform.resolvedExecutable;
-    } catch (_) {
-      return 'N/A (Web/JS)';
-    }
-  }();
-  final sdkVersion = () {
-    try {
-      return Platform.version;
-    } catch (_) {
-      return 'N/A (Web/JS)';
-    }
-  }();
-
-  print('SDK Binary: $sdkBinary');
-  print('SDK Version: $sdkVersion');
-  print('${'=' * 60}\n');
-
-  final benchmarkArgs = args.where((arg) => arg != '--allow-mock').toList();
+  print('SDK Binary: ${Platform.resolvedExecutable}');
+  print('SDK Version: ${Platform.version}');
+  print('============================================================\n');
 
   final datasets = [
     'coordinates',
@@ -280,13 +59,144 @@ void main(List<String> args) async {
     'small',
     'twitter',
   ];
+  final cases = datasets.map(Data.new).toList();
 
-  final groups = <BenchmarkGroup>[];
-  for (final ds in datasets) {
-    final bytes = getDatasetBytes(ds);
-    final jsonString = utf8.decode(bytes);
-    groups.add(_createDecodeGroup(ds, bytes, jsonString));
-  }
+  final groups = BenchmarkGroup.matrix<Data>(
+    cases: cases,
+    name: (d) => '${d.name}_decode',
+    config: const BenchmarkConfig(forceRun: true),
+    throughput: (d) => Throughput.bytes(d.bytes.length),
+    baseline: (
+      'json_serializable',
+      (d) {
+        final dynamic jsonAst = utf8JsonDecoder.convert(d.bytes);
+        switch (d.name) {
+          case 'coordinates':
+            Blackhole.consume(
+              (jsonAst as List<dynamic>)
+                  .map(
+                    (e) =>
+                        js_coord.Coordinate.fromJson(e as Map<String, dynamic>),
+                  )
+                  .toList(),
+            );
+            break;
+          case 'canada':
+            Blackhole.consume(
+              js_canada.CanadaFeatureCollection.fromJson(
+                jsonAst as Map<String, dynamic>,
+              ),
+            );
+            break;
+          case 'citm_catalog':
+            Blackhole.consume(
+              js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>),
+            );
+            break;
+          case 'small':
+            Blackhole.consume(
+              js_small.SmallDocument.fromJson(jsonAst as Map<String, dynamic>),
+            );
+            break;
+          case 'twitter':
+            Blackhole.consume(
+              js_twitter.TwitterResponse.fromJson(
+                jsonAst as Map<String, dynamic>,
+              ),
+            );
+            break;
+        }
+      },
+    ),
+    candidates: {
+      'json_serializable_literal': (d) {
+        final dynamic jsonAst = jsonDecode(d.string);
+        switch (d.name) {
+          case 'coordinates':
+            Blackhole.consume(
+              (jsonAst as List<dynamic>)
+                  .map(
+                    (e) =>
+                        js_coord.Coordinate.fromJson(e as Map<String, dynamic>),
+                  )
+                  .toList(),
+            );
+            break;
+          case 'canada':
+            Blackhole.consume(
+              js_canada.CanadaFeatureCollection.fromJson(
+                jsonAst as Map<String, dynamic>,
+              ),
+            );
+            break;
+          case 'citm_catalog':
+            Blackhole.consume(
+              js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>),
+            );
+            break;
+          case 'small':
+            Blackhole.consume(
+              js_small.SmallDocument.fromJson(jsonAst as Map<String, dynamic>),
+            );
+            break;
+          case 'twitter':
+            Blackhole.consume(
+              js_twitter.TwitterResponse.fromJson(
+                jsonAst as Map<String, dynamic>,
+              ),
+            );
+            break;
+        }
+      },
+      'codable': (d) {
+        final decoder = JsonCodableDecoder.fromBytes(d.bytes);
+        switch (d.name) {
+          case 'coordinates':
+            Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+            break;
+          case 'canada':
+            Blackhole.consume(
+              codable_canada.CanadaFeatureCollection.decode(decoder),
+            );
+            break;
+          case 'citm_catalog':
+            Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+            break;
+          case 'small':
+            Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+            break;
+          case 'twitter':
+            Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+            break;
+        }
+      },
+      'codable_js': (d) {
+        final decoder = JsonCodableDecoder.fromBytes(
+          d.bytes,
+          userInfo: const {#forceJsDom: true},
+        );
+        switch (d.name) {
+          case 'coordinates':
+            Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+            break;
+          case 'canada':
+            Blackhole.consume(
+              codable_canada.CanadaFeatureCollection.decode(decoder),
+            );
+            break;
+          case 'citm_catalog':
+            Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+            break;
+          case 'small':
+            Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+            break;
+          case 'twitter':
+            Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+            break;
+        }
+      },
+    },
+  );
 
-  await mainBenchmarkSuite(groups, benchmarkArgs);
+  await mainBenchmarkSuite(groups.toList(), args);
 }

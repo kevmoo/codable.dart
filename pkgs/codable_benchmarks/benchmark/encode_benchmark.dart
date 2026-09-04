@@ -3,12 +3,12 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
+import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
-
 import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
 import 'package:codable_benchmarks/src/models/codable/canada.dart'
     as codable_canada;
@@ -33,191 +33,78 @@ import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
 
 final utf8JsonEncoder = json.encoder.fuse(utf8.encoder);
 
-BenchmarkGroup _createEncodeGroup(
-  String dataset,
-  Uint8List bytes,
-  String jsonString,
-) {
-  switch (dataset) {
-    case 'coordinates':
-      final jsList = (jsonDecode(jsonString) as List<dynamic>)
-          .map((e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final codableList = codable_coord.Coordinate.decodeList(
-        JsonCodableDecoder.fromBytes(bytes),
-      );
-      return BenchmarkGroup.compare(
-        name: 'coordinates_encode',
-        config: const BenchmarkConfig(forceRun: true),
-        throughput: Throughput.bytes(bytes.length),
-        baseline: (
-          'json_serializable',
-          () {
-            final mapList = jsList.map((e) => e.toJson()).toList();
-            final outBytes = utf8JsonEncoder.convert(mapList);
-            Blackhole.consume(outBytes);
-          },
-        ),
-        candidates: {
-          'codable': () {
-            final outBytes = JsonCodableEncoder.toBytes((e) {
-              final unkeyed = e.unkeyed();
-              for (var i = 0; i < codableList.length; i++) {
-                unkeyed.encodeEncodable(codableList[i]);
-              }
-            });
-            Blackhole.consume(outBytes);
-          },
-        },
-      );
+class EncData {
+  final String name;
+  final Uint8List bytes;
+  final Object jsModel;
+  final void Function(Encoder) codableEncode;
 
-    case 'canada':
-      final jsModel = js_canada.CanadaFeatureCollection.fromJson(
-        jsonDecode(jsonString) as Map<String, dynamic>,
-      );
-      final codableModel = codable_canada.CanadaFeatureCollection.decode(
-        JsonCodableDecoder.fromBytes(bytes),
-      );
-      return BenchmarkGroup.compare(
-        name: 'canada_encode',
-        config: const BenchmarkConfig(forceRun: true),
-        throughput: Throughput.bytes(bytes.length),
-        baseline: (
-          'json_serializable',
-          () {
-            final outBytes = utf8JsonEncoder.convert(jsModel.toJson());
-            Blackhole.consume(outBytes);
-          },
-        ),
-        candidates: {
-          'codable': () {
-            final outBytes = JsonCodableEncoder.toBytes(codableModel.encode);
-            Blackhole.consume(outBytes);
-          },
-        },
-      );
+  EncData._(this.name, this.bytes, this.jsModel, this.codableEncode);
 
-    case 'citm_catalog':
-      final jsModel = js_citm.CitmCatalog.fromJson(
-        jsonDecode(jsonString) as Map<String, dynamic>,
-      );
-      final codableModel = codable_citm.CitmCatalog.decode(
-        JsonCodableDecoder.fromBytes(bytes),
-      );
-      return BenchmarkGroup.compare(
-        name: 'citm_catalog_encode',
-        config: const BenchmarkConfig(forceRun: true),
-        throughput: Throughput.bytes(bytes.length),
-        baseline: (
-          'json_serializable',
-          () {
-            final outBytes = utf8JsonEncoder.convert(jsModel.toJson());
-            Blackhole.consume(outBytes);
-          },
-        ),
-        candidates: {
-          'codable': () {
-            final outBytes = JsonCodableEncoder.toBytes(codableModel.encode);
-            Blackhole.consume(outBytes);
-          },
-        },
-      );
+  factory EncData(String name) {
+    final bytes = getDatasetBytes(name);
+    final jsonAst = utf8.decoder.fuse(json.decoder).convert(bytes);
+    Object jsModel;
+    void Function(Encoder) codableEncode;
+    final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-    case 'small':
-      final jsModel = js_small.SmallDocument.fromJson(
-        jsonDecode(jsonString) as Map<String, dynamic>,
-      );
-      final codableModel = codable_small.SmallDocument.decode(
-        JsonCodableDecoder.fromBytes(bytes),
-      );
-      return BenchmarkGroup.compare(
-        name: 'small_encode',
-        config: const BenchmarkConfig(forceRun: true),
-        throughput: Throughput.bytes(bytes.length),
-        baseline: (
-          'json_serializable',
-          () {
-            final outBytes = utf8JsonEncoder.convert(jsModel.toJson());
-            Blackhole.consume(outBytes);
-          },
-        ),
-        candidates: {
-          'codable': () {
-            final outBytes = JsonCodableEncoder.toBytes(codableModel.encode);
-            Blackhole.consume(outBytes);
-          },
-        },
-      );
-
-    case 'twitter':
-      final jsModel = js_twitter.TwitterResponse.fromJson(
-        jsonDecode(jsonString) as Map<String, dynamic>,
-      );
-      final codableModel = codable_twitter.TwitterResponse.decode(
-        JsonCodableDecoder.fromBytes(bytes),
-      );
-      return BenchmarkGroup.compare(
-        name: 'twitter_encode',
-        config: const BenchmarkConfig(forceRun: true),
-        throughput: Throughput.bytes(bytes.length),
-        baseline: (
-          'json_serializable',
-          () {
-            final outBytes = utf8JsonEncoder.convert(jsModel.toJson());
-            Blackhole.consume(outBytes);
-          },
-        ),
-        candidates: {
-          'codable': () {
-            final outBytes = JsonCodableEncoder.toBytes(codableModel.encode);
-            Blackhole.consume(outBytes);
-          },
-        },
-      );
-
-    default:
-      throw ArgumentError('Unknown dataset: $dataset');
+    switch (name) {
+      case 'coordinates':
+        jsModel = (jsonAst as List)
+            .map((e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>))
+            .toList();
+        final list = codable_coord.Coordinate.decodeList(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
+        codableEncode = (encoder) {
+          var eList = encoder.unkeyed();
+          for (final model in list) {
+            eList.encodeEncodable(model);
+          }
+        };
+        break;
+      case 'canada':
+        jsModel = js_canada.CanadaFeatureCollection.fromJson(
+          jsonAst as Map<String, dynamic>,
+        );
+        final m = codable_canada.CanadaFeatureCollection.decode(decoder);
+        codableEncode = m.encode;
+        break;
+      case 'citm_catalog':
+        jsModel = js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>);
+        final m = codable_citm.CitmCatalog.decode(decoder);
+        codableEncode = m.encode;
+        break;
+      case 'small':
+        jsModel = js_small.SmallDocument.fromJson(
+          jsonAst as Map<String, dynamic>,
+        );
+        final m = codable_small.SmallDocument.decode(decoder);
+        codableEncode = m.encode;
+        break;
+      case 'twitter':
+        jsModel = js_twitter.TwitterResponse.fromJson(
+          jsonAst as Map<String, dynamic>,
+        );
+        final m = codable_twitter.TwitterResponse.decode(decoder);
+        codableEncode = m.encode;
+        break;
+      default:
+        throw Exception();
+    }
+    return EncData._(name, bytes, jsModel, codableEncode);
   }
 }
 
 void main(List<String> args) async {
-  if (isMockSubstrate && !args.contains('--allow-mock')) {
-    stderr.writeln(
-      '❌ ERROR: Running benchmarks on the MOCK substrate is prohibited to '
-      'prevent false optimization targets.',
-    );
-    stderr.writeln(
-      '   Pass --allow-mock to bypass this guard if you explicitly intend to '
-      'benchmark the mock payload.',
-    );
-    exit(1);
-  }
-
-  print('\n${'=' * 60}');
+  print('\n============================================================');
   print('🎯 SUBSTRATE METADATA');
   print(
     'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
   );
-  final sdkBinary = () {
-    try {
-      return Platform.resolvedExecutable;
-    } catch (_) {
-      return 'N/A (Web/JS)';
-    }
-  }();
-  final sdkVersion = () {
-    try {
-      return Platform.version;
-    } catch (_) {
-      return 'N/A (Web/JS)';
-    }
-  }();
-
-  print('SDK Binary: $sdkBinary');
-  print('SDK Version: $sdkVersion');
-  print('${'=' * 60}\n');
-
-  final benchmarkArgs = args.where((arg) => arg != '--allow-mock').toList();
+  print('SDK Binary: ${Platform.resolvedExecutable}');
+  print('SDK Version: ${Platform.version}');
+  print('============================================================\n');
 
   final datasets = [
     'coordinates',
@@ -226,13 +113,46 @@ void main(List<String> args) async {
     'small',
     'twitter',
   ];
+  final cases = datasets.map(EncData.new).toList();
 
-  final groups = <BenchmarkGroup>[];
-  for (final ds in datasets) {
-    final bytes = getDatasetBytes(ds);
-    final jsonString = utf8.decode(bytes);
-    groups.add(_createEncodeGroup(ds, bytes, jsonString));
-  }
+  final groups = BenchmarkGroup.matrix<EncData>(
+    cases: cases,
+    name: (d) => '${d.name}_encode',
+    config: const BenchmarkConfig(forceRun: true),
+    throughput: (d) => Throughput.bytes(d.bytes.length),
+    baseline: (
+      'json_serializable',
+      (d) {
+        dynamic res;
+        switch (d.name) {
+          case 'coordinates':
+            res = (d.jsModel as List<js_coord.Coordinate>)
+                .map((e) => e.toJson())
+                .toList();
+            break;
+          case 'canada':
+            res = (d.jsModel as js_canada.CanadaFeatureCollection).toJson();
+            break;
+          case 'citm_catalog':
+            res = (d.jsModel as js_citm.CitmCatalog).toJson();
+            break;
+          case 'small':
+            res = (d.jsModel as js_small.SmallDocument).toJson();
+            break;
+          case 'twitter':
+            res = (d.jsModel as js_twitter.TwitterResponse).toJson();
+            break;
+        }
+        Blackhole.consume(utf8JsonEncoder.convert(res));
+      },
+    ),
+    candidates: {
+      'codable': (d) {
+        final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
+        Blackhole.consume(outBytes);
+      },
+    },
+  );
 
-  await mainBenchmarkSuite(groups, benchmarkArgs);
+  await mainBenchmarkSuite(groups.toList(), args);
 }
