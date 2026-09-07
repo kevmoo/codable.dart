@@ -1,19 +1,3 @@
-### 📊 Isolated AOT Decode Optimization Impact (`native` SDK Substrate)
-
-Isolated **Before vs. After** latency and throughput delta on `package:codable` AOT (`dart compile exe`) following the Layer 1 SDK token-reader (`kevmoo/dart-sdk-json-next#4`) and streaming driver (`kevmoo/codable.dart#45`) cleanups:
-
-<!-- mdformat off(prevent table wrapping) -->
-| Workload / Dataset | Pre-Change Latency (Baseline) | Post-Change Latency (`dart-sdk-json-next#4` + `#45`) | Absolute Delta | Delta (%) | Speedup Multiplier vs Pre-Change Commit |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **`citm_catalog_decode` (1.73 MB)** | 16,950 µs | **4,620 µs** | -12,330 µs | **-72.7%** | **3.67x faster** |
-| **`coordinates_decode` (0.39 MB)** | 8,280 µs | **2,670 µs** | -5,610 µs | **-67.8%** | **3.10x faster** |
-| **`canada_decode` (2.25 MB)** | 59,080 µs | **23,470 µs** | -35,610 µs | **-60.3%** | **2.52x faster** |
-| **`twitter_decode` (0.62 MB)** | 8,650 µs | **3,510 µs** | -5,140 µs | **-59.4%** | **2.46x faster** |
-| **`small_decode` (0.55 KB)** | 6.2 µs | **3.0 µs** | -3.2 µs | **-51.6%** | **2.07x faster** |
-<!-- mdformat on -->
-
-------------------------------------------------------------------------
-
 ### 📊 3-Runtime Summary (Relative Efficiency Index)
 
 <!-- mdformat off(prevent table wrapping) -->
