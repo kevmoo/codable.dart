@@ -280,11 +280,13 @@ void runBenchmark(
   for (var i = 0; i < warmupIterations; i++) {
     action();
   }
+  Blackhole.drain();
 
   // Measurement Loop
   for (var i = 0; i < count; i++) {
     action();
   }
+  Blackhole.drain();
 }
 
 void runAllBenchmarks() {
@@ -297,11 +299,13 @@ void runAllBenchmarks() {
       for (var i = 0; i < 5; i++) {
         action();
       }
+      Blackhole.drain();
       final sw = Stopwatch()..start();
       for (var i = 0; i < iters; i++) {
         action();
       }
       sw.stop();
+      Blackhole.drain();
       final usPerIter = sw.elapsedMicroseconds / iters;
       results[b]![impl] = usPerIter;
     }

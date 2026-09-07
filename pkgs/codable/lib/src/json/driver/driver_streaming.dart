@@ -170,6 +170,7 @@ final class _JsonCodableKeyedDecoder
   @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
+  final JsonKeyOptions? _compiledOptions;
   bool _started = false;
   bool _ended = false;
 
@@ -177,9 +178,13 @@ final class _JsonCodableKeyedDecoder
     this._reader,
     this._rootDecoder, {
     KeyOptions? options,
-  });
+  }) : _compiledOptions = options != null
+           ? ((options.compiled ??= JsonKeyOptions.of(options.keys))
+                 as JsonKeyOptions)
+           : null;
 
   @override
+  @pragma('vm:prefer-inline')
   void _ensureStarted() {
     if (!_started) {
       _reader.beginObject();
@@ -188,6 +193,7 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   bool hasNextKey() {
     if (_ended) return false;
     _ensureStarted();
@@ -200,9 +206,11 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   bool hasNext() => hasNextKey();
 
   @override
+  @pragma('vm:prefer-inline')
   String nextKey() {
     _ensureStarted();
     return _reader.nextName();
@@ -215,10 +223,14 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   int selectKeyIndex(KeyOptions options) {
     _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectName(compiled as JsonKeyOptions);
+    final compiled =
+        _compiledOptions ??
+        ((options.compiled ??= JsonKeyOptions.of(options.keys))
+            as JsonKeyOptions);
+    return _reader.selectName(compiled);
   }
 
   @override
