@@ -83,21 +83,25 @@ mixin _JsonPrimitiveDecoderMixin {
   JsonTokenReader get _reader;
   void _ensureStarted();
 
+  @pragma('vm:prefer-inline')
   bool isNextNull() {
     _ensureStarted();
     return _reader.peek() == JsonTokenType.nullValue;
   }
 
+  @pragma('vm:prefer-inline')
   void readNull() {
     _ensureStarted();
     _reader.readNull();
   }
 
+  @pragma('vm:prefer-inline')
   int readInt() {
     _ensureStarted();
     return _reader.readInt();
   }
 
+  @pragma('vm:prefer-inline')
   int? readNullableInt() {
     _ensureStarted();
     if (isNextNull()) {
@@ -107,11 +111,13 @@ mixin _JsonPrimitiveDecoderMixin {
     return readInt();
   }
 
+  @pragma('vm:prefer-inline')
   double readDouble() {
     _ensureStarted();
     return _reader.readDouble();
   }
 
+  @pragma('vm:prefer-inline')
   double? readNullableDouble() {
     _ensureStarted();
     if (isNextNull()) {
@@ -121,11 +127,13 @@ mixin _JsonPrimitiveDecoderMixin {
     return readDouble();
   }
 
+  @pragma('vm:prefer-inline')
   String readString() {
     _ensureStarted();
     return _reader.readString();
   }
 
+  @pragma('vm:prefer-inline')
   String? readNullableString() {
     _ensureStarted();
     if (isNextNull()) {
@@ -135,11 +143,13 @@ mixin _JsonPrimitiveDecoderMixin {
     return readString();
   }
 
+  @pragma('vm:prefer-inline')
   (int start, int end) readStringSpan() {
     _ensureStarted();
     return _reader.readStringSpan();
   }
 
+  @pragma('vm:prefer-inline')
   (int start, int end)? readNullableStringSpan() {
     _ensureStarted();
     if (isNextNull()) {
@@ -149,11 +159,13 @@ mixin _JsonPrimitiveDecoderMixin {
     return readStringSpan();
   }
 
+  @pragma('vm:prefer-inline')
   bool readBool() {
     _ensureStarted();
     return _reader.readBool();
   }
 
+  @pragma('vm:prefer-inline')
   bool? readNullableBool() {
     _ensureStarted();
     if (isNextNull()) {
@@ -170,6 +182,8 @@ final class _JsonCodableKeyedDecoder
   @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
+  final KeyOptions? _options;
+  final JsonKeyOptions? _compiledOptions;
   bool _started = false;
   bool _ended = false;
 
@@ -177,9 +191,14 @@ final class _JsonCodableKeyedDecoder
     this._reader,
     this._rootDecoder, {
     KeyOptions? options,
-  });
+  }) : _options = options,
+       _compiledOptions = options != null
+           ? ((options.compiled ??= JsonKeyOptions.of(options.keys))
+                 as JsonKeyOptions)
+           : null;
 
   @override
+  @pragma('vm:prefer-inline')
   void _ensureStarted() {
     if (!_started) {
       _reader.beginObject();
@@ -188,6 +207,7 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   bool hasNextKey() {
     if (_ended) return false;
     _ensureStarted();
@@ -200,9 +220,11 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   bool hasNext() => hasNextKey();
 
   @override
+  @pragma('vm:prefer-inline')
   String nextKey() {
     _ensureStarted();
     return _reader.nextName();
@@ -215,10 +237,14 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   int selectKeyIndex(KeyOptions options) {
     _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectName(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectName(compiled);
   }
 
   @override
@@ -244,12 +270,15 @@ final class _JsonCodableKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
+  @pragma('vm:prefer-inline')
   T decodeValue<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
 
   @override
+  @pragma('vm:prefer-inline')
   T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
     if (isNextNull()) {
       readNull();
