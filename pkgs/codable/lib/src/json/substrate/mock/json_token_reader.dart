@@ -193,6 +193,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   void beginObject() {
     _skipWs();
     if (_offset < _bytes.length && _bytes[_offset] == 123) {
+      if (_containerTypes.length >= 1000) {
+        throw FormatException(
+          'Nesting depth exceeds limit of 1000 at offset $_offset',
+        );
+      }
       _offset++;
       _containerTypes.add(_containerObject);
       _elementCounts.add(0);
@@ -223,6 +228,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   void beginArray() {
     _skipWs();
     if (_offset < _bytes.length && _bytes[_offset] == 91) {
+      if (_containerTypes.length >= 1000) {
+        throw FormatException(
+          'Nesting depth exceeds limit of 1000 at offset $_offset',
+        );
+      }
       _offset++;
       _containerTypes.add(_containerArray);
       _elementCounts.add(0);
@@ -484,7 +494,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void skipValue() {
     _skipWs();
-    if (_offset >= _bytes.length) return;
+    if (_offset >= _bytes.length) {
+      throw FormatException(
+        'Unexpected end of document at offset $_offset',
+        _bytes,
+        _offset,
+      );
+    }
     final b = _bytes[_offset];
     if (b == 123) {
       beginObject();
@@ -500,10 +516,28 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       endArray();
     } else if (b == 34) {
-      _scanStringSpan();
+      final (start, end) = _scanStringSpan();
+      decodeStringUtf8(_bytes, start, end);
       _onValueRead();
     } else {
-      _scanValueSpan();
+      final (start, end) = _scanValueSpan();
+      if (start == end) {
+        throw FormatException(
+          'Unexpected token at offset $start',
+          _bytes,
+          start,
+        );
+      }
+      if (!isNullUtf8(_bytes, start, end) &&
+          tryParseBoolUtf8(_bytes, start, end) == null &&
+          tryParseIntUtf8(_bytes, start, end) == null &&
+          tryParseDoubleUtf8(_bytes, start, end) == null) {
+        throw FormatException(
+          'Invalid JSON value in byte span [$start, $end)',
+          _bytes,
+          start,
+        );
+      }
       _onValueRead();
     }
   }

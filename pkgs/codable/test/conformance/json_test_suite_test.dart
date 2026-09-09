@@ -83,7 +83,87 @@ void main() {
         });
       }
     });
+
+    group('skipValue conformance', () {
+      group('y_* (valid JSON must accept via skipValue)', () {
+        for (final file in yFiles) {
+          final name = file.uri.pathSegments.last;
+          test(name, () {
+            final bytes = file.readAsBytesSync();
+            expect(
+              () => _parseWithSkipValue(bytes),
+              returnsNormally,
+              reason:
+                  'File $name must be accepted by skipValue in RFC 8259 parser',
+            );
+          });
+        }
+      });
+
+      group('n_* (invalid JSON must reject via skipValue)', () {
+        for (final file in nFiles) {
+          final name = file.uri.pathSegments.last;
+          test(name, () {
+            final bytes = file.readAsBytesSync();
+            expect(
+              () => _parseWithSkipValue(bytes),
+              throwsA(isA<FormatException>()),
+              reason: 'File $name must be rejected with FormatException',
+            );
+          });
+        }
+      });
+
+      group('EOF rejection', () {
+        test('empty buffer', () {
+          expect(
+            () => JsonTokenReader.fromBytes(Uint8List(0)).skipValue(),
+            throwsA(isA<FormatException>()),
+          );
+        });
+
+        test('whitespace only', () {
+          for (final ws in [' ', '\t', '\n', '\r', '   \t\r\n  ']) {
+            expect(
+              () =>
+                  JsonTokenReader.fromBytes(Uint8List.fromList(ws.codeUnits))
+                      .skipValue(),
+              throwsA(isA<FormatException>()),
+            );
+          }
+        });
+
+        test('trailing comma in array before EOF', () {
+          final reader = JsonTokenReader.fromBytes(
+            Uint8List.fromList('[1,'.codeUnits),
+          );
+          reader.beginArray();
+          expect(reader.readInt(), equals(1));
+          expect(reader.skipValue, throwsA(isA<FormatException>()));
+        });
+
+        test('trailing comma in object before EOF', () {
+          final reader = JsonTokenReader.fromBytes(
+            Uint8List.fromList('{"a":1,'.codeUnits),
+          );
+          reader.beginObject();
+          expect(reader.nextName(), equals('a'));
+          expect(reader.readInt(), equals(1));
+          expect(reader.skipValue, throwsA(isA<FormatException>()));
+        });
+      });
+    });
   });
+}
+
+void _parseWithSkipValue(Uint8List bytes) {
+  final reader = JsonTokenReader.fromBytes(bytes);
+  reader.skipValue();
+  if (reader.peek() != JsonTokenType.endOfDocument) {
+    throw FormatException(
+      'Trailing tokens remaining in document: ${reader.peek()}',
+    );
+  }
 }
 
 void _parseFully(Uint8List bytes) {
