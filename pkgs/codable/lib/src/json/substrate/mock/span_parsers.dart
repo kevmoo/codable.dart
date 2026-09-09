@@ -28,6 +28,10 @@ const List<double> _powersOfTen = [
   1e22,
 ];
 
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _isWs(int b) => b == 0x20 || b == 0x0A || b == 0x0D || b == 0x09;
+
 /// Parses a 64-bit signed integer directly from the UTF-8 byte span
 /// `[start, end)` in [source].
 ///
@@ -59,7 +63,7 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   if (start >= end || start < 0 || end > source.length) return null;
 
   var index = start;
-  while (index < end && source[index] <= 32) {
+  while (index < end && _isWs(source[index])) {
     index++;
   }
   if (index >= end) return null;
@@ -72,17 +76,24 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     index++;
   } else if (first == 43) {
     // '+'
+    if (r == 10) return null;
     index++;
   }
   if (index >= end) return null;
+
+  if (r == 10 && source[index] == 48) {
+    if (index + 1 < end && source[index + 1] >= 48 && source[index + 1] <= 57) {
+      return null;
+    }
+  }
 
   var result = 0;
   var hasDigits = false;
   while (index < end) {
     final byte = source[index++];
-    if (byte <= 32) {
+    if (_isWs(byte)) {
       while (index < end) {
-        if (source[index++] > 32) return null;
+        if (!_isWs(source[index++])) return null;
       }
       break;
     }
@@ -130,7 +141,7 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   if (start >= end || start < 0 || end > source.length) return null;
 
   var i = start;
-  while (i < end && source[i] <= 32) {
+  while (i < end && _isWs(source[i])) {
     i++;
   }
   if (i >= end) return null;
@@ -141,18 +152,29 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
     negative = true;
     i++;
   } else if (source[i] == 43) {
-    // '+'
-    i++;
+    // '+' is not permitted in JSON numbers
+    return null;
   }
   if (i >= end) return null;
 
+  // RFC 8259 leading zero check:
+  // "0" cannot be followed by another digit (e.g. 012, -01, -012 are invalid).
+  if (source[i] == 48) {
+    if (i + 1 < end && source[i + 1] >= 48 && source[i + 1] <= 57) {
+      return null;
+    }
+  }
+
   var integerPart = 0;
-  var hasDigits = false;
+  var intDigits = 0;
   while (i < end && source[i] >= 48 && source[i] <= 57) {
-    hasDigits = true;
+    intDigits++;
     integerPart = integerPart * 10 + (source[i] - 48);
     i++;
   }
+
+  // RFC 8259 requires integer digits before any decimal point
+  if (intDigits == 0) return null;
 
   var fractionalPart = 0;
   var fractionDigits = 0;
@@ -160,14 +182,14 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
     // '.'
     i++;
     while (i < end && source[i] >= 48 && source[i] <= 57) {
-      hasDigits = true;
       fractionalPart = fractionalPart * 10 + (source[i] - 48);
       fractionDigits++;
       i++;
     }
+    // RFC 8259 requires at least one digit in fractional part:
+    // '1.' or '2.e3' is invalid.
+    if (fractionDigits == 0) return null;
   }
-
-  if (!hasDigits) return null;
 
   var val = integerPart.toDouble();
   if (fractionDigits > 0) {
@@ -192,7 +214,9 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
     var hasExpDigits = false;
     while (i < end && source[i] >= 48 && source[i] <= 57) {
       hasExpDigits = true;
-      exp = exp * 10 + (source[i] - 48);
+      if (exp < 10000) {
+        exp = exp * 10 + (source[i] - 48);
+      }
       i++;
     }
     if (!hasExpDigits) return null;
@@ -202,7 +226,7 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
     val = expNegative ? val / factor : val * factor;
   }
 
-  while (i < end && source[i] <= 32) {
+  while (i < end && _isWs(source[i])) {
     i++;
   }
   if (i < end) return null;
@@ -353,6 +377,14 @@ String decodeStringUtf8(
           );
       }
     } else if (byte <= 0x7F) {
+      if (byte < 0x20) {
+        throw FormatException(
+          'Unescaped control character 0x${byte.toRadixString(16)} '
+          'at offset $i',
+          source,
+          i,
+        );
+      }
       buffer.writeCharCode(byte);
       i++;
     } else {

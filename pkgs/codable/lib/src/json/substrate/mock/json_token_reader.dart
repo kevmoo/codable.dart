@@ -73,12 +73,19 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
+  static const int _containerArray = 1;
+  static const int _containerObject = 2;
+
   final Uint8List _bytes;
   int _offset = 0;
   final List<String?> _stringCache = List<String?>.filled(
     _stringCacheSize,
     null,
   );
+
+  final List<int> _containerTypes = <int>[];
+  final List<int> _elementCounts = <int>[];
+  final List<int> _lastCheckedOffsets = <int>[];
 
   _MockJsonTokenReader(this._bytes);
 
@@ -117,19 +124,31 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   Uint8List get bytes => _bytes;
 
-  @override
-  (int start, int end) readStringSpan() {
-    final span = _scanStringSpan();
-    _consumeTrailingComma();
-    return span;
-  }
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  static bool _isWs(int b) => b == 0x20 || b == 0x0A || b == 0x0D || b == 0x09;
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   void _skipWs() {
-    while (_offset < _bytes.length && _bytes[_offset] <= 32) {
+    while (_offset < _bytes.length && _isWs(_bytes[_offset])) {
       _offset++;
     }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _onValueRead() {
+    if (_containerTypes.isNotEmpty) {
+      _elementCounts[_containerTypes.length - 1]++;
+    }
+  }
+
+  @override
+  (int start, int end) readStringSpan() {
+    final span = _scanStringSpan();
+    _onValueRead();
+    return span;
   }
 
   @override
@@ -175,6 +194,9 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     _skipWs();
     if (_offset < _bytes.length && _bytes[_offset] == 123) {
       _offset++;
+      _containerTypes.add(_containerObject);
+      _elementCounts.add(0);
+      _lastCheckedOffsets.add(-1);
     } else {
       throw FormatException('Expected "{" at offset $_offset');
     }
@@ -183,9 +205,15 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endObject() {
     _skipWs();
+    if (_containerTypes.isEmpty || _containerTypes.last != _containerObject) {
+      throw FormatException('Mismatched endObject at offset $_offset');
+    }
     if (_offset < _bytes.length && _bytes[_offset] == 125) {
       _offset++;
-      _consumeTrailingComma();
+      _containerTypes.removeLast();
+      _elementCounts.removeLast();
+      _lastCheckedOffsets.removeLast();
+      _onValueRead();
     } else {
       throw FormatException('Expected "}" at offset $_offset');
     }
@@ -196,6 +224,9 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     _skipWs();
     if (_offset < _bytes.length && _bytes[_offset] == 91) {
       _offset++;
+      _containerTypes.add(_containerArray);
+      _elementCounts.add(0);
+      _lastCheckedOffsets.add(-1);
     } else {
       throw FormatException('Expected "[" at offset $_offset');
     }
@@ -204,9 +235,15 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endArray() {
     _skipWs();
+    if (_containerTypes.isEmpty || _containerTypes.last != _containerArray) {
+      throw FormatException('Mismatched endArray at offset $_offset');
+    }
     if (_offset < _bytes.length && _bytes[_offset] == 93) {
       _offset++;
-      _consumeTrailingComma();
+      _containerTypes.removeLast();
+      _elementCounts.removeLast();
+      _lastCheckedOffsets.removeLast();
+      _onValueRead();
     } else {
       throw FormatException('Expected "]" at offset $_offset');
     }
@@ -216,25 +253,49 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   bool hasNext() {
     _skipWs();
     if (_offset >= _bytes.length) return false;
-    final b = _bytes[_offset];
-    return b != 125 && b != 93; // not '}' and not ']'
-  }
-
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void _consumeTrailingComma() {
-    _skipWs();
-    if (_offset < _bytes.length && _bytes[_offset] == 44) {
-      _offset++;
-      _skipWs();
+    if (_containerTypes.isEmpty) {
+      return _offset < _bytes.length;
     }
+    final depth = _containerTypes.length - 1;
+    final type = _containerTypes[depth];
+    final closeChar = type == _containerArray ? 93 : 125; // ']' or '}'
+    final count = _elementCounts[depth];
+
+    if (_bytes[_offset] == closeChar) {
+      return false;
+    }
+
+    if (count == 0) {
+      if (_bytes[_offset] == 44) {
+        throw FormatException('Unexpected leading comma at offset $_offset');
+      }
+      return true;
+    }
+
+    if (_lastCheckedOffsets[depth] == _offset) {
+      return true;
+    }
+
+    if (_bytes[_offset] != 44) {
+      throw FormatException(
+        'Expected "," or "${String.fromCharCode(closeChar)}" '
+        'at offset $_offset',
+      );
+    }
+    _offset++;
+    _skipWs();
+    if (_offset < _bytes.length && _bytes[_offset] == closeChar) {
+      throw FormatException('Trailing comma not allowed at offset $_offset');
+    }
+    _lastCheckedOffsets[depth] = _offset;
+    return true;
   }
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   (int, int, bool) _scanPropertyName() {
     var i = _offset;
-    while (i < _bytes.length && _bytes[i] <= 32) {
+    while (i < _bytes.length && _isWs(_bytes[i])) {
       i++;
     }
     if (i >= _bytes.length || _bytes[i] != 34) {
@@ -245,8 +306,16 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     var hasEscapes = false;
     while (i < _bytes.length) {
       final b = _bytes[i];
+      if (b < 0x20) {
+        throw FormatException(
+          'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
+        );
+      }
       if (b == 92) {
         hasEscapes = true;
+        if (i + 1 >= _bytes.length) {
+          throw FormatException('Unterminated escape sequence at offset $i');
+        }
         i += 2;
       } else if (b == 34) {
         break;
@@ -264,7 +333,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     if (i < _bytes.length && _bytes[i] == 58) {
       i++;
     } else {
-      while (i < _bytes.length && _bytes[i] <= 32) {
+      while (i < _bytes.length && _isWs(_bytes[i])) {
         i++;
       }
       if (i >= _bytes.length || _bytes[i] != 58) {
@@ -272,7 +341,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       i++;
     }
-    while (i < _bytes.length && _bytes[i] <= 32) {
+    while (i < _bytes.length && _isWs(_bytes[i])) {
       i++;
     }
     _offset = i;
@@ -288,7 +357,15 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     var i = start;
     while (i < _bytes.length) {
       final b = _bytes[i];
+      if (b < 0x20) {
+        throw FormatException(
+          'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
+        );
+      }
       if (b == 92) {
+        if (i + 1 >= _bytes.length) {
+          throw FormatException('Unterminated escape sequence at offset $i');
+        }
         i += 2;
       } else if (b == 34) {
         final end = i;
@@ -326,7 +403,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @pragma('wasm:prefer-inline')
   int selectString(JsonKeyOptions options) {
     final (start, end) = _scanStringSpan();
-    _consumeTrailingComma();
+    _onValueRead();
     if (_isVerbatimUtf8(start, end)) {
       return options.selectKey(_bytes, start, end);
     }
@@ -346,7 +423,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   String readString() {
     final (start, end) = _scanStringSpan();
-    _consumeTrailingComma();
+    _onValueRead();
     return _decodeCachedString(start, end);
   }
 
@@ -356,31 +433,33 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     var i = start;
     while (i < _bytes.length) {
       final b = _bytes[i];
-      if (b == 44 || b == 125 || b == 93 || b <= 32) {
+      if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
         break;
       }
       i++;
     }
     _offset = i;
-    _consumeTrailingComma();
     return (start, i);
   }
 
   @override
   int readInt() {
     final (start, end) = _scanValueSpan();
+    _onValueRead();
     return parseIntUtf8(_bytes, start, end);
   }
 
   @override
   double readDouble() {
     final (start, end) = _scanValueSpan();
+    _onValueRead();
     return parseDoubleUtf8(_bytes, start, end);
   }
 
   @override
   num readNum() {
     final (start, end) = _scanValueSpan();
+    _onValueRead();
     final asInt = tryParseIntUtf8(_bytes, start, end);
     if (asInt != null) return asInt;
     return parseDoubleUtf8(_bytes, start, end);
@@ -389,12 +468,14 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   bool readBool() {
     final (start, end) = _scanValueSpan();
+    _onValueRead();
     return parseBoolUtf8(_bytes, start, end);
   }
 
   @override
   void readNull() {
     final (start, end) = _scanValueSpan();
+    _onValueRead();
     if (!isNullUtf8(_bytes, start, end)) {
       throw FormatException('Expected null at offset $start');
     }
@@ -406,54 +487,25 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     if (_offset >= _bytes.length) return;
     final b = _bytes[_offset];
     if (b == 123) {
-      // object
-      var depth = 1;
-      _offset++;
-      while (_offset < _bytes.length && depth > 0) {
-        final c = _bytes[_offset++];
-        if (c == 34) {
-          // skip string
-          while (_offset < _bytes.length) {
-            final sc = _bytes[_offset++];
-            if (sc == 92) {
-              _offset++;
-            } else if (sc == 34) {
-              break;
-            }
-          }
-        } else if (c == 123) {
-          depth++;
-        } else if (c == 125) {
-          depth--;
-        }
+      beginObject();
+      while (hasNext()) {
+        nextName();
+        skipValue();
       }
+      endObject();
     } else if (b == 91) {
-      // array
-      var depth = 1;
-      _offset++;
-      while (_offset < _bytes.length && depth > 0) {
-        final c = _bytes[_offset++];
-        if (c == 34) {
-          while (_offset < _bytes.length) {
-            final sc = _bytes[_offset++];
-            if (sc == 92) {
-              _offset++;
-            } else if (sc == 34) {
-              break;
-            }
-          }
-        } else if (c == 91) {
-          depth++;
-        } else if (c == 93) {
-          depth--;
-        }
+      beginArray();
+      while (hasNext()) {
+        skipValue();
       }
+      endArray();
     } else if (b == 34) {
       _scanStringSpan();
+      _onValueRead();
     } else {
       _scanValueSpan();
+      _onValueRead();
     }
-    _consumeTrailingComma();
   }
 
   @override
