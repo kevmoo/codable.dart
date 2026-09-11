@@ -1,14 +1,13 @@
 version: 1
 defaults:
   targets: [aot, wasm, js]
-  trials: 10
+  trials: 15
 matrix:
   baseline:
-    sdk: stock
+    sdk: native_kernels
     runtime: aot
   axes:
     sdk:
-      stock: stock
       native_kernels: "~/.local/share/dart-sdk-json-utf8-kernels/dart-sdk"
     runtime:
       - aot
