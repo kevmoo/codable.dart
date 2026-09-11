@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
@@ -102,8 +101,6 @@ void main(List<String> args) async {
   print(
     'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
   );
-  print('SDK Binary: ${Platform.resolvedExecutable}');
-  print('SDK Version: ${Platform.version}');
   print('============================================================\n');
 
   final datasets = [
