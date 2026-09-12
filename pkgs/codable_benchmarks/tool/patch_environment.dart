@@ -7,7 +7,8 @@ void main() {
 
   final data = jsonDecode(file.readAsStringSync());
   if (data is Map<String, dynamic>) {
-    data['environment'] = {
+    final res = Process.runSync('git', ['rev-parse', 'HEAD']);
+    data['environment'] = <String, Object?>{
       'dart_version': Platform.version,
       'os': Platform.operatingSystem,
       'arch':
@@ -18,11 +19,9 @@ void main() {
                     Platform.version.contains('x86_64')
                 ? 'x64'
                 : 'unknown'),
+      'commit': res.stdout.toString().trim(),
+      'host': Platform.localHostname,
     };
-    // Include commit info
-    final res = Process.runSync('git', ['rev-parse', 'HEAD']);
-    data['environment']['commit'] = res.stdout.toString().trim();
-    data['environment']['host'] = Platform.localHostname;
     file.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(data));
   }
 }

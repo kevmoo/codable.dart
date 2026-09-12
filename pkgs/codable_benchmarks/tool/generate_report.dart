@@ -115,12 +115,15 @@ String generateMarkdownReport(
     final host = env?['host'] ?? 'unknown';
     final os = env?['os'] ?? 'unknown';
 
-    int trialCount = 0;
-    if (jsonRoot['benchmarks'] is List &&
-        (jsonRoot['benchmarks'] as List).isNotEmpty) {
-      final firstBench = (jsonRoot['benchmarks'] as List)[0];
-      if (firstBench['raw_trials_ns'] is List) {
-        trialCount = (firstBench['raw_trials_ns'] as List).length;
+    var trialCount = 0;
+    final benchmarks = jsonRoot['benchmarks'];
+    if (benchmarks is List && benchmarks.isNotEmpty) {
+      final firstBench = benchmarks.first;
+      if (firstBench is Map<String, dynamic>) {
+        final rawTrials = firstBench['raw_trials_ns'];
+        if (rawTrials is List) {
+          trialCount = rawTrials.length;
+        }
       }
     }
 
