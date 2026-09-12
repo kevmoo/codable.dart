@@ -256,8 +256,11 @@ final class _JsonCodableKeyedDecoder
   @override
   int selectStringIndex(KeyOptions options) {
     _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectString(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectString(compiled);
   }
 
   @override

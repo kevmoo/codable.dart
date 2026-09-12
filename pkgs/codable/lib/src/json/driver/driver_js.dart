@@ -430,6 +430,8 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
+  final KeyOptions? _options;
+  final JsonKeyOptions? _compiledOptions;
   bool _started = false;
   bool _ended = false;
 
@@ -437,7 +439,11 @@ final class _JsonCodableStreamingKeyedDecoder
     this._reader,
     this._rootDecoder, {
     KeyOptions? options,
-  });
+  }) : _options = options,
+       _compiledOptions = options != null
+           ? ((options.compiled ??= JsonKeyOptions.of(options.keys))
+                 as JsonKeyOptions)
+           : null;
 
   @override
   void _ensureStarted() {
@@ -477,8 +483,11 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   int selectKeyIndex(KeyOptions options) {
     _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectName(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectName(compiled);
   }
 
   @override
@@ -490,8 +499,11 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   int selectStringIndex(KeyOptions options) {
     _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectString(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectString(compiled);
   }
 
   @override

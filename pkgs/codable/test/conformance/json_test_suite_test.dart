@@ -2,6 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// Reads the JSONTestSuite fixtures from disk, which requires filesystem
+// access unavailable on JS and Wasm.
+@TestOn('vm')
+library;
+
 import 'dart:io';
 import 'dart:typed_data';
 
