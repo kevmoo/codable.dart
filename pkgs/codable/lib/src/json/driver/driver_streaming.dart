@@ -11,6 +11,7 @@ import '../../contracts/encoder.dart';
 import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
+import 'adaptive_writer.dart';
 
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
@@ -681,13 +682,11 @@ final class JsonCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
-    final sink = BytesBuilder(copy: false);
-    final writer = JsonUtf8TokenWriter(sink);
+    final writer = AdaptiveJsonTokenWriter(capacityHint ?? 1024);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
     encode(encoder);
     encoder._finish();
-    writer.flush();
-    return sink.takeBytes();
+    return writer.takeBytes();
   }
 
   /// Encodes a value to a JSON String.
@@ -737,10 +736,19 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   final JsonTokenWriter _writer;
   bool _closed = false;
 
+  static final Expando<Uint8List> _wireBytesCache = Expando<Uint8List>();
+
   void _writeFastKey(StaticKey key) {
     final metadata = key.wireMetadata;
     if (metadata is Uint8List) {
       _writer.writeNameBytes(metadata);
+    } else if (metadata is List<int>) {
+      var cached = _wireBytesCache[key];
+      if (cached == null) {
+        cached = Uint8List.fromList(metadata);
+        _wireBytesCache[key] = cached;
+      }
+      _writer.writeNameBytes(cached);
     } else {
       _writer.writeName(key.name);
     }
@@ -882,8 +890,12 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
-      encodeValue(key.name, value, encode);
+  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) {
+    _writeFastKey(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encode(value, child);
+    child._finish();
+  }
 
   @override
   void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
@@ -897,7 +909,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
     StaticKey key,
     T? value,
     EncoderCallback<T> encode,
-  ) => encodeNullableValue(key.name, value, encode);
+  ) {
+    if (value != null) {
+      encodeValueKey(key, value, encode);
+    }
+  }
 
   @override
   void encodeEncodable(String key, Encodable value) {
@@ -908,8 +924,12 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeEncodableKey(StaticKey key, Encodable value) =>
-      encodeEncodable(key.name, value);
+  void encodeEncodableKey(StaticKey key, Encodable value) {
+    _writeFastKey(key);
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    value.encode(child);
+    child._finish();
+  }
 
   @override
   void encodeNullableEncodable(String key, Encodable? value) {
@@ -919,8 +939,11 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
-      encodeNullableEncodable(key.name, value);
+  void encodeNullableEncodableKey(StaticKey key, Encodable? value) {
+    if (value != null) {
+      encodeEncodableKey(key, value);
+    }
+  }
 
   @override
   void encodeList<T>(
@@ -946,7 +969,19 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
     StaticKey key,
     Iterable<T> elements,
     EncoderCallback<T> encode,
-  ) => encodeList(key.name, elements, encode);
+  ) {
+    _writeFastKey(key);
+    _writer.beginArray();
+    for (final e in elements) {
+      final child = JsonCodableEncoder(
+        _writer,
+        userInfo: _rootEncoder.userInfo,
+      );
+      encode(e, child);
+      child._finish();
+    }
+    _writer.endArray();
+  }
 
   @override
   void encodeIntList(String key, List<int> values) {
