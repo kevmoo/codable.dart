@@ -1,158 +1,158 @@
 {
   "aot": {
     "citm_catalog_decode": {
-      "codable": 4609.022727272728,
-      "codable_js": 4631.590909090909,
-      "json_serializable": 8149.194444444444,
-      "json_serializable_literal": 10060.95
+      "codable": 4702.863636363637,
+      "codable_js": 4682.5,
+      "json_serializable": 7772.0,
+      "json_serializable_literal": 10446.714285714286
     },
     "small_decode": {
-      "codable": 3.1375703578845977,
-      "codable_js": 3.050190230314559,
-      "json_serializable": 2.7962736464448796,
-      "json_serializable_literal": 3.2755561948599925
+      "codable": 3.348888888888889,
+      "codable_js": 3.3054167229501554,
+      "json_serializable": 2.774767005146752,
+      "json_serializable_literal": 3.3785461563203603
     },
     "twitter_decode": {
-      "codable": 3143.921875,
-      "codable_js": 3161.683333333333,
-      "json_serializable": 3093.5135135135138,
-      "json_serializable_literal": 4803.527777777778
+      "codable": 3204.7575757575755,
+      "codable_js": 3418.15625,
+      "json_serializable": 3156.5172413793102,
+      "json_serializable_literal": 4792.8
     },
     "coordinates_decode": {
-      "codable": 2607.738095238095,
-      "codable_js": 2709.853658536585,
-      "json_serializable": 3922.444444444444,
-      "json_serializable_literal": 4404.65
+      "codable": 2715.325581395349,
+      "codable_js": 2782.842105263158,
+      "json_serializable": 4492.0,
+      "json_serializable_literal": 4687.12
     },
     "canada_decode": {
-      "codable": 11232.583333333332,
-      "codable_js": 11408.7,
-      "json_serializable": 36802.5,
-      "json_serializable_literal": 42740.0
+      "codable": 11899.333333333334,
+      "codable_js": 11617.333333333334,
+      "json_serializable": 43708.0,
+      "json_serializable_literal": 43293.0
     },
     "coordinates_encode": {
-      "codable": 2918.8720930232557,
-      "json_serializable": 4836.5
+      "codable": 3021.1,
+      "json_serializable": 4886.416666666667
     },
     "canada_encode": {
-      "codable": 36222.25,
-      "json_serializable": 26361.166666666668
+      "codable": 23529.4,
+      "json_serializable": 26986.75
     },
     "citm_catalog_encode": {
-      "codable": 3257.329268292683,
-      "json_serializable": 6213.911764705882
+      "codable": 3172.775,
+      "json_serializable": 6828.388888888889
     },
     "small_encode": {
-      "codable": 1.7058019178177035,
-      "json_serializable": 4.904357130119479
+      "codable": 1.8385867091488395,
+      "json_serializable": 5.188309585492227
     },
     "twitter_encode": {
-      "codable": 1917.5714285714287,
-      "json_serializable": 3117.5454545454545
+      "codable": 1810.3835616438357,
+      "json_serializable": 3413.0
     }
   },
   "js": {
     "twitter_decode": {
-      "codable": 3086.206896551724,
-      "codable_js": 3100.0,
-      "json_serializable": 3750.0,
-      "json_serializable_literal": 2750.0
+      "codable": 3172.413793103448,
+      "codable_js": 3225.0,
+      "json_serializable": 3800.0,
+      "json_serializable_literal": 2848.4848484848485
     },
     "coordinates_decode": {
-      "codable": 2666.6666666666665,
-      "codable_js": 2651.162790697674,
-      "json_serializable": 4409.090909090908,
-      "json_serializable_literal": 4050.0
+      "codable": 2631.5789473684213,
+      "codable_js": 2605.2631578947367,
+      "json_serializable": 4363.636363636363,
+      "json_serializable_literal": 4400.0
     },
     "canada_decode": {
-      "codable": 15400.0,
-      "codable_js": 15166.666666666668,
-      "json_serializable": 37000.0,
-      "json_serializable_literal": 37166.66666666667
+      "codable": 15333.333333333334,
+      "codable_js": 15142.857142857143,
+      "json_serializable": 34333.333333333336,
+      "json_serializable_literal": 35666.666666666664
     },
     "small_decode": {
-      "codable": 3.5550355503555036,
-      "codable_js": 3.6,
-      "json_serializable": 4.7399052018959615,
-      "json_serializable_literal": 4.536072577161234
+      "codable": 3.5749642503574965,
+      "codable_js": 3.64,
+      "json_serializable": 4.95,
+      "json_serializable_literal": 4.760038080304643
     },
     "citm_catalog_decode": {
-      "codable": 6107.142857142857,
-      "codable_js": 6088.235294117647,
-      "json_serializable": 9388.888888888889,
-      "json_serializable_literal": 8653.846153846154
+      "codable": 6000.0,
+      "codable_js": 6058.823529411765,
+      "json_serializable": 10285.714285714286,
+      "json_serializable_literal": 9000.0
     },
     "coordinates_encode": {
-      "codable": 2625.0,
-      "json_serializable": 8000.0
+      "codable": 2725.0,
+      "json_serializable": 9000.0
     },
     "canada_encode": {
-      "codable": 20125.0,
-      "json_serializable": 37166.66666666667
+      "codable": 21500.0,
+      "json_serializable": 38500.0
     },
     "citm_catalog_encode": {
       "codable": 4235.2941176470595,
-      "json_serializable": 9500.0
+      "json_serializable": 8750.0
     },
     "small_encode": {
-      "codable": 3.19202553620429,
-      "json_serializable": 21.120844833793353
+      "codable": 3.180031800318003,
+      "json_serializable": 21.614962481800873
     },
     "twitter_encode": {
       "codable": 3120.0,
-      "json_serializable": 3550.0
+      "json_serializable": 3500.0
     }
   },
   "wasm": {
-    "citm_catalog_encode": {
-      "codable": 5331.708333333333,
-      "json_serializable": 6861.633333333333
+    "small_encode": {
+      "codable": 3.1593154146565587,
+      "json_serializable": 6.241132075471698
     },
     "twitter_decode": {
-      "codable": 3336.3275862068967,
-      "codable_js": 5186.452380952381,
-      "json_serializable": 3362.234375,
-      "json_serializable_literal": 3603.0
+      "codable": 3307.0384615384614,
+      "codable_js": 5542.642857142857,
+      "json_serializable": 3257.5666666666666,
+      "json_serializable_literal": 3872.785714285714
     },
     "coordinates_decode": {
-      "codable": 3369.125,
-      "codable_js": 3278.25,
-      "json_serializable": 3945.0,
-      "json_serializable_literal": 4763.666666666667
+      "codable": 3398.4333333333334,
+      "codable_js": 3432.3571428571427,
+      "json_serializable": 3934.363636363636,
+      "json_serializable_literal": 5060.5
     },
     "canada_decode": {
-      "codable": 14119.1875,
-      "codable_js": 30366.666666666668,
-      "json_serializable": 54369.5,
-      "json_serializable_literal": 54930.0
+      "codable": 14735.42857142857,
+      "codable_js": 31441.666666666668,
+      "json_serializable": 55769.5,
+      "json_serializable_literal": 59613.5
     },
     "citm_catalog_decode": {
-      "codable": 5665.566666666667,
-      "codable_js": 11166.142857142859,
-      "json_serializable": 6068.958333333334,
-      "json_serializable_literal": 8990.333333333332
+      "codable": 5752.133333333333,
+      "codable_js": 12126.285714285714,
+      "json_serializable": 6138.733333333333,
+      "json_serializable_literal": 9099.222222222223
     },
     "small_decode": {
-      "codable": 3.536332487874338,
-      "codable_js": 7.723388368041151,
-      "json_serializable": 3.38751222000255,
-      "json_serializable_literal": 4.313276047261009
+      "codable": 3.66587658357172,
+      "codable_js": 7.814310616751059,
+      "json_serializable": 3.376455185591451,
+      "json_serializable_literal": 4.133456258963327
     },
     "twitter_encode": {
-      "codable": 3525.678571428572,
-      "json_serializable": 3377.5
+      "codable": 3366.3103448275865,
+      "json_serializable": 3565.0
     },
     "coordinates_encode": {
-      "codable": 3445.375,
-      "json_serializable": 5158.75
+      "codable": 3427.9583333333335,
+      "json_serializable": 5210.866666666667
     },
     "canada_encode": {
-      "codable": 25309.625,
-      "json_serializable": 41677.5
+      "codable": 25939.25,
+      "json_serializable": 44256.5
     },
-    "small_encode": {
-      "codable": 3.9405978489685,
-      "json_serializable": 6.013430772269405
+    "citm_catalog_encode": {
+      "codable": 5697.125,
+      "json_serializable": 6106.25
     }
   }
 }
