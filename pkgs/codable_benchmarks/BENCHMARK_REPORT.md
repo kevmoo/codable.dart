@@ -1,9 +1,9 @@
 ### 📝 Provenance
 
 - **Run Timestamp**: 2026-09-12T22:48:03.596Z
-- **SDK Version**: unknown
-- **Repo Commit**: unknown
-- **Host OS**: unknown, Hostname: unknown
+- **SDK Version**: 3.14.0-edge.2c131e2363143936d92729b18d962e498c772a4d (main) (Fri Sep 11 18:19:58 2026 -0700) on "linux_x64"
+- **Repo Commit**: fb2d734503fd1cbd533cc11274d22f47b63f88ff
+- **Host OS**: linux, Hostname: kevmoo.c.googlers.com
 - **Trials**: 15
 
 ### 📊 3-Runtime Summary (Relative Efficiency Index)
