@@ -85,7 +85,7 @@ void main(List<String> args) {
     results[target]!.putIfAbsent(group, () => {})[candidate] = medianUs;
   }
 
-  final report = generateMarkdownReport(results);
+  final report = generateMarkdownReport(results, jsonRoot);
   print(report);
 
   final reportFile = File(argResults.option('output-report')!);
@@ -101,8 +101,36 @@ void main(List<String> args) {
 
 String generateMarkdownReport(
   Map<String, Map<String, Map<String, double>>> results,
+  dynamic jsonRoot,
 ) {
   final buf = StringBuffer();
+
+  buf.writeln('### 📝 Provenance\n');
+  if (jsonRoot is Map<String, dynamic>) {
+    final env = jsonRoot['environment'] as Map<String, dynamic>?;
+    final timestamp = jsonRoot['timestamp'] as String? ?? 'unknown';
+
+    final dartVersion = env?['dart_version'] ?? 'unknown';
+    final commit = env?['commit'] ?? 'unknown';
+    final host = env?['host'] ?? 'unknown';
+    final os = env?['os'] ?? 'unknown';
+
+    int trialCount = 0;
+    if (jsonRoot['benchmarks'] is List &&
+        (jsonRoot['benchmarks'] as List).isNotEmpty) {
+      final firstBench = (jsonRoot['benchmarks'] as List)[0];
+      if (firstBench['raw_trials_ns'] is List) {
+        trialCount = (firstBench['raw_trials_ns'] as List).length;
+      }
+    }
+
+    buf.writeln('- **Run Timestamp**: $timestamp');
+    buf.writeln('- **SDK Version**: $dartVersion');
+    buf.writeln('- **Repo Commit**: $commit');
+    buf.writeln('- **Host OS**: $os, Hostname: $host');
+    buf.writeln('- **Trials**: $trialCount');
+    buf.writeln('');
+  }
 
   buf.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)\n');
   buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
