@@ -2,9 +2,11 @@
   "version": 1,
   "timestamp": "2026-09-12T22:48:03.596Z",
   "environment": {
-    "dart_version": "unknown",
-    "os": "unknown",
-    "arch": "unknown"
+    "dart_version": "3.14.0-edge.2c131e2363143936d92729b18d962e498c772a4d (main) (Fri Sep 11 18:19:58 2026 -0700) on \"linux_x64\"",
+    "os": "linux",
+    "arch": "x64",
+    "commit": "fb2d734503fd1cbd533cc11274d22f47b63f88ff",
+    "host": "kevmoo.c.googlers.com"
   },
   "benchmarks": [
     {
