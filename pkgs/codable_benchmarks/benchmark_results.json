@@ -1,0 +1,4633 @@
+{
+  "version": 1,
+  "timestamp": "2026-09-12T05:59:33.435Z",
+  "environment": {
+    "dart_version": "3.14.0-edge.2c131e2363143936d92729b18d962e498c772a4d (main) (Fri Sep 11 18:19:58 2026 -0700) on \"linux_x64\"",
+    "os": "linux",
+    "arch": "x64",
+    "commit": "b52902aea52aa2a5bea1e0f37f58d1c002889cb3",
+    "host": "kevmoo.c.googlers.com"
+  },
+  "benchmarks": [
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4803081.818181818,
+        "median_ns": 4774681.818181818,
+        "min_ns": 4590772.7272727275,
+        "max_ns": 5136727.2727272725,
+        "stddev_ns": 146087.0242045986,
+        "cv": 0.030415268724258183,
+        "mad_ns": 53159.09090909129,
+        "robust_cv": 0.016506580162409794,
+        "iqr_ns": 103636.3636363633,
+        "is_robust_stable": true,
+        "p95_ns": 5042186.363636363,
+        "p99_ns": 5117819.090909091,
+        "ops_per_sec": 208.1996596881926,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        4722909.090909091,
+        4590772.7272727275,
+        4749045.454545454,
+        4720136.363636363,
+        4786681.818181818,
+        4763818.181818182,
+        5136727.2727272725,
+        4785545.454545454,
+        4848545.454545454,
+        4926636.363636363
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.12224589992393757,
+        "elapsed_seconds": 2.557083
+      },
+      "calibrated_batch_iterations": 22
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3154.683730508973,
+        "median_ns": 3143.350985583995,
+        "min_ns": 3093.056781406296,
+        "max_ns": 3346.866725507502,
+        "stddev_ns": 73.59186477983498,
+        "cv": 0.023327810667081277,
+        "mad_ns": 27.581641659311572,
+        "robust_cv": 0.013009219177761662,
+        "iqr_ns": 50.99293909973494,
+        "is_robust_stable": true,
+        "p95_ns": 3271.6019417475723,
+        "p99_ns": 3331.8137687555163,
+        "ops_per_sec": 316988.9869875042,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3096.3518681965284,
+        3138.746690203001,
+        3096.822594880847,
+        3346.866725507502,
+        3162.253604001177,
+        3144.1894674904383,
+        3093.056781406296,
+        3179.6116504854367,
+        3146.425419240953,
+        3142.512503677552
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.16423054524926328,
+        "elapsed_seconds": 3.199938
+      },
+      "calibrated_batch_iterations": 33990
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3307183.3333333335,
+        "median_ns": 3265625.0,
+        "min_ns": 3134583.3333333335,
+        "max_ns": 3668041.6666666665,
+        "stddev_ns": 149559.8998976911,
+        "cv": 0.04522274238330435,
+        "mad_ns": 55770.833333333256,
+        "robust_cv": 0.025320065071770297,
+        "iqr_ns": 94000.0,
+        "is_robust_stable": true,
+        "p95_ns": 3558729.1666666665,
+        "p99_ns": 3646179.1666666665,
+        "ops_per_sec": 302.37210919664767,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3225333.3333333335,
+        3668041.6666666665,
+        3425125.0,
+        3311000.0,
+        3331791.6666666665,
+        3134583.3333333335,
+        3254375.0,
+        3190333.3333333335,
+        3275041.6666666665,
+        3256208.3333333335
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.11708187953987259,
+        "elapsed_seconds": 1.530844
+      },
+      "calibrated_batch_iterations": 24
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2699079.069767442,
+        "median_ns": 2691046.511627907,
+        "min_ns": 2563162.7906976743,
+        "max_ns": 2850093.023255814,
+        "stddev_ns": 87117.60498735061,
+        "cv": 0.03227678876219689,
+        "mad_ns": 39418.604651162634,
+        "robust_cv": 0.02171721038759011,
+        "iqr_ns": 64581.39534883713,
+        "is_robust_stable": true,
+        "p95_ns": 2843416.2790697673,
+        "p99_ns": 2848757.6744186045,
+        "ops_per_sec": 370.49674135191674,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2563162.7906976743,
+        2850093.023255814,
+        2689279.069767442,
+        2835255.8139534886,
+        2640744.1860465114,
+        2692813.9534883723,
+        2718162.7906976743,
+        2645465.11627907,
+        2698023.2558139535,
+        2657790.697674419
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.976547
+      },
+      "calibrated_batch_iterations": 43
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 12011620.0,
+        "median_ns": 12020300.0,
+        "min_ns": 11201200.0,
+        "max_ns": 12899800.0,
+        "stddev_ns": 509201.0251364386,
+        "cv": 0.04239236881756488,
+        "mad_ns": 378800.0,
+        "robust_cv": 0.04672170245334975,
+        "iqr_ns": 674700.0,
+        "is_robust_stable": true,
+        "p95_ns": 12692440.0,
+        "p99_ns": 12858328.0,
+        "ops_per_sec": 83.25271695241774,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        12198600.0,
+        12899800.0,
+        11970200.0,
+        11201200.0,
+        11772600.0,
+        12436600.0,
+        11679000.0,
+        12439000.0,
+        12070400.0,
+        11448800.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.771771
+      },
+      "calibrated_batch_iterations": 5
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2779420.0000000005,
+        "median_ns": 2734100.0,
+        "min_ns": 2586942.8571428573,
+        "max_ns": 3062314.285714286,
+        "stddev_ns": 153445.5679451039,
+        "cv": 0.05520776562919741,
+        "mad_ns": 80014.28571428591,
+        "robust_cv": 0.043388749497092385,
+        "iqr_ns": 199335.71428571455,
+        "is_robust_stable": true,
+        "p95_ns": 3012840.0,
+        "p99_ns": 3052419.4285714286,
+        "ops_per_sec": 359.7872937519338,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2677085.714285714,
+        2732914.285714286,
+        2747371.4285714286,
+        2937514.285714286,
+        2586942.8571428573,
+        3062314.285714286,
+        2631085.714285714,
+        2731314.285714286,
+        2952371.4285714286,
+        2735285.714285714
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.543758
+      },
+      "calibrated_batch_iterations": 35
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 28098625.0,
+        "median_ns": 27930875.0,
+        "min_ns": 27374750.0,
+        "max_ns": 29189250.0,
+        "stddev_ns": 618893.1792814581,
+        "cv": 0.02202574607410356,
+        "mad_ns": 380750.0,
+        "robust_cv": 0.020210607437110364,
+        "iqr_ns": 675062.5,
+        "is_robust_stable": true,
+        "p95_ns": 29108475.0,
+        "p99_ns": 29173095.0,
+        "ops_per_sec": 35.588930063303806,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        28007250.0,
+        27744000.0,
+        27854500.0,
+        29189250.0,
+        27699250.0,
+        27451500.0,
+        27374750.0,
+        28443000.0,
+        28213000.0,
+        29009750.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.07545997963785042,
+        "elapsed_seconds": 2.301473
+      },
+      "calibrated_batch_iterations": 4
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3186374.358974359,
+        "median_ns": 3194564.1025641025,
+        "min_ns": 2983615.3846153845,
+        "max_ns": 3432025.641025641,
+        "stddev_ns": 170293.4673741665,
+        "cv": 0.053444274962399944,
+        "mad_ns": 154961.5384615385,
+        "robust_cv": 0.07191778582206955,
+        "iqr_ns": 270955.128205128,
+        "is_robust_stable": false,
+        "p95_ns": 3431114.1025641025,
+        "p99_ns": 3431843.3333333335,
+        "ops_per_sec": 313.83631907014325,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        3432025.641025641,
+        3217230.769230769,
+        3430000.0,
+        3214461.5384615385,
+        3019435.8974358975,
+        2999769.230769231,
+        2983615.3846153845,
+        3329358.9743589745,
+        3063179.487179487,
+        3174666.6666666665
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.935788
+      },
+      "calibrated_batch_iterations": 39
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6008.626740631722,
+        "median_ns": 6033.284274878297,
+        "min_ns": 5768.368617683686,
+        "max_ns": 6240.009056945545,
+        "stddev_ns": 155.43073048615773,
+        "cv": 0.025867929095195617,
+        "mad_ns": 101.97554624702889,
+        "robust_cv": 0.025059144899797516,
+        "iqr_ns": 193.3516359107889,
+        "is_robust_stable": true,
+        "p95_ns": 6200.93399750934,
+        "p99_ns": 6232.194045058304,
+        "ops_per_sec": 166427.37902785157,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        6073.983923921657,
+        5992.471414015623,
+        5992.5846258349375,
+        5786.199479225631,
+        6153.175591531756,
+        6075.05943620514,
+        5887.071210234349,
+        6240.009056945545,
+        6117.344050718895,
+        5768.368617683686
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 40,
+        "converged_at": 40,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.999796
+      },
+      "calibrated_batch_iterations": 17666
+    },
+    {
+      "name": "codable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 1897311.7647058822,
+        "median_ns": 1979264.7058823528,
+        "min_ns": 1484058.8235294118,
+        "max_ns": 2351352.9411764704,
+        "stddev_ns": 338649.01330126333,
+        "cv": 0.17848885965968808,
+        "mad_ns": 336676.4705882354,
+        "robust_cv": 0.2521929147782154,
+        "iqr_ns": 623647.0588235294,
+        "is_robust_stable": false,
+        "p95_ns": 2319482.3529411764,
+        "p99_ns": 2344978.8235294116,
+        "ops_per_sec": 527.0615080779927,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        1979294.1176470588,
+        1539941.1764705882,
+        2229117.6470588236,
+        1509000.0,
+        2023823.5294117648,
+        1979235.294117647,
+        1596764.705882353,
+        2351352.9411764704,
+        1484058.8235294118,
+        2280529.411764706
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 152,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.032502
+      },
+      "calibrated_batch_iterations": 17
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3090909.090909091,
+        "median_ns": 3136363.6363636362,
+        "min_ns": 2878787.878787879,
+        "max_ns": 3212121.212121212,
+        "stddev_ns": 130142.41138106177,
+        "cv": 0.04210489779975528,
+        "mad_ns": 60606.06060606055,
+        "robust_cv": 0.028649275362318816,
+        "iqr_ns": 196969.6969696968,
+        "is_robust_stable": true,
+        "p95_ns": 3212121.212121212,
+        "p99_ns": 3212121.212121212,
+        "ops_per_sec": 323.5294117647059,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3181818.1818181816,
+        2939393.9393939395,
+        3181818.1818181816,
+        2909090.909090909,
+        3212121.212121212,
+        2878787.878787879,
+        3212121.212121212,
+        3151515.1515151514,
+        3121212.121212121,
+        3121212.121212121
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.17712587432073387,
+        "elapsed_seconds": 2.069
+      },
+      "calibrated_batch_iterations": 33
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2697500.0,
+        "median_ns": 2675000.0,
+        "min_ns": 2625000.0,
+        "max_ns": 2975000.0,
+        "stddev_ns": 105046.28609437947,
+        "cv": 0.03894208937697107,
+        "mad_ns": 37500.0,
+        "robust_cv": 0.02078411214953271,
+        "iqr_ns": 62500.0,
+        "is_robust_stable": true,
+        "p95_ns": 2873750.0,
+        "p99_ns": 2954750.0,
+        "ops_per_sec": 370.71362372567194,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2675000.0,
+        2625000.0,
+        2625000.0,
+        2975000.0,
+        2675000.0,
+        2675000.0,
+        2700000.0,
+        2625000.0,
+        2750000.0,
+        2650000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.225
+      },
+      "calibrated_batch_iterations": 40
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 14433333.333333332,
+        "median_ns": 14333333.333333334,
+        "min_ns": 14000000.0,
+        "max_ns": 16000000.0,
+        "stddev_ns": 583730.0238472754,
+        "cv": 0.04044318871921077,
+        "mad_ns": 166666.6666666679,
+        "robust_cv": 0.01723953488372106,
+        "iqr_ns": 166666.6666666679,
+        "is_robust_stable": true,
+        "p95_ns": 15399999.999999998,
+        "p99_ns": 15880000.0,
+        "ops_per_sec": 69.28406466512703,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        14333333.333333334,
+        14000000.0,
+        14166666.666666666,
+        14333333.333333334,
+        16000000.0,
+        14666666.666666666,
+        14000000.0,
+        14166666.666666666,
+        14333333.333333334,
+        14333333.333333334
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.24593999935048946,
+        "elapsed_seconds": 1.801
+      },
+      "calibrated_batch_iterations": 6
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 7320.0,
+        "median_ns": 7300.0,
+        "min_ns": 7200.0,
+        "max_ns": 7500.0,
+        "stddev_ns": 78.88106377466156,
+        "cv": 0.010776101608560322,
+        "mad_ns": 0.0,
+        "robust_cv": 0.0,
+        "iqr_ns": 0.0,
+        "is_robust_stable": true,
+        "p95_ns": 7455.0,
+        "p99_ns": 7491.0,
+        "ops_per_sec": 136612.0218579235,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        7300.0,
+        7200.0,
+        7300.0,
+        7300.0,
+        7300.0,
+        7300.0,
+        7400.0,
+        7300.0,
+        7300.0,
+        7500.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.14471147098826803,
+        "elapsed_seconds": 1.851
+      },
+      "calibrated_batch_iterations": 10000
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6000000.000000001,
+        "median_ns": 5857142.857142857,
+        "min_ns": 5571428.571428572,
+        "max_ns": 7071428.571428572,
+        "stddev_ns": 416496.56391752156,
+        "cv": 0.06941609398625358,
+        "mad_ns": 107142.85714285728,
+        "robust_cv": 0.027120731707317103,
+        "iqr_ns": 267857.14285714366,
+        "is_robust_stable": true,
+        "p95_ns": 6685714.285714285,
+        "p99_ns": 6994285.714285715,
+        "ops_per_sec": 166.66666666666663,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        7071428.571428572,
+        6071428.571428572,
+        5785714.285714285,
+        5785714.285714285,
+        5857142.857142857,
+        6000000.0,
+        6214285.714285715,
+        5571428.571428572,
+        5857142.857142857,
+        5785714.285714285
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.145
+      },
+      "calibrated_batch_iterations": 14
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2626315.7894736836,
+        "median_ns": 2631578.947368421,
+        "min_ns": 2552631.5789473685,
+        "max_ns": 2657894.736842105,
+        "stddev_ns": 40768.24574955168,
+        "cv": 0.015522979343516674,
+        "mad_ns": 26315.78947368404,
+        "robust_cv": 0.014825999999999902,
+        "iqr_ns": 26315.78947368404,
+        "is_robust_stable": true,
+        "p95_ns": 2657894.736842105,
+        "p99_ns": 2657894.736842105,
+        "ops_per_sec": 380.7615230460923,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2631578.947368421,
+        2552631.5789473685,
+        2631578.947368421,
+        2552631.5789473685,
+        2631578.947368421,
+        2657894.736842105,
+        2657894.736842105,
+        2631578.947368421,
+        2657894.736842105,
+        2657894.736842105
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0,
+        "elapsed_seconds": 3.107
+      },
+      "calibrated_batch_iterations": 38
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 22633333.333333336,
+        "median_ns": 22666666.666666668,
+        "min_ns": 21333333.333333332,
+        "max_ns": 23666666.666666668,
+        "stddev_ns": 792713.7325216435,
+        "cv": 0.03502417080360722,
+        "mad_ns": 666666.6666666679,
+        "robust_cv": 0.04360588235294125,
+        "iqr_ns": 1250000.0,
+        "is_robust_stable": true,
+        "p95_ns": 23666666.666666668,
+        "p99_ns": 23666666.666666668,
+        "ops_per_sec": 44.18262150220912,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        21333333.333333332,
+        22666666.666666668,
+        22000000.0,
+        23666666.666666668,
+        22000000.0,
+        23666666.666666668,
+        22000000.0,
+        23333333.333333332,
+        22666666.666666668,
+        23000000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.23446901971460649,
+        "elapsed_seconds": 2.376
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4360000.0,
+        "median_ns": 4350000.0,
+        "min_ns": 4100000.0,
+        "max_ns": 4850000.0,
+        "stddev_ns": 213177.02607092643,
+        "cv": 0.048893813319019826,
+        "mad_ns": 125000.0,
+        "robust_cv": 0.04260344827586207,
+        "iqr_ns": 200000.0,
+        "is_robust_stable": true,
+        "p95_ns": 4692500.0,
+        "p99_ns": 4818500.0,
+        "ops_per_sec": 229.3577981651376,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        4450000.0,
+        4500000.0,
+        4100000.0,
+        4350000.0,
+        4300000.0,
+        4150000.0,
+        4350000.0,
+        4350000.0,
+        4200000.0,
+        4850000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 55,
+        "converged_at": 55,
+        "best_mmd": 0,
+        "elapsed_seconds": 4.89
+      },
+      "calibrated_batch_iterations": 20
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3273.5738114095084,
+        "median_ns": 3323.9734082127343,
+        "min_ns": 2927.9765761873905,
+        "max_ns": 3551.9715842273263,
+        "stddev_ns": 229.13917151041846,
+        "cv": 0.06999664119739447,
+        "mad_ns": 155.99875200998395,
+        "robust_cv": 0.06958050541516246,
+        "iqr_ns": 353.9971680226563,
+        "is_robust_stable": false,
+        "p95_ns": 3519.5718434252526,
+        "p99_ns": 3545.4916360669117,
+        "ops_per_sec": 305476.53958944284,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        2927.9765761873905,
+        3095.9752321981423,
+        2951.9763841889267,
+        3479.9721602227182,
+        3551.9715842273263,
+        3431.9725442196464,
+        3407.97273621811,
+        3479.9721602227182,
+        3167.9746562027503,
+        3239.9740802073584
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 38,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 5.093
+      },
+      "calibrated_batch_iterations": 41667
+    },
+    {
+      "name": "codable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3112000.0,
+        "median_ns": 3120000.0,
+        "min_ns": 2920000.0,
+        "max_ns": 3360000.0,
+        "stddev_ns": 143356.58726096654,
+        "cv": 0.0460657414077656,
+        "mad_ns": 100000.0,
+        "robust_cv": 0.04751923076923077,
+        "iqr_ns": 220000.0,
+        "is_robust_stable": false,
+        "p95_ns": 3306000.0,
+        "p99_ns": 3349200.0,
+        "ops_per_sec": 321.3367609254499,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3200000.0,
+        3040000.0,
+        3160000.0,
+        2960000.0,
+        3240000.0,
+        3200000.0,
+        3080000.0,
+        2960000.0,
+        3360000.0,
+        2920000.0
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 64,
+        "converged_at": 30,
+        "best_mmd": 0,
+        "elapsed_seconds": 5.04
+      },
+      "calibrated_batch_iterations": 25
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3969.640918412481,
+        "median_ns": 4121.315694237806,
+        "min_ns": 3285.9785274840165,
+        "max_ns": 4430.576219389602,
+        "stddev_ns": 462.32007621856843,
+        "cv": 0.11646395372291184,
+        "mad_ns": 305.27966544694164,
+        "robust_cv": 0.10982115071273146,
+        "iqr_ns": 740.3996943986485,
+        "is_robust_stable": false,
+        "p95_ns": 4426.993445655234,
+        "p99_ns": 4429.859664642728,
+        "ops_per_sec": 251911.9538902564,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3313.000120632112,
+        4327.878081145201,
+        4350.235232618923,
+        3546.7449435039607,
+        4430.576219389602,
+        3285.9785274840165,
+        4311.311271060356,
+        3931.320117415256,
+        3776.7501708954924,
+        4422.614499979894
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 52,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.093751
+      },
+      "calibrated_batch_iterations": 24869
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3476637.0370370373,
+        "median_ns": 3540629.6296296297,
+        "min_ns": 3276592.592592593,
+        "max_ns": 3639925.925925926,
+        "stddev_ns": 140474.75819298142,
+        "cv": 0.040405356295893625,
+        "mad_ns": 86870.37037037034,
+        "robust_cv": 0.03637601912193896,
+        "iqr_ns": 234175.92592592584,
+        "is_robust_stable": true,
+        "p95_ns": 3628742.5925925924,
+        "p99_ns": 3637689.2592592593,
+        "ops_per_sec": 287.6342825974867,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3309740.7407407407,
+        3276592.592592593,
+        3428740.7407407407,
+        3538296.296296296,
+        3542962.962962963,
+        3581851.8518518517,
+        3615074.074074074,
+        3639925.925925926,
+        3549111.111111111,
+        3284074.074074074
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.875574
+      },
+      "calibrated_batch_iterations": 27
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3505200.0,
+        "median_ns": 3411483.870967742,
+        "min_ns": 3323838.709677419,
+        "max_ns": 3848806.4516129033,
+        "stddev_ns": 183717.83650508686,
+        "cv": 0.052412939776642374,
+        "mad_ns": 56129.032258064486,
+        "robust_cv": 0.024393169181890374,
+        "iqr_ns": 267427.4193548383,
+        "is_robust_stable": true,
+        "p95_ns": 3790306.4516129033,
+        "p99_ns": 3837106.4516129033,
+        "ops_per_sec": 285.2904256533151,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        3323838.709677419,
+        3391741.935483871,
+        3384225.806451613,
+        3369290.3225806453,
+        3391677.419354839,
+        3710838.709677419,
+        3718806.4516129033,
+        3481548.3870967743,
+        3431225.806451613,
+        3848806.4516129033
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.121757
+      },
+      "calibrated_batch_iterations": 31
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 15300814.285714287,
+        "median_ns": 15307285.714285715,
+        "min_ns": 14235714.285714285,
+        "max_ns": 16126428.57142857,
+        "stddev_ns": 588162.5218884613,
+        "cv": 0.038439949071050646,
+        "mad_ns": 305357.1428571427,
+        "robust_cv": 0.029575622252708777,
+        "iqr_ns": 460250.0,
+        "is_robust_stable": true,
+        "p95_ns": 16054107.142857142,
+        "p99_ns": 16111964.285714285,
+        "ops_per_sec": 65.35599879371499,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        14511857.142857144,
+        14235714.285714285,
+        15185000.0,
+        15615714.285714285,
+        15965714.285714285,
+        15143571.42857143,
+        15609571.42857143,
+        15313571.42857143,
+        16126428.57142857,
+        15301000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.008437
+      },
+      "calibrated_batch_iterations": 7
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5814292.307692307,
+        "median_ns": 5775846.153846154,
+        "min_ns": 5682846.153846154,
+        "max_ns": 6014692.307692308,
+        "stddev_ns": 109635.09974151544,
+        "cv": 0.018856138277820712,
+        "mad_ns": 42115.38461538451,
+        "robust_cv": 0.010810583863836105,
+        "iqr_ns": 145423.07692307606,
+        "is_robust_stable": true,
+        "p95_ns": 5983330.769230769,
+        "p99_ns": 6008420.0,
+        "ops_per_sec": 171.9899769533431,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        5779307.692307692,
+        5945000.0,
+        5752230.769230769,
+        5800384.615384615,
+        5716692.307692308,
+        5772384.615384615,
+        5682846.153846154,
+        5750769.230769231,
+        6014692.307692308,
+        5928615.384615385
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.15729071326686647,
+        "elapsed_seconds": 1.546186
+      },
+      "calibrated_batch_iterations": 13
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3676.1050212164073,
+        "median_ns": 3669.3555516265915,
+        "min_ns": 3592.0261669024044,
+        "max_ns": 3789.7365629420083,
+        "stddev_ns": 61.58294437510456,
+        "cv": 0.01675222661476821,
+        "mad_ns": 45.96888260254582,
+        "robust_cv": 0.018573688046208178,
+        "iqr_ns": 85.32973833097549,
+        "is_robust_stable": true,
+        "p95_ns": 3765.60952970297,
+        "p99_ns": 3784.9111562942007,
+        "ops_per_sec": 272027.0487999019,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3789.7365629420083,
+        3736.1209335219237,
+        3645.1997878359266,
+        3712.8270862800564,
+        3710.7054455445545,
+        3660.581683168317,
+        3678.1294200848656,
+        3592.0261669024044,
+        3614.8338048090523,
+        3620.8893210749648
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.656469
+      },
+      "calibrated_batch_iterations": 22624
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3508200.0,
+        "median_ns": 3529958.333333333,
+        "min_ns": 3280291.6666666665,
+        "max_ns": 3729041.6666666665,
+        "stddev_ns": 181065.18440353576,
+        "cv": 0.05161199030942813,
+        "mad_ns": 173375.00000000023,
+        "robust_cv": 0.07281835951793587,
+        "iqr_ns": 349666.666666667,
+        "is_robust_stable": false,
+        "p95_ns": 3719235.4166666665,
+        "p99_ns": 3727080.4166666665,
+        "ops_per_sec": 285.0464625733995,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3729041.6666666665,
+        3400208.3333333335,
+        3464625.0,
+        3296583.3333333335,
+        3280291.6666666665,
+        3595291.6666666665,
+        3607125.0,
+        3707250.0,
+        3302166.6666666665,
+        3699416.6666666665
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.930448
+      },
+      "calibrated_batch_iterations": 24
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3516790.909090909,
+        "median_ns": 3520704.5454545454,
+        "min_ns": 3242545.4545454546,
+        "max_ns": 3786181.8181818184,
+        "stddev_ns": 143795.95436657697,
+        "cv": 0.0408884002727783,
+        "mad_ns": 55863.63636363624,
+        "robust_cv": 0.023524674167747877,
+        "iqr_ns": 101272.72727272706,
+        "is_robust_stable": true,
+        "p95_ns": 3706490.909090909,
+        "p99_ns": 3770243.6363636367,
+        "ops_per_sec": 284.35014359682253,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        3609090.909090909,
+        3507318.1818181816,
+        3585409.090909091,
+        3534090.909090909,
+        3492454.5454545454,
+        3786181.8181818184,
+        3562363.6363636362,
+        3473681.8181818184,
+        3374772.727272727,
+        3242545.4545454546
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.08304414678670247,
+        "elapsed_seconds": 1.541856
+      },
+      "calibrated_batch_iterations": 22
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 26478025.0,
+        "median_ns": 26183625.0,
+        "min_ns": 24980500.0,
+        "max_ns": 28616000.0,
+        "stddev_ns": 1247233.8418476305,
+        "cv": 0.047104489169703195,
+        "mad_ns": 1032000.0,
+        "robust_cv": 0.058435117368202456,
+        "iqr_ns": 1859937.5,
+        "is_robust_stable": false,
+        "p95_ns": 28311125.0,
+        "p99_ns": 28555025.0,
+        "ops_per_sec": 37.767167301941896,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        25089750.0,
+        25351250.0,
+        26236750.0,
+        25877500.0,
+        24980500.0,
+        26130500.0,
+        27153750.0,
+        28616000.0,
+        27405750.0,
+        27938500.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.068421
+      },
+      "calibrated_batch_iterations": 4
+    },
+    {
+      "name": "codable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5583125.0,
+        "median_ns": 5536291.666666667,
+        "min_ns": 5222750.0,
+        "max_ns": 6120416.666666667,
+        "stddev_ns": 304001.8534960147,
+        "cv": 0.05445012488454311,
+        "mad_ns": 206833.33333333302,
+        "robust_cv": 0.05538926025995129,
+        "iqr_ns": 394874.99999999907,
+        "is_robust_stable": false,
+        "p95_ns": 6046541.666666667,
+        "p99_ns": 6105641.666666667,
+        "ops_per_sec": 179.11116086421134,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        5253583.333333333,
+        5603666.666666667,
+        5222750.0,
+        5468916.666666667,
+        5380666.666666667,
+        5338750.0,
+        5741166.666666667,
+        5956250.0,
+        6120416.666666667,
+        5745083.333333333
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.396868
+      },
+      "calibrated_batch_iterations": 12
+    },
+    {
+      "name": "codable_js",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3166996.875,
+        "median_ns": 3166296.875,
+        "min_ns": 3091562.5,
+        "max_ns": 3297375.0,
+        "stddev_ns": 64797.630771186596,
+        "cv": 0.020460276194995172,
+        "mad_ns": 47484.375,
+        "robust_cv": 0.02223428097689039,
+        "iqr_ns": 82812.5,
+        "is_robust_stable": true,
+        "p95_ns": 3264356.25,
+        "p99_ns": 3290771.25,
+        "ops_per_sec": 315.75654775472424,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3125343.75,
+        3112281.25,
+        3091562.5,
+        3096250.0,
+        3151468.75,
+        3201437.5,
+        3189125.0,
+        3297375.0,
+        3224000.0,
+        3181125.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.556981
+      },
+      "calibrated_batch_iterations": 32
+    },
+    {
+      "name": "codable_js",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4889886.363636363,
+        "median_ns": 4775045.454545455,
+        "min_ns": 4714409.090909091,
+        "max_ns": 5687090.909090909,
+        "stddev_ns": 292350.1996463172,
+        "cv": 0.059786706255666656,
+        "mad_ns": 56772.72727272799,
+        "robust_cv": 0.017627318159751198,
+        "iqr_ns": 134238.6363636367,
+        "is_robust_stable": true,
+        "p95_ns": 5367345.454545453,
+        "p99_ns": 5623141.818181818,
+        "ops_per_sec": 204.50372986916412,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        4976545.454545454,
+        4754545.454545454,
+        4722136.363636363,
+        4785090.909090909,
+        4882727.2727272725,
+        4714409.090909091,
+        4765000.0,
+        4742000.0,
+        5687090.909090909,
+        4869318.181818182
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.628614
+      },
+      "calibrated_batch_iterations": 22
+    },
+    {
+      "name": "codable_js",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3151.2857582282372,
+        "median_ns": 3099.7846816364195,
+        "min_ns": 2996.278068286681,
+        "max_ns": 3526.6687173177484,
+        "stddev_ns": 169.22673184258593,
+        "cv": 0.05370085254906591,
+        "mad_ns": 74.42325438326657,
+        "robust_cv": 0.03559599400639048,
+        "iqr_ns": 132.09012611504113,
+        "is_robust_stable": true,
+        "p95_ns": 3451.6594893878805,
+        "p99_ns": 3511.666871731775,
+        "ops_per_sec": 317330.7902620151,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3359.9815441402648,
+        3147.1547216241156,
+        3526.6687173177484,
+        3128.5758228237464,
+        3070.9935404490925,
+        3176.5918179021837,
+        3065.3337434635496,
+        3027.7453091356506,
+        2996.278068286681,
+        3013.5342971393416
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.043445
+      },
+      "calibrated_batch_iterations": 32510
+    },
+    {
+      "name": "codable_js",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 11508600.0,
+        "median_ns": 11375550.0,
+        "min_ns": 11130700.0,
+        "max_ns": 12469700.0,
+        "stddev_ns": 449989.79247682204,
+        "cv": 0.03910030694235807,
+        "mad_ns": 193150.0,
+        "robust_cv": 0.025173656658359377,
+        "iqr_ns": 360225.0,
+        "is_robust_stable": false,
+        "p95_ns": 12314990.0,
+        "p99_ns": 12438758.0,
+        "ops_per_sec": 86.89154197730393,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        11504100.0,
+        11290000.0,
+        12469700.0,
+        12125900.0,
+        11222100.0,
+        11171800.0,
+        11461100.0,
+        11130700.0,
+        11152500.0,
+        11558100.0
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 43,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.10389
+      },
+      "calibrated_batch_iterations": 10
+    },
+    {
+      "name": "codable_js",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2798611.6279069767,
+        "median_ns": 2687755.813953488,
+        "min_ns": 2513232.5581395347,
+        "max_ns": 3376511.6279069767,
+        "stddev_ns": 287989.675384061,
+        "cv": 0.102904480390315,
+        "mad_ns": 162162.79069767427,
+        "robust_cv": 0.0894510402471154,
+        "iqr_ns": 419837.20930232573,
+        "is_robust_stable": false,
+        "p95_ns": 3248491.860465116,
+        "p99_ns": 3350907.6744186045,
+        "ops_per_sec": 357.32003327231195,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2513232.5581395347,
+        2537953.488372093,
+        3045465.11627907,
+        2569000.0,
+        2613232.5581395347,
+        3092023.2558139535,
+        3376511.6279069767,
+        2863186.0465116277,
+        2698441.8604651163,
+        2677069.7674418604
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 40,
+        "converged_at": 40,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 4.466208
+      },
+      "calibrated_batch_iterations": 43
+    },
+    {
+      "name": "codable_js",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2712000.0,
+        "median_ns": 2740000.0,
+        "min_ns": 2600000.0,
+        "max_ns": 2800000.0,
+        "stddev_ns": 81758.45182269809,
+        "cv": 0.03014692176353174,
+        "mad_ns": 40000.0,
+        "robust_cv": 0.021643795620437955,
+        "iqr_ns": 130000.0,
+        "is_robust_stable": true,
+        "p95_ns": 2800000.0,
+        "p99_ns": 2800000.0,
+        "ops_per_sec": 368.7315634218289,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        2800000.0,
+        2760000.0,
+        2600000.0,
+        2760000.0,
+        2600000.0,
+        2720000.0,
+        2760000.0,
+        2600000.0,
+        2800000.0,
+        2720000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.359
+      },
+      "calibrated_batch_iterations": 25
+    },
+    {
+      "name": "codable_js",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5980000.0,
+        "median_ns": 6000000.0,
+        "min_ns": 5700000.0,
+        "max_ns": 6250000.0,
+        "stddev_ns": 160208.19787597223,
+        "cv": 0.02679066854113248,
+        "mad_ns": 100000.0,
+        "robust_cv": 0.02471,
+        "iqr_ns": 187500.0,
+        "is_robust_stable": true,
+        "p95_ns": 6182500.0,
+        "p99_ns": 6236500.0,
+        "ops_per_sec": 167.22408026755852,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        5700000.0,
+        6100000.0,
+        6000000.0,
+        5900000.0,
+        5800000.0,
+        5900000.0,
+        6100000.0,
+        6050000.0,
+        6250000.0,
+        6000000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.924
+      },
+      "calibrated_batch_iterations": 20
+    },
+    {
+      "name": "codable_js",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 7312.0,
+        "median_ns": 7280.0,
+        "min_ns": 7120.0,
+        "max_ns": 7600.0,
+        "stddev_ns": 137.01581417242804,
+        "cv": 0.018738486620955695,
+        "mad_ns": 80.0,
+        "robust_cv": 0.01629230769230769,
+        "iqr_ns": 140.0,
+        "is_robust_stable": true,
+        "p95_ns": 7528.0,
+        "p99_ns": 7585.6,
+        "ops_per_sec": 136761.48796498906,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        7600.0,
+        7440.0,
+        7200.0,
+        7280.0,
+        7200.0,
+        7120.0,
+        7280.0,
+        7280.0,
+        7360.0,
+        7360.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.857
+      },
+      "calibrated_batch_iterations": 12500
+    },
+    {
+      "name": "codable_js",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3087878.787878788,
+        "median_ns": 3090909.090909091,
+        "min_ns": 2909090.909090909,
+        "max_ns": 3242424.242424242,
+        "stddev_ns": 113787.77791223375,
+        "cv": 0.03684982012859385,
+        "mad_ns": 90909.09090909082,
+        "robust_cv": 0.04360588235294114,
+        "iqr_ns": 159090.9090909087,
+        "is_robust_stable": true,
+        "p95_ns": 3242424.242424242,
+        "p99_ns": 3242424.242424242,
+        "ops_per_sec": 323.846908734053,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3060606.0606060605,
+        3121212.121212121,
+        2909090.909090909,
+        3121212.121212121,
+        2969696.9696969697,
+        3181818.1818181816,
+        3242424.242424242,
+        3000000.0,
+        3242424.242424242,
+        3030303.0303030303
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.643
+      },
+      "calibrated_batch_iterations": 33
+    },
+    {
+      "name": "codable_js",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 14862500.0,
+        "median_ns": 14437500.0,
+        "min_ns": 14125000.0,
+        "max_ns": 16750000.0,
+        "stddev_ns": 854826.9805444062,
+        "cv": 0.057515692551347766,
+        "mad_ns": 187500.0,
+        "robust_cv": 0.019254545454545455,
+        "iqr_ns": 906250.0,
+        "is_robust_stable": true,
+        "p95_ns": 16299999.999999998,
+        "p99_ns": 16660000.0,
+        "ops_per_sec": 67.2834314550042,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        16750000.0,
+        15500000.0,
+        14125000.0,
+        14375000.0,
+        14625000.0,
+        14375000.0,
+        14500000.0,
+        14375000.0,
+        14250000.0,
+        15750000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.44
+      },
+      "calibrated_batch_iterations": 8
+    },
+    {
+      "name": "codable_js",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3441925.0,
+        "median_ns": 3426178.5714285714,
+        "min_ns": 3288821.4285714286,
+        "max_ns": 3672964.285714286,
+        "stddev_ns": 111324.58829814097,
+        "cv": 0.03234369961522723,
+        "mad_ns": 80500.0,
+        "robust_cv": 0.034834524094941255,
+        "iqr_ns": 132633.92857142864,
+        "is_robust_stable": true,
+        "p95_ns": 3608807.1428571427,
+        "p99_ns": 3660132.8571428573,
+        "ops_per_sec": 290.53509300754666,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        3428178.5714285714,
+        3424178.5714285714,
+        3288821.4285714286,
+        3337750.0,
+        3423392.8571428573,
+        3530392.8571428573,
+        3527392.8571428573,
+        3672964.285714286,
+        3353607.1428571427,
+        3432571.4285714286
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.962491
+      },
+      "calibrated_batch_iterations": 28
+    },
+    {
+      "name": "codable_js",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3744.1020234378166,
+        "median_ns": 3744.008758768907,
+        "min_ns": 3565.264993309274,
+        "max_ns": 4035.2378249057215,
+        "stddev_ns": 124.64227514648357,
+        "cv": 0.03329029881296815,
+        "mad_ns": 55.61412756984714,
+        "robust_cv": 0.02202278649640966,
+        "iqr_ns": 107.88289201573343,
+        "is_robust_stable": true,
+        "p95_ns": 3923.454036738169,
+        "p99_ns": 4012.881067272211,
+        "ops_per_sec": 267086.7390204834,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3565.264993309274,
+        3761.8101455739834,
+        3652.8932322290257,
+        4035.2378249057215,
+        3726.2073719638297,
+        3786.829406755606,
+        3778.313936985524,
+        3784.234215968533,
+        3675.601151615912,
+        3674.6279550707595
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.17950626508766904,
+        "elapsed_seconds": 1.839298
+      },
+      "calibrated_batch_iterations": 24661
+    },
+    {
+      "name": "codable_js",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5524905.555555556,
+        "median_ns": 5499944.444444444,
+        "min_ns": 5263833.333333333,
+        "max_ns": 5894333.333333333,
+        "stddev_ns": 219141.2173648492,
+        "cv": 0.03966424677513125,
+        "mad_ns": 176138.88888888806,
+        "robust_cv": 0.047481119001201805,
+        "iqr_ns": 357402.777777778,
+        "is_robust_stable": true,
+        "p95_ns": 5818733.333333333,
+        "p99_ns": 5879213.333333333,
+        "ops_per_sec": 180.99856910575645,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        5382888.888888889,
+        5894333.333333333,
+        5363388.888888889,
+        5726333.333333333,
+        5337555.555555556,
+        5627666.666666667,
+        5617000.0,
+        5310055.555555556,
+        5726000.0,
+        5263833.333333333
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.575632
+      },
+      "calibrated_batch_iterations": 18
+    },
+    {
+      "name": "codable_js",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 29915999.999999993,
+        "median_ns": 29782000.0,
+        "min_ns": 28861000.0,
+        "max_ns": 31710333.333333332,
+        "stddev_ns": 873756.9653902061,
+        "cv": 0.02920701181274924,
+        "mad_ns": 587666.6666666679,
+        "robust_cv": 0.029255073534349668,
+        "iqr_ns": 1221666.666666668,
+        "is_robust_stable": true,
+        "p95_ns": 31201683.333333332,
+        "p99_ns": 31608603.333333332,
+        "ops_per_sec": 33.426928733787946,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        31710333.333333332,
+        28861000.0,
+        29167333.333333332,
+        29313333.333333332,
+        30560666.666666668,
+        30182000.0,
+        29491333.333333332,
+        30072666.666666668,
+        29221333.333333332,
+        30580000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.15066914391507516,
+        "elapsed_seconds": 3.369318
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "codable_js",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 11407028.57142857,
+        "median_ns": 11326357.142857142,
+        "min_ns": 10858857.142857144,
+        "max_ns": 12247857.142857144,
+        "stddev_ns": 425287.8059782954,
+        "cv": 0.03728296140534993,
+        "mad_ns": 285214.2857142864,
+        "robust_cv": 0.037334042593445214,
+        "iqr_ns": 450857.14285714366,
+        "is_robust_stable": true,
+        "p95_ns": 12077435.714285715,
+        "p99_ns": 12213772.857142858,
+        "ops_per_sec": 87.66524899435436,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        11120142.857142856,
+        11302428.57142857,
+        12247857.142857144,
+        11690571.42857143,
+        11299428.57142857,
+        11391571.42857143,
+        11869142.857142856,
+        10858857.142857144,
+        11350285.714285715,
+        10940000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.11452
+      },
+      "calibrated_batch_iterations": 7
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 38573266.666666664,
+        "median_ns": 37912833.33333333,
+        "min_ns": 35906000.0,
+        "max_ns": 44325333.333333336,
+        "stddev_ns": 2809485.9149269364,
+        "cv": 0.07283505281534197,
+        "mad_ns": 1939999.9999999963,
+        "robust_cv": 0.07586465444858148,
+        "iqr_ns": 3518916.6666666716,
+        "is_robust_stable": false,
+        "p95_ns": 43198083.333333336,
+        "p99_ns": 44099883.333333336,
+        "ops_per_sec": 25.92469050240322,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        38876000.0,
+        36973333.333333336,
+        36002666.666666664,
+        44325333.333333336,
+        35943000.0,
+        40060333.333333336,
+        37194000.0,
+        38631666.666666664,
+        35906000.0,
+        41820333.333333336
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 44,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.006331
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3301616.666666667,
+        "median_ns": 3325736.111111111,
+        "min_ns": 3048444.4444444445,
+        "max_ns": 3522500.0,
+        "stddev_ns": 165487.84026129654,
+        "cv": 0.050123275040398346,
+        "mad_ns": 153527.77777777752,
+        "robust_cv": 0.06844207589798404,
+        "iqr_ns": 263784.72222222155,
+        "is_robust_stable": false,
+        "p95_ns": 3510287.5,
+        "p99_ns": 3520057.5,
+        "ops_per_sec": 302.88192148290983,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3163277.777777778,
+        3181138.888888889,
+        3522500.0,
+        3370916.6666666665,
+        3495361.111111111,
+        3373944.4444444445,
+        3280555.5555555555,
+        3450722.222222222,
+        3048444.4444444445,
+        3129305.5555555555
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 40,
+        "converged_at": 40,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 4.726896
+      },
+      "calibrated_batch_iterations": 36
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 7696038.88888889,
+        "median_ns": 7672166.666666666,
+        "min_ns": 7122055.555555556,
+        "max_ns": 8586722.222222222,
+        "stddev_ns": 433126.2373521756,
+        "cv": 0.05627911235967102,
+        "mad_ns": 329055.55555555504,
+        "robust_cv": 0.06358800425781494,
+        "iqr_ns": 564097.222222222,
+        "is_robust_stable": false,
+        "p95_ns": 8346222.222222222,
+        "p99_ns": 8538622.222222222,
+        "ops_per_sec": 129.93697334920486,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        7122055.555555556,
+        7312944.444444444,
+        7437722.222222222,
+        8586722.222222222,
+        8052277.777777778,
+        8041444.444444444,
+        7688833.333333333,
+        7373277.777777778,
+        7689611.111111111,
+        7655500.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.735772
+      },
+      "calibrated_batch_iterations": 18
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3733420.0,
+        "median_ns": 3692300.0,
+        "min_ns": 3631800.0,
+        "max_ns": 3874600.0,
+        "stddev_ns": 85837.18179074717,
+        "cv": 0.02299156853253777,
+        "mad_ns": 45400.0,
+        "robust_cv": 0.01822984047883433,
+        "iqr_ns": 146200.0,
+        "is_robust_stable": true,
+        "p95_ns": 3850210.0,
+        "p99_ns": 3869722.0,
+        "ops_per_sec": 267.85092488924363,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        3689000.0,
+        3631800.0,
+        3676000.0,
+        3664200.0,
+        3662000.0,
+        3804200.0,
+        3816400.0,
+        3820400.0,
+        3874600.0,
+        3695600.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 0.585578
+      },
+      "calibrated_batch_iterations": 5
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3439758.823529412,
+        "median_ns": 3413352.9411764704,
+        "min_ns": 3052941.1764705884,
+        "max_ns": 3875058.8235294116,
+        "stddev_ns": 243411.9300788869,
+        "cv": 0.07076424324108012,
+        "mad_ns": 177264.70588235278,
+        "robust_cv": 0.07699545211711782,
+        "iqr_ns": 312375.0,
+        "is_robust_stable": false,
+        "p95_ns": 3767257.352941176,
+        "p99_ns": 3853498.5294117643,
+        "ops_per_sec": 290.7180564984891,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3205529.411764706,
+        3635500.0,
+        3329058.8235294116,
+        3052941.1764705884,
+        3875058.8235294116,
+        3326058.8235294116,
+        3627117.6470588236,
+        3560058.8235294116,
+        3288617.6470588236,
+        3497647.0588235296
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 44,
+        "converged_at": 35,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.123624
+      },
+      "calibrated_batch_iterations": 34
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5025.665218910688,
+        "median_ns": 5005.316759023513,
+        "min_ns": 4755.279317058559,
+        "max_ns": 5434.875942289451,
+        "stddev_ns": 230.2424177009365,
+        "cv": 0.04581332175381979,
+        "mad_ns": 132.64440117817367,
+        "robust_cv": 0.03928993881001177,
+        "iqr_ns": 256.4400179721424,
+        "is_robust_stable": true,
+        "p95_ns": 5377.949178772901,
+        "p99_ns": 5423.490589586141,
+        "ops_per_sec": 198978.6339601725,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        4903.649343517548,
+        4884.129599121362,
+        4761.120263591433,
+        4755.279317058559,
+        5114.772103239978,
+        5106.984174529479,
+        5126.25430582597,
+        4861.215116569318,
+        5308.372023363786,
+        5434.875942289451
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.505502
+      },
+      "calibrated_batch_iterations": 20031
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6519118.181818182,
+        "median_ns": 6682954.545454545,
+        "min_ns": 5589454.545454546,
+        "max_ns": 7501454.545454546,
+        "stddev_ns": 668269.0014585269,
+        "cv": 0.10250910979376458,
+        "mad_ns": 384090.90909090964,
+        "robust_cv": 0.08520979425267823,
+        "iqr_ns": 1053681.8181818184,
+        "is_robust_stable": false,
+        "p95_ns": 7339781.818181818,
+        "p99_ns": 7469120.0,
+        "ops_per_sec": 153.39497952177024,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        6991909.090909091,
+        6778727.2727272725,
+        5589454.545454546,
+        6587181.818181818,
+        5642727.2727272725,
+        7142181.818181818,
+        6419636.363636363,
+        5719818.181818182,
+        7501454.545454546,
+        6818090.909090909
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 65,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.008138
+      },
+      "calibrated_batch_iterations": 11
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 26542275.0,
+        "median_ns": 26599500.0,
+        "min_ns": 25994500.0,
+        "max_ns": 27106250.0,
+        "stddev_ns": 322252.4555979192,
+        "cv": 0.012141101529462685,
+        "mad_ns": 178125.0,
+        "robust_cv": 0.009928311622398918,
+        "iqr_ns": 313750.0,
+        "is_robust_stable": true,
+        "p95_ns": 26951000.0,
+        "p99_ns": 27075200.0,
+        "ops_per_sec": 37.675745579457676,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        26761250.0,
+        26405000.0,
+        26710000.0,
+        26709750.0,
+        26545000.0,
+        26654000.0,
+        26143750.0,
+        27106250.0,
+        25994500.0,
+        26393250.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.737128
+      },
+      "calibrated_batch_iterations": 4
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4669823.076923078,
+        "median_ns": 4816807.692307692,
+        "min_ns": 4120923.076923077,
+        "max_ns": 5249153.846153846,
+        "stddev_ns": 485300.9315348431,
+        "cv": 0.10392276613926996,
+        "mad_ns": 412538.46153846197,
+        "robust_cv": 0.12697819015147294,
+        "iqr_ns": 912115.384615385,
+        "is_robust_stable": false,
+        "p95_ns": 5231326.923076923,
+        "p99_ns": 5245588.461538461,
+        "ops_per_sec": 214.14087504550488,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4125384.6153846155,
+        5249153.846153846,
+        4703307.692307692,
+        4121000.0,
+        5015307.692307692,
+        5058153.846153846,
+        4120923.076923077,
+        4930307.692307692,
+        4165153.846153846,
+        5209538.461538462
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 80,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.018105
+      },
+      "calibrated_batch_iterations": 13
+    },
+    {
+      "name": "json_serializable",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2923.810956431365,
+        "median_ns": 2893.9775182561607,
+        "min_ns": 2758.389628859776,
+        "max_ns": 3271.4766293794273,
+        "stddev_ns": 166.86970018189123,
+        "cv": 0.05707267079454506,
+        "mad_ns": 119.39665782348288,
+        "robust_cv": 0.061167539751919735,
+        "iqr_ns": 229.03618412055903,
+        "is_robust_stable": false,
+        "p95_ns": 3187.182397505675,
+        "p99_ns": 3254.6177830046768,
+        "ops_per_sec": 342019.3763896905,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        2951.508355441293,
+        2771.6270546727565,
+        2856.357519897164,
+        2758.389628859776,
+        2931.5975166151575,
+        3084.1561141044226,
+        3033.1756146924486,
+        2802.2864644586057,
+        3271.4766293794273,
+        2777.534666192599
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.18643681606434503,
+        "elapsed_seconds": 2.125447
+      },
+      "calibrated_batch_iterations": 36563
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 37366666.66666667,
+        "median_ns": 35666666.666666664,
+        "min_ns": 34666666.666666664,
+        "max_ns": 43000000.0,
+        "stddev_ns": 3093002.855909879,
+        "cv": 0.08277438508233395,
+        "mad_ns": 833333.3333333321,
+        "robust_cv": 0.0346401869158878,
+        "iqr_ns": 4166666.666666664,
+        "is_robust_stable": true,
+        "p95_ns": 42400000.0,
+        "p99_ns": 42880000.0,
+        "ops_per_sec": 26.76181980374665,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        35666666.666666664,
+        35666666.666666664,
+        41666666.666666664,
+        35333333.333333336,
+        34666666.666666664,
+        35333333.333333336,
+        37000000.0,
+        43000000.0,
+        40333333.333333336,
+        35000000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 40,
+        "converged_at": 40,
+        "best_mmd": 0,
+        "elapsed_seconds": 4.419
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4245454.545454545,
+        "median_ns": 4227272.727272727,
+        "min_ns": 4000000.0,
+        "max_ns": 4545454.545454546,
+        "stddev_ns": 142456.47604294747,
+        "cv": 0.03355505859683988,
+        "mad_ns": 45454.54545454588,
+        "robust_cv": 0.015941935483871118,
+        "iqr_ns": 90909.09090909082,
+        "is_robust_stable": true,
+        "p95_ns": 4463636.363636363,
+        "p99_ns": 4529090.909090909,
+        "ops_per_sec": 235.54603854389725,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4181818.1818181816,
+        4181818.1818181816,
+        4272727.2727272725,
+        4272727.2727272725,
+        4000000.0,
+        4181818.1818181816,
+        4272727.2727272725,
+        4545454.545454546,
+        4363636.363636363,
+        4181818.1818181816
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.585
+      },
+      "calibrated_batch_iterations": 11
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 35100000.0,
+        "median_ns": 35000000.0,
+        "min_ns": 32666666.666666668,
+        "max_ns": 38666666.666666664,
+        "stddev_ns": 2233582.0757001266,
+        "cv": 0.06363481697151357,
+        "mad_ns": 1666666.666666668,
+        "robust_cv": 0.07060000000000005,
+        "iqr_ns": 2583333.333333332,
+        "is_robust_stable": false,
+        "p95_ns": 38666666.666666664,
+        "p99_ns": 38666666.666666664,
+        "ops_per_sec": 28.49002849002849,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        33333333.333333332,
+        32666666.666666668,
+        33333333.333333332,
+        32666666.666666668,
+        38666666.666666664,
+        38666666.666666664,
+        36000000.0,
+        35333333.333333336,
+        34666666.666666664,
+        35666666.666666664
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 45,
+        "converged_at": 45,
+        "best_mmd": 0,
+        "elapsed_seconds": 4.686
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3613636.363636364,
+        "median_ns": 3522727.2727272725,
+        "min_ns": 3409090.909090909,
+        "max_ns": 4500000.0,
+        "stddev_ns": 320876.0391598086,
+        "cv": 0.08879588505051306,
+        "mad_ns": 68181.81818181789,
+        "robust_cv": 0.02869548387096762,
+        "iqr_ns": 159090.9090909087,
+        "is_robust_stable": true,
+        "p95_ns": 4111363.6363636353,
+        "p99_ns": 4422272.7272727275,
+        "ops_per_sec": 276.7295597484276,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3454545.4545454546,
+        3500000.0,
+        4500000.0,
+        3636363.6363636362,
+        3636363.6363636362,
+        3545454.5454545454,
+        3454545.4545454546,
+        3409090.909090909,
+        3454545.4545454546,
+        3545454.5454545454
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.71
+      },
+      "calibrated_batch_iterations": 22
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 21852.874114964598,
+        "median_ns": 21480.859234369374,
+        "min_ns": 18360.734429377175,
+        "max_ns": 26161.046441857674,
+        "stddev_ns": 2312.805205129658,
+        "cv": 0.1058352870639508,
+        "mad_ns": 1140.045601824073,
+        "robust_cv": 0.0786854748603352,
+        "iqr_ns": 1920.0768030721229,
+        "is_robust_stable": false,
+        "p95_ns": 25459.018360734426,
+        "p99_ns": 26020.640825633025,
+        "ops_per_sec": 45760.57111477211,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        20760.83043321733,
+        24600.984039361574,
+        21240.84963398536,
+        26161.046441857674,
+        19320.772830913236,
+        21240.84963398536,
+        22080.883235329413,
+        23040.921636865474,
+        21720.86883475339,
+        18360.734429377175
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 28,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 5.007
+      },
+      "calibrated_batch_iterations": 8333
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 8866666.666666668,
+        "median_ns": 9000000.0,
+        "min_ns": 8111111.111111111,
+        "max_ns": 9444444.444444444,
+        "stddev_ns": 431286.7149039893,
+        "cv": 0.04864135882375818,
+        "mad_ns": 277777.777777778,
+        "robust_cv": 0.04575925925925929,
+        "iqr_ns": 611111.1111111101,
+        "is_robust_stable": true,
+        "p95_ns": 9344444.444444444,
+        "p99_ns": 9424444.444444444,
+        "ops_per_sec": 112.78195488721803,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        9222222.222222222,
+        9000000.0,
+        9111111.111111112,
+        8666666.666666666,
+        9444444.444444444,
+        9000000.0,
+        8555555.555555556,
+        9222222.222222222,
+        8333333.333333333,
+        8111111.111111111
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0.13592681620385352,
+        "elapsed_seconds": 2.846
+      },
+      "calibrated_batch_iterations": 9
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 9922222.222222224,
+        "median_ns": 9666666.666666666,
+        "min_ns": 9000000.0,
+        "max_ns": 12111111.111111112,
+        "stddev_ns": 963034.1854003195,
+        "cv": 0.09705831655770296,
+        "mad_ns": 555555.555555555,
+        "robust_cv": 0.08520689655172406,
+        "iqr_ns": 1138888.888888888,
+        "is_robust_stable": false,
+        "p95_ns": 11461111.11111111,
+        "p99_ns": 11981111.111111112,
+        "ops_per_sec": 100.78387458006718,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        9333333.333333334,
+        9111111.111111112,
+        9000000.0,
+        9111111.111111112,
+        9444444.444444444,
+        9888888.888888888,
+        10222222.222222222,
+        10666666.666666666,
+        10333333.333333334,
+        12111111.111111112
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 35,
+        "converged_at": 35,
+        "best_mmd": 0,
+        "elapsed_seconds": 3.023
+      },
+      "calibrated_batch_iterations": 9
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 10320000.0,
+        "median_ns": 9900000.0,
+        "min_ns": 8900000.0,
+        "max_ns": 13200000.0,
+        "stddev_ns": 1565460.5286198265,
+        "cv": 0.1516919116879677,
+        "mad_ns": 800000.0,
+        "robust_cv": 0.11980606060606061,
+        "iqr_ns": 1425000.0,
+        "is_robust_stable": false,
+        "p95_ns": 13065000.0,
+        "p99_ns": 13173000.0,
+        "ops_per_sec": 96.89922480620154,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        8900000.0,
+        12900000.0,
+        9600000.0,
+        10200000.0,
+        10200000.0,
+        10800000.0,
+        9300000.0,
+        13200000.0,
+        9200000.0,
+        8900000.0
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 51,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 5.059
+      },
+      "calibrated_batch_iterations": 10
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3680000.0,
+        "median_ns": 3650000.0,
+        "min_ns": 3400000.0,
+        "max_ns": 4300000.0,
+        "stddev_ns": 241752.8581929166,
+        "cv": 0.06569371146546647,
+        "mad_ns": 50000.0,
+        "robust_cv": 0.02030958904109589,
+        "iqr_ns": 87500.0,
+        "is_robust_stable": true,
+        "p95_ns": 4029999.9999999995,
+        "p99_ns": 4246000.0,
+        "ops_per_sec": 271.7391304347826,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3700000.0,
+        3650000.0,
+        3450000.0,
+        3700000.0,
+        3650000.0,
+        3600000.0,
+        3700000.0,
+        4300000.0,
+        3400000.0,
+        3650000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.476
+      },
+      "calibrated_batch_iterations": 20
+    },
+    {
+      "name": "json_serializable",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4930.0,
+        "median_ns": 4900.0,
+        "min_ns": 4850.0,
+        "max_ns": 5050.0,
+        "stddev_ns": 58.68938953886336,
+        "cv": 0.011904541488613257,
+        "mad_ns": 25.0,
+        "robust_cv": 0.0075642857142857135,
+        "iqr_ns": 50.0,
+        "is_robust_stable": true,
+        "p95_ns": 5027.5,
+        "p99_ns": 5045.5,
+        "ops_per_sec": 202839.75659229208,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        5050.0,
+        4950.0,
+        4950.0,
+        5000.0,
+        4900.0,
+        4900.0,
+        4900.0,
+        4900.0,
+        4900.0,
+        4850.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.988
+      },
+      "calibrated_batch_iterations": 20000
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 58641350.0,
+        "median_ns": 57534750.0,
+        "min_ns": 54997000.0,
+        "max_ns": 65174000.0,
+        "stddev_ns": 3184788.3502850095,
+        "cv": 0.05430960150618991,
+        "mad_ns": 1695750.0,
+        "robust_cv": 0.043697399397755264,
+        "iqr_ns": 4177375.0,
+        "is_robust_stable": true,
+        "p95_ns": 63576050.0,
+        "p99_ns": 64854410.0,
+        "ops_per_sec": 17.05281341578937,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        56873000.0,
+        65174000.0,
+        55825500.0,
+        56790500.0,
+        61239000.0,
+        59217000.0,
+        58196500.0,
+        54997000.0,
+        56478000.0,
+        61623000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.976888
+      },
+      "calibrated_batch_iterations": 2
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6313617.647058822,
+        "median_ns": 6232117.647058824,
+        "min_ns": 5925352.94117647,
+        "max_ns": 6835823.529411765,
+        "stddev_ns": 253556.6523891268,
+        "cv": 0.040160279979457626,
+        "mad_ns": 145676.47058823518,
+        "robust_cv": 0.03465594642553751,
+        "iqr_ns": 301544.11764705926,
+        "is_robust_stable": true,
+        "p95_ns": 6680944.117647058,
+        "p99_ns": 6804847.647058824,
+        "ops_per_sec": 158.38779854935413,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        6140235.294117647,
+        5925352.94117647,
+        6242588.235294118,
+        6835823.529411765,
+        6431588.235294118,
+        6486352.94117647,
+        6199176.470588235,
+        6221647.05882353,
+        6491647.05882353,
+        6161764.705882353
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.163007
+      },
+      "calibrated_batch_iterations": 17
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3559.381827298449,
+        "median_ns": 3457.9527953869847,
+        "min_ns": 3362.7377242935427,
+        "max_ns": 3891.7302388882918,
+        "stddev_ns": 197.29032657520597,
+        "cv": 0.055428255845467476,
+        "mad_ns": 81.58733569714536,
+        "robust_cv": 0.034980634803908804,
+        "iqr_ns": 343.67501163998395,
+        "is_robust_stable": true,
+        "p95_ns": 3837.835321084488,
+        "p99_ns": 3880.9512553275313,
+        "ops_per_sec": 280947.66128504806,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3765.624440385373,
+        3771.9637548798396,
+        3891.7302388882918,
+        3681.243508470327,
+        3394.3984814297482,
+        3495.075391282547,
+        3420.2213387772645,
+        3362.7377242935427,
+        3389.993195086136,
+        3420.8301994914223
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.22032805297409347,
+        "elapsed_seconds": 2.116515
+      },
+      "calibrated_batch_iterations": 27921
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3254439.1304347827,
+        "median_ns": 3262195.652173913,
+        "min_ns": 3073565.217391304,
+        "max_ns": 3385391.304347826,
+        "stddev_ns": 101740.87378249531,
+        "cv": 0.031262183652795206,
+        "mad_ns": 61717.391304347664,
+        "robust_cv": 0.028049269297152415,
+        "iqr_ns": 102869.56521739112,
+        "is_robust_stable": true,
+        "p95_ns": 3378836.9565217393,
+        "p99_ns": 3384080.434782609,
+        "ops_per_sec": 307.27260825013593,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3370826.086956522,
+        3254391.304347826,
+        3218826.086956522,
+        3270000.0,
+        3073565.217391304,
+        3114217.3913043477,
+        3278043.4782608696,
+        3236869.565217391,
+        3342260.8695652173,
+        3385391.304347826
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.514779
+      },
+      "calibrated_batch_iterations": 23
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6346050.0,
+        "median_ns": 6297607.142857143,
+        "min_ns": 6164142.857142857,
+        "max_ns": 6705500.0,
+        "stddev_ns": 176339.94962704042,
+        "cv": 0.02778735585553855,
+        "mad_ns": 120500.0,
+        "robust_cv": 0.028368441528244855,
+        "iqr_ns": 256642.8571428582,
+        "is_robust_stable": true,
+        "p95_ns": 6612639.285714285,
+        "p99_ns": 6686927.857142857,
+        "ops_per_sec": 157.5783361303488,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        6705500.0,
+        6190071.428571428,
+        6499142.857142857,
+        6285357.142857143,
+        6196500.0,
+        6205357.142857143,
+        6164142.857142857,
+        6309857.142857143,
+        6446142.857142857,
+        6458428.571428572
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.829218
+      },
+      "calibrated_batch_iterations": 14
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 40393750.0,
+        "median_ns": 40275000.0,
+        "min_ns": 38797000.0,
+        "max_ns": 41926000.0,
+        "stddev_ns": 969869.0418470596,
+        "cv": 0.024010373927824468,
+        "mad_ns": 578500.0,
+        "robust_cv": 0.02129569459962756,
+        "iqr_ns": 1182875.0,
+        "is_robust_stable": true,
+        "p95_ns": 41828350.0,
+        "p99_ns": 41906470.0,
+        "ops_per_sec": 24.75630512146062,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        41709000.0,
+        40432500.0,
+        39642000.0,
+        39926500.0,
+        40117500.0,
+        39751000.0,
+        38797000.0,
+        40498500.0,
+        41926000.0,
+        41137500.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.790324
+      },
+      "calibrated_batch_iterations": 2
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5134339.999999999,
+        "median_ns": 5090566.666666666,
+        "min_ns": 5026800.0,
+        "max_ns": 5529666.666666667,
+        "stddev_ns": 147635.45845288193,
+        "cv": 0.028754515371572968,
+        "mad_ns": 49366.666666666046,
+        "robust_cv": 0.014377774576504073,
+        "iqr_ns": 85916.66666666698,
+        "is_robust_stable": true,
+        "p95_ns": 5373306.666666666,
+        "p99_ns": 5498394.666666667,
+        "ops_per_sec": 194.76700023761578,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        5050333.333333333,
+        5075133.333333333,
+        5182200.0,
+        5032066.666666667,
+        5075400.0,
+        5026800.0,
+        5114200.0,
+        5105733.333333333,
+        5151866.666666667,
+        5529666.666666667
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.088189
+      },
+      "calibrated_batch_iterations": 15
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3543525.0,
+        "median_ns": 3520875.0,
+        "min_ns": 3337571.4285714286,
+        "max_ns": 3986785.714285714,
+        "stddev_ns": 174507.34675975458,
+        "cv": 0.04924682251705705,
+        "mad_ns": 60482.142857142724,
+        "robust_cv": 0.02546833528597289,
+        "iqr_ns": 105267.85714285681,
+        "is_robust_stable": true,
+        "p95_ns": 3820719.6428571423,
+        "p99_ns": 3953572.5,
+        "ops_per_sec": 282.2048666229249,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3553607.1428571427,
+        3489142.8571428573,
+        3337571.4285714286,
+        3547321.4285714286,
+        3428678.5714285714,
+        3617750.0,
+        3432642.8571428573,
+        3527392.8571428573,
+        3514357.1428571427,
+        3986785.714285714
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.1636687122394464,
+        "elapsed_seconds": 1.949287
+      },
+      "calibrated_batch_iterations": 28
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 6024.036934074662,
+        "median_ns": 5950.655281969817,
+        "min_ns": 5912.033359809372,
+        "max_ns": 6391.084193804607,
+        "stddev_ns": 178.13488401219973,
+        "cv": 0.029570682577423908,
+        "mad_ns": 21.544876886418024,
+        "robust_cv": 0.005367885208976448,
+        "iqr_ns": 34.99801429706167,
+        "is_robust_stable": true,
+        "p95_ns": 6362.356036536934,
+        "p99_ns": 6385.338562351072,
+        "ops_per_sec": 166001.63826080653,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_encode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        5960.683081810961,
+        5912.033359809372,
+        6327.243844320889,
+        5964.05877680699,
+        5940.627482128673,
+        5928.117553613979,
+        5924.146147736299,
+        5930.103256552819,
+        5962.271644162033,
+        6391.084193804607
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.227076
+      },
+      "calibrated_batch_iterations": 10072
+    },
+    {
+      "name": "json_serializable",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4144980.0,
+        "median_ns": 4096700.0,
+        "min_ns": 4045900.0,
+        "max_ns": 4580600.0,
+        "stddev_ns": 158803.9658055036,
+        "cv": 0.0383123599644639,
+        "mad_ns": 34000.0,
+        "robust_cv": 0.01230463543827959,
+        "iqr_ns": 64200.0,
+        "is_robust_stable": true,
+        "p95_ns": 4404830.0,
+        "p99_ns": 4545446.0,
+        "ops_per_sec": 241.25568760283522,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4063300.0,
+        4096900.0,
+        4067000.0,
+        4133100.0,
+        4062100.0,
+        4114400.0,
+        4045900.0,
+        4096500.0,
+        4190000.0,
+        4580600.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 30,
+        "converged_at": 30,
+        "best_mmd": 0.18235456916418086,
+        "elapsed_seconds": 1.350097
+      },
+      "calibrated_batch_iterations": 10
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 10074175.0,
+        "median_ns": 9884062.5,
+        "min_ns": 9610875.0,
+        "max_ns": 10885375.0,
+        "stddev_ns": 453472.03836987936,
+        "cv": 0.04501331755403091,
+        "mad_ns": 116437.5,
+        "robust_cv": 0.01746551455942331,
+        "iqr_ns": 443656.25,
+        "is_robust_stable": true,
+        "p95_ns": 10860118.75,
+        "p99_ns": 10880323.75,
+        "ops_per_sec": 99.26371142053816,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        10829250.0,
+        9864625.0,
+        10885375.0,
+        9819375.0,
+        9745750.0,
+        9789500.0,
+        9610875.0,
+        9959000.0,
+        9903500.0,
+        10334500.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.994075
+      },
+      "calibrated_batch_iterations": 8
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4602436.842105264,
+        "median_ns": 4551657.894736842,
+        "min_ns": 4255578.947368421,
+        "max_ns": 5356157.894736842,
+        "stddev_ns": 322388.75271843397,
+        "cv": 0.07004740396849546,
+        "mad_ns": 191605.26315789483,
+        "robust_cv": 0.062411097171071295,
+        "iqr_ns": 324881.578947369,
+        "is_robust_stable": false,
+        "p95_ns": 5103850.0,
+        "p99_ns": 5305696.315789474,
+        "ops_per_sec": 217.2762026523706,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4795473.684210527,
+        5356157.894736842,
+        4597842.105263158,
+        4255578.947368421,
+        4632473.684210527,
+        4754473.684210527,
+        4371263.157894737,
+        4273052.631578947,
+        4505473.684210527,
+        4482578.947368421
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 57,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.014671
+      },
+      "calibrated_batch_iterations": 19
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3346.416119082741,
+        "median_ns": 3320.9400563229183,
+        "min_ns": 3269.5453935899154,
+        "max_ns": 3448.6053372669976,
+        "stddev_ns": 68.14846802087747,
+        "cv": 0.020364612647024036,
+        "mad_ns": 50.10392919404603,
+        "robust_cv": 0.022368390926436367,
+        "iqr_ns": 114.16286710473378,
+        "is_robust_stable": true,
+        "p95_ns": 3440.322851012472,
+        "p99_ns": 3446.9488400160926,
+        "ops_per_sec": 298827.1525162573,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        3325.0972240847527,
+        3269.5453935899154,
+        3292.074560815341,
+        3316.7828885610834,
+        3303.00388896339,
+        3272.126860667829,
+        3448.6053372669976,
+        3414.576907603594,
+        3430.19981225694,
+        3392.1483170175675
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.15908698524072293,
+        "elapsed_seconds": 2.033795
+      },
+      "calibrated_batch_iterations": 29828
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 41661100.0,
+        "median_ns": 41799250.0,
+        "min_ns": 38464000.0,
+        "max_ns": 46576000.0,
+        "stddev_ns": 2147531.3320699707,
+        "cv": 0.05154763873421419,
+        "mad_ns": 954750.0,
+        "robust_cv": 0.033864539435516185,
+        "iqr_ns": 1865250.0,
+        "is_robust_stable": true,
+        "p95_ns": 44689374.99999999,
+        "p99_ns": 46198675.0,
+        "ops_per_sec": 24.00320682843228,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        42383500.0,
+        42292000.0,
+        38464000.0,
+        40458000.0,
+        41498000.0,
+        40474000.0,
+        42339000.0,
+        46576000.0,
+        42100500.0,
+        40026000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 40,
+        "converged_at": 40,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 3.451223
+      },
+      "calibrated_batch_iterations": 2
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "aot",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4805322.222222223,
+        "median_ns": 4690000.0,
+        "min_ns": 4456611.111111111,
+        "max_ns": 5549833.333333333,
+        "stddev_ns": 353626.73663264496,
+        "cv": 0.07359063976964902,
+        "mad_ns": 163527.77777777798,
+        "robust_cv": 0.05169430348258713,
+        "iqr_ns": 480402.777777778,
+        "is_robust_stable": false,
+        "p95_ns": 5362283.333333333,
+        "p99_ns": 5512323.333333333,
+        "ops_per_sec": 208.1025899523445,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "aot"
+      },
+      "is_baseline": true,
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        4803500.0,
+        4529000.0,
+        4548111.111111111,
+        4576500.0,
+        4531333.333333333,
+        4456611.111111111,
+        5549833.333333333,
+        4856055.555555556,
+        5069222.222222222,
+        5133055.555555556
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 55,
+        "converged_at": 55,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 4.760013
+      },
+      "calibrated_batch_iterations": 18
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 9020000.0,
+        "median_ns": 9050000.0,
+        "min_ns": 8700000.0,
+        "max_ns": 9700000.0,
+        "stddev_ns": 289827.5349237888,
+        "cv": 0.03213165575651761,
+        "mad_ns": 100000.0,
+        "robust_cv": 0.01638232044198895,
+        "iqr_ns": 275000.0,
+        "is_robust_stable": true,
+        "p95_ns": 9430000.0,
+        "p99_ns": 9646000.0,
+        "ops_per_sec": 110.86474501108647,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        8700000.0,
+        9700000.0,
+        9100000.0,
+        8900000.0,
+        8700000.0,
+        9100000.0,
+        9100000.0,
+        9000000.0,
+        9100000.0,
+        8800000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.796
+      },
+      "calibrated_batch_iterations": 10
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4665.0,
+        "median_ns": 4675.0,
+        "min_ns": 4500.0,
+        "max_ns": 4800.0,
+        "stddev_ns": 105.54093465991708,
+        "cv": 0.022623994568042247,
+        "mad_ns": 75.0,
+        "robust_cv": 0.023785026737967913,
+        "iqr_ns": 137.5,
+        "is_robust_stable": true,
+        "p95_ns": 4777.5,
+        "p99_ns": 4795.5,
+        "ops_per_sec": 214362.27224008573,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        4500.0,
+        4500.0,
+        4750.0,
+        4650.0,
+        4750.0,
+        4650.0,
+        4600.0,
+        4750.0,
+        4800.0,
+        4700.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.03995956111575215,
+        "elapsed_seconds": 1.851
+      },
+      "calibrated_batch_iterations": 20000
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 33933333.33333333,
+        "median_ns": 32500000.0,
+        "min_ns": 32000000.0,
+        "max_ns": 45666666.666666664,
+        "stddev_ns": 4150858.9026404675,
+        "cv": 0.12232393622712578,
+        "mad_ns": 333333.33333333395,
+        "robust_cv": 0.015206153846153873,
+        "iqr_ns": 666666.6666666679,
+        "is_robust_stable": true,
+        "p95_ns": 40266666.66666665,
+        "p99_ns": 44586666.666666664,
+        "ops_per_sec": 29.46954813359529,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        33666666.666666664,
+        45666666.666666664,
+        32333333.333333332,
+        32000000.0,
+        33000000.0,
+        32333333.333333332,
+        32333333.333333332,
+        32666666.666666668,
+        33000000.0,
+        32333333.333333332
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.17164258303284238,
+        "elapsed_seconds": 2.09
+      },
+      "calibrated_batch_iterations": 3
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4652941.176470588,
+        "median_ns": 4382352.94117647,
+        "min_ns": 4235294.117647059,
+        "max_ns": 5764705.882352941,
+        "stddev_ns": 519848.26106554584,
+        "cv": 0.11172465787755094,
+        "mad_ns": 147058.8235294111,
+        "robust_cv": 0.04975167785234877,
+        "iqr_ns": 573529.4117647065,
+        "is_robust_stable": true,
+        "p95_ns": 5526470.5882352935,
+        "p99_ns": 5717058.823529411,
+        "ops_per_sec": 214.9178255372946,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4411764.705882353,
+        4352941.176470588,
+        4235294.117647059,
+        4235294.117647059,
+        4529411.764705882,
+        5764705.882352941,
+        5235294.117647059,
+        5058823.529411765,
+        4352941.176470588,
+        4352941.176470588
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0,
+        "elapsed_seconds": 1.506
+      },
+      "calibrated_batch_iterations": 17
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "js",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 2732500.0,
+        "median_ns": 2725000.0,
+        "min_ns": 2675000.0,
+        "max_ns": 2900000.0,
+        "stddev_ns": 65669.6276828185,
+        "cv": 0.024032800615853063,
+        "mad_ns": 25000.0,
+        "robust_cv": 0.013601834862385321,
+        "iqr_ns": 25000.0,
+        "is_robust_stable": true,
+        "p95_ns": 2843750.0,
+        "p99_ns": 2888750.0,
+        "ops_per_sec": 365.9652333028362,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "js"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        2900000.0,
+        2725000.0,
+        2725000.0,
+        2700000.0,
+        2675000.0,
+        2725000.0,
+        2675000.0,
+        2775000.0,
+        2725000.0,
+        2700000.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0,
+        "elapsed_seconds": 2.852
+      },
+      "calibrated_batch_iterations": 40
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 5071316.666666666,
+        "median_ns": 4913625.0,
+        "min_ns": 4715916.666666667,
+        "max_ns": 6711166.666666667,
+        "stddev_ns": 587889.4897516827,
+        "cv": 0.11592442917552959,
+        "mad_ns": 97291.66666666651,
+        "robust_cv": 0.029356050777175662,
+        "iqr_ns": 169854.16666666698,
+        "is_robust_stable": true,
+        "p95_ns": 5986366.666666665,
+        "p99_ns": 6566206.666666667,
+        "ops_per_sec": 197.18744967611963,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "coordinates_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 424161
+      },
+      "raw_trials_ns": [
+        4835166.666666667,
+        5100500.0,
+        4976333.333333333,
+        4797500.0,
+        4772416.666666667,
+        4715916.666666667,
+        6711166.666666667,
+        4856583.333333333,
+        4970666.666666667,
+        4976916.666666667
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 1.554711
+      },
+      "calibrated_batch_iterations": 12
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 9030907.692307692,
+        "median_ns": 8982769.230769232,
+        "min_ns": 8613769.23076923,
+        "max_ns": 10166615.384615384,
+        "stddev_ns": 429976.36863034574,
+        "cv": 0.04761164472942063,
+        "mad_ns": 88653.84615384694,
+        "robust_cv": 0.014632257484414733,
+        "iqr_ns": 145288.4615384601,
+        "is_robust_stable": true,
+        "p95_ns": 9685253.846153844,
+        "p99_ns": 10070343.076923076,
+        "ops_per_sec": 110.73084058336414,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "citm_catalog_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 1727204
+      },
+      "raw_trials_ns": [
+        8613769.23076923,
+        8987384.615384616,
+        8997384.615384616,
+        9096923.076923076,
+        9038923.076923076,
+        8641692.307692308,
+        8978153.846153846,
+        10166615.384615384,
+        8872384.615384616,
+        8915846.153846154
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 20,
+        "converged_at": 20,
+        "best_mmd": 0.21155253229046642,
+        "elapsed_seconds": 2.384495
+      },
+      "calibrated_batch_iterations": 13
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 4167.755402750491,
+        "median_ns": 4159.647184020956,
+        "min_ns": 4123.0353634577605,
+        "max_ns": 4240.749836280288,
+        "stddev_ns": 40.561786687864966,
+        "cv": 0.009732285791315009,
+        "mad_ns": 28.79420432220013,
+        "robust_cv": 0.010262958717288856,
+        "iqr_ns": 57.05631958087724,
+        "is_robust_stable": true,
+        "p95_ns": 4229.975032743942,
+        "p99_ns": 4238.594875573019,
+        "ops_per_sec": 239937.30518351786,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "small_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 546
+      },
+      "raw_trials_ns": [
+        4123.362802881467,
+        4138.3431565160445,
+        4161.632285527177,
+        4202.030124426981,
+        4123.0353634577605,
+        4157.662082514735,
+        4138.384086444008,
+        4175.548461034708,
+        4240.749836280288,
+        4216.805828421742
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 25,
+        "converged_at": 25,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 2.614178
+      },
+      "calibrated_batch_iterations": 24432
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 3683252.0,
+        "median_ns": 3701240.0,
+        "min_ns": 3417840.0,
+        "max_ns": 3844720.0,
+        "stddev_ns": 112860.76542950315,
+        "cv": 0.03064160840189679,
+        "mad_ns": 49280.0,
+        "robust_cv": 0.019740013617058065,
+        "iqr_ns": 90480.0,
+        "is_robust_stable": true,
+        "p95_ns": 3808666.0,
+        "p99_ns": 3837509.2,
+        "ops_per_sec": 271.4992077653117,
+        "is_stable": true
+      },
+      "coordinates": {
+        "group": "twitter_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 631514
+      },
+      "raw_trials_ns": [
+        3709000.0,
+        3693480.0,
+        3636640.0,
+        3736440.0,
+        3844720.0,
+        3627280.0,
+        3417840.0,
+        3670000.0,
+        3732520.0,
+        3764600.0
+      ],
+      "warmup": {
+        "is_stable": true,
+        "total_iterations": 50,
+        "converged_at": 50,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 4.698969
+      },
+      "calibrated_batch_iterations": 25
+    },
+    {
+      "name": "json_serializable_literal",
+      "target": "wasm",
+      "mode": "sync",
+      "samples": 10,
+      "metrics": {
+        "mean_ns": 57813550.0,
+        "median_ns": 55947750.0,
+        "min_ns": 52393500.0,
+        "max_ns": 71659000.0,
+        "stddev_ns": 5869604.597935973,
+        "cv": 0.1015264518082002,
+        "mad_ns": 2379250.0,
+        "robust_cv": 0.06304947115835757,
+        "iqr_ns": 5230750.0,
+        "is_robust_stable": false,
+        "p95_ns": 67744899.99999999,
+        "p99_ns": 70876180.0,
+        "ops_per_sec": 17.29698314668447,
+        "is_stable": false
+      },
+      "coordinates": {
+        "group": "canada_decode",
+        "sdk": "native_kernels",
+        "runtime": "wasm"
+      },
+      "throughput": {
+        "type": "bytes",
+        "amount": 2251051
+      },
+      "raw_trials_ns": [
+        52393500.0,
+        62961000.0,
+        54701000.0,
+        60475500.0,
+        52898500.0,
+        54238500.0,
+        56913000.0,
+        55235500.0,
+        56660000.0,
+        71659000.0
+      ],
+      "warmup": {
+        "is_stable": false,
+        "total_iterations": 43,
+        "converged_at": 20,
+        "best_mmd": 0.0,
+        "elapsed_seconds": 5.092663
+      },
+      "calibrated_batch_iterations": 2
+    }
+  ]
+}
