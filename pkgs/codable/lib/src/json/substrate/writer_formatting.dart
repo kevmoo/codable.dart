@@ -366,6 +366,26 @@ int writeDecimalFraction(
   return writeFractionLeadingZeros(buffer, offset, isNeg, negVal, numDigits, k);
 }
 
+/// Scales [absVal] by [p10] and returns the resulting integer mantissa, or
+/// `-1` if the product cannot represent [absVal] exactly.
+///
+/// The caller guarantees `absVal >= 1e-15`, so a successful result is always
+/// positive and `-1` is an unambiguous sentinel.
+@pragma('vm:prefer-inline')
+int tryScaleToExactMantissa(double absVal, double p10) {
+  final scaled = absVal * p10;
+  // Beyond 2^53 the scaled value is no longer exactly representable, so the
+  // round-trip check below would be meaningless.
+  if (scaled > 9007199254740991.0) {
+    return -1;
+  }
+  final intVal = scaled.round();
+  if (intVal / p10 != absVal) {
+    return -1;
+  }
+  return intVal;
+}
+
 @pragma('vm:prefer-inline')
 int tryWriteScaledFractionDouble(
   double absVal,
@@ -378,18 +398,23 @@ int tryWriteScaledFractionDouble(
   }
   final intPart = absVal.toInt();
   final intPartDigits = intPart == 0 ? 0 : digitCountNegative(-intPart);
-  final maxFrac = 16 - intPartDigits;
-  if (maxFrac <= 0 || maxFrac > 16) {
+  var maxFrac = 15 - intPartDigits;
+  if (maxFrac <= 0 || maxFrac > 15) {
     return 0;
   }
-  final p10 = powersOfTen[maxFrac];
-  final scaled = absVal * p10;
-  if (scaled > 9007199254740991.0) {
-    return 0;
-  }
-  var intVal = scaled.round();
-  if (intVal / p10 != absVal) {
-    return 0;
+  var intVal = tryScaleToExactMantissa(absVal, powersOfTen[maxFrac]);
+  if (intVal < 0) {
+    // 15 significant digits did not round-trip. 16 is the real limit for a
+    // double, so escalate before giving up and falling back to toString().
+    //
+    // Attempt 15 first rather than starting at 16: a value that already fits
+    // in 15 digits would otherwise carry an extra trailing zero through the
+    // strip loops below, and those integer divides cost more than this retry.
+    maxFrac += 1;
+    intVal = tryScaleToExactMantissa(absVal, powersOfTen[maxFrac]);
+    if (intVal < 0) {
+      return 0;
+    }
   }
   var k = maxFrac;
   while (k >= 4 && intVal % 10000 == 0) {
