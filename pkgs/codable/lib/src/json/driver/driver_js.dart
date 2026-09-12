@@ -430,6 +430,8 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   final JsonTokenReader _reader;
   final JsonCodableDecoder _rootDecoder;
+  final KeyOptions? _options;
+  final JsonKeyOptions? _compiledOptions;
   bool _started = false;
   bool _ended = false;
 
@@ -437,9 +439,15 @@ final class _JsonCodableStreamingKeyedDecoder
     this._reader,
     this._rootDecoder, {
     KeyOptions? options,
-  });
+  }) : _options = options,
+       _compiledOptions = options != null
+           ? ((options.compiled ??= JsonKeyOptions.of(options.keys))
+                 as JsonKeyOptions)
+           : null;
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   void _ensureStarted() {
     if (!_started) {
       _reader.beginObject();
@@ -448,9 +456,14 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   bool hasNextKey() {
     if (_ended) return false;
-    _ensureStarted();
+    if (!_started) {
+      _reader.beginObject();
+      _started = true;
+    }
     final has = _reader.hasNext();
     if (!has) {
       _reader.endObject();
@@ -460,46 +473,158 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   bool hasNext() => hasNextKey();
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   String nextKey() {
-    _ensureStarted();
+    if (!_started) {
+      _reader.beginObject();
+      _started = true;
+    }
     return _reader.nextName();
   }
 
   @override
   String? peekKey() {
-    _ensureStarted();
+    if (!_started) {
+      _reader.beginObject();
+      _started = true;
+    }
     return null;
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   int selectKeyIndex(KeyOptions options) {
-    _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectName(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectName(compiled);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   int selectKey(List<String> keys) {
-    _ensureStarted();
     return _reader.selectName(JsonKeyOptions.of(keys));
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   int selectStringIndex(KeyOptions options) {
-    _ensureStarted();
-    final compiled = options.compiled ??= JsonKeyOptions.of(options.keys);
-    return _reader.selectString(compiled as JsonKeyOptions);
+    final compiled = identical(options, _options)
+        ? _compiledOptions!
+        : ((options.compiled ??= JsonKeyOptions.of(options.keys))
+              as JsonKeyOptions);
+    return _reader.selectString(compiled);
   }
 
   @override
-  void skipField() => skipValue();
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  int readInt() => _reader.readInt();
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  int? readNullableInt() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return _reader.readInt();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  double readDouble() => _reader.readDouble();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  double? readNullableDouble() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return _reader.readDouble();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  String readString() => _reader.readString();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  String? readNullableString() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return _reader.readString();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  (int, int) readStringSpan() => _reader.readStringSpan();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  (int, int)? readNullableStringSpan() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return _reader.readStringSpan();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool readBool() => _reader.readBool();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool? readNullableBool() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return _reader.readBool();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void readNull() => _reader.readNull();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool isNextNull() => _reader.peek() == JsonTokenType.nullValue;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void skipField() => _reader.skipValue();
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   void skipValue() {
-    _ensureStarted();
     _reader.skipValue();
   }
 
