@@ -21,6 +21,7 @@ const List<double> powersOfTen = [
   1e13,
   1e14,
   1e15,
+  1e16,
 ];
 
 const String digitPairs =
@@ -377,8 +378,8 @@ int tryWriteScaledFractionDouble(
   }
   final intPart = absVal.toInt();
   final intPartDigits = intPart == 0 ? 0 : digitCountNegative(-intPart);
-  final maxFrac = 15 - intPartDigits;
-  if (maxFrac <= 0 || maxFrac > 15) {
+  final maxFrac = 16 - intPartDigits;
+  if (maxFrac <= 0 || maxFrac > 16) {
     return 0;
   }
   final p10 = powersOfTen[maxFrac];
