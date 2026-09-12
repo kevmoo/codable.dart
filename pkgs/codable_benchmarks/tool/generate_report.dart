@@ -270,8 +270,34 @@ String generateMarkdownReport(
     buf.writeln('${'-' * 72}\n');
   }
 
+  buf.writeln(_methodologyFooter);
+
   return buf.toString();
 }
+
+/// Static caveats appended to every generated report.
+///
+/// These are measurement-methodology facts, not run data, so they are emitted
+/// by the generator rather than hand-written into the report.
+const _methodologyFooter = '''
+### 🔬 Methodology & Caveats
+
+- Every cell is the **median** of the trial count listed in the provenance
+  header, measured in a single sweep. `json_serializable` is measured in the
+  same sweep and serves as the machine-state control.
+- **Resolution limit**: at 10–15 trials this harness cannot reliably resolve
+  latency deltas below roughly **10%**. Run-to-run drift is large enough to
+  flip the sign of small effects. Treat any speedup between `0.90x` and
+  `1.10x` as *no measured difference*.
+- To resolve sub-10% effects, use an **interleaved same-session A/B** instead:
+  compile `tool/profiler/benchmark_harness.dart` to AOT from both commits and
+  alternate the two binaries in one shell loop for 3–5 rounds. Absolute
+  numbers from that harness run higher than `bench_press` (different
+  warmup/iteration structure), but the relative delta is stable.
+- Comparing a cell against a *previous* report is only valid when the
+  `json_serializable` control for that cell moved by less than the effect
+  being claimed.
+''';
 
 String _formatTime(double us) {
   if (us < 1000) {
