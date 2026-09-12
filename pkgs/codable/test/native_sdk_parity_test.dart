@@ -1,6 +1,12 @@
 // Copyright (c) 2026, the Dart project authors. Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+
+// Spawns a subprocess via Platform.resolvedExecutable, which is unavailable
+// on JS and Wasm.
+@TestOn('vm')
+library;
+
 import 'dart:io';
 
 import 'package:test/test.dart';

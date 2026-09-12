@@ -35,3 +35,9 @@ jobs:
 
       - name: Run tests
         run: dart test pkgs/codable pkgs/codable_builder pkgs/codable_benchmarks
+
+      # The VM run above exercises driver_streaming.dart. driver_js.dart is
+      # selected by the `dart.library.js_interop` conditional export and would
+      # otherwise only ever be analyzed, never executed.
+      - name: Run tests (JS)
+        run: dart test -p node pkgs/codable
