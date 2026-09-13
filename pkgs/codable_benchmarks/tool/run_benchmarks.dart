@@ -145,7 +145,7 @@ Future<void> main(List<String> args) async {
 
   print('\n📝 Patching environment...');
   final patchProcess = await Process.start(
-    Platform.resolvedExecutable,
+    sdkPath,
     ['run', 'tool/patch_environment.dart'],
     workingDirectory: benchmarkPkgDir,
     mode: ProcessStartMode.inheritStdio,
@@ -159,7 +159,7 @@ Future<void> main(List<String> args) async {
   // Make sure we generate the report using min metric as explicitly asked.
   print('\n📊 Generating reports...');
   final reportProcess = await Process.start(
-    Platform.resolvedExecutable,
+    sdkPath,
     ['run', 'tool/generate_report.dart', '--metric', 'min'],
     workingDirectory: benchmarkPkgDir,
     mode: ProcessStartMode.inheritStdio,
