@@ -1,32 +1,5 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
-
-const List<double> _powersOfTen = [
-  1.0,
-  1e1,
-  1e2,
-  1e3,
-  1e4,
-  1e5,
-  1e6,
-  1e7,
-  1e8,
-  1e9,
-  1e10,
-  1e11,
-  1e12,
-  1e13,
-  1e14,
-  1e15,
-  1e16,
-  1e17,
-  1e18,
-  1e19,
-  1e20,
-  1e21,
-  1e22,
-];
 
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
@@ -135,7 +108,9 @@ double parseDoubleUtf8(Uint8List source, int start, int end) {
 /// Zero-allocation floating point parser operating directly on the UTF-8
 /// byte span `[start, end)` in [source].
 ///
-/// Uses mantissa accumulation and pre-computed powers of ten scaling.
+/// Uses integer fast-path for exact integral values and delegates to
+/// [double.tryParse] for fractions and exponents to guarantee exact
+/// IEEE 754 precision matching RFC 8259.
 /// `null` if the span does not contain a valid number representation.
 double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   if (start >= end || start < 0 || end > source.length) return null;
@@ -146,6 +121,7 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   }
   if (i >= end) return null;
 
+  final numStart = i;
   var negative = false;
   if (source[i] == 45) {
     // '-'
@@ -169,20 +145,20 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   var intDigits = 0;
   while (i < end && source[i] >= 48 && source[i] <= 57) {
     intDigits++;
-    integerPart = integerPart * 10 + (source[i] - 48);
+    if (intDigits <= 15) {
+      integerPart = integerPart * 10 + (source[i] - 48);
+    }
     i++;
   }
 
   // RFC 8259 requires integer digits before any decimal point
   if (intDigits == 0) return null;
 
-  var fractionalPart = 0;
   var fractionDigits = 0;
   if (i < end && source[i] == 46) {
     // '.'
     i++;
     while (i < end && source[i] >= 48 && source[i] <= 57) {
-      fractionalPart = fractionalPart * 10 + (source[i] - 48);
       fractionDigits++;
       i++;
     }
@@ -191,47 +167,36 @@ double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
     if (fractionDigits == 0) return null;
   }
 
-  var val = integerPart.toDouble();
-  if (fractionDigits > 0) {
-    if (fractionDigits < _powersOfTen.length) {
-      val += fractionalPart / _powersOfTen[fractionDigits];
-    } else {
-      val += fractionalPart / math.pow(10, fractionDigits);
-    }
-  }
-
+  var hasExponent = false;
   if (i < end && (source[i] == 101 || source[i] == 69)) {
     // 'e' or 'E'
+    hasExponent = true;
     i++;
-    var expNegative = false;
-    if (i < end && source[i] == 45) {
-      expNegative = true;
-      i++;
-    } else if (i < end && source[i] == 43) {
+    if (i < end && (source[i] == 45 || source[i] == 43)) {
       i++;
     }
-    var exp = 0;
     var hasExpDigits = false;
     while (i < end && source[i] >= 48 && source[i] <= 57) {
       hasExpDigits = true;
-      if (exp < 10000) {
-        exp = exp * 10 + (source[i] - 48);
-      }
       i++;
     }
     if (!hasExpDigits) return null;
-    final factor = exp < _powersOfTen.length
-        ? _powersOfTen[exp]
-        : math.pow(10, exp);
-    val = expNegative ? val / factor : val * factor;
   }
 
+  final numEnd = i;
   while (i < end && _isWs(source[i])) {
     i++;
   }
   if (i < end) return null;
 
-  return negative ? -val : val;
+  // Fast path for integers <= 15 digits without fraction or exponent
+  // (guaranteed exact representation in IEEE 754 float64 without allocation).
+  if (fractionDigits == 0 && !hasExponent && intDigits <= 15) {
+    final val = integerPart.toDouble();
+    return negative ? -val : val;
+  }
+
+  return double.tryParse(String.fromCharCodes(source, numStart, numEnd));
 }
 
 /// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span
