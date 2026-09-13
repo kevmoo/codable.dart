@@ -28,6 +28,13 @@ void main(List<String> args) {
       defaultsTo: 'benchmark_results_unified.json',
       help: 'Path to write unified simplified telemetry JSON.',
     )
+    ..addOption(
+      'metric',
+      abbr: 'm',
+      allowed: ['min', 'median'],
+      defaultsTo: 'median',
+      help: 'Metric to extract for reporting (min or median).',
+    )
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Print usage.');
 
   final argResults = parser.parse(args);
@@ -76,16 +83,30 @@ void main(List<String> args) {
     final metrics = entry['metrics'] as Map<String, dynamic>?;
     if (metrics == null) continue;
 
-    final medianNs =
-        (metrics['median_ns'] as num?)?.toDouble() ??
-        (metrics['mean_ns'] as num?)?.toDouble();
-    if (medianNs == null) continue;
+    final metricFlag = argResults.option('metric')!;
+    double? valNs;
+    if (metricFlag == 'min') {
+      valNs =
+          (metrics['min_ns'] as num?)?.toDouble() ??
+          (metrics['median_ns'] as num?)?.toDouble() ??
+          (metrics['mean_ns'] as num?)?.toDouble();
+    } else {
+      valNs =
+          (metrics['median_ns'] as num?)?.toDouble() ??
+          (metrics['mean_ns'] as num?)?.toDouble();
+    }
 
-    final medianUs = medianNs / 1000.0;
-    results[target]!.putIfAbsent(group, () => {})[candidate] = medianUs;
+    if (valNs == null) continue;
+
+    final valUs = valNs / 1000.0;
+    results[target]!.putIfAbsent(group, () => {})[candidate] = valUs;
   }
 
-  final report = generateMarkdownReport(results, jsonRoot);
+  final report = generateMarkdownReport(
+    results,
+    jsonRoot,
+    argResults.option('metric')!,
+  );
   print(report);
 
   final reportFile = File(argResults.option('output-report')!);
@@ -102,6 +123,7 @@ void main(List<String> args) {
 String generateMarkdownReport(
   Map<String, Map<String, Map<String, double>>> results,
   dynamic jsonRoot,
+  String metric,
 ) {
   final buf = StringBuffer();
 
@@ -114,6 +136,13 @@ String generateMarkdownReport(
     final commit = env?['commit'] ?? 'unknown';
     final host = env?['host'] ?? 'unknown';
     final os = env?['os'] ?? 'unknown';
+
+    if (dartVersion == 'unknown' || commit == 'unknown') {
+      stderr.writeln(
+        'Warning: Provenance data (timestamp, sdk, commit, host) is missing or '
+        'unknown. Did you run patch_environment.dart?',
+      );
+    }
 
     var trialCount = 0;
     final benchmarks = jsonRoot['benchmarks'];
@@ -270,19 +299,16 @@ String generateMarkdownReport(
     buf.writeln('${'-' * 72}\n');
   }
 
-  buf.writeln(_methodologyFooter);
+  buf.writeln(_methodologyFooter(metric));
 
   return buf.toString();
 }
 
-/// Static caveats appended to every generated report.
-///
-/// These are measurement-methodology facts, not run data, so they are emitted
-/// by the generator rather than hand-written into the report.
-const _methodologyFooter = '''
+String _methodologyFooter(String metric) =>
+    '''
 ### 🔬 Methodology & Caveats
 
-- Every cell is the **median** of the trial count listed in the provenance
+- Every cell is the **$metric** of the trial count listed in the provenance
   header, measured in a single sweep. `json_serializable` is measured in the
   same sweep and serves as the machine-state control.
 - **Resolution limit**: at 10–15 trials this harness cannot reliably resolve
