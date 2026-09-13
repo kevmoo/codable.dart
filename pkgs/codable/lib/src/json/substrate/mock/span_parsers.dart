@@ -1,58 +1,15 @@
-// Copyright 2024 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
-const _powersOfTen = <double>[
-  1.0,
-  1e1,
-  1e2,
-  1e3,
-  1e4,
-  1e5,
-  1e6,
-  1e7,
-  1e8,
-  1e9,
-  1e10,
-  1e11,
-  1e12,
-  1e13,
-  1e14,
-  1e15,
-  1e16,
-  1e17,
-  1e18,
-  1e19,
-  1e20,
-  1e21,
-  1e22,
-];
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _isWs(int b) => b == 0x20 || b == 0x0A || b == 0x0D || b == 0x09;
 
-bool _isWs(int charCode) =>
-    charCode == 32 || charCode == 10 || charCode == 13 || charCode == 9;
-
-int _skipWs(Uint8List source, int i, int end) {
-  while (i < end && _isWs(source[i])) {
-    i++;
-  }
-  return i;
-}
-
+/// Parses a 64-bit signed integer directly from the UTF-8 byte span
+/// `[start, end)` in [source].
+///
+/// Throws [FormatException] if the byte span does not contain a valid integer,
+/// or [RangeError] if [radix] is outside the range 2..36.
 int parseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   final res = tryParseIntUtf8(source, start, end, radix: radix);
   if (res == null) {
@@ -65,56 +22,65 @@ int parseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   return res;
 }
 
+/// Zero-allocation fast-path integer parser operating directly on the UTF-8
+/// byte span `[start, end)` in [source].
+///
+/// Supports radix 2 through 36 (default 10) and handles signed 64-bit integers
+/// up to 19 digits (-9223372036854775808 to 9223372036854775807).
+///
+/// `null` if the byte span is invalid, empty, or contains non-digit
+/// characters.
 int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   final r = radix ?? 10;
   if (r < 2 || r > 36) throw RangeError.range(r, 2, 36, 'radix');
   if (start >= end || start < 0 || end > source.length) return null;
 
-  var index = _skipWs(source, start, end);
-  if (index >= end) return null;
-
-  final signRes = _parseSign(source, index, end, r);
-  if (signRes == null) return null;
-  final negative = signRes.$1;
-  index = signRes.$2;
-
-  if (index >= end) return null;
-
-  if (r == 10 && source[index] == 48 && index + 1 < end) {
-    final next = source[index + 1];
-    if (next >= 48 && next <= 57) return null;
+  var index = start;
+  while (index < end && _isWs(source[index])) {
+    index++;
   }
+  if (index >= end) return null;
 
-  return _accumulateInt(source, index, end, r, negative);
-}
-
-(bool, int)? _parseSign(Uint8List source, int i, int end, int r) {
-  if (source[i] == 45) return (true, i + 1);
-  if (source[i] == 43) {
+  var negative = false;
+  final first = source[index];
+  if (first == 45) {
+    // '-'
+    negative = true;
+    index++;
+  } else if (first == 43) {
+    // '+'
     if (r == 10) return null;
-    return (false, i + 1);
+    index++;
   }
-  return (false, i);
-}
+  if (index >= end) return null;
 
-int? _accumulateInt(
-  Uint8List source,
-  int index,
-  int end,
-  int r,
-  bool negative,
-) {
+  if (r == 10 && source[index] == 48) {
+    if (index + 1 < end && source[index + 1] >= 48 && source[index + 1] <= 57) {
+      return null;
+    }
+  }
+
   var result = 0;
   var hasDigits = false;
   while (index < end) {
     final byte = source[index++];
     if (_isWs(byte)) {
-      index = _skipWs(source, index, end);
-      if (index < end) return null;
+      while (index < end) {
+        if (!_isWs(source[index++])) return null;
+      }
       break;
     }
-    final digit = _parseIntDigit(byte, r);
-    if (digit == null) return null;
+    final int digit;
+    if (byte >= 48 && byte <= 57) {
+      digit = byte - 48;
+    } else if (byte >= 65 && byte <= 90) {
+      digit = byte - 55;
+    } else if (byte >= 97 && byte <= 122) {
+      digit = byte - 87;
+    } else {
+      return null;
+    }
+    if (digit >= r) return null;
     hasDigits = true;
     result = result * r + digit;
   }
@@ -123,19 +89,10 @@ int? _accumulateInt(
   return negative ? -result : result;
 }
 
-int? _parseIntDigit(int byte, int r) {
-  final int digit;
-  if (byte >= 48 && byte <= 57)
-    digit = byte - 48;
-  else if (byte >= 65 && byte <= 90)
-    digit = byte - 55;
-  else if (byte >= 97 && byte <= 122)
-    digit = byte - 87;
-  else
-    return null;
-  return digit >= r ? null : digit;
-}
-
+/// Parses a 64-bit IEEE 754 floating point number directly from the UTF-8
+/// byte span `[start, end)` in [source].
+///
+/// Throws [FormatException] if the byte span does not contain a valid number.
 double parseDoubleUtf8(Uint8List source, int start, int end) {
   final res = tryParseDoubleUtf8(source, start, end);
   if (res == null) {
@@ -148,150 +105,104 @@ double parseDoubleUtf8(Uint8List source, int start, int end) {
   return res;
 }
 
+/// Zero-allocation floating point parser operating directly on the UTF-8
+/// byte span `[start, end)` in [source].
+///
+/// Uses integer fast-path for exact integral values and delegates to
+/// [double.tryParse] for fractions and exponents to guarantee exact
+/// IEEE 754 precision matching RFC 8259.
+/// `null` if the span does not contain a valid number representation.
 double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
   if (start >= end || start < 0 || end > source.length) return null;
 
-  final prep = _prepareDoubleParsing(source, start, end);
-  if (prep == null) return null;
-  final negative = prep.$1;
-  var i = prep.$2;
-
-  final intResult = _parseIntegerPart(source, i, end);
-  if (intResult == null) return null;
-  final integerPart = intResult.$1;
-  final intDigits = intResult.$2;
-  i = intResult.$3;
-
-  final fracResult = _parseFractionPart(source, i, end);
-  if (fracResult == null) return null;
-  final fractionalPart = fracResult.$1;
-  final fractionDigits = fracResult.$2;
-  i = fracResult.$3;
-
-  final val = _computeDouble(integerPart, fractionalPart, fractionDigits);
-  final fallback = _tryFallbackParseDouble(
-    source,
-    start,
-    end,
-    i,
-    intDigits,
-    fractionDigits,
-  );
-  if (fallback != null) {
-    return fallback.isNaN ? null : fallback;
+  var i = start;
+  while (i < end && _isWs(source[i])) {
+    i++;
   }
-
-  i = _skipWs(source, i, end);
-  return (i < end) ? null : (negative ? -val : val);
-}
-
-(bool, int)? _prepareDoubleParsing(Uint8List source, int start, int end) {
-  var i = _skipWs(source, start, end);
   if (i >= end) return null;
 
-  final signRes = _parseSignDouble(source, i, end);
-  if (signRes == null) return null;
-  final negative = signRes.$1;
-  i = signRes.$2;
-
-  if (i >= end || _hasInvalidLeadingZero(source, i, end)) return null;
-  return (negative, i);
-}
-
-(bool, int)? _parseSignDouble(Uint8List source, int i, int end) {
-  if (source[i] == 45) return (true, i + 1);
-  if (source[i] == 43) return null;
-  return (false, i);
-}
-
-bool _hasInvalidLeadingZero(Uint8List source, int i, int end) {
-  if (source[i] == 48 && i + 1 < end) {
-    final next = source[i + 1];
-    return next >= 48 && next <= 57;
+  final numStart = i;
+  var negative = false;
+  if (source[i] == 45) {
+    // '-'
+    negative = true;
+    i++;
+  } else if (source[i] == 43) {
+    // '+' is not permitted in JSON numbers
+    return null;
   }
-  return false;
-}
+  if (i >= end) return null;
 
-double _computeDouble(int integerPart, int fractionalPart, int fractionDigits) {
-  var val = integerPart.toDouble();
-  if (fractionDigits > 0) {
-    val +=
-        fractionalPart /
-        (fractionDigits < _powersOfTen.length
-            ? _powersOfTen[fractionDigits]
-            : math.pow(10, fractionDigits));
+  // RFC 8259 leading zero check:
+  // "0" cannot be followed by another digit (e.g. 012, -01, -012 are invalid).
+  if (source[i] == 48) {
+    if (i + 1 < end && source[i + 1] >= 48 && source[i + 1] <= 57) {
+      return null;
+    }
   }
-  return val;
-}
 
-(int, int, int)? _parseIntegerPart(Uint8List source, int i, int end) {
   var integerPart = 0;
   var intDigits = 0;
   while (i < end && source[i] >= 48 && source[i] <= 57) {
     intDigits++;
-    integerPart = integerPart * 10 + (source[i] - 48);
+    if (intDigits <= 15) {
+      integerPart = integerPart * 10 + (source[i] - 48);
+    }
     i++;
   }
-  if (intDigits == 0) return null;
-  return (integerPart, intDigits, i);
-}
 
-(int, int, int)? _parseFractionPart(Uint8List source, int i, int end) {
-  var fractionalPart = 0;
+  // RFC 8259 requires integer digits before any decimal point
+  if (intDigits == 0) return null;
+
   var fractionDigits = 0;
   if (i < end && source[i] == 46) {
+    // '.'
     i++;
     while (i < end && source[i] >= 48 && source[i] <= 57) {
-      fractionalPart = fractionalPart * 10 + (source[i] - 48);
       fractionDigits++;
       i++;
     }
+    // RFC 8259 requires at least one digit in fractional part:
+    // '1.' or '2.e3' is invalid.
     if (fractionDigits == 0) return null;
   }
-  return (fractionalPart, fractionDigits, i);
-}
 
-double? _tryFallbackParseDouble(
-  Uint8List source,
-  int start,
-  int end,
-  int i,
-  int intDigits,
-  int fractionDigits,
-) {
+  var hasExponent = false;
   if (i < end && (source[i] == 101 || source[i] == 69)) {
-    return _parseExponentPart(source, start, end, i);
+    // 'e' or 'E'
+    hasExponent = true;
+    i++;
+    if (i < end && (source[i] == 45 || source[i] == 43)) {
+      i++;
+    }
+    var hasExpDigits = false;
+    while (i < end && source[i] >= 48 && source[i] <= 57) {
+      hasExpDigits = true;
+      i++;
+    }
+    if (!hasExpDigits) return null;
   }
 
-  if (intDigits + fractionDigits > 15) {
-    var wsIndex = _skipWs(source, i, end);
-    if (wsIndex < end) return double.nan;
-    final str = String.fromCharCodes(source, start, i);
-    return double.tryParse(str) ?? double.nan;
+  final numEnd = i;
+  while (i < end && _isWs(source[i])) {
+    i++;
+  }
+  if (i < end) return null;
+
+  // Fast path for integers <= 15 digits without fraction or exponent
+  // (guaranteed exact representation in IEEE 754 float64 without allocation).
+  if (fractionDigits == 0 && !hasExponent && intDigits <= 15) {
+    final val = integerPart.toDouble();
+    return negative ? -val : val;
   }
 
-  return null;
+  return double.tryParse(String.fromCharCodes(source, numStart, numEnd));
 }
 
-double? _parseExponentPart(Uint8List source, int start, int end, int i) {
-  var endIndex = i + 1;
-  if (endIndex < end && (source[endIndex] == 45 || source[endIndex] == 43)) {
-    endIndex++;
-  }
-  var hasExpDigits = false;
-  while (endIndex < end && source[endIndex] >= 48 && source[endIndex] <= 57) {
-    hasExpDigits = true;
-    endIndex++;
-  }
-  if (!hasExpDigits) return double.nan;
-
-  var wsIndex = _skipWs(source, endIndex, end);
-  if (wsIndex < end) return double.nan;
-
-  final str = String.fromCharCodes(source, start, endIndex);
-  return double.tryParse(str) ?? double.nan;
-}
-
+/// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span
+/// `[start, end)` in [source].
+///
+/// Throws [FormatException] if the byte span does not match `true` or `false`.
 bool parseBoolUtf8(Uint8List source, int start, int end) {
   final res = tryParseBoolUtf8(source, start, end);
   if (res == null) {
@@ -304,6 +215,10 @@ bool parseBoolUtf8(Uint8List source, int start, int end) {
   return res;
 }
 
+/// Fast-path boolean matcher for the UTF-8 byte span `[start, end)` in
+/// [source].
+///
+/// `true` for `true`, `false` for `false`, or `null` if unmatched.
 bool? tryParseBoolUtf8(Uint8List source, int start, int end) {
   final len = end - start;
   if (start < 0 || end > source.length || len < 4 || len > 5) return null;
@@ -312,18 +227,27 @@ bool? tryParseBoolUtf8(Uint8List source, int start, int end) {
       source[start] == 116 &&
       source[start + 1] == 114 &&
       source[start + 2] == 117 &&
-      source[start + 3] == 101)
+      source[start + 3] == 101) {
     return true;
+  }
   if (len == 5 &&
       source[start] == 102 &&
       source[start + 1] == 97 &&
       source[start + 2] == 108 &&
       source[start + 3] == 115 &&
-      source[start + 4] == 101)
+      source[start + 4] == 101) {
     return false;
+  }
   return null;
 }
 
+/// Decodes the UTF-8 string slice `[start, end)` from [source] into a Dart
+/// [String].
+///
+/// If the byte span contains no escape characters (`isVerbatimUtf8` returns
+/// true), decodes the slice directly without intermediate buffers. Handles all
+/// standard JSON escape sequences (`\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`,
+/// `\t`, `\uXXXX`), including surrogate pairs.
 String decodeStringUtf8(
   Uint8List source,
   int start,
@@ -335,147 +259,119 @@ String decodeStringUtf8(
   }
   if (start == end) return '';
 
+  // Single-pass scan for escapes and non-ASCII characters.
   var isAscii = true;
   var isVerbatim = true;
   for (var i = start; i < end; i++) {
     final b = source[i];
     if (b == 92) {
+      // '\\' escape present
       isVerbatim = false;
       break;
     }
-    if (b >= 128) isAscii = false;
+    if (b >= 128) {
+      isAscii = false;
+    }
   }
 
   if (isVerbatim) {
-    if (isAscii) return String.fromCharCodes(source, start, end);
+    if (isAscii) {
+      // Pure ASCII fast-path: zero heap view allocation, zero multi-byte
+      // state machine.
+      return String.fromCharCodes(source, start, end);
+    }
     return utf8.decode(
       Uint8List.sublistView(source, start, end),
       allowMalformed: allowMalformed,
     );
   }
 
-  return _decodeStringBody(source, start, end, allowMalformed);
-}
-
-String _decodeStringBody(
-  Uint8List source,
-  int start,
-  int end,
-  bool allowMalformed,
-) {
   final buffer = StringBuffer();
   var i = start;
   while (i < end) {
     final byte = source[i];
     if (byte == 92) {
-      i = _processEscape(source, i, end, buffer);
+      // '\\'
+      i++;
+      if (i >= end) {
+        throw FormatException('Unexpected EOF in escape sequence', source, i);
+      }
+      final esc = source[i++];
+      switch (esc) {
+        case 34:
+          buffer.write('"');
+        case 92:
+          buffer.write('\\');
+        case 47:
+          buffer.write('/');
+        case 98:
+          buffer.write('\b');
+        case 102:
+          buffer.write('\f');
+        case 110:
+          buffer.write('\n');
+        case 114:
+          buffer.write('\r');
+        case 116:
+          buffer.write('\t');
+        case 117: // \uXXXX
+          if (i + 4 > end) {
+            throw FormatException('Incomplete unicode escape', source, i);
+          }
+          final codeUnit = _parseHex4(source, i);
+          i += 4;
+          // Check for UTF-16 surrogate pairs
+          if (codeUnit >= 0xD800 && codeUnit <= 0xDBFF) {
+            if (i + 6 <= end && source[i] == 92 && source[i + 1] == 117) {
+              final low = _parseHex4(source, i + 2);
+              if (low >= 0xDC00 && low <= 0xDFFF) {
+                i += 6;
+                final codePoint =
+                    0x10000 + ((codeUnit - 0xD800) << 10) + (low - 0xDC00);
+                buffer.writeCharCode(codePoint);
+                break;
+              }
+            }
+          }
+          buffer.writeCharCode(codeUnit);
+        default:
+          throw FormatException(
+            'Invalid escape character: ${String.fromCharCode(esc)}',
+            source,
+            i - 1,
+          );
+      }
     } else if (byte <= 0x7F) {
-      i = _processAscii(source, i, byte, buffer);
+      if (byte < 0x20) {
+        throw FormatException(
+          'Unescaped control character 0x${byte.toRadixString(16)} '
+          'at offset $i',
+          source,
+          i,
+        );
+      }
+      buffer.writeCharCode(byte);
+      i++;
     } else {
-      i = _processMultibyte(source, i, end, byte, buffer, allowMalformed);
+      final charLen = _utf8SequenceLength(byte);
+      if (i + charLen > end) {
+        if (allowMalformed) {
+          buffer.write('\uFFFD');
+          i++;
+          continue;
+        }
+        throw FormatException('Truncated UTF-8 multibyte sequence', source, i);
+      }
+      buffer.write(
+        utf8.decode(
+          Uint8List.sublistView(source, i, i + charLen),
+          allowMalformed: allowMalformed,
+        ),
+      );
+      i += charLen;
     }
   }
   return buffer.toString();
-}
-
-int _processEscape(Uint8List source, int i, int end, StringBuffer buffer) {
-  i++;
-  if (i >= end)
-    throw FormatException('Unexpected EOF in escape sequence', source, i);
-  final esc = source[i++];
-  return _decodeEscape(source, esc, i, end, buffer);
-}
-
-int _processAscii(Uint8List source, int i, int byte, StringBuffer buffer) {
-  if (byte < 0x20)
-    throw FormatException('Unescaped control character', source, i);
-  buffer.writeCharCode(byte);
-  return i + 1;
-}
-
-int _processMultibyte(
-  Uint8List source,
-  int i,
-  int end,
-  int byte,
-  StringBuffer buffer,
-  bool allowMalformed,
-) {
-  final charLen = _utf8SequenceLength(byte);
-  if (i + charLen > end) {
-    if (allowMalformed) {
-      buffer.writeCharCode(0xFFFD);
-      return i + 1;
-    }
-    throw FormatException('Truncated UTF-8 multibyte sequence', source, i);
-  }
-  buffer.write(
-    utf8.decode(
-      Uint8List.sublistView(source, i, i + charLen),
-      allowMalformed: allowMalformed,
-    ),
-  );
-  return i + charLen;
-}
-
-int _decodeEscape(
-  Uint8List source,
-  int esc,
-  int i,
-  int end,
-  StringBuffer buffer,
-) {
-  final charId = switch (esc) {
-    34 => 34,
-    92 => 92,
-    47 => 47,
-    98 => 8,
-    102 => 12,
-    110 => 10,
-    114 => 13,
-    116 => 9,
-    _ => -1,
-  };
-
-  if (charId >= 0) {
-    buffer.writeCharCode(charId);
-    return i;
-  }
-
-  if (esc == 117) {
-    return _decodeUnicodeEscape(source, i, end, buffer);
-  }
-  throw FormatException(
-    'Invalid escape character: ${String.fromCharCode(esc)}',
-    source,
-    i - 1,
-  );
-}
-
-int _decodeUnicodeEscape(
-  Uint8List source,
-  int i,
-  int end,
-  StringBuffer buffer,
-) {
-  if (i + 4 > end)
-    throw FormatException('Incomplete unicode escape', source, i);
-  final codeUnit = _parseHex4(source, i);
-  i += 4;
-  if (codeUnit >= 0xD800 && codeUnit <= 0xDBFF) {
-    if (i + 6 <= end && source[i] == 92 && source[i + 1] == 117) {
-      final low = _parseHex4(source, i + 2);
-      if (low >= 0xDC00 && low <= 0xDFFF) {
-        i += 6;
-        buffer.writeCharCode(
-          0x10000 + ((codeUnit - 0xD800) << 10) + (low - 0xDC00),
-        );
-        return i;
-      }
-    }
-  }
-  buffer.writeCharCode(codeUnit);
-  return i;
 }
 
 int _parseHex4(Uint8List source, int offset) {
@@ -483,14 +379,19 @@ int _parseHex4(Uint8List source, int offset) {
   for (var i = 0; i < 4; i++) {
     final b = source[offset + i];
     final int digit;
-    if (b >= 48 && b <= 57)
+    if (b >= 48 && b <= 57) {
       digit = b - 48;
-    else if (b >= 65 && b <= 70)
+    } else if (b >= 65 && b <= 70) {
       digit = b - 55;
-    else if (b >= 97 && b <= 102)
+    } else if (b >= 97 && b <= 102) {
       digit = b - 87;
-    else
-      throw FormatException('Invalid hex digit', source, offset + i);
+    } else {
+      throw FormatException(
+        'Invalid hex digit: ${String.fromCharCode(b)}',
+        source,
+        offset + i,
+      );
+    }
     v = (v << 4) | digit;
   }
   return v;
@@ -504,6 +405,11 @@ int _utf8SequenceLength(int firstByte) {
   return 1;
 }
 
+/// Direct byte-comparison of a UTF-8 byte span `[start, end)` against an
+/// [asciiString].
+///
+/// Whether the slice exactly matches the ASCII string, `false`
+/// otherwise.
 bool equalsAsciiUtf8(Uint8List source, int start, int end, String asciiString) {
   if (start < 0 || end > source.length || end - start != asciiString.length) {
     return false;
@@ -514,6 +420,8 @@ bool equalsAsciiUtf8(Uint8List source, int start, int end, String asciiString) {
   return true;
 }
 
+/// Checks if the UTF-8 byte span `[start, end)` in [source] matches the literal
+/// `null`.
 bool isNullUtf8(Uint8List source, int start, int end) {
   return (end - start == 4) &&
       start >= 0 &&
@@ -524,10 +432,12 @@ bool isNullUtf8(Uint8List source, int start, int end) {
       source[start + 3] == 108;
 }
 
+/// Checks whether the UTF-8 byte span `[start, end)` in [source] is verbatim
+/// (contains no `\` escapes).
 bool isVerbatimUtf8(Uint8List source, int start, int end) {
   if (start < 0 || end > source.length || start > end) return false;
   for (var i = start; i < end; i++) {
-    if (source[i] == 92) return false;
+    if (source[i] == 92) return false; // '\\'
   }
   return true;
 }
