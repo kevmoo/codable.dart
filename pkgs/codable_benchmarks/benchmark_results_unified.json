@@ -1,158 +1,248 @@
 {
   "aot": {
-    "citm_catalog_decode": {
-      "codable": 4590.409090909091,
-      "codable_js": 4621.8421052631575,
-      "json_serializable": 6928.1875,
-      "json_serializable_literal": 9721.545454545456
-    },
-    "small_decode": {
-      "codable": 3.084367001378224,
-      "codable_js": 3.0566254011921137,
-      "json_serializable": 2.747669829540684,
-      "json_serializable_literal": 3.2799201056666987
-    },
-    "twitter_decode": {
-      "codable": 3199.413793103448,
-      "codable_js": 3230.5806451612902,
-      "json_serializable": 2979.0833333333335,
-      "json_serializable_literal": 4461.391304347826
-    },
     "coordinates_decode": {
-      "codable": 2437.2,
-      "codable_js": 2471.6944444444443,
-      "json_serializable": 3757.125,
-      "json_serializable_literal": 4300.315789473684
+      "codable": 2424.15,
+      "codable_js": 2452.209302325581,
+      "json_serializable": 3640.0,
+      "json_serializable_literal": 4272.333333333333,
+      "stock_codable": 3271.21875,
+      "stock_codable_js": 3166.2413793103447,
+      "stock_json_serializable": 3800.125,
+      "stock_json_serializable_literal": 4335.041666666667
     },
     "canada_decode": {
-      "codable": 11274.777777777777,
-      "codable_js": 11271.222222222223,
-      "json_serializable": 38599.0,
-      "json_serializable_literal": 35940.0
+      "codable": 11196.666666666666,
+      "codable_js": 11051.0,
+      "json_serializable": 45047.666666666664,
+      "json_serializable_literal": 34968.0,
+      "stock_codable": 20540.333333333332,
+      "stock_codable_js": 20817.8,
+      "stock_json_serializable": 39072.5,
+      "stock_json_serializable_literal": 54881.0
+    },
+    "citm_catalog_decode": {
+      "codable": 4555.588235294118,
+      "codable_js": 4572.666666666667,
+      "json_serializable": 7575.5,
+      "json_serializable_literal": 9198.125,
+      "stock_codable": 5016.666666666667,
+      "stock_codable_js": 5186.5,
+      "stock_json_serializable": 7263.941176470588,
+      "stock_json_serializable_literal": 9557.75
+    },
+    "small_decode": {
+      "codable": 3.009627747047391,
+      "codable_js": 3.0442747639764423,
+      "json_serializable": 2.722693308706238,
+      "json_serializable_literal": 3.2657151142185135,
+      "stock_codable": 3.0557871990747785,
+      "stock_codable_js": 3.0448868071818893,
+      "stock_json_serializable": 2.832676358361452,
+      "stock_json_serializable_literal": 3.2857287006827893
+    },
+    "twitter_decode": {
+      "codable": 3145.9285714285716,
+      "codable_js": 3160.6,
+      "json_serializable": 2928.695652173913,
+      "json_serializable_literal": 4518.666666666667,
+      "stock_codable": 3626.3928571428573,
+      "stock_codable_js": 3645.9285714285716,
+      "stock_json_serializable": 2989.787878787879,
+      "stock_json_serializable_literal": 4565.181818181818
     },
     "coordinates_encode": {
-      "codable": 2417.0,
-      "json_serializable": 4571.25
+      "codable": 2746.5,
+      "json_serializable": 4220.230769230769,
+      "stock_codable": 2748.0526315789475,
+      "stock_json_serializable": 9370.272727272726
     },
     "canada_encode": {
-      "codable": 22824.8,
-      "json_serializable": 21470.0
+      "codable": 23101.666666666668,
+      "json_serializable": 20866.6,
+      "stock_codable": 23414.6,
+      "stock_json_serializable": 41563.0
     },
     "citm_catalog_encode": {
-      "codable": 3036.9117647058824,
-      "json_serializable": 5699.166666666667
+      "codable": 3033.7,
+      "json_serializable": 5699.055555555556,
+      "stock_codable": 2847.2820512820513,
+      "stock_json_serializable": 8398.583333333334
     },
     "small_encode": {
-      "codable": 2.189093681998252,
-      "json_serializable": 6.955760841673082
+      "codable": 1.7130445152387603,
+      "json_serializable": 5.199898557258792,
+      "stock_codable": 1.6379072385864235,
+      "stock_json_serializable": 4.834153419126924
     },
     "twitter_encode": {
-      "codable": 1423.103448275862,
-      "json_serializable": 3326.0
+      "codable": 1724.84,
+      "json_serializable": 2711.0,
+      "stock_codable": 1803.7014925373135,
+      "stock_json_serializable": 5471.611111111111
     }
   },
   "js": {
-    "twitter_decode": {
-      "codable": 2928.5714285714284,
-      "codable_js": 2900.0,
-      "json_serializable": 3529.4117647058824,
-      "json_serializable_literal": 2675.0
-    },
     "coordinates_decode": {
-      "codable": 2526.315789473684,
-      "codable_js": 2515.151515151515,
-      "json_serializable": 4200.0,
-      "json_serializable_literal": 4214.285714285715
+      "codable": 2470.5882352941176,
+      "codable_js": 2578.9473684210525,
+      "json_serializable": 4000.0,
+      "json_serializable_literal": 4000.0,
+      "stock_codable": 2447.3684210526317,
+      "stock_codable_js": 2552.6315789473683,
+      "stock_json_serializable": 4000.0,
+      "stock_json_serializable_literal": 4111.111111111111
     },
     "canada_decode": {
-      "codable": 13500.0,
-      "codable_js": 15375.0,
-      "json_serializable": 31500.0,
-      "json_serializable_literal": 38250.0
+      "codable": 15000.0,
+      "codable_js": 14875.0,
+      "json_serializable": 31000.0,
+      "json_serializable_literal": 34333.333333333336,
+      "stock_codable": 14800.0,
+      "stock_codable_js": 15571.42857142857,
+      "stock_json_serializable": 36666.666666666664,
+      "stock_json_serializable_literal": 35666.666666666664
+    },
+    "citm_catalog_decode": {
+      "codable": 5833.333333333333,
+      "codable_js": 5923.076923076923,
+      "json_serializable": 8250.0,
+      "json_serializable_literal": 8769.23076923077,
+      "stock_codable": 5750.0,
+      "stock_codable_js": 5769.230769230769,
+      "stock_json_serializable": 8333.333333333332,
+      "stock_json_serializable_literal": 8923.076923076924
     },
     "small_decode": {
       "codable": 3.6,
       "codable_js": 3.6,
-      "json_serializable": 4.759904801903962,
-      "json_serializable_literal": 4.439911201775964
+      "json_serializable": 4.800192007680307,
+      "json_serializable_literal": 4.439911201775964,
+      "stock_codable": 3.70992580148397,
+      "stock_codable_js": 3.599712023038157,
+      "stock_json_serializable": 4.799846404915042,
+      "stock_json_serializable_literal": 4.4
     },
-    "citm_catalog_decode": {
-      "codable": 5250.0,
-      "codable_js": 5588.235294117647,
-      "json_serializable": 8000.0,
-      "json_serializable_literal": 8769.23076923077
+    "twitter_decode": {
+      "codable": 2941.176470588235,
+      "codable_js": 2878.787878787879,
+      "json_serializable": 3470.5882352941176,
+      "json_serializable_literal": 2666.6666666666665,
+      "stock_codable": 2909.090909090909,
+      "stock_codable_js": 3090.909090909091,
+      "stock_json_serializable": 3588.2352941176473,
+      "stock_json_serializable_literal": 2689.655172413793
     },
     "coordinates_encode": {
-      "codable": 2500.0,
-      "json_serializable": 8000.0
+      "codable": 2526.315789473684,
+      "json_serializable": 8000.0,
+      "stock_codable": 2525.0,
+      "stock_json_serializable": 9000.0
     },
     "canada_encode": {
-      "codable": 18666.666666666668,
-      "json_serializable": 35000.0
+      "codable": 19400.0,
+      "json_serializable": 37333.333333333336,
+      "stock_codable": 21250.0,
+      "stock_json_serializable": 36000.0
     },
     "citm_catalog_encode": {
-      "codable": 3923.076923076923,
-      "json_serializable": 8750.0
+      "codable": 4000.0,
+      "json_serializable": 8250.0,
+      "stock_codable": 4000.0,
+      "stock_json_serializable": 10250.0
     },
     "small_encode": {
-      "codable": 2.3,
-      "json_serializable": 19.88238588630636
+      "codable": 2.4300243002430024,
+      "json_serializable": 20.7020702070207,
+      "stock_codable": 2.399952000959981,
+      "stock_json_serializable": 6.687785990848293
     },
     "twitter_encode": {
       "codable": 2900.0,
-      "json_serializable": 3538.4615384615386
+      "json_serializable": 3538.4615384615386,
+      "stock_codable": 2900.0,
+      "stock_json_serializable": 5250.0
     }
   },
   "wasm": {
-    "citm_catalog_encode": {
-      "codable": 5340.416666666667,
-      "json_serializable": 6099.071428571428
-    },
-    "twitter_decode": {
-      "codable": 3337.8,
-      "codable_js": 5026.55,
-      "json_serializable": 3033.125,
-      "json_serializable_literal": 3449.4117647058824
-    },
     "coordinates_decode": {
-      "codable": 3133.4545454545455,
-      "codable_js": 3160.3703703703704,
-      "json_serializable": 3800.888888888889,
-      "json_serializable_literal": 4566.375
+      "codable": 3149.4,
+      "codable_js": 3306.0,
+      "json_serializable": 4014.6666666666665,
+      "json_serializable_literal": 4552.555555555556,
+      "stock_codable": 4723.714285714285,
+      "stock_codable_js": 3183.4814814814813,
+      "stock_json_serializable": 3512.909090909091,
+      "stock_json_serializable_literal": 4112.111111111111
     },
     "canada_decode": {
-      "codable": 14421.0,
-      "codable_js": 28103.0,
-      "json_serializable": 65103.0,
-      "json_serializable_literal": 64880.0
+      "codable": 14607.714285714286,
+      "codable_js": 30260.333333333332,
+      "json_serializable": 63985.0,
+      "json_serializable_literal": 62972.0,
+      "stock_codable": 31888.0,
+      "stock_codable_js": 28189.666666666668,
+      "stock_json_serializable": 31174.0,
+      "stock_json_serializable_literal": 48664.0
     },
     "citm_catalog_decode": {
-      "codable": 5758.0,
-      "codable_js": 10813.5,
-      "json_serializable": 6888.857142857143,
-      "json_serializable_literal": 8959.25
+      "codable": 5444.333333333333,
+      "codable_js": 10585.0,
+      "json_serializable": 6990.8,
+      "json_serializable_literal": 9137.923076923076,
+      "stock_codable": 7583.0,
+      "stock_codable_js": 11413.833333333334,
+      "stock_json_serializable": 6847.214285714285,
+      "stock_json_serializable_literal": 7959.666666666667
     },
     "small_decode": {
-      "codable": 3.560835913312694,
-      "codable_js": 7.284052395346707,
-      "json_serializable": 3.344155333700181,
-      "json_serializable_literal": 4.112779329608938
+      "codable": 3.4357868801971048,
+      "codable_js": 7.139753309946815,
+      "json_serializable": 3.277403551745254,
+      "json_serializable_literal": 4.039145907473309,
+      "stock_codable": 4.290649967609587,
+      "stock_codable_js": 7.146667941485802,
+      "stock_json_serializable": 3.410525745844388,
+      "stock_json_serializable_literal": 3.964124929656725
     },
-    "twitter_encode": {
-      "codable": 3297.0740740740744,
-      "json_serializable": 3377.9666666666667
+    "twitter_decode": {
+      "codable": 3333.206896551724,
+      "codable_js": 5008.368421052632,
+      "json_serializable": 3012.2666666666664,
+      "json_serializable_literal": 3387.0588235294117,
+      "stock_codable": 4094.1428571428573,
+      "stock_codable_js": 5052.75,
+      "stock_json_serializable": 3043.0588235294117,
+      "stock_json_serializable_literal": 3454.6
     },
     "coordinates_encode": {
-      "codable": 3262.5789473684213,
-      "json_serializable": 5228.090909090909
+      "codable": 3289.214285714286,
+      "json_serializable": 5411.181818181818,
+      "stock_codable": 3325.923076923077,
+      "stock_json_serializable": 9912.0
     },
     "canada_encode": {
-      "codable": 25530.5,
-      "json_serializable": 24097.25
+      "codable": 24525.0,
+      "json_serializable": 24749.75,
+      "stock_codable": 26513.333333333332,
+      "stock_json_serializable": 54200.5
+    },
+    "citm_catalog_encode": {
+      "codable": 5309.7,
+      "json_serializable": 6349.4,
+      "stock_codable": 5095.25,
+      "stock_json_serializable": 9895.0
     },
     "small_encode": {
-      "codable": 3.146976483762598,
-      "json_serializable": 5.90715038650738
+      "codable": 3.112238398544131,
+      "json_serializable": 6.192123237901468,
+      "stock_codable": 3.1986797150964157,
+      "stock_json_serializable": 5.503501400560224
+    },
+    "twitter_encode": {
+      "codable": 3273.0,
+      "json_serializable": 3344.0,
+      "stock_codable": 3530.1,
+      "stock_json_serializable": 5335.882352941177
     }
   }
 }
