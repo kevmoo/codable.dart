@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'eisel_lemire.dart';
+
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
 bool _isWs(int b) => b == 0x20 || b == 0x0A || b == 0x0D || b == 0x09;
@@ -105,98 +107,249 @@ double parseDoubleUtf8(Uint8List source, int start, int end) {
   return res;
 }
 
-/// Zero-allocation floating point parser operating directly on the UTF-8
-/// byte span `[start, end)` in [source].
-///
-/// Uses integer fast-path for exact integral values and delegates to
-/// [double.tryParse] for fractions and exponents to guarantee exact
-/// IEEE 754 precision matching RFC 8259.
-/// `null` if the span does not contain a valid number representation.
-double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
-  if (start >= end || start < 0 || end > source.length) return null;
+const int _invalidExponentSentinel = 0x7FFFFFFF;
 
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _isAsciiDigit(int b) => b >= 48 && b <= 57;
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _skipLeadingWs(Uint8List source, int start, int end) {
   var i = start;
   while (i < end && _isWs(source[i])) {
     i++;
   }
-  if (i >= end) return null;
+  return i;
+}
 
-  final numStart = i;
-  var negative = false;
-  if (source[i] == 45) {
-    // '-'
-    negative = true;
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _trimTrailingWs(Uint8List source, int start, int end) {
+  var actualEnd = end;
+  while (actualEnd > start && _isWs(source[actualEnd - 1])) {
+    actualEnd--;
+  }
+  return actualEnd;
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _hasValidLeadingIntDigit(Uint8List source, int i, int actualEnd) {
+  final first = source[i];
+  if (!_isAsciiDigit(first)) {
+    return false;
+  }
+  return first != 48 || i + 1 >= actualEnd || !_isAsciiDigit(source[i + 1]);
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _applyExpSign(int explicitExp, bool expNegative, bool expSaturated) {
+  if (expSaturated) {
+    return expNegative ? -100000 : 100000;
+  }
+  return expNegative ? -explicitExp : explicitExp;
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _parseExplicitExponent(Uint8List source, int i, int actualEnd) {
+  if (i >= actualEnd) {
+    return _invalidExponentSentinel;
+  }
+  final first = source[i];
+  final expNegative = first == 45;
+  if (expNegative || first == 43) {
     i++;
-  } else if (source[i] == 43) {
-    // '+' is not permitted in JSON numbers
+  }
+  if (i >= actualEnd || !_isAsciiDigit(source[i])) {
+    return _invalidExponentSentinel;
+  }
+  var explicitExp = 0;
+  var expSaturated = false;
+  while (i < actualEnd) {
+    final b = source[i++];
+    if (!_isAsciiDigit(b)) {
+      return _invalidExponentSentinel;
+    }
+    if (explicitExp < 10000) {
+      explicitExp = explicitExp * 10 + (b - 48);
+    } else {
+      expSaturated = true;
+    }
+  }
+  return _applyExpSign(explicitExp, expNegative, expSaturated);
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+double? _finishDoubleFastPath(
+  int mantissa,
+  int decimalExp,
+  bool isNegative,
+  bool truncatedDigits,
+) {
+  if (mantissa == 0) {
+    return isNegative ? -0.0 : 0.0;
+  }
+  if (decimalExp == 0 &&
+      !truncatedDigits &&
+      unsignedLe(mantissa, 0x001FFFFFFFFFFFFF)) {
+    return isNegative ? -mantissa.toDouble() : mantissa.toDouble();
+  }
+  final result = tryParseDoubleFastEiselLemire(
+    mantissa,
+    decimalExp,
+    isNegative,
+  );
+  if (result == null) {
     return null;
   }
-  if (i >= end) return null;
+  if (!truncatedDigits) {
+    return result;
+  }
+  final resultPlus1 = tryParseDoubleFastEiselLemire(
+    mantissa + 1,
+    decimalExp,
+    isNegative,
+  );
+  return resultPlus1 == result ? result : null;
+}
 
-  // RFC 8259 leading zero check:
-  // "0" cannot be followed by another digit (e.g. 012, -01, -012 are invalid).
-  if (source[i] == 48) {
-    if (i + 1 < end && source[i + 1] >= 48 && source[i + 1] <= 57) {
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _isValidBounds(Uint8List source, int start, int end) =>
+    start < end && start >= 0 && end <= source.length;
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+bool _isExponentMarker(int b) => b == 101 || b == 69;
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _scanDigitsEnd(Uint8List source, int start, int end) {
+  var i = start;
+  while (i < end && _isAsciiDigit(source[i])) {
+    i++;
+  }
+  return i;
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+int _scanOptionalFractionEnd(Uint8List source, int intEnd, int actualEnd) {
+  if (intEnd >= actualEnd || source[intEnd] != 46) {
+    return intEnd;
+  }
+  final fracStart = intEnd + 1;
+  if (fracStart >= actualEnd || !_isAsciiDigit(source[fracStart])) {
+    return -1;
+  }
+  return _scanDigitsEnd(source, fracStart + 1, actualEnd);
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+double? _accumulateMantissaAndParse(
+  Uint8List source,
+  int start,
+  int intEnd,
+  int fracEnd,
+  int explicitExp,
+  bool isNegative,
+) {
+  var mantissa = 0;
+  var leadingZeros = 0;
+  var digitCount = 0;
+  var truncatedDigits = false;
+
+  for (var k = start; k < fracEnd; k++) {
+    final d = source[k] - 48;
+    if (d < 0) {
+      continue;
+    }
+    if (mantissa == 0 && d == 0) {
+      leadingZeros++;
+    } else if (digitCount < 19) {
+      mantissa = mantissa * 10 + d;
+      digitCount++;
+    } else {
+      truncatedDigits = true;
+    }
+  }
+
+  final sigExp = (intEnd - start) - leadingZeros - digitCount;
+  final decimalExp = explicitExp.abs() == 100000
+      ? explicitExp
+      : sigExp + explicitExp;
+
+  return _finishDoubleFastPath(
+    mantissa,
+    decimalExp,
+    isNegative,
+    truncatedDigits,
+  );
+}
+
+/// Zero-allocation floating point parser operating directly on the UTF-8
+/// byte span `[start, end)` in [source].
+///
+/// Uses integer fast-path and 64-bit Eisel-Lemire 128-bit power-of-10 scaling
+/// before falling back to [double.tryParse] for ambiguous halfway or extreme
+/// subnormal cases to guarantee exact IEEE 754 precision matching RFC 8259.
+/// `null` if the span does not contain a valid number representation.
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+double? tryParseDoubleUtf8(Uint8List source, int start, int end) {
+  if (!_isValidBounds(source, start, end)) {
+    return null;
+  }
+
+  var i = _skipLeadingWs(source, start, end);
+  final actualEnd = _trimTrailingWs(source, i, end);
+  if (i >= actualEnd) {
+    return null;
+  }
+
+  final sliceStart = i;
+  final isNegative = source[i] == 45;
+  if (isNegative) {
+    i++;
+  }
+  if (i >= actualEnd || !_hasValidLeadingIntDigit(source, i, actualEnd)) {
+    return null;
+  }
+
+  final intEnd = source[i] == 48 ? i + 1 : _scanDigitsEnd(source, i, actualEnd);
+  final fracEnd = _scanOptionalFractionEnd(source, intEnd, actualEnd);
+  if (fracEnd < 0) {
+    return null;
+  }
+
+  var explicitExp = 0;
+  var afterNumber = fracEnd;
+  if (fracEnd < actualEnd && _isExponentMarker(source[fracEnd])) {
+    explicitExp = _parseExplicitExponent(source, fracEnd + 1, actualEnd);
+    if (explicitExp == _invalidExponentSentinel) {
       return null;
     }
+    afterNumber = actualEnd;
   }
 
-  var integerPart = 0;
-  var intDigits = 0;
-  while (i < end && source[i] >= 48 && source[i] <= 57) {
-    intDigits++;
-    if (intDigits <= 15) {
-      integerPart = integerPart * 10 + (source[i] - 48);
-    }
-    i++;
+  if (afterNumber != actualEnd) {
+    return null;
   }
 
-  // RFC 8259 requires integer digits before any decimal point
-  if (intDigits == 0) return null;
-
-  var fractionDigits = 0;
-  if (i < end && source[i] == 46) {
-    // '.'
-    i++;
-    while (i < end && source[i] >= 48 && source[i] <= 57) {
-      fractionDigits++;
-      i++;
-    }
-    // RFC 8259 requires at least one digit in fractional part:
-    // '1.' or '2.e3' is invalid.
-    if (fractionDigits == 0) return null;
-  }
-
-  var hasExponent = false;
-  if (i < end && (source[i] == 101 || source[i] == 69)) {
-    // 'e' or 'E'
-    hasExponent = true;
-    i++;
-    if (i < end && (source[i] == 45 || source[i] == 43)) {
-      i++;
-    }
-    var hasExpDigits = false;
-    while (i < end && source[i] >= 48 && source[i] <= 57) {
-      hasExpDigits = true;
-      i++;
-    }
-    if (!hasExpDigits) return null;
-  }
-
-  final numEnd = i;
-  while (i < end && _isWs(source[i])) {
-    i++;
-  }
-  if (i < end) return null;
-
-  // Fast path for integers <= 15 digits without fraction or exponent
-  // (guaranteed exact representation in IEEE 754 float64 without allocation).
-  if (fractionDigits == 0 && !hasExponent && intDigits <= 15) {
-    final val = integerPart.toDouble();
-    return negative ? -val : val;
-  }
-
-  return double.tryParse(String.fromCharCodes(source, numStart, numEnd));
+  return _accumulateMantissaAndParse(
+        source,
+        i,
+        intEnd,
+        fracEnd,
+        explicitExp,
+        isNegative,
+      ) ??
+      double.tryParse(String.fromCharCodes(source, sliceStart, actualEnd));
 }
 
 /// Parses a boolean literal (`true` or `false`) from the UTF-8 byte span
