@@ -8,8 +8,8 @@ import 'dart:typed_data';
 /// shift so `dart2js` compiles without 64-bit integer literal errors.
 const int _bit63 = 1 << 63;
 
-// Precomputed 128-bit power-of-10 lookup tables for Eisel-Lemire (q in [-342, 308]).
-// 651 entries.
+// Precomputed 128-bit power-of-10 lookup tables for Eisel-Lemire
+// (q in [-342, 308]). 651 entries.
 Int64List? _initInt64From32(List<int> words) {
   if (identical(1, 1.0)) return null;
   final list = Int64List(words.length ~/ 2);
@@ -21,7 +21,7 @@ Int64List? _initInt64From32(List<int> words) {
   return list;
 }
 
-const List<int> _power10_H_32 = <int>[
+const List<int> _power10H32 = <int>[
   0x923bd65a, 0xeef453d6, // q = -342
   0x1b6565f8, 0x9558b466, // q = -341
   0xa23ebf76, 0xbaaee17f, // q = -340
@@ -675,7 +675,7 @@ const List<int> _power10_H_32 = <int>[
   0x5e44ff8f, 0x8e679c2f, // q = 308
 ];
 
-const List<int> _power10_L_32 = <int>[
+const List<int> _power10L32 = <int>[
   0x06a13b40, 0x113faa29, // q = -342
   0xa424c508, 0x4ac7ca59, // q = -341
   0x0d2df64a, 0x5d79bcf0, // q = -340
@@ -1329,10 +1329,10 @@ const List<int> _power10_L_32 = <int>[
   0xa7ea7649, 0x570f09ea, // q = 308
 ];
 
-final Int64List? _power10_H = _initInt64From32(_power10_H_32);
-final Int64List? _power10_L = _initInt64From32(_power10_L_32);
+final Int64List? _power10H = _initInt64From32(_power10H32);
+final Int64List? _power10L = _initInt64From32(_power10L32);
 
-final Int32List _power10_Exp = Int32List.fromList(const <int>[
+final Int32List _power10Exp = Int32List.fromList(const <int>[
   -1136, // q = -342
   -1132, // q = -341
   -1129, // q = -340
@@ -2069,7 +2069,7 @@ double? _roundAndPackEiselLemire(
   final normHi = isBit63Set ? hi : ((hi << 1) | (lo >>> 63));
   final shiftedLo = isBit63Set ? lo : (lo << 1);
 
-  final biasedExp = _power10_Exp[qIndex] - lz - finalShift + 1023 + 63;
+  final biasedExp = _power10Exp[qIndex] - lz - finalShift + 1023 + 63;
   if (biasedExp <= 0 ||
       biasedExp >= 2047 ||
       _isAmbiguousHalfway(normHi, shiftedLo)) {
@@ -2117,9 +2117,9 @@ double? tryParseDoubleFastEiselLemire(
     return null;
   }
 
-  final power10_H = _power10_H;
-  final power10_L = _power10_L;
-  if (power10_H == null || power10_L == null) {
+  final power10H = _power10H;
+  final power10L = _power10L;
+  if (power10H == null || power10L == null) {
     return null;
   }
 
@@ -2128,12 +2128,12 @@ double? tryParseDoubleFastEiselLemire(
   final normMantissa = mantissa << lz;
 
   // 192-bit full multiplication: normMantissa * (H_q * 2^64 + L_q)
-  final p1Hi = _mul64x64High(normMantissa, power10_L[qIndex]);
+  final p1Hi = _mul64x64High(normMantissa, power10L[qIndex]);
 
   final aLo = normMantissa & 0xFFFFFFFF;
   final aHi = normMantissa >>> 32;
-  final bLo = power10_H[qIndex] & 0xFFFFFFFF;
-  final bHi = power10_H[qIndex] >>> 32;
+  final bLo = power10H[qIndex] & 0xFFFFFFFF;
+  final bHi = power10H[qIndex] >>> 32;
 
   final p0 = aLo * bLo;
   final p1 = aLo * bHi;
