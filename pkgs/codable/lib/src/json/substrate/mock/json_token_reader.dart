@@ -141,7 +141,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   void _beforeReadingName() {
     _skipWs();
     if (_stackLength > 0 && _topType == 0) {
-      if (_topState == 0) {
+      if (_topState == 0 || _topState == 3) {
         _topState = 1;
       } else if (_topState == 2) {
         if (_offset < _bytes.length && _bytes[_offset] == 44) {
@@ -719,7 +719,9 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       );
     }
 
-    if (_stackLength > 0 && _topType == 0 && _topState == 0) {
+    if (_stackLength > 0 &&
+        _topType == 0 &&
+        (_topState == 0 || _topState == 2 || _topState == 3)) {
       nextName();
       skipValue();
       return;
