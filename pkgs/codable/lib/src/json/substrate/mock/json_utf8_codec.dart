@@ -53,8 +53,8 @@ final class JsonUtf8Decoder extends Converter<List<int>, Object?> {
   }
 
   @override
-  ChunkedConversionSink<List<int>> startChunkedConversion(Sink<Object?> sink) {
-    throw UnimplementedError();
+  ByteConversionSink startChunkedConversion(Sink<Object?> sink) {
+    return _MockChunkedJsonUtf8Decoder(sink, this);
   }
 
   // --- Static Micro-Tier Span Atoms ---
@@ -177,6 +177,46 @@ final class JsonUtf8Decoder extends Converter<List<int>, Object?> {
   }
 }
 
+final class _MockChunkedJsonUtf8Decoder extends ByteConversionSinkBase {
+  final Sink<Object?> _sink;
+  final JsonUtf8Decoder _decoder;
+  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  bool _isClosed = false;
+
+  _MockChunkedJsonUtf8Decoder(this._sink, this._decoder);
+
+  @override
+  void add(List<int> chunk) {
+    if (_isClosed) {
+      throw StateError('Cannot add to a closed sink');
+    }
+    _accumulator.add(chunk);
+  }
+
+  @override
+  void addSlice(List<int> chunk, int start, int end, bool isLast) {
+    if (_isClosed) {
+      throw StateError('Cannot addSlice to a closed sink');
+    }
+    RangeError.checkValidRange(start, end, chunk.length);
+    if (start < end) {
+      _accumulator.add(chunk.sublist(start, end));
+    }
+    if (isLast) {
+      close();
+    }
+  }
+
+  @override
+  void close() {
+    if (_isClosed) return;
+    _isClosed = true;
+    final bytes = _accumulator.takeBytes();
+    _sink.add(_decoder.convert(bytes));
+    _sink.close();
+  }
+}
+
 final class JsonUtf8Encoder extends Converter<Object?, List<int>> {
   final String? indent;
   final dynamic Function(dynamic object)? toEncodable;
@@ -188,6 +228,16 @@ final class JsonUtf8Encoder extends Converter<Object?, List<int>> {
   List<int> convert(Object? input) {
     final str = jsonEncode(input, toEncodable: toEncodable);
     return utf8.encode(str);
+  }
+
+  @override
+  ChunkedConversionSink<Object?> startChunkedConversion(Sink<List<int>> sink) {
+    final jsonEncoder = indent != null
+        ? JsonEncoder.withIndent(indent, toEncodable)
+        : JsonEncoder(toEncodable);
+    return jsonEncoder.startChunkedConversion(
+      utf8.encoder.startChunkedConversion(sink),
+    );
   }
 
   // --- Static Micro-Tier Formatting Atoms ---

@@ -50,6 +50,17 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
   }
 
+  /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
+  /// and invokes [decode] on the resulting [JsonCodableDecoder] when closed,
+  /// emitting the decoded value to [sink].
+  static ByteConversionSink startChunkedConversion<T>(
+    Sink<T> sink,
+    T Function(Decoder decoder) decode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    return _JsonCodableChunkedDecoderSink<T>(sink, decode, userInfo);
+  }
+
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
 
   @override
@@ -77,7 +88,104 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
-      null;
+      decodeUniformDoubleListFromReader(_reader, propertyAliases);
+}
+
+final _uniformKeyOptionsCache =
+    Expando<({JsonKeyOptions options, Int32List fieldMap})>();
+
+({JsonKeyOptions options, Int32List fieldMap}) _compileUniformAliases(
+  List<List<String>> propertyAliases,
+) {
+  final cached = _uniformKeyOptionsCache[propertyAliases];
+  if (cached != null) return cached;
+  final flatKeys = <String>[];
+  final mapList = <int>[];
+  for (var fieldIdx = 0; fieldIdx < propertyAliases.length; fieldIdx++) {
+    for (final alias in propertyAliases[fieldIdx]) {
+      flatKeys.add(alias);
+      mapList.add(fieldIdx);
+    }
+  }
+  final built = (
+    options: JsonKeyOptions.of(flatKeys),
+    fieldMap: Int32List.fromList(mapList),
+  );
+  try {
+    _uniformKeyOptionsCache[propertyAliases] = built;
+  } on Object {
+    // Ignore if propertyAliases cannot be attached to Expando.
+  }
+  return built;
+}
+
+/// Decodes a uniform array of numeric objects directly from [reader] into a
+/// flat [Float64List] without per-element [KeyedDecoder] allocations.
+Float64List? decodeUniformDoubleListFromReader(
+  JsonTokenReader reader,
+  List<List<String>> propertyAliases,
+) {
+  final kCount = propertyAliases.length;
+  if (kCount == 0 || kCount > 30) return null;
+  final compiled = _compileUniformAliases(propertyAliases);
+  final options = compiled.options;
+  final fieldMap = compiled.fieldMap;
+  final expectedMask = (1 << kCount) - 1;
+
+  try {
+    reader.beginArray();
+    var out = Float64List(256 * kCount);
+    var outLen = 0;
+    final row = Float64List(kCount);
+
+    while (reader.hasNext()) {
+      reader.beginObject();
+      var seenMask = 0;
+      while (reader.hasNext()) {
+        final keyIdx = reader.selectName(options);
+        if (keyIdx < 0) {
+          reader.skipValue();
+        } else {
+          final fieldIdx = fieldMap[keyIdx];
+          final bit = 1 << fieldIdx;
+          if ((seenMask & bit) != 0) {
+            throw CodableException(
+              'Duplicate field "${propertyAliases[fieldIdx].first}"',
+            );
+          }
+          row[fieldIdx] = reader.readDouble();
+          seenMask |= bit;
+        }
+      }
+      if (seenMask != expectedMask) {
+        final missing = <String>[];
+        for (var k = 0; k < kCount; k++) {
+          if ((seenMask & (1 << k)) == 0) {
+            missing.add(propertyAliases[k].first);
+          }
+        }
+        throw CodableException(
+          'Missing required fields: ${missing.join(", ")}',
+        );
+      }
+      reader.endObject();
+
+      if (outLen + kCount > out.length) {
+        final next = Float64List(out.length * 2);
+        next.setRange(0, outLen, out);
+        out = next;
+      }
+      for (var k = 0; k < kCount; k++) {
+        out[outLen++] = row[k];
+      }
+    }
+    reader.endArray();
+    return outLen == out.length ? out : out.sublist(0, outLen);
+  } on CodableException {
+    rethrow;
+  } on Object catch (e) {
+    throw CodableException('Failed to decode uniform double list: $e');
+  }
 }
 
 mixin _JsonPrimitiveDecoderMixin {
@@ -698,6 +806,32 @@ final class JsonCodableEncoder implements Encoder {
     return utf8.decode(bytes);
   }
 
+  /// Encodes a value directly into [sink] using a chunked [JsonTokenWriter].
+  static void toSink(
+    BytesBuilder sink,
+    void Function(Encoder encoder) encode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final writer = AdaptiveJsonTokenWriter.toSink(sink);
+    final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
+    encode(encoder);
+    encoder._finish();
+    writer.flush();
+  }
+
+  /// Starts a chunked conversion that streams encoded UTF-8 byte chunks
+  /// directly to [sink] via [JsonTokenWriter.toSink].
+  static ChunkedConversionSink<void Function(Encoder encoder)>
+  startChunkedConversion(
+    Sink<List<int>> sink, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final byteSink = sink is ByteConversionSink
+        ? sink
+        : ByteConversionSink.from(sink);
+    return _JsonCodableChunkedEncoderSink(byteSink, userInfo);
+  }
+
   void _finish() {
     _activeKeyed?._close();
     _activeKeyed = null;
@@ -1263,5 +1397,114 @@ final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
     } else {
       encodeEncodable(value);
     }
+  }
+}
+
+final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
+  final Sink<T> _sink;
+  final T Function(Decoder decoder) _decode;
+  final Map<Object, Object?> _userInfo;
+  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  bool _isClosed = false;
+
+  _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
+
+  @override
+  void add(List<int> chunk) {
+    if (_isClosed) {
+      throw StateError('Cannot add to a closed sink');
+    }
+    _accumulator.add(chunk);
+  }
+
+  @override
+  void addSlice(List<int> chunk, int start, int end, bool isLast) {
+    if (_isClosed) {
+      throw StateError('Cannot addSlice to a closed sink');
+    }
+    RangeError.checkValidRange(start, end, chunk.length);
+    if (start < end) {
+      _accumulator.add(chunk.sublist(start, end));
+    }
+    if (isLast) {
+      close();
+    }
+  }
+
+  @override
+  void close() {
+    if (_isClosed) return;
+    _isClosed = true;
+    final bytes = _accumulator.takeBytes();
+    final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
+    _sink.add(_decode(decoder));
+    _sink.close();
+  }
+}
+
+final class _ByteSinkAdapter implements BytesBuilder {
+  final ByteConversionSink _byteSink;
+  int _length = 0;
+
+  _ByteSinkAdapter(this._byteSink);
+
+  @override
+  void add(List<int> bytes) {
+    _length += bytes.length;
+    _byteSink.add(bytes);
+  }
+
+  @override
+  void addByte(int byte) {
+    _length += 1;
+    _byteSink.add([byte]);
+  }
+
+  @override
+  void clear() {
+    _length = 0;
+  }
+
+  @override
+  bool get isEmpty => _length == 0;
+
+  @override
+  bool get isNotEmpty => _length > 0;
+
+  @override
+  int get length => _length;
+
+  @override
+  Uint8List takeBytes() => throw UnsupportedError('Not supported on adapter');
+
+  @override
+  Uint8List toBytes() => throw UnsupportedError('Not supported on adapter');
+}
+
+final class _JsonCodableChunkedEncoderSink
+    implements ChunkedConversionSink<void Function(Encoder encoder)> {
+  final ByteConversionSink _byteSink;
+  final Map<Object, Object?> _userInfo;
+  bool _isClosed = false;
+
+  _JsonCodableChunkedEncoderSink(this._byteSink, this._userInfo);
+
+  @override
+  void add(void Function(Encoder encoder) encode) {
+    if (_isClosed) {
+      throw StateError('Cannot add to a closed sink');
+    }
+    final writer = AdaptiveJsonTokenWriter.toSink(_ByteSinkAdapter(_byteSink));
+    final encoder = JsonCodableEncoder(writer, userInfo: _userInfo);
+    encode(encoder);
+    encoder._finish();
+    writer.flush();
+  }
+
+  @override
+  void close() {
+    if (_isClosed) return;
+    _isClosed = true;
+    _byteSink.close();
   }
 }

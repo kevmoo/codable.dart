@@ -28,6 +28,12 @@ final class AdaptiveJsonTokenWriter implements JsonTokenWriter {
   AdaptiveJsonTokenWriter([int initialCapacity = 1024])
     : _buffer = Uint8List(initialCapacity);
 
+  AdaptiveJsonTokenWriter.toSink(
+    BytesBuilder sink, [
+    int initialCapacity = _chunkSize,
+  ]) : _sink = sink,
+       _buffer = Uint8List(initialCapacity);
+
   @pragma('vm:prefer-inline')
   void _ensureCapacity(int needed) {
     if (_cursor + needed > _buffer.length) {

@@ -53,6 +53,11 @@ void main(List<String> args) {
       defaultsTo: 'median',
       help: 'Metric to extract for reporting (min or median).',
     )
+    ..addFlag(
+      'streaming',
+      negatable: false,
+      help: 'Generate streaming benchmark report (decode_stream / encode_stream).',
+    )
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Print usage.');
 
   final argResults = parser.parse(args);
@@ -62,7 +67,15 @@ void main(List<String> args) {
     return;
   }
 
-  final inputFile = File(argResults.option('input')!);
+  final streaming = argResults.flag('streaming');
+  final defaultInputPath =
+      streaming && File('streaming_benchmark_results.json').existsSync()
+      ? 'streaming_benchmark_results.json'
+      : 'benchmark_results.json';
+  final inputPath = argResults.wasParsed('input')
+      ? argResults.option('input')!
+      : defaultInputPath;
+  final inputFile = File(inputPath);
   if (!inputFile.existsSync()) {
     stderr.writeln('Error: Input file ${inputFile.path} does not exist.');
     exit(1);
@@ -72,11 +85,18 @@ void main(List<String> args) {
   final benchmarksList = _extractBenchmarksList(jsonRoot, inputFile.path);
   final metricFlag = argResults.option('metric')!;
 
-  final unifiedFile = File(argResults.option('output-unified')!);
+  final unifiedPath = argResults.wasParsed('output-unified')
+      ? argResults.option('output-unified')!
+      : (streaming
+            ? 'streaming_benchmark_results_unified.json'
+            : 'benchmark_results_unified.json');
+  final unifiedFile = File(unifiedPath);
   final results = extractUnifiedResults(
     benchmarksList,
     metric: metricFlag,
-    existingUnifiedFile: unifiedFile.existsSync() ? unifiedFile : null,
+    existingUnifiedFile: !streaming && unifiedFile.existsSync()
+        ? unifiedFile
+        : null,
   );
 
   final report = generateMarkdownReport(
@@ -84,10 +104,14 @@ void main(List<String> args) {
     jsonRoot,
     metricFlag,
     benchmarksList: benchmarksList,
+    streaming: streaming,
   );
   print(report);
 
-  final reportFile = File(argResults.option('output-report')!);
+  final reportPath = argResults.wasParsed('output-report')
+      ? argResults.option('output-report')!
+      : (streaming ? 'STREAMING_BENCHMARK_REPORT.md' : 'BENCHMARK_REPORT.md');
+  final reportFile = File(reportPath);
   reportFile.writeAsStringSync(report);
   print('💾 Markdown report saved to ${reportFile.path}');
 
@@ -234,8 +258,9 @@ Set<String> collectUnstableCells(List<dynamic> benchmarksList) {
 /// canonical decode workloads.
 Map<String, List<double>> extractControlRatios(
   List<dynamic> benchmarksList,
-  String metric,
-) {
+  String metric, {
+  String decodeMode = 'decode',
+}) {
   final byKey = <String, double>{};
   for (final raw in benchmarksList) {
     if (raw is! Map<String, dynamic>) continue;
@@ -258,8 +283,8 @@ Map<String, List<double>> extractControlRatios(
   for (final target in canonicalTargets) {
     final ratios = <double>[];
     for (final ds in canonicalDatasets) {
-      final stock = byKey['$target|${ds}_decode|stock'];
-      final fork = byKey['$target|${ds}_decode|native_kernels'];
+      final stock = byKey['$target|${ds}_$decodeMode|stock'];
+      final fork = byKey['$target|${ds}_$decodeMode|native_kernels'];
       if (stock != null && fork != null && fork > 0) ratios.add(stock / fork);
     }
     if (ratios.isNotEmpty) out[target] = ratios;
@@ -271,7 +296,7 @@ Map<String, Map<String, Map<String, double>>> _sortUnifiedResults(
   Map<String, Map<String, Map<String, double>>> raw,
 ) {
   final orderedGroups = <String>[
-    for (final mode in ['decode', 'encode'])
+    for (final mode in ['decode', 'encode', 'decode_stream', 'encode_stream'])
       for (final ds in canonicalDatasets) '${ds}_$mode',
   ];
 
@@ -295,18 +320,60 @@ Map<String, Map<String, Map<String, double>>> _sortUnifiedResults(
   return sorted;
 }
 
-bool _hasFourTierData(Map<String, Map<String, Map<String, double>>> results) {
+bool _hasFourTierData(
+  Map<String, Map<String, Map<String, double>>> results, {
+  required bool streaming,
+}) {
+  final suffix = streaming ? '_stream' : '';
   for (final target in canonicalTargets) {
     final targetMap = results[target];
     if (targetMap == null) continue;
-    for (final groupMap in targetMap.values) {
+    for (final entry in targetMap.entries) {
+      final isStreamGroup = entry.key.endsWith('_stream');
+      if (streaming != isStreamGroup) continue;
+      final groupMap = entry.value;
       if (groupMap.containsKey('stock_json_serializable') &&
           groupMap.containsKey('stock_codable')) {
         return true;
       }
     }
   }
+  // Fallback if suffix check found nothing
+  if (suffix.isEmpty) {
+    for (final target in canonicalTargets) {
+      final targetMap = results[target];
+      if (targetMap == null) continue;
+      for (final groupMap in targetMap.values) {
+        if (groupMap.containsKey('stock_json_serializable') &&
+            groupMap.containsKey('stock_codable')) {
+          return true;
+        }
+      }
+    }
+  }
   return false;
+}
+
+List<String> _resolveActiveDatasets(
+  Map<String, Map<String, Map<String, double>>> results, {
+  required bool streaming,
+}) {
+  if (!streaming) return canonicalDatasets;
+  final found = <String>[];
+  for (final ds in canonicalDatasets) {
+    var present = false;
+    for (final target in canonicalTargets) {
+      final tMap = results[target];
+      if (tMap == null) continue;
+      if ((tMap['${ds}_decode_stream']?.isNotEmpty ?? false) ||
+          (tMap['${ds}_encode_stream']?.isNotEmpty ?? false)) {
+        present = true;
+        break;
+      }
+    }
+    if (present) found.add(ds);
+  }
+  return found.isEmpty ? const ['coordinates', 'canada'] : found;
 }
 
 String generateMarkdownReport(
@@ -314,26 +381,59 @@ String generateMarkdownReport(
   dynamic jsonRoot,
   String metric, {
   List<dynamic> benchmarksList = const [],
+  bool streaming = false,
 }) {
   final buf = StringBuffer();
-  final hasFourTiers = _hasFourTierData(results);
-  final unstable = collectUnstableCells(benchmarksList);
-  final controlRatios = extractControlRatios(benchmarksList, metric);
+  final hasFourTiers = _hasFourTierData(results, streaming: streaming);
+  final activeDatasets = _resolveActiveDatasets(results, streaming: streaming);
+  final decodeMode = streaming ? 'decode_stream' : 'decode';
+  final encodeMode = streaming ? 'encode_stream' : 'encode';
+  final activeBenchmarksList = benchmarksList.where((raw) {
+    if (raw is! Map<String, dynamic>) return false;
+    final coords = raw['coordinates'] as Map<String, dynamic>?;
+    final group = coords?['group'] as String? ?? '';
+    return group.endsWith('_stream') == streaming;
+  }).toList();
+  final unstable = collectUnstableCells(activeBenchmarksList);
+  final controlRatios = extractControlRatios(
+    benchmarksList,
+    metric,
+    decodeMode: decodeMode,
+  );
+
+  if (streaming) {
+    buf.writeln(
+      '## 🌊 Streaming Benchmark Report '
+      '(`ChunkedConversionSink` / `ByteConversionSink`)\n',
+    );
+  }
 
   _writeProvenanceSection(buf, jsonRoot, metric, hasFourTiers);
   if (hasFourTiers) {
-    _writeFourTierLegendSection(buf);
-    _writeFourTierRuntimeSummary(buf, results);
+    _writeFourTierLegendSection(buf, streaming: streaming);
+    _writeFourTierRuntimeSummary(
+      buf,
+      results,
+      decodeMode: decodeMode,
+      encodeMode: encodeMode,
+      datasets: activeDatasets,
+    );
   } else {
-    _writeTwoTierRuntimeSummary(buf, results);
+    _writeTwoTierRuntimeSummary(
+      buf,
+      results,
+      decodeMode: decodeMode,
+      encodeMode: encodeMode,
+      datasets: activeDatasets,
+    );
   }
 
-  if (benchmarksList.isNotEmpty) {
+  if (activeBenchmarksList.isNotEmpty) {
     _writeControlAndStabilitySection(
       buf,
       controlRatios,
       unstable,
-      benchmarksList.length,
+      activeBenchmarksList.length,
     );
   }
 
@@ -344,7 +444,14 @@ String generateMarkdownReport(
       results,
       hasFourTiers: hasFourTiers,
       unstable: unstable,
+      decodeMode: decodeMode,
+      encodeMode: encodeMode,
+      datasets: activeDatasets,
     );
+  }
+
+  if (streaming) {
+    _writeStreamingVsMonolithicSection(buf, results, activeDatasets);
   }
 
   buf.writeln(_methodologyFooter(metric));
@@ -448,8 +555,30 @@ int _extractTrialCount(dynamic benchmarks) {
   return rawTrials is List ? rawTrials.length : 0;
 }
 
-void _writeFourTierLegendSection(StringBuffer buf) {
+void _writeFourTierLegendSection(StringBuffer buf, {bool streaming = false}) {
   buf.writeln('### 🏛️ The 4 Dart Serialization Tiers\n');
+  if (streaming) {
+    buf.writeln(
+      '- **Tier 0 (`Stock Dart + json_serializable [Chunked Sink]`)**: '
+      'Out-of-the-box status-quo baseline compiled & executed on unmodified '
+      'Stock Dart (`utf8.decoder.fuse(json.decoder).startChunkedConversion` '
+      'on 32 KB input chunks, and `json.encoder.fuse(utf8.encoder)'
+      '.startChunkedConversion` for output).\n'
+      '- **Tier 1 (`New Dart + json_serializable [Chunked Sink]`)**: '
+      'Unmodified `json_serializable` chunked converter pipeline running on '
+      'the upgraded `dart-sdk-json-next` SDK.\n'
+      '- **Tier 2 (`Stock Dart + Codable [Mock Substrate]`)**: '
+      '`package:codable` running on unmodified Stock Dart '
+      '(`JsonCodableDecoder.startChunkedConversion` accumulating 32 KB chunks '
+      'into `BytesBuilder(copy: false)` for `_MockJsonTokenReader`, and '
+      '`JsonCodableEncoder.startChunkedConversion` streaming 32 KB chunks via '
+      '`JsonTokenWriter.toSink`).\n'
+      '- **Tier 3 (`New Dart + Codable [Native Substrate]`)**: Full end-to-end '
+      'streaming stack (`package:codable` + `dart:convert` Layer 1 native '
+      '`JsonTokenReader` / `JsonUtf8TokenWriter` chunked sink substrate).\n',
+    );
+    return;
+  }
   buf.writeln(
     '- **Tier 0 (`Stock Dart + json_serializable`)**: Out-of-the-box '
     'status-quo baseline compiled & executed on unmodified Stock Dart '
@@ -472,8 +601,11 @@ void _writeFourTierLegendSection(StringBuffer buf) {
 
 void _writeFourTierRuntimeSummary(
   StringBuffer buf,
-  Map<String, Map<String, Map<String, double>>> results,
-) {
+  Map<String, Map<String, Map<String, double>>> results, {
+  String decodeMode = 'decode',
+  String encodeMode = 'encode',
+  List<String> datasets = canonicalDatasets,
+}) {
   buf.writeln(
     '### 📊 3-Runtime Summary '
     '(4-Tier Relative Efficiency & GeoMean Speedups)\n',
@@ -500,7 +632,16 @@ void _writeFourTierRuntimeSummary(
 
   for (final target in canonicalTargets) {
     for (final tier in tierSpecs) {
-      _writeFourTierSummaryRow(buf, target, tier.key, tier.label, results);
+      _writeFourTierSummaryRow(
+        buf,
+        target,
+        tier.key,
+        tier.label,
+        results,
+        decodeMode: decodeMode,
+        encodeMode: encodeMode,
+        datasets: datasets,
+      );
     }
   }
 
@@ -515,37 +656,56 @@ void _writeFourTierSummaryRow(
   String target,
   String tierKey,
   String tierLabel,
-  Map<String, Map<String, Map<String, double>>> results,
-) {
-  final decEff = _computeEfficiencyScores(results, target, 'decode', tierKey);
-  final encEff = _computeEfficiencyScores(results, target, 'encode', tierKey);
+  Map<String, Map<String, Map<String, double>>> results, {
+  required String decodeMode,
+  required String encodeMode,
+  required List<String> datasets,
+}) {
+  final decEff = _computeEfficiencyScores(
+    results,
+    target,
+    decodeMode,
+    tierKey,
+    datasets: datasets,
+  );
+  final encEff = _computeEfficiencyScores(
+    results,
+    target,
+    encodeMode,
+    tierKey,
+    datasets: datasets,
+  );
   final decVsT0 = _computeModeSpeedupGeoMean(
     results,
     target,
-    'decode',
+    decodeMode,
     'stock_json_serializable',
     tierKey,
+    datasets: datasets,
   );
   final decVsT1 = _computeModeSpeedupGeoMean(
     results,
     target,
-    'decode',
+    decodeMode,
     'json_serializable',
     tierKey,
+    datasets: datasets,
   );
   final encVsT0 = _computeModeSpeedupGeoMean(
     results,
     target,
-    'encode',
+    encodeMode,
     'stock_json_serializable',
     tierKey,
+    datasets: datasets,
   );
   final encVsT1 = _computeModeSpeedupGeoMean(
     results,
     target,
-    'encode',
+    encodeMode,
     'json_serializable',
     tierKey,
+    datasets: datasets,
   );
 
   final targetLabel = _formatTargetLabel(target);
@@ -562,8 +722,9 @@ List<double> _computeEfficiencyScores(
   Map<String, Map<String, Map<String, double>>> results,
   String target,
   String mode,
-  String tierKey,
-) {
+  String tierKey, {
+  List<String> datasets = canonicalDatasets,
+}) {
   const allTierKeys = [
     'stock_json_serializable',
     'json_serializable',
@@ -571,7 +732,7 @@ List<double> _computeEfficiencyScores(
     'codable',
   ];
   final scores = <double>[];
-  for (final ds in canonicalDatasets) {
+  for (final ds in datasets) {
     final group = results[target]?['${ds}_$mode'];
     final val = group?[tierKey];
     if (group == null || val == null) continue;
@@ -591,10 +752,11 @@ double _computeModeSpeedupGeoMean(
   String target,
   String mode,
   String baseKey,
-  String candKey,
-) {
+  String candKey, {
+  List<String> datasets = canonicalDatasets,
+}) {
   final ratios = <double>[];
-  for (final ds in canonicalDatasets) {
+  for (final ds in datasets) {
     final group = results[target]?['${ds}_$mode'];
     final baseVal = group?[baseKey];
     final candVal = group?[candKey];
@@ -607,8 +769,11 @@ double _computeModeSpeedupGeoMean(
 
 void _writeTwoTierRuntimeSummary(
   StringBuffer buf,
-  Map<String, Map<String, Map<String, double>>> results,
-) {
+  Map<String, Map<String, Map<String, double>>> results, {
+  String decodeMode = 'decode',
+  String encodeMode = 'encode',
+  List<String> datasets = canonicalDatasets,
+}) {
   buf.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)\n');
   buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
@@ -620,14 +785,16 @@ void _writeTwoTierRuntimeSummary(
     final decodeScores = _computeEfficiencyScores(
       results,
       target,
-      'decode',
+      decodeMode,
       'codable',
+      datasets: datasets,
     );
     final encodeScores = _computeEfficiencyScores(
       results,
       target,
-      'encode',
+      encodeMode,
       'codable',
+      datasets: datasets,
     );
     buf.writeln(
       '| ${_formatTargetLabel(target)} | **`New Dart + Codable`** | '
@@ -671,8 +838,7 @@ String _efficiencyIndexCallout() =>
     'benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).\n'
     '> - **`[ Worst / GeoMean / Best ]`**: Range from lowest score '
     '(worst workload) to the geometric mean and peak dataset score\n'
-    '>   across the 5 canonical benchmarks (`coordinates`, `canada`, '
-    '`citm_catalog`, `small`, `twitter`).\n'
+    '>   across the active canonical benchmarks.\n'
     '> - **Badges**: 🥇 Peak across all workloads (`100`) • '
     '🟢 `≥ 90` (Within 10% of peak) • 🟡 `70–89` (Good / moderate) • '
     '🔴 `< 70` (Significant performance gap).\n';
@@ -683,17 +849,31 @@ void _writeTargetSection(
   Map<String, Map<String, Map<String, double>>> results, {
   required bool hasFourTiers,
   Set<String> unstable = const {},
+  String decodeMode = 'decode',
+  String encodeMode = 'encode',
+  List<String> datasets = canonicalDatasets,
 }) {
   final upper = target.toUpperCase();
   buf.writeln('### 🎯 $upper Target Detailed Breakdown\n');
 
-  for (final mode in ['decode', 'encode']) {
-    final modeCap = '${mode[0].toUpperCase()}${mode.substring(1)}';
+  for (final mode in [decodeMode, encodeMode]) {
+    final modeCap = switch (mode) {
+      'decode_stream' => 'Decode Stream (32 KB Chunks)',
+      'encode_stream' => 'Encode Stream (BytesBuilder / ByteConversionSink)',
+      _ => '${mode[0].toUpperCase()}${mode.substring(1)}',
+    };
     buf.writeln('#### Detailed Breakdown: $upper $modeCap\n');
     if (hasFourTiers) {
-      _writeFourTierModeTable(buf, target, mode, results, unstable);
+      _writeFourTierModeTable(
+        buf,
+        target,
+        mode,
+        results,
+        unstable,
+        datasets: datasets,
+      );
     } else {
-      _writeTwoTierModeTable(buf, target, mode, results);
+      _writeTwoTierModeTable(buf, target, mode, results, datasets: datasets);
     }
   }
   buf.writeln('${'-' * 72}\n');
@@ -704,8 +884,9 @@ void _writeFourTierModeTable(
   String target,
   String mode,
   Map<String, Map<String, Map<String, double>>> results,
-  Set<String> unstable,
-) {
+  Set<String> unstable, {
+  List<String> datasets = canonicalDatasets,
+}) {
   buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Workload / Dataset | '
@@ -728,7 +909,7 @@ void _writeFourTierModeTable(
   final t3VsT1Ratios = <double>[];
   var flagged = 0;
 
-  for (final ds in canonicalDatasets) {
+  for (final ds in datasets) {
     final groupKey = '${ds}_$mode';
     final group = results[target]?[groupKey];
     final t0 = group?['stock_json_serializable'];
@@ -774,7 +955,7 @@ void _writeFourTierModeTable(
   buf.writeln('<!-- mdformat on -->\n');
   if (flagged > 0) {
     buf.writeln(
-      '> ⚠️ $flagged of ${canonicalDatasets.length} workloads in this table '
+      '> ⚠️ $flagged of ${datasets.length} workloads in this table '
       'draw on samples flagged `is_robust_stable: false`. The Geometric Mean '
       'includes them and inherits their uncertainty.\n',
     );
@@ -786,8 +967,9 @@ void _writeTwoTierModeTable(
   StringBuffer buf,
   String target,
   String mode,
-  Map<String, Map<String, Map<String, double>>> results,
-) {
+  Map<String, Map<String, Map<String, double>>> results, {
+  List<String> datasets = canonicalDatasets,
+}) {
   buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Workload / Dataset | json_serializable | package:codable | '
@@ -795,7 +977,7 @@ void _writeTwoTierModeTable(
   );
   buf.writeln('| :--- | :---: | :---: | :---: |');
 
-  for (final ds in canonicalDatasets) {
+  for (final ds in datasets) {
     final b = '${ds}_$mode';
     final jsVal = results[target]?[b]?['json_serializable'];
     final codableVal = results[target]?[b]?['codable'];
@@ -812,6 +994,73 @@ void _writeTwoTierModeTable(
     }
   }
   buf.writeln('<!-- mdformat on -->\n\n');
+}
+
+void _writeStreamingVsMonolithicSection(
+  StringBuffer buf,
+  Map<String, Map<String, Map<String, double>>> results,
+  List<String> datasets,
+) {
+  var hasMonolithic = false;
+  for (final target in canonicalTargets) {
+    for (final ds in datasets) {
+      if (results[target]?.containsKey('${ds}_decode') ?? false) {
+        hasMonolithic = true;
+        break;
+      }
+    }
+  }
+  if (!hasMonolithic) return;
+
+  buf.writeln(
+    '### 🔄 Streaming vs. Monolithic Single-Buffer Overhead '
+    '(`Stream / Sink` vs. `Single Buffer`)\n',
+  );
+  buf.writeln(
+    'Compares the chunked conversion sink latency (`32 KB` slices) against the '
+    'in-memory single-buffer latency (`Stream Latency / Monolithic Latency`; '
+    '`1.00x` = zero streaming overhead, `< 1.00x` = streaming is faster than '
+    'monolithic allocation).\n',
+  );
+  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
+  buf.writeln(
+    '| Target | Mode & Dataset | '
+    'Tier 0 Ratio (Stream / Mono) | '
+    'Tier 1 Ratio (Stream / Mono) | '
+    'Tier 2 Ratio (Stream / Mono) | '
+    'Tier 3 Ratio (Stream / Mono) |',
+  );
+  buf.writeln('| :--- | :--- | :---: | :---: | :---: | :---: |');
+
+  for (final target in canonicalTargets) {
+    final upper = target.toUpperCase();
+    for (final baseMode in ['decode', 'encode']) {
+      final streamMode = '${baseMode}_stream';
+      final modeLabel = baseMode == 'decode' ? '📥 Decode' : '📤 Encode';
+      for (final ds in datasets) {
+        final monoGroup = results[target]?['${ds}_$baseMode'];
+        final streamGroup = results[target]?['${ds}_$streamMode'];
+        if (monoGroup == null || streamGroup == null) continue;
+        String fmtRatio(String key) {
+          final m = monoGroup[key];
+          final s = streamGroup[key];
+          if (m == null || s == null || m <= 0) return 'N/A';
+          return '`${(s / m).toStringAsFixed(2)}x` '
+              '(${_formatTime(s)} vs ${_formatTime(m)})';
+        }
+
+        buf.writeln(
+          '| **$upper** | $modeLabel `${datasetNames[ds]}` | '
+          '${fmtRatio('stock_json_serializable')} | '
+          '${fmtRatio('json_serializable')} | '
+          '${fmtRatio('stock_codable')} | '
+          '**${fmtRatio('codable')}** |',
+        );
+      }
+    }
+  }
+  buf.writeln('<!-- mdformat on -->\n');
+  buf.writeln('${'-' * 72}\n');
 }
 
 String _methodologyFooter(String metric) =>
