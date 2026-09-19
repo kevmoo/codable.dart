@@ -457,7 +457,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     _skipWs();
     if (_offset >= _bytes.length) {
       if (_stackLength > 0 && _topState == 3) {
-        throw FormatException('Unexpected end of document after comma');
+        throw const FormatException('Unexpected end of document after comma');
       }
       return false;
     }
@@ -485,7 +485,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     if (_topState == 2) {
       if (b != 44) {
         throw FormatException(
-          'Expected "," or "${String.fromCharCode(closeChar)}" at offset $_offset',
+          'Expected "," or "${String.fromCharCode(closeChar)}" '
+          'at offset $_offset',
         );
       }
       _offset++;
@@ -495,7 +496,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         throw FormatException('Trailing comma not allowed at offset $_offset');
       }
       if (_offset >= _bytes.length) {
-        throw FormatException('Unexpected end of document after comma');
+        throw const FormatException('Unexpected end of document after comma');
       }
       return true;
     }
