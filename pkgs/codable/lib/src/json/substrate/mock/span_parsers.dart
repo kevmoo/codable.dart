@@ -1,13 +1,13 @@
 import 'dart:convert'
     hide
-        JsonTokenReader,
-        JsonTokenWriter,
-        JsonTokenType,
         JsonKeyOptions,
+        JsonTokenReader,
+        JsonTokenType,
+        JsonTokenWriter,
+        JsonUtf8TokenWriter,
         jsonUtf8,
         jsonUtf8Decode,
-        jsonUtf8Encode,
-        JsonUtf8TokenWriter;
+        jsonUtf8Encode;
 import 'dart:typed_data';
 
 import 'eisel_lemire.dart';
@@ -71,8 +71,8 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
   }
 
-  final int limitBeforeMul = 9223372036854775807 ~/ r;
-  final int limitLastDigit = (9223372036854775807 % r) + (negative ? 1 : 0);
+  final limitBeforeMul = 9223372036854775807 ~/ r;
+  final limitLastDigit = (9223372036854775807 % r) + (negative ? 1 : 0);
 
   var result = 0;
   var hasDigits = false;

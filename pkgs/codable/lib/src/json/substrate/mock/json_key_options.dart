@@ -4,14 +4,14 @@
 
 import 'dart:convert'
     hide
-        JsonTokenReader,
-        JsonTokenWriter,
-        JsonTokenType,
         JsonKeyOptions,
+        JsonTokenReader,
+        JsonTokenType,
+        JsonTokenWriter,
+        JsonUtf8TokenWriter,
         jsonUtf8,
         jsonUtf8Decode,
-        jsonUtf8Encode,
-        JsonUtf8TokenWriter;
+        jsonUtf8Encode;
 import 'dart:typed_data';
 
 /// Pre-compiled key lookup options for fast-path UTF-8 property matching.
