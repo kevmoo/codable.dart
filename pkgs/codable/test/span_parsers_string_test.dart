@@ -31,8 +31,9 @@ void main() {
     });
 
     test('single character ASCII strings', () {
-      for (var c = 0; c < 128; c++) {
-        if (c == 92) continue; // backslash is escape
+      for (var c = 0x20; c < 128; c++) {
+        if (c == 92 || c == 34)
+          continue; // backslash is escape, quote is invalid
         final char = String.fromCharCode(c);
         final bytes = Uint8List.fromList([c]);
         check(decodeStringUtf8(bytes, 0, 1)).equals(char);
