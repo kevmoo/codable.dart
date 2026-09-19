@@ -387,8 +387,7 @@ void _writeControlAndStabilitySection(
     'plus `.fromJson()` hydration. Because the fork only alters the UTF-8 '
     '*byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a '
     'value away from `1.000x` is harness or build drift, not an intentional '
-    'code effect. (The AOT `canada` entry at `1.502x` is itself an unstable '
-    'cell, not a speedup.) **Treat any speedup inside the control band as '
+    'code effect. **Treat any speedup inside the control band as '
     'unresolved.**',
   );
   if (unstable.isNotEmpty) {
