@@ -520,9 +520,9 @@ String decodeStringUtf8(
           );
       }
     } else if (byte <= 0x7F) {
-      if (byte < 0x20) {
+      if (byte < 0x20 || byte == 34) {
         throw FormatException(
-          'Unescaped control character 0x${byte.toRadixString(16)} '
+          'Unescaped control character or quote 0x${byte.toRadixString(16)} '
           'at offset $i',
           source,
           i,
