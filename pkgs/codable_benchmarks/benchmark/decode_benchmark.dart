@@ -32,6 +32,13 @@ import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
 
 final utf8JsonDecoder = utf8.decoder.fuse(json.decoder);
 
+@pragma('vm:never-inline')
+@pragma('dart2js:noInline')
+@pragma('wasm:never-inline')
+void _consumeResult(Object? value) {
+  Blackhole.consume(value.hashCode);
+}
+
 class Data {
   final String name;
   final Uint8List bytes;
@@ -69,7 +76,7 @@ void main(List<String> args) async {
         final dynamic jsonAst = utf8JsonDecoder.convert(d.bytes);
         switch (d.name) {
           case 'coordinates':
-            Blackhole.consume(
+            _consumeResult(
               (jsonAst as List<dynamic>)
                   .map(
                     (e) =>
@@ -79,24 +86,24 @@ void main(List<String> args) async {
             );
             break;
           case 'canada':
-            Blackhole.consume(
+            _consumeResult(
               js_canada.CanadaFeatureCollection.fromJson(
                 jsonAst as Map<String, dynamic>,
               ),
             );
             break;
           case 'citm_catalog':
-            Blackhole.consume(
+            _consumeResult(
               js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>),
             );
             break;
           case 'small':
-            Blackhole.consume(
+            _consumeResult(
               js_small.SmallDocument.fromJson(jsonAst as Map<String, dynamic>),
             );
             break;
           case 'twitter':
-            Blackhole.consume(
+            _consumeResult(
               js_twitter.TwitterResponse.fromJson(
                 jsonAst as Map<String, dynamic>,
               ),
@@ -110,7 +117,7 @@ void main(List<String> args) async {
         final dynamic jsonAst = jsonDecode(d.string);
         switch (d.name) {
           case 'coordinates':
-            Blackhole.consume(
+            _consumeResult(
               (jsonAst as List<dynamic>)
                   .map(
                     (e) =>
@@ -120,24 +127,24 @@ void main(List<String> args) async {
             );
             break;
           case 'canada':
-            Blackhole.consume(
+            _consumeResult(
               js_canada.CanadaFeatureCollection.fromJson(
                 jsonAst as Map<String, dynamic>,
               ),
             );
             break;
           case 'citm_catalog':
-            Blackhole.consume(
+            _consumeResult(
               js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>),
             );
             break;
           case 'small':
-            Blackhole.consume(
+            _consumeResult(
               js_small.SmallDocument.fromJson(jsonAst as Map<String, dynamic>),
             );
             break;
           case 'twitter':
-            Blackhole.consume(
+            _consumeResult(
               js_twitter.TwitterResponse.fromJson(
                 jsonAst as Map<String, dynamic>,
               ),
@@ -149,21 +156,21 @@ void main(List<String> args) async {
         final decoder = JsonCodableDecoder.fromBytes(d.bytes);
         switch (d.name) {
           case 'coordinates':
-            Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+            _consumeResult(codable_coord.Coordinate.decodeList(decoder));
             break;
           case 'canada':
-            Blackhole.consume(
+            _consumeResult(
               codable_canada.CanadaFeatureCollection.decode(decoder),
             );
             break;
           case 'citm_catalog':
-            Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+            _consumeResult(codable_citm.CitmCatalog.decode(decoder));
             break;
           case 'small':
-            Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+            _consumeResult(codable_small.SmallDocument.decode(decoder));
             break;
           case 'twitter':
-            Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+            _consumeResult(codable_twitter.TwitterResponse.decode(decoder));
             break;
         }
       },
@@ -174,21 +181,21 @@ void main(List<String> args) async {
         );
         switch (d.name) {
           case 'coordinates':
-            Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+            _consumeResult(codable_coord.Coordinate.decodeList(decoder));
             break;
           case 'canada':
-            Blackhole.consume(
+            _consumeResult(
               codable_canada.CanadaFeatureCollection.decode(decoder),
             );
             break;
           case 'citm_catalog':
-            Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+            _consumeResult(codable_citm.CitmCatalog.decode(decoder));
             break;
           case 'small':
-            Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+            _consumeResult(codable_small.SmallDocument.decode(decoder));
             break;
           case 'twitter':
-            Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+            _consumeResult(codable_twitter.TwitterResponse.decode(decoder));
             break;
         }
       },

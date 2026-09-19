@@ -32,6 +32,13 @@ import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
 
 final utf8JsonEncoder = json.encoder.fuse(utf8.encoder);
 
+@pragma('vm:never-inline')
+@pragma('dart2js:noInline')
+@pragma('wasm:never-inline')
+void _consumeResult(Object? value) {
+  Blackhole.consume(value.hashCode);
+}
+
 class EncData {
   final String name;
   final Uint8List bytes;
@@ -140,13 +147,13 @@ void main(List<String> args) async {
             res = (d.jsModel as js_twitter.TwitterResponse).toJson();
             break;
         }
-        Blackhole.consume(utf8JsonEncoder.convert(res));
+        _consumeResult(utf8JsonEncoder.convert(res));
       },
     ),
     candidates: {
       'codable': (d) {
         final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
-        Blackhole.consume(outBytes);
+        _consumeResult(outBytes);
       },
     },
   );

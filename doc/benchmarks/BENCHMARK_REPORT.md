@@ -1,78 +1,49 @@
 # Cross-Language JSON Serialization Benchmark Report
 
 **Host Hardware**: `kevmoo.c.googlers.com` (AMD EPYC 7B13, 64 logical cores, 117.9 GB RAM, Linux 6.18.14-1rodete4-amd64)  
-**Audit Version**: `4.0-native-sdk-verified` (`2026-09-18T21:08:23Z`)  
+**Audit Version**: `4.1-clean-mergebase-audit` (`2026-09-19T00:08:58Z`)  
 **Target Codebases**: [`pkgs/codable`](file:///usr/local/google/home/kevmoo/github/kevmoo/codable.dart/pkgs/codable), [`pkgs/codable_builder`](file:///usr/local/google/home/kevmoo/github/kevmoo/codable.dart/pkgs/codable_builder), [`pkgs/codable_benchmarks`](file:///usr/local/google/home/kevmoo/github/kevmoo/codable.dart/pkgs/codable_benchmarks)  
-**SDK Substrate**: Custom `dart-sdk` (`3.14.0-edge.8045fcd2294` with native C++ `JsonTokenWriter`, `JsonTokenReader`, `JsonKeyOptions`, PR #7 integer fast-path, and PR #8 IEEE-754 double fast-path escalations)  
+**SDK Substrates**:
+- **Stock Baseline (`Tier 0 / Tier 2`)**: Merge-base SDK (`3.14.0-edge.5237faee608`, built from the exact fork parent commit)
+- **New SDK (`Tier 1 / Tier 3`)**: Fork HEAD (`3.14.0-edge.8045fcd2294`, adding native `dart:convert` `JsonTokenReader`, `JsonUtf8TokenWriter`, `JsonKeyOptions`, 16-digit double fast-path, 32 KB stringifier buffers, and Eisel-Lemire float parser)  
 **Raw Telemetry JSON**: [`doc/benchmarks/cross_language_benchmark_matrix.json`](file:///usr/local/google/home/kevmoo/github/kevmoo/codable.dart/doc/benchmarks/cross_language_benchmark_matrix.json) & [`json_compare_bench/results.json`](file:///usr/local/google/home/kevmoo/github/kevmoo/json_compare_bench/results.json)
 
 ---
 
 ## 1. Executive Summary
 
-This report documents 100% locally measured and mathematically verified performance metrics of Dart's native serialization architecture (`package:codable` + `dart:convert` native kernels) compared against `package:json_serializable` (on both Stock Dart 3.12 and New Dart 3.14), native `dart:convert` (`jsonDecode`), Rust (`serde_json`), Go (`encoding/json`), Node.js (V8 C++ engine), and C++ (`simdjson`).
+This report documents 100% locally measured and mathematically verified performance metrics of Dart's native serialization architecture (`package:codable` + `dart:convert` native kernels) compared against `package:json_serializable` (on both Stock merge-base `5237faee608` and New SDK `8045fcd2294`), native `dart:convert` (`jsonDecode`), Rust (`serde_json`), Go (`encoding/json`), Node.js (V8 C++ engine), and C++ (`simdjson`).
 
-All benchmarks were compiled and executed natively on **`kevmoo.c.googlers.com`** (`taskset -c 16` single-core isolation) under identical system load to guarantee hardware, kernel, and memory bus consistency.
+All benchmarks were compiled and executed serially on **`kevmoo.c.googlers.com`** (`taskset -c 2` single-core isolation) on an uncontended machine (`loadavg < 1.0`) to guarantee hardware, kernel, and memory bus consistency.
 
 ---
 
 ## 2. Multi-Language Macro Benchmark Matrix (`json_compare_bench`)
 
-### 2.1 DECODE — Apples-to-Apples Typed Struct Matrix
+Direct throughput and latency comparisons across compiled native binaries on `kevmoo.c.googlers.com`:
 
-Strongly-typed domain model deserialization (UTF-8 bytes -> Typed Structs). Each cell displays **Throughput (`MiB/s`)** and **Single-Pass Latency (`ms`/`µs`)**. Medals (🥇, 🥈, 🥉) rank the top 3 typed struct contenders per dataset.
+### 2.1 DECODE Matrix
 
 <!-- mdformat off(prevent table wrapping) -->
-| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Stock Dart + `json_serializable` (Typed) | New Dart + `json_serializable` (Typed) | New Dart + `package:codable` (Typed) | `codable` vs Stock `json_serializable` | `codable` vs Go `encoding/json` |
+| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Stock Dart + `json_serializable` (Typed) | New Dart + `json_serializable` (Typed) | New Dart + `package:codable` (Typed) | Node.js V8 (`Untyped JS Object`) | New Dart `std_convert` (`Untyped Map/DOM`) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`small.json`** (546 B) | 🥇 **383.4 MB/s (1.36 µs)** | 63.9 MB/s (8.15 µs) | 🥉 **174.0 MB/s (2.99 µs)** | 🥈 **177.9 MB/s (2.93 µs)** | 173.6 MB/s (3.00 µs) | **1.00x** | **2.72x** |
-| **`twitter.json`** (616.7 KB) | 🥇 **465.9 MB/s (1.29 ms)** | 87.5 MB/s (6.88 ms) | 🥉 **195.6 MB/s (3.08 ms)** | 🥈 **204.8 MB/s (2.94 ms)** | 175.3 MB/s (3.44 ms) | **0.90x** | **2.00x** |
-| **`citm_catalog.json`** (1.65 MB) | 🥇 **736.5 MB/s (2.24 ms)** | 83.3 MB/s (19.78 ms) | 🥉 **286.3 MB/s (5.75 ms)** | 274.8 MB/s (5.99 ms) | 🥈 **375.7 MB/s (4.38 ms)** | **1.31x** | **4.51x** |
-| **`canada.json`** (2.15 MB) | 🥇 **436.9 MB/s (4.91 ms)** | 49.5 MB/s (43.40 ms) | 60.1 MB/s (35.72 ms) | 🥉 **78.0 MB/s (27.51 ms)** | 🥈 **190.8 MB/s (11.25 ms)** | **3.17x** | **3.86x** |
+| **`small.json`** (546 B) | 🥇 **419.1 MB/s (1.24 µs)** | 63.2 MB/s (8.24 µs) | 178.0 MB/s (2.93 µs) | 179.4 MB/s (2.90 µs) | 171.3 MB/s (3.04 µs) | 🥈 **253.8 MB/s (2.05 µs)** | 🥉 **208.6 MB/s (2.50 µs)** |
+| **`twitter.json`** (616.7 KB) | 🥇 **455.7 MB/s (1.32 ms)** | 90.4 MB/s (6.67 ms) | 202.5 MB/s (2.97 ms) | 194.9 MB/s (3.09 ms) | 178.3 MB/s (3.38 ms) | 🥈 **434.6 MB/s (1.39 ms)** | 🥉 **221.8 MB/s (2.72 ms)** |
+| **`citm_catalog.json`** (1.65 MB) | 🥇 **745.1 MB/s (2.21 ms)** | 81.8 MB/s (20.14 ms) | 284.7 MB/s (5.79 ms) | 281.9 MB/s (5.84 ms) | 🥉 **380.6 MB/s (4.33 ms)** | 🥈 **479.5 MB/s (3.43 ms)** | 332.4 MB/s (4.96 ms) |
+| **`canada.json`** (2.15 MB) | 🥇 **416.1 MB/s (5.16 ms)** | 46.5 MB/s (46.12 ms) | 62.6 MB/s (34.29 ms) | 81.3 MB/s (26.40 ms) | 🥉 **193.6 MB/s (11.09 ms)** | 🥈 **225.6 MB/s (9.51 ms)** | 136.8 MB/s (15.69 ms) |
 <!-- mdformat on -->
 
-### 2.2 ENCODE — Apples-to-Apples Typed Struct Matrix
-
-Strongly-typed domain model serialization (Typed Structs -> UTF-8 bytes). Each cell displays **Throughput (`MiB/s`)** and **Single-Pass Latency (`ms`/`µs`)**. Medals (🥇, 🥈, 🥉) rank the top 3 typed struct contenders per dataset.
+### 2.2 ENCODE Matrix
 
 <!-- mdformat off(prevent table wrapping) -->
-| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Stock Dart + `json_serializable` (Typed) | New Dart + `json_serializable` (Typed) | New Dart + `package:codable` (Typed) | `codable` vs Stock `json_serializable` | `codable` vs Go `encoding/json` |
+| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Stock Dart + `json_serializable` (Typed) | New Dart + `json_serializable` (Typed) | New Dart + `package:codable` (Typed) | Node.js V8 (`Untyped JS Object`) | New Dart `std_convert` (`Untyped Map/DOM`) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`small.json`** (546 B) | 🥇 **940.2 MB/s (554 ns)** | 🥈 **398.1 MB/s (1.31 µs)** | 106.4 MB/s (4.89 µs) | 92.7 MB/s (5.62 µs) | 🥉 **297.1 MB/s (1.75 µs)** | **2.79x** | **0.75x** |
-| **`twitter.json`** (616.7 KB) | 🥇 **1261.7 MB/s (477.34 µs)** | 🥈 **732.7 MB/s (821.99 µs)** | 114.0 MB/s (5.28 ms) | 188.6 MB/s (3.19 ms) | 🥉 **377.3 MB/s (1.60 ms)** | **3.31x** | **0.52x** |
-| **`citm_catalog.json`** (1.65 MB) | 🥇 **2994.5 MB/s (550.09 µs)** | 🥈 **1291.5 MB/s (1.28 ms)** | 196.4 MB/s (8.39 ms) | 277.2 MB/s (5.94 ms) | 🥉 **594.2 MB/s (2.77 ms)** | **3.03x** | **0.46x** |
-| **`canada.json`** (2.15 MB) | 🥇 **658.1 MB/s (3.26 ms)** | 🥈 **156.1 MB/s (13.75 ms)** | 48.5 MB/s (44.25 ms) | 🥉 **101.5 MB/s (21.15 ms)** | 88.3 MB/s (24.32 ms) | **1.82x** | **0.57x** |
+| **`small.json`** (546 B) | 🥇 **927.8 MB/s (561 ns)** | 🥈 **392.9 MB/s (1.33 µs)** | 109.8 MB/s (4.74 µs) | 93.0 MB/s (5.60 µs) | 313.0 MB/s (1.66 µs) | 🥉 **352.7 MB/s (1.48 µs)** | 116.2 MB/s (4.48 µs) |
+| **`twitter.json`** (616.7 KB) | 🥇 **1259.6 MB/s (478.13 µs)** | 🥈 **724.2 MB/s (831.63 µs)** | 113.5 MB/s (5.31 ms) | 201.5 MB/s (2.99 ms) | 🥉 **389.8 MB/s (1.54 ms)** | 356.3 MB/s (1.69 ms) | 255.2 MB/s (2.36 ms) |
+| **`citm_catalog.json`** (1.65 MB) | 🥇 **2817.3 MB/s (584.66 µs)** | 🥈 **1290.4 MB/s (1.28 ms)** | 197.6 MB/s (8.34 ms) | 287.8 MB/s (5.72 ms) | 🥉 **579.9 MB/s (2.84 ms)** | 501.2 MB/s (3.29 ms) | 433.1 MB/s (3.80 ms) |
+| **`canada.json`** (2.15 MB) | 🥇 **686.0 MB/s (3.13 ms)** | 🥈 **158.0 MB/s (13.59 ms)** | 47.0 MB/s (45.72 ms) | 99.2 MB/s (21.64 ms) | 89.6 MB/s (23.97 ms) | 🥉 **131.2 MB/s (16.36 ms)** | 97.9 MB/s (21.92 ms) |
 <!-- mdformat on -->
 
-### 2.3 DECODE — Complete Cross-Language Matrix (Typed Structs + Untyped DOM)
-
-<!-- mdformat off(prevent table wrapping) -->
-| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Node.js V8 (`Untyped JS Object`) | Stock Dart + `json_serializable` (`Typed`) | New Dart + `json_serializable` (`Typed`) | New Dart + `package:codable` (`Typed`) | Stock Dart `std_convert` (`Untyped Map/DOM`) | New Dart `std_convert` (`Untyped Map/DOM`) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`small.json`** (546 B) | 🥇 **383.4 MB/s (1.36 µs)** | 63.9 MB/s (8.15 µs) | 🥈 **257.6 MB/s (2.02 µs)** | 174.0 MB/s (2.99 µs) | 177.9 MB/s (2.93 µs) | 173.6 MB/s (3.00 µs) | 204.5 MB/s (2.55 µs) | 🥉 **216.2 MB/s (2.41 µs)** |
-| ↳ *% of Winner* | **100.0%** | 16.7% | 67.2% | 45.4% | 46.4% | 45.3% | 53.3% | 56.4% |
-| **`twitter.json`** (616.7 KB) | 🥇 **465.9 MB/s (1.29 ms)** | 87.5 MB/s (6.88 ms) | 🥈 **421.1 MB/s (1.43 ms)** | 195.6 MB/s (3.08 ms) | 204.8 MB/s (2.94 ms) | 175.3 MB/s (3.44 ms) | 🥉 **235.8 MB/s (2.55 ms)** | 229.3 MB/s (2.63 ms) |
-| ↳ *% of Winner* | **100.0%** | 18.8% | 90.4% | 42.0% | 44.0% | 37.6% | 50.6% | 49.2% |
-| **`citm_catalog.json`** (1.65 MB) | 🥇 **736.5 MB/s (2.24 ms)** | 83.3 MB/s (19.78 ms) | 🥈 **476.3 MB/s (3.46 ms)** | 286.3 MB/s (5.75 ms) | 274.8 MB/s (5.99 ms) | 🥉 **375.7 MB/s (4.38 ms)** | 321.9 MB/s (5.12 ms) | 329.9 MB/s (4.99 ms) |
-| ↳ *% of Winner* | **100.0%** | 11.3% | 64.7% | 38.9% | 37.3% | 51.0% | 43.7% | 44.8% |
-| **`canada.json`** (2.15 MB) | 🥇 **436.9 MB/s (4.91 ms)** | 49.5 MB/s (43.40 ms) | 🥈 **227.8 MB/s (9.42 ms)** | 60.1 MB/s (35.72 ms) | 78.0 MB/s (27.51 ms) | 🥉 **190.8 MB/s (11.25 ms)** | 81.4 MB/s (26.37 ms) | 139.4 MB/s (15.40 ms) |
-| ↳ *% of Winner* | **100.0%** | 11.3% | 52.1% | 13.8% | 17.9% | 43.7% | 18.6% | 31.9% |
-<!-- mdformat on -->
-
-### 2.4 ENCODE — Complete Cross-Language Matrix (Typed Structs + Untyped DOM)
-
-<!-- mdformat off(prevent table wrapping) -->
-| Dataset | Rust (`serde_json` Typed) | Go (`encoding/json` Typed) | Node.js V8 (`Untyped JS Object`) | Stock Dart + `json_serializable` (`Typed`) | New Dart + `json_serializable` (`Typed`) | New Dart + `package:codable` (`Typed`) | Stock Dart `std_convert` (`Untyped Map/DOM`) | New Dart `std_convert` (`Untyped Map/DOM`) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`small.json`** (546 B) | 🥇 **940.2 MB/s (554 ns)** | 🥈 **398.1 MB/s (1.31 µs)** | 🥉 **349.3 MB/s (1.49 µs)** | 106.4 MB/s (4.89 µs) | 92.7 MB/s (5.62 µs) | 297.1 MB/s (1.75 µs) | 141.6 MB/s (3.68 µs) | 117.1 MB/s (4.45 µs) |
-| ↳ *% of Winner* | **100.0%** | 42.3% | 37.1% | 11.3% | 9.9% | 31.6% | 15.1% | 12.5% |
-| **`twitter.json`** (616.7 KB) | 🥇 **1261.7 MB/s (477.34 µs)** | 🥈 **732.7 MB/s (821.99 µs)** | 353.1 MB/s (1.71 ms) | 114.0 MB/s (5.28 ms) | 188.6 MB/s (3.19 ms) | 🥉 **377.3 MB/s (1.60 ms)** | 129.5 MB/s (4.65 ms) | 249.8 MB/s (2.41 ms) |
-| ↳ *% of Winner* | **100.0%** | 58.1% | 28.0% | 9.0% | 14.9% | 29.9% | 10.3% | 19.8% |
-| **`citm_catalog.json`** (1.65 MB) | 🥇 **2994.5 MB/s (550.09 µs)** | 🥈 **1291.5 MB/s (1.28 ms)** | 502.8 MB/s (3.28 ms) | 196.4 MB/s (8.39 ms) | 277.2 MB/s (5.94 ms) | 🥉 **594.2 MB/s (2.77 ms)** | 262.3 MB/s (6.28 ms) | 421.7 MB/s (3.91 ms) |
-| ↳ *% of Winner* | **100.0%** | 43.1% | 16.8% | 6.6% | 9.3% | 19.8% | 8.8% | 14.1% |
-| **`canada.json`** (2.15 MB) | 🥇 **658.1 MB/s (3.26 ms)** | 🥈 **156.1 MB/s (13.75 ms)** | 🥉 **122.6 MB/s (17.51 ms)** | 48.5 MB/s (44.25 ms) | 101.5 MB/s (21.15 ms) | 88.3 MB/s (24.32 ms) | 47.7 MB/s (44.98 ms) | 97.8 MB/s (21.95 ms) |
-| ↳ *% of Winner* | **100.0%** | 23.7% | 18.6% | 7.4% | 15.4% | 13.4% | 7.3% | 14.9% |
-<!-- mdformat on -->
 
 ---
 

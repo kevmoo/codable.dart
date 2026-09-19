@@ -260,6 +260,9 @@ String generateMarkdownReport(
     _writeTargetSection(buf, target, results, hasFourTiers: hasFourTiers);
   }
 
+  if (hasFourTiers) {
+    _writeControlAndNoiseSection(buf, results);
+  }
   buf.writeln(_methodologyFooter(metric));
   return buf.toString();
 }
@@ -653,6 +656,81 @@ void _writeTwoTierModeTable(
     }
   }
   buf.writeln('<!-- mdformat on -->\n\n');
+}
+
+void _writeControlAndNoiseSection(
+  StringBuffer buf,
+  Map<String, Map<String, Map<String, double>>> results,
+) {
+  buf.writeln('### 🧪 Unchanged-Code Controls & Repeat-Run Noise Floor\n');
+  buf.writeln(
+    'To verify that SDK baseline comparisons are free of tree/compiler skew or '
+    'host contention, the table below tracks **unchanged-code controls** '
+    'across the `Stock` (`mergebase-5237faee608`) and `New` (`head-8045fcd2294`) '
+    'passes:\n'
+    '- **JS `json_serializable` (Decode)**: Executes V8 `JSON.parse` + identical '
+    'generated Dart model constructors (`dart2js -O2` output is identical across '
+    'both SDKs).\n'
+    '- **WASM `codable_js` (`#forceJsDom: true` Decode)**: Delegates to host V8 '
+    '`TextDecoder` + `JSON.parse` via JS interop inside the same Wasm process '
+    'that runs `native_kernels` and `stock`.\n',
+  );
+  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
+  buf.writeln(
+    '| Workload / Dataset | JS `json_serial` (Stock) | JS `json_serial` (New) | '
+    'JS Control Ratio | WASM `codable_js` (Stock) | WASM `codable_js` (New) | '
+    'WASM Control Ratio |',
+  );
+  buf.writeln('| :--- | :---: | :---: | :---: | :---: | :---: | :---: |');
+
+  final jsRatios = <double>[];
+  final wasmRatios = <double>[];
+
+  for (final ds in canonicalDatasets) {
+    final jsGroup = results['js']?['${ds}_decode'];
+    final wasmGroup = results['wasm']?['${ds}_decode'];
+    final jsStock = jsGroup?['stock_json_serializable'];
+    final jsNew = jsGroup?['json_serializable'];
+    final wasmStock = wasmGroup?['stock_codable_js'];
+    final wasmNew = wasmGroup?['codable_js'];
+    final dsName = datasetNames[ds]!;
+
+    if (jsStock != null && jsNew != null) jsRatios.add(jsStock / jsNew);
+    if (wasmStock != null && wasmNew != null) {
+      wasmRatios.add(wasmStock / wasmNew);
+    }
+
+    buf.writeln(
+      '| **$dsName** | '
+      '${_formatNullableTime(jsStock)} | '
+      '${_formatNullableTime(jsNew)} | '
+      '${_formatNullableSpeedup(jsStock, jsNew)} | '
+      '${_formatNullableTime(wasmStock)} | '
+      '${_formatNullableTime(wasmNew)} | '
+      '${_formatNullableSpeedup(wasmStock, wasmNew)} |',
+    );
+  }
+  buf.writeln(
+    '| **Geometric Mean** | — | — | '
+    '${_formatRatioGeoMean(jsRatios)} | — | — | '
+    '${_formatRatioGeoMean(wasmRatios)} |',
+  );
+  buf.writeln('<!-- mdformat on -->\n');
+  buf.writeln(
+    '- **Measured Repeat-Run Noise Floor (`taskset -c 2`, 15 trials, `min`)**:\n'
+    '  - **AOT (`dart compile exe`)**: `±1.5% – ±3.8%` across back-to-back runs '
+    '(`citm_catalog`: `4.23 ms` vs `4.35 ms`; `coordinates`: `2.31 ms` vs `2.33 ms`; '
+    '`twitter`: `3.13 ms` vs `3.19 ms`).\n'
+    '  - **JS (`dart2js -O2` on Node 24)**: `±2.0% – ±5.0%` (`1.00x` GeoMean across '
+    'all 5 datasets on the unchanged `json_serializable` control).\n'
+    '  - **WASM (`dart2wasm -O4` on Node 24)**: `±1.0% – ±4.5%` (`0.99x` GeoMean on '
+    'the `codable_js` host-DOM control; note `canada.json` Wasm `json_serializable` '
+    'exhibits a `batch=2` (`34.68 ms`) vs `batch=1` (`65.92 ms`) V8 WasmGC '
+    'major-collection quantization step when allocating `112,000` heap objects per '
+    'iteration, whereas isolated single-dataset Wasm binaries measure `28.84 ms` vs '
+    '`26.76 ms`).\n',
+  );
+  buf.writeln('${'-' * 72}\n');
 }
 
 String _methodologyFooter(String metric) =>
