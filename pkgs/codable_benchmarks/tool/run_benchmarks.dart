@@ -11,6 +11,7 @@ Future<void> main(List<String> args) async {
   final parser = ArgParser()
     ..addOption(
       'pin-cpu',
+      defaultsTo: Platform.isLinux ? '2' : null,
       help: 'CPU core to pin to using taskset (Linux only).',
     )
     ..addOption(
@@ -58,7 +59,11 @@ Future<void> main(List<String> args) async {
   }
 
   final rawStockSdk =
-      results.option('stock-sdk') ?? Platform.environment['CODABLE_STOCK_SDK'];
+      results.option('stock-sdk') ??
+      Platform.environment['CODABLE_STOCK_SDK'] ??
+      (File('$home/github/flutter/bin/dart').existsSync()
+          ? '$home/github/flutter/bin/dart'
+          : null);
   ({String sdkRoot, String dartBin})? stockSdk;
   if (rawStockSdk != null && rawStockSdk.isNotEmpty) {
     stockSdk = _resolveStockSdk(rawStockSdk, home);
@@ -131,7 +136,7 @@ Future<void> main(List<String> args) async {
   print('\n📊 Generating reports...');
   await _runCheckedProcess(
     sdkPath,
-    ['run', 'tool/generate_report.dart', '--metric', 'min'],
+    ['run', 'tool/generate_report.dart'],
     workingDirectory: benchmarkPkgDir,
     errorLabel: 'generate_report.dart',
   );
