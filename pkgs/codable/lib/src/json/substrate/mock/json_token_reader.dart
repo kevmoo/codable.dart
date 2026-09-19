@@ -348,7 +348,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         }
       }
     } else {
-      if (_hasReadRoot) return JsonTokenType.endOfDocument;
+      if (_hasReadRoot) {
+        throw FormatException(
+          'Unexpected trailing characters after root value',
+          _bytes,
+          _offset,
+        );
+      }
       return _valueTokenType(_bytes[_offset]);
     }
     return JsonTokenType.none;
@@ -462,7 +468,14 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       return false;
     }
     if (_stackLength == 0) {
-      return !_hasReadRoot;
+      if (_hasReadRoot) {
+        throw FormatException(
+          'Unexpected trailing characters after root value',
+          _bytes,
+          _offset,
+        );
+      }
+      return true;
     }
 
     final closeChar = _topType == 0 ? 125 : 93;
@@ -510,7 +523,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     _beforeReadingName();
 
     var i = _offset;
-    if (_bytes[i] != 34) {
+    if (i >= _bytes.length || _bytes[i] != 34) {
       throw FormatException('Expected string at offset $i');
     }
     final start = i + 1;
