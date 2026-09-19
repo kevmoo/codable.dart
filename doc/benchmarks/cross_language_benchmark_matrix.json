@@ -943,5 +943,1115 @@
       "runtime": "dart_stock_aot",
       "semantic_category": "typed_struct"
     }
-  ]
+  ],
+  "generated_at": "2026-09-19T05:34:15.850224Z",
+  "host": {
+    "hostname": "kevmoo.c.googlers.com",
+    "cpu": "AMD EPYC 7B13 (64 logical cores)",
+    "ram": "117.9 GB",
+    "os": "linux (Linux 7.1.6-1rodete1-amd64 #1 SMP PREEMPT_DYNAMIC Debian 7.1.6-1rodete1 (2026-08-05))",
+    "architecture": "x86_64"
+  },
+  "datasets": {
+    "small.json": {
+      "file_bytes": 546,
+      "decode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 385.267404746363,
+          "latency_ms": 0.0014,
+          "is_robust_stable": false,
+          "metrics": {
+            "mean_ns": 1444.1261500000003,
+            "median_ns": 1351.54485,
+            "min_ns": 1270.7979,
+            "max_ns": 2108.54835,
+            "stddev_ns": 239.0835246339543,
+            "cv": 0.16555584471201099,
+            "mad_ns": 56.365549999999985,
+            "robust_cv": 0.06183114413850194,
+            "iqr_ns": 153.48947499999986,
+            "is_robust_stable": false,
+            "p95_ns": 1940.5630499999997,
+            "p99_ns": 2074.95129,
+            "ops_per_sec": 692460.2812572848,
+            "is_stable": false
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 62.9818119354576,
+          "latency_ms": 0.0083,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 8359.8132,
+            "median_ns": 8267.56425,
+            "min_ns": 7975.9213,
+            "max_ns": 9055.78625,
+            "stddev_ns": 307.2697520316786,
+            "cv": 0.036755576312599736,
+            "mad_ns": 151.70994999999948,
+            "robust_cv": 0.02720573618402775,
+            "iqr_ns": 293.47249999999985,
+            "is_robust_stable": true,
+            "p95_ns": 8919.190315,
+            "p99_ns": 9028.467063,
+            "ops_per_sec": 119619.89772690136,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 247.23242642373467,
+          "latency_ms": 0.0021,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 2181.62088,
+            "median_ns": 2106.1403,
+            "min_ns": 2044.09085,
+            "max_ns": 2735.71025,
+            "stddev_ns": 191.134399742025,
+            "cv": 0.08761118922827005,
+            "mad_ns": 33.38850000000002,
+            "robust_cv": 0.023503557716454137,
+            "iqr_ns": 84.08674999999994,
+            "is_robust_stable": true,
+            "p95_ns": 2568.0063849999997,
+            "p99_ns": 2702.169477,
+            "ops_per_sec": 458374.7841650654,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 205.94703136741848,
+          "latency_ms": 0.0025,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 2583.19,
+            "median_ns": 2528.35,
+            "min_ns": 2454.15,
+            "max_ns": 3215.25,
+            "stddev_ns": 186.9477831985636,
+            "cv": 0.07237089923643386,
+            "mad_ns": 32.20000000000027,
+            "robust_cv": 0.01888176874246066,
+            "iqr_ns": 65.59999999999991,
+            "is_robust_stable": true,
+            "p95_ns": 2869.064999999999,
+            "p99_ns": 3146.013,
+            "ops_per_sec": 387118.2530127478,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 173.90784588541405,
+          "latency_ms": 0.003,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3036.1133333333337,
+            "median_ns": 2994.15,
+            "min_ns": 2898.85,
+            "max_ns": 3274.55,
+            "stddev_ns": 115.3524249956669,
+            "cv": 0.03799345160446367,
+            "mad_ns": 31.34999999999991,
+            "robust_cv": 0.015523440709383251,
+            "iqr_ns": 123.15000000000009,
+            "is_robust_stable": true,
+            "p95_ns": 3241.545,
+            "p99_ns": 3267.949,
+            "ops_per_sec": 329368.46889773547,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 172.102981857121,
+          "latency_ms": 0.003,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3043.4633333333336,
+            "median_ns": 3025.55,
+            "min_ns": 2977.4,
+            "max_ns": 3330.55,
+            "stddev_ns": 82.95724257253313,
+            "cv": 0.027257513394017056,
+            "mad_ns": 22.450000000000273,
+            "robust_cv": 0.011001097321148352,
+            "iqr_ns": 36.625,
+            "is_robust_stable": true,
+            "p95_ns": 3139.4849999999997,
+            "p99_ns": 3292.337,
+            "ops_per_sec": 328573.04014395876,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      },
+      "encode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 918.8084795078981,
+          "latency_ms": 0.0006,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 575.1789866666667,
+            "median_ns": 566.71895,
+            "min_ns": 546.3295,
+            "max_ns": 638.3204,
+            "stddev_ns": 24.838574061962465,
+            "cv": 0.04318407771798026,
+            "mad_ns": 8.005550000000085,
+            "robust_cv": 0.02094341195049173,
+            "iqr_ns": 18.636724999999956,
+            "is_robust_stable": true,
+            "p95_ns": 625.596185,
+            "p99_ns": 635.7755569999999,
+            "ops_per_sec": 1738589.2447067606,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 388.2189340618764,
+          "latency_ms": 0.0013,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1353.7705866666665,
+            "median_ns": 1341.2694,
+            "min_ns": 1280.6414,
+            "max_ns": 1551.99935,
+            "stddev_ns": 72.11609164063543,
+            "cv": 0.05327054107313996,
+            "mad_ns": 28.387950000000046,
+            "robust_cv": 0.031379210373397075,
+            "iqr_ns": 50.3442500000001,
+            "is_robust_stable": true,
+            "p95_ns": 1468.399085,
+            "p99_ns": 1535.279297,
+            "ops_per_sec": 738677.5941574109,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 343.1421555502289,
+          "latency_ms": 0.0015,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1596.9693633333334,
+            "median_ns": 1517.4649,
+            "min_ns": 1485.11585,
+            "max_ns": 2367.38235,
+            "stddev_ns": 227.96789198620277,
+            "cv": 0.14275032271775606,
+            "mad_ns": 21.657000000000153,
+            "robust_cv": 0.021159414099133512,
+            "iqr_ns": 46.784025000000156,
+            "is_robust_stable": true,
+            "p95_ns": 1977.5540999999994,
+            "p99_ns": 2289.4166999999998,
+            "ops_per_sec": 626186.0890760691,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 114.67909763306483,
+          "latency_ms": 0.0045,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 4649.306666666667,
+            "median_ns": 4540.55,
+            "min_ns": 4422.05,
+            "max_ns": 5166.8,
+            "stddev_ns": 267.2099314254262,
+            "cv": 0.05747307084327114,
+            "mad_ns": 104.65000000000055,
+            "robust_cv": 0.03417077006089588,
+            "iqr_ns": 280.02500000000055,
+            "is_robust_stable": true,
+            "p95_ns": 5125.92,
+            "p99_ns": 5158.624,
+            "ops_per_sec": 215085.8335866566,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 91.47874716849888,
+          "latency_ms": 0.0057,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 5684.7,
+            "median_ns": 5692.1,
+            "min_ns": 5559.8,
+            "max_ns": 5846.0,
+            "stddev_ns": 88.31014745122522,
+            "cv": 0.015534706748152976,
+            "mad_ns": 81.30000000000018,
+            "robust_cv": 0.02117590695876746,
+            "iqr_ns": 146.625,
+            "is_robust_stable": true,
+            "p95_ns": 5799.52,
+            "p99_ns": 5836.704,
+            "ops_per_sec": 175910.77805337132,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 303.88455019422963,
+          "latency_ms": 0.0017,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1740.2233333333331,
+            "median_ns": 1713.5,
+            "min_ns": 1662.25,
+            "max_ns": 1940.1,
+            "stddev_ns": 76.36496921893912,
+            "cv": 0.04388228094417333,
+            "mad_ns": 32.049999999999955,
+            "robust_cv": 0.027731152611613616,
+            "iqr_ns": 64.12499999999977,
+            "is_robust_stable": true,
+            "p95_ns": 1890.995,
+            "p99_ns": 1930.279,
+            "ops_per_sec": 574638.8873458771,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      }
+    },
+    "twitter.json": {
+      "file_bytes": 631514,
+      "decode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 471.2569411642971,
+          "latency_ms": 1.28,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1290202.5783333336,
+            "median_ns": 1277983.685,
+            "min_ns": 1234711.59,
+            "max_ns": 1371423.425,
+            "stddev_ns": 45985.706628774315,
+            "cv": 0.03564223742924001,
+            "mad_ns": 37094.29000000004,
+            "robust_cv": 0.04303340879817261,
+            "iqr_ns": 73776.23999999976,
+            "is_robust_stable": true,
+            "p95_ns": 1365060.4285,
+            "p99_ns": 1370150.8257,
+            "ops_per_sec": 775.0720830923982,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 88.54923368138492,
+          "latency_ms": 6.8,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 6840744.778000001,
+            "median_ns": 6801399.145,
+            "min_ns": 6642805.76,
+            "max_ns": 7399375.045,
+            "stddev_ns": 191061.13226486312,
+            "cv": 0.02792987291081525,
+            "mad_ns": 87947.43999999948,
+            "robust_cv": 0.019171184011433168,
+            "iqr_ns": 163781.54000000097,
+            "is_robust_stable": true,
+            "p95_ns": 7163284.1095,
+            "p99_ns": 7352156.8579,
+            "ops_per_sec": 146.18291318454447,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 427.028672745756,
+          "latency_ms": 1.41,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1424556.682,
+            "median_ns": 1410347.175,
+            "min_ns": 1380492.275,
+            "max_ns": 1494679.62,
+            "stddev_ns": 37518.3315638359,
+            "cv": 0.02633684713139122,
+            "mad_ns": 20177.39500000002,
+            "robust_cv": 0.021211093521706827,
+            "iqr_ns": 65737.91999999993,
+            "is_robust_stable": true,
+            "p95_ns": 1480236.2785,
+            "p99_ns": 1491790.9517,
+            "ops_per_sec": 701.9727699399468,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 232.67020502536315,
+          "latency_ms": 2.59,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 2608088.0,
+            "median_ns": 2588465.0,
+            "min_ns": 2560820.0,
+            "max_ns": 2723460.0,
+            "stddev_ns": 45859.00171799893,
+            "cv": 0.01758337974715536,
+            "mad_ns": 10845.0,
+            "robust_cv": 0.0062117111879048,
+            "iqr_ns": 48082.5,
+            "is_robust_stable": true,
+            "p95_ns": 2685142.0,
+            "p99_ns": 2715796.4,
+            "ops_per_sec": 383.4226452481665,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 200.58072895796994,
+          "latency_ms": 3.0,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3014836.3333333335,
+            "median_ns": 3002575.0,
+            "min_ns": 2927005.0,
+            "max_ns": 3140755.0,
+            "stddev_ns": 64250.46032260522,
+            "cv": 0.021311425636020224,
+            "mad_ns": 30775.0,
+            "robust_cv": 0.015195961799455468,
+            "iqr_ns": 50225.0,
+            "is_robust_stable": true,
+            "p95_ns": 3133314.0,
+            "p99_ns": 3139266.8,
+            "ops_per_sec": 331.6929642062383,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 175.42732789246338,
+          "latency_ms": 3.43,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3499811.6666666665,
+            "median_ns": 3433095.0,
+            "min_ns": 3369520.0,
+            "max_ns": 3852630.0,
+            "stddev_ns": 137925.67064839497,
+            "cv": 0.03940945507498117,
+            "mad_ns": 29035.0,
+            "robust_cv": 0.012538916342250942,
+            "iqr_ns": 78827.5,
+            "is_robust_stable": true,
+            "p95_ns": 3747763.0,
+            "p99_ns": 3831656.6,
+            "ops_per_sec": 285.7296606912658,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      },
+      "encode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 1245.3677686035546,
+          "latency_ms": 0.48,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 494271.1986666666,
+            "median_ns": 483599.06,
+            "min_ns": 466782.015,
+            "max_ns": 539424.055,
+            "stddev_ns": 24754.373112011195,
+            "cv": 0.05008257243955942,
+            "mad_ns": 12334.15499999997,
+            "robust_cv": 0.037813593357687574,
+            "iqr_ns": 38637.94750000001,
+            "is_robust_stable": true,
+            "p95_ns": 538060.245,
+            "p99_ns": 539151.2930000001,
+            "ops_per_sec": 2023.1808017492717,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 675.5329094064839,
+          "latency_ms": 0.89,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 894009.0440000001,
+            "median_ns": 891531.225,
+            "min_ns": 807466.735,
+            "max_ns": 1016318.515,
+            "stddev_ns": 53309.574343987246,
+            "cv": 0.059629793123197126,
+            "mad_ns": 22914.449999999953,
+            "robust_cv": 0.03810630813295399,
+            "iqr_ns": 38293.57500000007,
+            "is_robust_stable": true,
+            "p95_ns": 998681.35,
+            "p99_ns": 1012791.0819999999,
+            "ops_per_sec": 1118.5569169700702,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 335.51209280319364,
+          "latency_ms": 1.8,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1814690.4306666667,
+            "median_ns": 1795043.145,
+            "min_ns": 1656840.205,
+            "max_ns": 2021438.42,
+            "stddev_ns": 94860.04886519976,
+            "cv": 0.052273405569428624,
+            "mad_ns": 54810.73999999999,
+            "robust_cv": 0.04527044564380093,
+            "iqr_ns": 85092.91500000004,
+            "is_robust_stable": true,
+            "p95_ns": 1958383.4804999998,
+            "p99_ns": 2008827.4320999999,
+            "ops_per_sec": 551.0581767010409,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 241.88455666221256,
+          "latency_ms": 2.49,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 2475143.6666666665,
+            "median_ns": 2489860.0,
+            "min_ns": 2366120.0,
+            "max_ns": 2565285.0,
+            "stddev_ns": 72819.6236911714,
+            "cv": 0.029420362410412834,
+            "mad_ns": 64805.0,
+            "robust_cv": 0.0385884720426048,
+            "iqr_ns": 136200.0,
+            "is_robust_stable": true,
+            "p95_ns": 2560455.0,
+            "p99_ns": 2564319.0,
+            "ops_per_sec": 404.0169520126172,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 190.93289697094804,
+          "latency_ms": 3.15,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3157243.3333333335,
+            "median_ns": 3154295.0,
+            "min_ns": 3079500.0,
+            "max_ns": 3218200.0,
+            "stddev_ns": 38218.24651480843,
+            "cv": 0.012104941710165438,
+            "mad_ns": 22665.0,
+            "robust_cv": 0.010653134535609383,
+            "iqr_ns": 36617.5,
+            "is_robust_stable": true,
+            "p95_ns": 3213888.0,
+            "p99_ns": 3217337.6,
+            "ops_per_sec": 316.73200144007484,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 377.9625038052864,
+          "latency_ms": 1.59,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1592645.3333333333,
+            "median_ns": 1593435.0,
+            "min_ns": 1543120.0,
+            "max_ns": 1678770.0,
+            "stddev_ns": 37754.454678822185,
+            "cv": 0.02370550045803597,
+            "mad_ns": 30460.0,
+            "robust_cv": 0.028341285336395898,
+            "iqr_ns": 60542.5,
+            "is_robust_stable": true,
+            "p95_ns": 1642149.5,
+            "p99_ns": 1671445.9,
+            "ops_per_sec": 627.8861834901096,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      }
+    },
+    "citm_catalog.json": {
+      "file_bytes": 1727204,
+      "decode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 696.5372494453677,
+          "latency_ms": 2.36,
+          "is_robust_stable": false,
+          "metrics": {
+            "mean_ns": 2349037.7920000004,
+            "median_ns": 2364827.0,
+            "min_ns": 2175558.02,
+            "max_ns": 2591630.36,
+            "stddev_ns": 129395.81497733551,
+            "cv": 0.05508460332907896,
+            "mad_ns": 97378.37999999989,
+            "robust_cv": 0.0610502105177249,
+            "iqr_ns": 164755.7799999998,
+            "is_robust_stable": false,
+            "p95_ns": 2547709.448,
+            "p99_ns": 2582846.1776,
+            "ops_per_sec": 425.706220396134,
+            "is_stable": false
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 81.04991277187554,
+          "latency_ms": 20.32,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 20507359.88,
+            "median_ns": 20323156.9,
+            "min_ns": 19919087.12,
+            "max_ns": 21438434.58,
+            "stddev_ns": 425165.4278955632,
+            "cv": 0.020732333678418053,
+            "mad_ns": 239315.97999999672,
+            "robust_cv": 0.017458403420976154,
+            "iqr_ns": 549663.4800000004,
+            "is_robust_stable": true,
+            "p95_ns": 21211828.9,
+            "p99_ns": 21393113.444,
+            "ops_per_sec": 48.76298099080319,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 460.8395525394887,
+          "latency_ms": 3.57,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3603433.3680000002,
+            "median_ns": 3574324.48,
+            "min_ns": 3469944.7,
+            "max_ns": 3891615.88,
+            "stddev_ns": 128755.90370441708,
+            "cv": 0.03573145124531052,
+            "mad_ns": 81842.97999999998,
+            "robust_cv": 0.03394778588988092,
+            "iqr_ns": 145591.8700000001,
+            "is_robust_stable": true,
+            "p95_ns": 3839572.126,
+            "p99_ns": 3881207.1292,
+            "ops_per_sec": 277.5131098247631,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 316.40224625319644,
+          "latency_ms": 5.21,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 5241922.666666667,
+            "median_ns": 5206000.0,
+            "min_ns": 5028320.0,
+            "max_ns": 5648600.0,
+            "stddev_ns": 180336.26112930046,
+            "cv": 0.03440269393443305,
+            "mad_ns": 109760.0,
+            "robust_cv": 0.03125819746446407,
+            "iqr_ns": 191220.0,
+            "is_robust_stable": true,
+            "p95_ns": 5538966.0,
+            "p99_ns": 5626673.2,
+            "ops_per_sec": 190.76969722559812,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 278.91624571499653,
+          "latency_ms": 5.91,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 5951582.666666667,
+            "median_ns": 5905680.0,
+            "min_ns": 5743440.0,
+            "max_ns": 6137520.0,
+            "stddev_ns": 127109.09956561313,
+            "cv": 0.021357192982888327,
+            "mad_ns": 84560.0,
+            "robust_cv": 0.021228487828666636,
+            "iqr_ns": 225460.0,
+            "is_robust_stable": true,
+            "p95_ns": 6124780.0,
+            "p99_ns": 6134972.0,
+            "ops_per_sec": 168.02253383805808,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 368.9198176877737,
+          "latency_ms": 4.46,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 4534032.0,
+            "median_ns": 4464900.0,
+            "min_ns": 4373440.0,
+            "max_ns": 4997480.0,
+            "stddev_ns": 178190.95741046217,
+            "cv": 0.039300771898050604,
+            "mad_ns": 28620.0,
+            "robust_cv": 0.009503463011489618,
+            "iqr_ns": 79320.0,
+            "is_robust_stable": true,
+            "p95_ns": 4923154.0,
+            "p99_ns": 4982614.8,
+            "ops_per_sec": 220.55424399298462,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      },
+      "encode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 2960.8309724808964,
+          "latency_ms": 0.56,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 564835.2039999999,
+            "median_ns": 556326.96,
+            "min_ns": 542309.34,
+            "max_ns": 684109.36,
+            "stddev_ns": 35068.227035217424,
+            "cv": 0.0620857672943796,
+            "mad_ns": 11358.79999999993,
+            "robust_cv": 0.030270970294159205,
+            "iqr_ns": 20955.57999999984,
+            "is_robust_stable": true,
+            "p95_ns": 609379.5859999999,
+            "p99_ns": 669163.4051999999,
+            "ops_per_sec": 1770.4278928053502,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 1259.0515658509566,
+          "latency_ms": 1.31,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 1321153.1706666665,
+            "median_ns": 1308278.5,
+            "min_ns": 1274072.48,
+            "max_ns": 1470982.68,
+            "stddev_ns": 48447.60939533392,
+            "cv": 0.03667069834975062,
+            "mad_ns": 17518.219999999972,
+            "robust_cv": 0.019852434303552307,
+            "iqr_ns": 34903.0,
+            "is_robust_stable": true,
+            "p95_ns": 1400592.6539999999,
+            "p99_ns": 1456904.6748,
+            "ops_per_sec": 756.9145063591608,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 488.4856820741629,
+          "latency_ms": 3.37,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3501268.8453333327,
+            "median_ns": 3372033.52,
+            "min_ns": 3249357.32,
+            "max_ns": 3942334.28,
+            "stddev_ns": 242455.24991002987,
+            "cv": 0.06924782432322683,
+            "mad_ns": 92027.3999999999,
+            "robust_cv": 0.0404621788101323,
+            "iqr_ns": 403378.27,
+            "is_robust_stable": true,
+            "p95_ns": 3894403.88,
+            "p99_ns": 3932748.1999999997,
+            "ops_per_sec": 285.6107440400786,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 414.08118121292443,
+          "latency_ms": 3.98,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3990350.6666666665,
+            "median_ns": 3977940.0,
+            "min_ns": 3836680.0,
+            "max_ns": 4426580.0,
+            "stddev_ns": 152487.18988195446,
+            "cv": 0.03821398233387203,
+            "mad_ns": 91400.0,
+            "robust_cv": 0.03406528001930647,
+            "iqr_ns": 154260.0,
+            "is_robust_stable": true,
+            "p95_ns": 4220948.0,
+            "p99_ns": 4385453.6,
+            "ops_per_sec": 250.60454168940208,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 281.60754114964345,
+          "latency_ms": 5.85,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 5869026.666666667,
+            "median_ns": 5849240.0,
+            "min_ns": 5671000.0,
+            "max_ns": 6265740.0,
+            "stddev_ns": 148615.4805754322,
+            "cv": 0.025321997839863084,
+            "mad_ns": 69460.0,
+            "robust_cv": 0.017605944703927345,
+            "iqr_ns": 149480.0,
+            "is_robust_stable": true,
+            "p95_ns": 6089312.0,
+            "p99_ns": 6230454.399999999,
+            "ops_per_sec": 170.38600381210284,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 562.2384865324575,
+          "latency_ms": 2.93,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 2970450.6666666665,
+            "median_ns": 2929700.0,
+            "min_ns": 2821620.0,
+            "max_ns": 3344540.0,
+            "stddev_ns": 132126.63338450657,
+            "cv": 0.0444803325189623,
+            "mad_ns": 52060.0,
+            "robust_cv": 0.026345412840905212,
+            "iqr_ns": 102150.0,
+            "is_robust_stable": true,
+            "p95_ns": 3191044.0,
+            "p99_ns": 3313840.8,
+            "ops_per_sec": 336.6492536710479,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      }
+    },
+    "canada.json": {
+      "file_bytes": 2251051,
+      "decode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 431.5593664251498,
+          "latency_ms": 4.97,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 5053786.752,
+            "median_ns": 4974447.76,
+            "min_ns": 4885251.0,
+            "max_ns": 5426781.32,
+            "stddev_ns": 165843.30842716777,
+            "cv": 0.032815652215942126,
+            "mad_ns": 67869.75999999978,
+            "robust_cv": 0.0202281159700026,
+            "iqr_ns": 217999.66999999993,
+            "is_robust_stable": true,
+            "p95_ns": 5335545.42,
+            "p99_ns": 5408534.140000001,
+            "ops_per_sec": 197.87142771789036,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 48.83378255054685,
+          "latency_ms": 43.96,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 44219229.541333325,
+            "median_ns": 43960746.26,
+            "min_ns": 43658733.12,
+            "max_ns": 46077710.16,
+            "stddev_ns": 698938.248792667,
+            "cv": 0.01580620594348764,
+            "mad_ns": 197103.5399999991,
+            "robust_cv": 0.006647423741982642,
+            "iqr_ns": 448725.2699999958,
+            "is_robust_stable": true,
+            "p95_ns": 45692606.125999995,
+            "p99_ns": 46000689.353199996,
+            "ops_per_sec": 22.614595739739507,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 220.46081639596466,
+          "latency_ms": 9.74,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 9770435.485333335,
+            "median_ns": 9737646.62,
+            "min_ns": 9417710.02,
+            "max_ns": 10267349.58,
+            "stddev_ns": 224378.8462489178,
+            "cv": 0.022965081401513675,
+            "mad_ns": 185092.74000000022,
+            "robust_cv": 0.02818119274942433,
+            "iqr_ns": 293981.25,
+            "is_robust_stable": true,
+            "p95_ns": 10113520.94,
+            "p99_ns": 10236583.852,
+            "ops_per_sec": 102.34958324028925,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 134.34421617163648,
+          "latency_ms": 15.98,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 16074170.666666666,
+            "median_ns": 15979620.0,
+            "min_ns": 15446440.0,
+            "max_ns": 16834000.0,
+            "stddev_ns": 425177.7167838454,
+            "cv": 0.026450989329455426,
+            "mad_ns": 370160.0,
+            "robust_cv": 0.03434369628314065,
+            "iqr_ns": 631160.0,
+            "is_robust_stable": true,
+            "p95_ns": 16732206.0,
+            "p99_ns": 16813641.2,
+            "ops_per_sec": 62.21160772379506,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 78.44911784127406,
+          "latency_ms": 27.37,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 27384013.333333332,
+            "median_ns": 27365120.0,
+            "min_ns": 26866800.0,
+            "max_ns": 28200040.0,
+            "stddev_ns": 370750.4955909734,
+            "cv": 0.013538939346763881,
+            "mad_ns": 185820.0,
+            "robust_cv": 0.010067441034426305,
+            "iqr_ns": 309420.0,
+            "is_robust_stable": true,
+            "p95_ns": 28017018.0,
+            "p99_ns": 28163435.6,
+            "ops_per_sec": 36.5176567739523,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 190.63518645719753,
+          "latency_ms": 11.26,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 11377125.333333334,
+            "median_ns": 11261140.0,
+            "min_ns": 11011260.0,
+            "max_ns": 12463040.0,
+            "stddev_ns": 349296.6182378251,
+            "cv": 0.030701658635546226,
+            "mad_ns": 180660.0,
+            "robust_cv": 0.023785026737967913,
+            "iqr_ns": 311540.0,
+            "is_robust_stable": true,
+            "p95_ns": 11821839.999999998,
+            "p99_ns": 12334800.0,
+            "ops_per_sec": 87.89566526705515,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      },
+      "encode": {
+        "rust_serde_json_typed": {
+          "throughput_mb_s": 677.2479155136328,
+          "latency_ms": 3.17,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 3222481.688,
+            "median_ns": 3169842.94,
+            "min_ns": 3134813.74,
+            "max_ns": 3535658.9,
+            "stddev_ns": 118356.2599103457,
+            "cv": 0.03672829557141791,
+            "mad_ns": 26622.97999999998,
+            "robust_cv": 0.012452109109229233,
+            "iqr_ns": 79451.09000000078,
+            "is_robust_stable": true,
+            "p95_ns": 3474594.288,
+            "p99_ns": 3523445.9776,
+            "ops_per_sec": 310.319839434259,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "go_encoding_json_typed": {
+          "throughput_mb_s": 156.2014709250951,
+          "latency_ms": 13.74,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 13922728.786666665,
+            "median_ns": 13743593.52,
+            "min_ns": 13346884.54,
+            "max_ns": 14720531.22,
+            "stddev_ns": 403518.79433049716,
+            "cv": 0.028982737544735748,
+            "mad_ns": 157649.59999999963,
+            "robust_cv": 0.017006563575957638,
+            "iqr_ns": 455963.5700000003,
+            "is_robust_stable": true,
+            "p95_ns": 14672468.814000001,
+            "p99_ns": 14710918.7388,
+            "ops_per_sec": 71.82500035177492,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "node_v8_builtin": {
+          "throughput_mb_s": 125.1618268450842,
+          "latency_ms": 17.15,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 17066407.362666667,
+            "median_ns": 17151951.02,
+            "min_ns": 16237765.12,
+            "max_ns": 17474842.0,
+            "stddev_ns": 350336.12883145286,
+            "cv": 0.020527819440067086,
+            "mad_ns": 202724.19999999925,
+            "robust_cv": 0.01752330674041296,
+            "iqr_ns": 409149.1799999997,
+            "is_robust_stable": true,
+            "p95_ns": 17415200.754,
+            "p99_ns": 17462913.7508,
+            "ops_per_sec": 58.59464026316009,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped JS Object"
+        },
+        "dart_aot_std_convert": {
+          "throughput_mb_s": 99.916015162643,
+          "latency_ms": 21.49,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 21685057.333333332,
+            "median_ns": 21485740.0,
+            "min_ns": 21303520.0,
+            "max_ns": 22588820.0,
+            "stddev_ns": 401523.81397917226,
+            "cv": 0.018516151827828797,
+            "mad_ns": 102420.0,
+            "robust_cv": 0.007067380132124841,
+            "iqr_ns": 465070.0,
+            "is_robust_stable": true,
+            "p95_ns": 22419476.0,
+            "p99_ns": 22554951.2,
+            "ops_per_sec": 46.11470399309682,
+            "is_stable": true
+          },
+          "semantic_category": "untyped_dom",
+          "note": "Untyped Map/DOM"
+        },
+        "dart_aot_json_serializable": {
+          "throughput_mb_s": 100.47070094709093,
+          "latency_ms": 21.37,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 21568182.666666668,
+            "median_ns": 21367120.0,
+            "min_ns": 21116280.0,
+            "max_ns": 22633100.0,
+            "stddev_ns": 498567.5971286809,
+            "cv": 0.023115883467512092,
+            "mad_ns": 183020.0,
+            "robust_cv": 0.012699205695479783,
+            "iqr_ns": 416070.0,
+            "is_robust_stable": true,
+            "p95_ns": 22519462.0,
+            "p99_ns": 22610372.4,
+            "ops_per_sec": 46.36459248583268,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        },
+        "dart_aot_package_codable": {
+          "throughput_mb_s": 89.58938548607169,
+          "latency_ms": 23.96,
+          "is_robust_stable": true,
+          "metrics": {
+            "mean_ns": 23996608.0,
+            "median_ns": 23962320.0,
+            "min_ns": 23614720.0,
+            "max_ns": 24696120.0,
+            "stddev_ns": 356158.3128569974,
+            "cv": 0.014842027375577308,
+            "mad_ns": 275580.0,
+            "robust_cv": 0.017050724136894926,
+            "iqr_ns": 504040.0,
+            "is_robust_stable": true,
+            "p95_ns": 24642052.0,
+            "p99_ns": 24685306.4,
+            "ops_per_sec": 41.6725563879695,
+            "is_stable": true
+          },
+          "semantic_category": "typed_struct"
+        }
+      }
+    }
+  }
 }
