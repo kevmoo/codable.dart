@@ -79,7 +79,12 @@ void main(List<String> args) {
     existingUnifiedFile: unifiedFile.existsSync() ? unifiedFile : null,
   );
 
-  final report = generateMarkdownReport(results, jsonRoot, metricFlag);
+  final report = generateMarkdownReport(
+    results,
+    jsonRoot,
+    metricFlag,
+    benchmarksList: benchmarksList,
+  );
   print(report);
 
   final reportFile = File(argResults.option('output-report')!);
@@ -198,6 +203,70 @@ double? _extractMetricNs(Map<String, dynamic>? metrics, String metric) {
       (metrics['mean_ns'] as num?)?.toDouble();
 }
 
+/// Candidate that is not one of the compared implementations. Its movement
+/// between the two SDK passes bounds the measurement floor for the same run.
+const _controlCandidate = 'json_serializable_literal';
+
+String _candidateKeyFor(String candidate, String? sdk) =>
+    sdk == 'stock' ? 'stock_$candidate' : candidate;
+
+/// Cell keys (`'<target>|<group>|<candidateKey>'`) the harness flagged as not
+/// robustly stable. Ratios derived from these cells are not resolvable at this
+/// trial count.
+Set<String> collectUnstableCells(List<dynamic> benchmarksList) {
+  final unstable = <String>{};
+  for (final raw in benchmarksList) {
+    if (raw is! Map<String, dynamic>) continue;
+    final metrics = raw['metrics'] as Map<String, dynamic>?;
+    if (metrics == null || metrics['is_robust_stable'] != false) continue;
+    final target = raw['target'] as String?;
+    final candidate = raw['name'] as String?;
+    final coords = raw['coordinates'] as Map<String, dynamic>?;
+    final group = coords?['group'] as String?;
+    if (target == null || candidate == null || group == null) continue;
+    final key = _candidateKeyFor(candidate, coords?['sdk'] as String?);
+    unstable.add('$target|$group|$key');
+  }
+  return unstable;
+}
+
+/// Per-target Tier 1 / Tier 0 ratios for [_controlCandidate], across the
+/// canonical decode workloads.
+Map<String, List<double>> extractControlRatios(
+  List<dynamic> benchmarksList,
+  String metric,
+) {
+  final byKey = <String, double>{};
+  for (final raw in benchmarksList) {
+    if (raw is! Map<String, dynamic>) continue;
+    if (raw['name'] != _controlCandidate) continue;
+    final target = raw['target'] as String?;
+    final coords = raw['coordinates'] as Map<String, dynamic>?;
+    final group = coords?['group'] as String?;
+    final sdk = coords?['sdk'] as String?;
+    final value = _extractMetricNs(
+      raw['metrics'] as Map<String, dynamic>?,
+      metric,
+    );
+    if (target == null || group == null || sdk == null || value == null) {
+      continue;
+    }
+    byKey['$target|$group|$sdk'] = value;
+  }
+
+  final out = <String, List<double>>{};
+  for (final target in canonicalTargets) {
+    final ratios = <double>[];
+    for (final ds in canonicalDatasets) {
+      final stock = byKey['$target|${ds}_decode|stock'];
+      final fork = byKey['$target|${ds}_decode|native_kernels'];
+      if (stock != null && fork != null && fork > 0) ratios.add(stock / fork);
+    }
+    if (ratios.isNotEmpty) out[target] = ratios;
+  }
+  return out;
+}
+
 Map<String, Map<String, Map<String, double>>> _sortUnifiedResults(
   Map<String, Map<String, Map<String, double>>> raw,
 ) {
@@ -243,10 +312,13 @@ bool _hasFourTierData(Map<String, Map<String, Map<String, double>>> results) {
 String generateMarkdownReport(
   Map<String, Map<String, Map<String, double>>> results,
   dynamic jsonRoot,
-  String metric,
-) {
+  String metric, {
+  List<dynamic> benchmarksList = const [],
+}) {
   final buf = StringBuffer();
   final hasFourTiers = _hasFourTierData(results);
+  final unstable = collectUnstableCells(benchmarksList);
+  final controlRatios = extractControlRatios(benchmarksList, metric);
 
   _writeProvenanceSection(buf, jsonRoot, metric, hasFourTiers);
   if (hasFourTiers) {
@@ -256,12 +328,79 @@ String generateMarkdownReport(
     _writeTwoTierRuntimeSummary(buf, results);
   }
 
+  if (benchmarksList.isNotEmpty) {
+    _writeControlAndStabilitySection(
+      buf,
+      controlRatios,
+      unstable,
+      benchmarksList.length,
+    );
+  }
+
   for (final target in canonicalTargets) {
-    _writeTargetSection(buf, target, results, hasFourTiers: hasFourTiers);
+    _writeTargetSection(
+      buf,
+      target,
+      results,
+      hasFourTiers: hasFourTiers,
+      unstable: unstable,
+    );
   }
 
   buf.writeln(_methodologyFooter(metric));
   return buf.toString();
+}
+
+void _writeControlAndStabilitySection(
+  StringBuffer buf,
+  Map<String, List<double>> controlRatios,
+  Set<String> unstable,
+  int totalCells,
+) {
+  buf.writeln('### 🎛️ Measurement Controls & Resolution Floor\n');
+  buf.writeln(
+    'These two diagnostics bound how much of the tables above is signal. '
+    'Read them before crediting any ratio.\n',
+  );
+
+  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
+  buf.writeln(
+    '| Target Runtime | Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |',
+  );
+  buf.writeln('| :--- | :---: | :--- |');
+  for (final target in canonicalTargets) {
+    final ratios = controlRatios[target];
+    if (ratios == null || ratios.isEmpty) {
+      buf.writeln('| **${target.toUpperCase()}** | N/A | N/A |');
+      continue;
+    }
+    final per = ratios.map((r) => r.toStringAsFixed(3)).join(', ');
+    buf.writeln(
+      '| **${target.toUpperCase()}** | '
+      '**${_geomean(ratios).toStringAsFixed(3)}x** | `[$per]` |',
+    );
+  }
+  buf.writeln('<!-- mdformat on -->\n');
+
+  buf.writeln(
+    '> **Control candidate**: `$_controlCandidate` calls `jsonDecode(String)` '
+    'plus `.fromJson()` hydration. Because the fork only alters the UTF-8 '
+    '*byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a '
+    'value away from `1.000x` is harness or build drift, not an intentional '
+    'code effect. (The AOT `canada` entry at `1.502x` is itself an unstable '
+    'cell, not a speedup.) **Treat any speedup inside the control band as '
+    'unresolved.**',
+  );
+  if (unstable.isNotEmpty) {
+    final pct = (unstable.length / totalCells * 100).toStringAsFixed(0);
+    buf.writeln(
+      '>\n> **Sample stability**: ${unstable.length} of $totalCells measured '
+      'cells ($pct%) are flagged `is_robust_stable: false` by the harness. '
+      'Ratios involving them are marked ⚠️ in the breakdowns below and must '
+      'not be quoted as measurements.',
+    );
+  }
+  buf.writeln();
 }
 
 void _writeProvenanceSection(
@@ -544,6 +683,7 @@ void _writeTargetSection(
   String target,
   Map<String, Map<String, Map<String, double>>> results, {
   required bool hasFourTiers,
+  Set<String> unstable = const {},
 }) {
   final upper = target.toUpperCase();
   buf.writeln('### 🎯 $upper Target Detailed Breakdown\n');
@@ -552,7 +692,7 @@ void _writeTargetSection(
     final modeCap = '${mode[0].toUpperCase()}${mode.substring(1)}';
     buf.writeln('#### Detailed Breakdown: $upper $modeCap\n');
     if (hasFourTiers) {
-      _writeFourTierModeTable(buf, target, mode, results);
+      _writeFourTierModeTable(buf, target, mode, results, unstable);
     } else {
       _writeTwoTierModeTable(buf, target, mode, results);
     }
@@ -565,6 +705,7 @@ void _writeFourTierModeTable(
   String target,
   String mode,
   Map<String, Map<String, Map<String, double>>> results,
+  Set<String> unstable,
 ) {
   buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
@@ -573,7 +714,7 @@ void _writeFourTierModeTable(
     'Tier 1: New + json_serial | '
     'Tier 2: Stock + Codable [Mock] | '
     'Tier 3: New + Codable [Native] | '
-    'Tier 1 vs Tier 0 (SDK-Only) | '
+    'Tier 1 vs Tier 0 (SDK + Substrate Build) | '
     'Tier 2 vs Tier 0 (Codable on Stock) | '
     'Speedup vs Tier 0 (Stock json_serial) | '
     'Speedup vs Tier 1 (New json_serial) |',
@@ -586,14 +727,25 @@ void _writeFourTierModeTable(
   final t2VsT0Ratios = <double>[];
   final t3VsT0Ratios = <double>[];
   final t3VsT1Ratios = <double>[];
+  var flagged = 0;
 
   for (final ds in canonicalDatasets) {
-    final group = results[target]?['${ds}_$mode'];
+    final groupKey = '${ds}_$mode';
+    final group = results[target]?[groupKey];
     final t0 = group?['stock_json_serializable'];
     final t1 = group?['json_serializable'];
     final t2 = group?['stock_codable'];
     final t3 = group?['codable'];
     final dsName = datasetNames[ds]!;
+
+    bool shaky(String candidateKey) =>
+        unstable.contains('$target|$groupKey|$candidateKey');
+
+    final u0 = shaky('stock_json_serializable');
+    final u1 = shaky('json_serializable');
+    final u2 = shaky('stock_codable');
+    final u3 = shaky('codable');
+    if (u0 || u1 || u2 || u3) flagged++;
 
     if (t0 != null && t1 != null) t1VsT0Ratios.add(t0 / t1);
     if (t0 != null && t2 != null) t2VsT0Ratios.add(t0 / t2);
@@ -606,10 +758,10 @@ void _writeFourTierModeTable(
       '${_formatNullableTime(t1)} | '
       '${_formatNullableTime(t2)} | '
       '**${_formatNullableTime(t3)}** | '
-      '${_formatNullableSpeedup(t0, t1)} | '
-      '${_formatNullableSpeedup(t0, t2)} | '
-      '${_formatNullableSpeedup(t0, t3)} | '
-      '${_formatNullableSpeedup(t1, t3)} |',
+      '${_formatGatedSpeedup(t0, t1, u0 || u1)} | '
+      '${_formatGatedSpeedup(t0, t2, u0 || u2)} | '
+      '${_formatGatedSpeedup(t0, t3, u0 || u3)} | '
+      '${_formatGatedSpeedup(t1, t3, u1 || u3)} |',
     );
   }
 
@@ -620,7 +772,15 @@ void _writeFourTierModeTable(
     '${_formatRatioGeoMean(t3VsT0Ratios)} | '
     '${_formatRatioGeoMean(t3VsT1Ratios)} |',
   );
-  buf.writeln('<!-- mdformat on -->\n\n');
+  buf.writeln('<!-- mdformat on -->\n');
+  if (flagged > 0) {
+    buf.writeln(
+      '> ⚠️ $flagged of ${canonicalDatasets.length} workloads in this table '
+      'draw on samples flagged `is_robust_stable: false`. The Geometric Mean '
+      'includes them and inherits their uncertainty.\n',
+    );
+  }
+  buf.writeln();
 }
 
 void _writeTwoTierModeTable(
@@ -663,6 +823,20 @@ String _methodologyFooter(String metric) =>
   header.
   - **Tier 0 (`Stock Dart + json_serializable`)** and **Tier 2 (`Stock Dart + Codable [Mock]`)** are compiled and executed in a dedicated Stock Dart pass with `substrate.dart` switched to `mock`.
   - **Tier 1 (`New Dart + json_serializable`)** and **Tier 3 (`New Dart + Codable [Native]`)** are compiled and executed in the `native_kernels` pass with `substrate.dart` switched to `native`.
+- **Use `median`, not `min`.** `min` reports whichever configuration drew the
+  single luckiest trial. On multimodal workloads that is enough to flip the
+  sign of a comparison, so `--metric median` is the default. Regenerating this
+  report with `--metric min` is a diagnostic, not a publication.
+- **`Tier 1 vs Tier 0` is not an SDK-only comparison.** The two passes differ by
+  SDK *and* by substrate build (`mock` vs `native`), because the native
+  substrate re-exports symbols that only exist in the forked SDK and cannot be
+  compiled by stock Dart. The binaries therefore differ in retained code and
+  layout even for candidates that never call the substrate. Read that column as
+  *SDK + build configuration*, never as an isolated SDK delta.
+- **Stability gate**: cells the harness flagged `is_robust_stable: false` have
+  their derived ratios marked ⚠️. A marked ratio is not a measurement. See the
+  *Measurement Controls & Resolution Floor* section for the run-wide count and
+  the unchanged-code control drift.
 - **Dual Speedup Baselines**:
   - **Speedup vs Tier 0 (`Stock Dart + json_serializable`)**: Measures total end-to-end speedup over out-of-the-box Stock Dart.
   - **Speedup vs Tier 1 (`New Dart + json_serializable`)**: Measures the isolated streaming vs. DOM mapping speedup on the identical upgraded SDK.
@@ -670,6 +844,10 @@ String _methodologyFooter(String metric) =>
   latency deltas below roughly **10%**. Run-to-run drift is large enough to
   flip the sign of small effects. Treat any speedup between `0.90x` and
   `1.10x` as *no measured difference*.
+- **Single invocation**: every cell comes from one process launch. Workloads
+  whose launch-to-launch distribution is multimodal cannot be resolved at any
+  estimator from a single invocation; they need repeated launches with a
+  median-of-medians aggregate.
 ''';
 
 String _formatNullableTime(double? us) => us == null ? 'N/A' : _formatTime(us);
@@ -683,6 +861,14 @@ String _formatTime(double us) {
 
 String _formatNullableSpeedup(double? baseUs, double? candUs) =>
     (baseUs == null || candUs == null) ? 'N/A' : _formatSpeedup(baseUs, candUs);
+
+/// Like [_formatNullableSpeedup], but appends a warning glyph when either
+/// operand came from samples the harness flagged as not robustly stable.
+String _formatGatedSpeedup(double? baseUs, double? candUs, bool unstable) {
+  final formatted = _formatNullableSpeedup(baseUs, candUs);
+  if (formatted == 'N/A' || !unstable) return formatted;
+  return '$formatted ⚠️';
+}
 
 String _formatSpeedup(double baseUs, double candUs) {
   final ratio = baseUs / candUs;
