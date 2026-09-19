@@ -9,16 +9,31 @@ import 'package:test/test.dart';
 void main() {
   group('Defect 1: int64 bounds', () {
     test('tryParseIntUtf8 parses valid boundaries', () {
-      final pos = '9223372036854775807'.codeUnits;
-      expect(
-        tryParseIntUtf8(Uint8List.fromList(pos), 0, pos.length),
-        9223372036854775807,
-      );
-      final neg = '-9223372036854775808'.codeUnits;
-      expect(
-        tryParseIntUtf8(Uint8List.fromList(neg), 0, neg.length),
-        -9223372036854775808,
-      );
+      if (identical(1.0, 1)) {
+        final posJs = '9007199254740991'.codeUnits;
+        expect(
+          tryParseIntUtf8(Uint8List.fromList(posJs), 0, posJs.length),
+          0x1FFFFFFFFFFFFF,
+        );
+        final overJs = '9007199254740992'.codeUnits;
+        expect(
+          tryParseIntUtf8(Uint8List.fromList(overJs), 0, overJs.length),
+          isNull,
+        );
+      } else {
+        final maxInt64 = (0x7FFFFFFF * 0x100000000) + 0xFFFFFFFF;
+        final minInt64 = -maxInt64 - 1;
+        final pos = '9223372036854775807'.codeUnits;
+        expect(
+          tryParseIntUtf8(Uint8List.fromList(pos), 0, pos.length),
+          maxInt64,
+        );
+        final neg = '-9223372036854775808'.codeUnits;
+        expect(
+          tryParseIntUtf8(Uint8List.fromList(neg), 0, neg.length),
+          minInt64,
+        );
+      }
     });
     test('tryParseIntUtf8 returns null on overflow', () {
       final neg1 = '-9223372036854775809'.codeUnits;
