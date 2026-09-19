@@ -71,8 +71,12 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
   }
 
-  final limitBeforeMul = 9223372036854775807 ~/ r;
-  final limitLastDigit = (9223372036854775807 % r) + (negative ? 1 : 0);
+  final maxInt = identical(1.0, 1)
+      ? 0x1FFFFFFFFFFFFF
+      : (0x7FFFFFFF * 0x100000000) + 0xFFFFFFFF;
+  final limitBeforeMul = maxInt ~/ r;
+  final limitLastDigit =
+      (maxInt % r) + (negative && !identical(1.0, 1) ? 1 : 0);
 
   var result = 0;
   var hasDigits = false;
@@ -104,9 +108,7 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
   }
 
   if (!hasDigits) return null;
-  return negative
-      ? (result == -9223372036854775808 ? result : -result)
-      : result;
+  return negative ? -result : result;
 }
 
 /// Parses a 64-bit IEEE 754 floating point number directly from the UTF-8
