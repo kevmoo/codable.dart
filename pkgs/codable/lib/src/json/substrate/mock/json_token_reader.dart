@@ -73,9 +73,6 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
-  static const int _containerArray = 1;
-  static const int _containerObject = 2;
-
   final Uint8List _bytes;
   int _offset = 0;
   final List<String?> _stringCache = List<String?>.filled(
@@ -83,9 +80,12 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     null,
   );
 
-  final List<int> _containerTypes = <int>[];
-  final List<int> _elementCounts = <int>[];
-  final List<int> _lastCheckedOffsets = <int>[];
+  final List<int> _types = <int>[];
+  final List<int> _states = <int>[];
+  int _stackLength = 0;
+  int _topType = 0;
+  int _topState = 0;
+  bool _hasReadRoot = false;
 
   _MockJsonTokenReader(this._bytes);
 
@@ -138,41 +138,90 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void _onValueRead() {
-    if (_containerTypes.isNotEmpty) {
-      _elementCounts[_containerTypes.length - 1]++;
+  void _beforeReadingName() {
+    _skipWs();
+    if (_stackLength > 0 && _topType == 0) {
+      if (_topState == 0 || _topState == 3) {
+        _topState = 1;
+      } else if (_topState == 2) {
+        if (_offset < _bytes.length && _bytes[_offset] == 44) {
+          _offset++;
+          _topState = 1;
+          _skipWs();
+        } else {
+          throw FormatException(
+            'Expected "," before property name at offset $_offset',
+          );
+        }
+      } else {
+        throw FormatException('Expected property name at offset $_offset');
+      }
+    } else {
+      throw FormatException('Unexpected property name at offset $_offset');
     }
   }
 
-  @override
-  (int start, int end) readStringSpan() {
-    final span = _scanStringSpan();
-    _onValueRead();
-    return span;
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _beforeReadingValue() {
+    _skipWs();
+    if (_stackLength > 0) {
+      if (_topType == 0) {
+        if (_topState != 1) {
+          throw FormatException(
+            'Expected property name before value at offset $_offset',
+          );
+        }
+      } else {
+        if (_topState == 2) {
+          if (_offset < _bytes.length && _bytes[_offset] == 44) {
+            _offset++;
+            _topState = 3;
+            _skipWs();
+          } else {
+            throw FormatException(
+              'Expected "," before array element at offset $_offset',
+            );
+          }
+        }
+      }
+    } else {
+      if (_hasReadRoot) {
+        throw FormatException(
+          'Cannot read multiple root values',
+          _bytes,
+          _offset,
+        );
+      }
+    }
   }
 
-  @override
-  JsonTokenType peek() {
-    _skipWs();
-    if (_offset >= _bytes.length) return JsonTokenType.endOfDocument;
-    final b = _bytes[_offset];
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _afterReadingValue() {
+    if (_stackLength > 0) {
+      _topState = 2;
+    } else {
+      _hasReadRoot = true;
+    }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  static JsonTokenType _valueTokenType(int b) {
     switch (b) {
-      case 123: // '{'
+      case 123:
         return JsonTokenType.beginObject;
-      case 125: // '}'
-        return JsonTokenType.endObject;
-      case 91: // '['
+      case 91:
         return JsonTokenType.beginArray;
-      case 93: // ']'
-        return JsonTokenType.endArray;
-      case 34: // '"'
+      case 34:
         return JsonTokenType.string;
-      case 116: // 't'
-      case 102: // 'f'
+      case 116:
+      case 102:
         return JsonTokenType.boolean;
-      case 110: // 'n'
+      case 110:
         return JsonTokenType.nullValue;
-      case 45: // '-'
+      case 45:
       case 48:
       case 49:
       case 50:
@@ -190,18 +239,144 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   @override
-  void beginObject() {
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  JsonTokenType peek() {
     _skipWs();
+    if (_offset >= _bytes.length) {
+      if (_stackLength > 0 && _topState == 3) {
+        throw FormatException(
+          'Unexpected end of document after comma',
+          _bytes,
+          _offset,
+        );
+      }
+      return JsonTokenType.endOfDocument;
+    }
+
+    if (_stackLength > 0) {
+      if (_topType == 0) {
+        switch (_topState) {
+          case 0:
+            if (_bytes[_offset] == 125) return JsonTokenType.endObject;
+            if (_bytes[_offset] == 34) return JsonTokenType.propertyName;
+            return JsonTokenType.none;
+          case 1:
+            return _valueTokenType(_bytes[_offset]);
+          case 3:
+            if (_bytes[_offset] == 34) return JsonTokenType.propertyName;
+            if (_bytes[_offset] == 125 || _bytes[_offset] == 93) {
+              throw FormatException(
+                'Trailing comma before closing delimiter',
+                _bytes,
+                _offset,
+              );
+            }
+            return JsonTokenType.none;
+          case 2:
+            if (_bytes[_offset] == 125) return JsonTokenType.endObject;
+            if (_bytes[_offset] == 44) {
+              var i = _offset + 1;
+              while (i < _bytes.length && _isWs(_bytes[i])) {
+                i++;
+              }
+              if (i >= _bytes.length) {
+                throw FormatException(
+                  'Unexpected end of document after comma',
+                  _bytes,
+                  _offset,
+                );
+              }
+              if (_bytes[i] == 125 || _bytes[i] == 93) {
+                throw FormatException(
+                  'Trailing comma before closing delimiter',
+                  _bytes,
+                  _offset,
+                );
+              }
+              if (_bytes[i] == 34) return JsonTokenType.propertyName;
+              return JsonTokenType.none;
+            }
+            throw FormatException(
+              'Expected comma or closing delimiter',
+              _bytes,
+              _offset,
+            );
+        }
+      } else {
+        switch (_topState) {
+          case 0:
+            if (_bytes[_offset] == 93) return JsonTokenType.endArray;
+            return _valueTokenType(_bytes[_offset]);
+          case 3:
+            if (_bytes[_offset] == 125 || _bytes[_offset] == 93) {
+              throw FormatException(
+                'Trailing comma before closing delimiter',
+                _bytes,
+                _offset,
+              );
+            }
+            return _valueTokenType(_bytes[_offset]);
+          case 2:
+            if (_bytes[_offset] == 93) return JsonTokenType.endArray;
+            if (_bytes[_offset] == 44) {
+              var i = _offset + 1;
+              while (i < _bytes.length && _isWs(_bytes[i])) {
+                i++;
+              }
+              if (i >= _bytes.length) {
+                throw FormatException(
+                  'Unexpected end of document after comma',
+                  _bytes,
+                  _offset,
+                );
+              }
+              if (_bytes[i] == 125 || _bytes[i] == 93) {
+                throw FormatException(
+                  'Trailing comma before closing delimiter',
+                  _bytes,
+                  _offset,
+                );
+              }
+              return _valueTokenType(_bytes[i]);
+            }
+            throw FormatException(
+              'Expected comma or closing delimiter',
+              _bytes,
+              _offset,
+            );
+        }
+      }
+    } else {
+      if (_hasReadRoot) {
+        throw FormatException(
+          'Unexpected trailing characters after root value',
+          _bytes,
+          _offset,
+        );
+      }
+      return _valueTokenType(_bytes[_offset]);
+    }
+    return JsonTokenType.none;
+  }
+
+  @override
+  void beginObject() {
+    _beforeReadingValue();
     if (_offset < _bytes.length && _bytes[_offset] == 123) {
-      if (_containerTypes.length >= 1000) {
+      if (_stackLength >= 1000) {
         throw FormatException(
           'Nesting depth exceeds limit of 1000 at offset $_offset',
         );
       }
       _offset++;
-      _containerTypes.add(_containerObject);
-      _elementCounts.add(0);
-      _lastCheckedOffsets.add(-1);
+      if (_stackLength > 0) {
+        _types.add(_topType);
+        _states.add(_topState);
+      }
+      _stackLength++;
+      _topType = 0;
+      _topState = 0;
     } else {
       throw FormatException('Expected "{" at offset $_offset');
     }
@@ -210,33 +385,47 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endObject() {
     _skipWs();
-    if (_containerTypes.isEmpty || _containerTypes.last != _containerObject) {
-      throw FormatException('Mismatched endObject at offset $_offset');
-    }
-    if (_offset < _bytes.length && _bytes[_offset] == 125) {
-      _offset++;
-      _containerTypes.removeLast();
-      _elementCounts.removeLast();
-      _lastCheckedOffsets.removeLast();
-      _onValueRead();
+    if (_stackLength > 0 && _topType == 0) {
+      if (_topState == 1 || _topState == 3) {
+        throw FormatException('Mismatched endObject at offset $_offset');
+      }
+      if (_offset < _bytes.length && _bytes[_offset] == 125) {
+        _offset++;
+        _stackLength--;
+        if (_stackLength > 0) {
+          _topState = _states.removeLast();
+          _topType = _types.removeLast();
+          _topState = 2;
+        } else {
+          _topType = 0;
+          _topState = 0;
+          _hasReadRoot = true;
+        }
+      } else {
+        throw FormatException('Expected "}" at offset $_offset');
+      }
     } else {
-      throw FormatException('Expected "}" at offset $_offset');
+      throw FormatException('Mismatched endObject at offset $_offset');
     }
   }
 
   @override
   void beginArray() {
-    _skipWs();
+    _beforeReadingValue();
     if (_offset < _bytes.length && _bytes[_offset] == 91) {
-      if (_containerTypes.length >= 1000) {
+      if (_stackLength >= 1000) {
         throw FormatException(
           'Nesting depth exceeds limit of 1000 at offset $_offset',
         );
       }
       _offset++;
-      _containerTypes.add(_containerArray);
-      _elementCounts.add(0);
-      _lastCheckedOffsets.add(-1);
+      if (_stackLength > 0) {
+        _types.add(_topType);
+        _states.add(_topState);
+      }
+      _stackLength++;
+      _topType = 1;
+      _topState = 0;
     } else {
       throw FormatException('Expected "[" at offset $_offset');
     }
@@ -245,69 +434,95 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endArray() {
     _skipWs();
-    if (_containerTypes.isEmpty || _containerTypes.last != _containerArray) {
-      throw FormatException('Mismatched endArray at offset $_offset');
-    }
-    if (_offset < _bytes.length && _bytes[_offset] == 93) {
-      _offset++;
-      _containerTypes.removeLast();
-      _elementCounts.removeLast();
-      _lastCheckedOffsets.removeLast();
-      _onValueRead();
+    if (_stackLength > 0 && _topType == 1) {
+      if (_topState == 3) {
+        throw FormatException('Trailing comma not allowed at offset $_offset');
+      }
+      if (_offset < _bytes.length && _bytes[_offset] == 93) {
+        _offset++;
+        _stackLength--;
+        if (_stackLength > 0) {
+          _topState = _states.removeLast();
+          _topType = _types.removeLast();
+          _topState = 2;
+        } else {
+          _topType = 0;
+          _topState = 0;
+          _hasReadRoot = true;
+        }
+      } else {
+        throw FormatException('Expected "]" at offset $_offset');
+      }
     } else {
-      throw FormatException('Expected "]" at offset $_offset');
+      throw FormatException('Mismatched endArray at offset $_offset');
     }
   }
 
   @override
   bool hasNext() {
     _skipWs();
-    if (_offset >= _bytes.length) return false;
-    if (_containerTypes.isEmpty) {
-      return _offset < _bytes.length;
+    if (_offset >= _bytes.length) {
+      if (_stackLength > 0 && _topState == 3) {
+        throw const FormatException('Unexpected end of document after comma');
+      }
+      return false;
     }
-    final depth = _containerTypes.length - 1;
-    final type = _containerTypes[depth];
-    final closeChar = type == _containerArray ? 93 : 125; // ']' or '}'
-    final count = _elementCounts[depth];
+    if (_stackLength == 0) {
+      if (_hasReadRoot) {
+        throw FormatException(
+          'Unexpected trailing characters after root value',
+          _bytes,
+          _offset,
+        );
+      }
+      return true;
+    }
 
-    if (_bytes[_offset] == closeChar) {
+    final closeChar = _topType == 0 ? 125 : 93;
+    final b = _bytes[_offset];
+
+    if (b == closeChar) {
+      if (_topState == 3) {
+        throw FormatException('Trailing comma not allowed at offset $_offset');
+      }
       return false;
     }
 
-    if (count == 0) {
-      if (_bytes[_offset] == 44) {
+    if (_topState == 0) {
+      if (b == 44) {
         throw FormatException('Unexpected leading comma at offset $_offset');
       }
       return true;
     }
 
-    if (_lastCheckedOffsets[depth] == _offset) {
+    if (_topState == 2) {
+      if (b != 44) {
+        throw FormatException(
+          'Expected "," or "${String.fromCharCode(closeChar)}" '
+          'at offset $_offset',
+        );
+      }
+      _offset++;
+      _topState = 3;
+      _skipWs();
+      if (_offset < _bytes.length && _bytes[_offset] == closeChar) {
+        throw FormatException('Trailing comma not allowed at offset $_offset');
+      }
+      if (_offset >= _bytes.length) {
+        throw const FormatException('Unexpected end of document after comma');
+      }
       return true;
     }
 
-    if (_bytes[_offset] != 44) {
-      throw FormatException(
-        'Expected "," or "${String.fromCharCode(closeChar)}" '
-        'at offset $_offset',
-      );
-    }
-    _offset++;
-    _skipWs();
-    if (_offset < _bytes.length && _bytes[_offset] == closeChar) {
-      throw FormatException('Trailing comma not allowed at offset $_offset');
-    }
-    _lastCheckedOffsets[depth] = _offset;
     return true;
   }
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   (int, int, bool) _scanPropertyName() {
+    _beforeReadingName();
+
     var i = _offset;
-    while (i < _bytes.length && _isWs(_bytes[i])) {
-      i++;
-    }
     if (i >= _bytes.length || _bytes[i] != 34) {
       throw FormatException('Expected string at offset $i');
     }
@@ -409,11 +624,20 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   @override
+  (int start, int end) readStringSpan() {
+    _beforeReadingValue();
+    final span = _scanStringSpan();
+    _afterReadingValue();
+    return span;
+  }
+
+  @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   int selectString(JsonKeyOptions options) {
+    _beforeReadingValue();
     final (start, end) = _scanStringSpan();
-    _onValueRead();
+    _afterReadingValue();
     if (_isVerbatimUtf8(start, end)) {
       return options.selectKey(_bytes, start, end);
     }
@@ -432,8 +656,9 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @override
   String readString() {
+    _beforeReadingValue();
     final (start, end) = _scanStringSpan();
-    _onValueRead();
+    _afterReadingValue();
     return _decodeCachedString(start, end);
   }
 
@@ -454,22 +679,25 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @override
   int readInt() {
+    _beforeReadingValue();
     final (start, end) = _scanValueSpan();
-    _onValueRead();
+    _afterReadingValue();
     return parseIntUtf8(_bytes, start, end);
   }
 
   @override
   double readDouble() {
+    _beforeReadingValue();
     final (start, end) = _scanValueSpan();
-    _onValueRead();
+    _afterReadingValue();
     return parseDoubleUtf8(_bytes, start, end);
   }
 
   @override
   num readNum() {
+    _beforeReadingValue();
     final (start, end) = _scanValueSpan();
-    _onValueRead();
+    _afterReadingValue();
     final asInt = tryParseIntUtf8(_bytes, start, end);
     if (asInt != null) return asInt;
     return parseDoubleUtf8(_bytes, start, end);
@@ -477,15 +705,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @override
   bool readBool() {
+    _beforeReadingValue();
     final (start, end) = _scanValueSpan();
-    _onValueRead();
+    _afterReadingValue();
     return parseBoolUtf8(_bytes, start, end);
   }
 
   @override
   void readNull() {
+    _beforeReadingValue();
     final (start, end) = _scanValueSpan();
-    _onValueRead();
+    _afterReadingValue();
     if (!isNullUtf8(_bytes, start, end)) {
       throw FormatException('Expected null at offset $start');
     }
@@ -501,6 +731,15 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         _offset,
       );
     }
+
+    if (_stackLength > 0 &&
+        _topType == 0 &&
+        (_topState == 0 || _topState == 2 || _topState == 3)) {
+      nextName();
+      skipValue();
+      return;
+    }
+
     final b = _bytes[_offset];
     if (b == 123) {
       beginObject();
@@ -516,10 +755,12 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       endArray();
     } else if (b == 34) {
+      _beforeReadingValue();
       final (start, end) = _scanStringSpan();
-      decodeStringUtf8(_bytes, start, end);
-      _onValueRead();
+      decodeStringUtf8(_bytes, start, end); // validates
+      _afterReadingValue();
     } else {
+      _beforeReadingValue();
       final (start, end) = _scanValueSpan();
       if (start == end) {
         throw FormatException(
@@ -538,7 +779,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
           start,
         );
       }
-      _onValueRead();
+      _afterReadingValue();
     }
   }
 

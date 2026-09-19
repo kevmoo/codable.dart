@@ -1,4 +1,13 @@
-import 'dart:convert';
+import 'dart:convert'
+    hide
+        JsonKeyOptions,
+        JsonTokenReader,
+        JsonTokenType,
+        JsonTokenWriter,
+        JsonUtf8TokenWriter,
+        jsonUtf8,
+        jsonUtf8Decode,
+        jsonUtf8Encode;
 import 'dart:typed_data';
 
 import 'eisel_lemire.dart';
@@ -62,6 +71,13 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
   }
 
+  final maxInt = identical(1.0, 1)
+      ? 0x1FFFFFFFFFFFFF
+      : (0x7FFFFFFF * 0x100000000) + 0xFFFFFFFF;
+  final limitBeforeMul = maxInt ~/ r;
+  final limitLastDigit =
+      (maxInt % r) + (negative && !identical(1.0, 1) ? 1 : 0);
+
   var result = 0;
   var hasDigits = false;
   while (index < end) {
@@ -84,6 +100,10 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
     if (digit >= r) return null;
     hasDigits = true;
+
+    if (result < 0 || result > limitBeforeMul) return null;
+    if (result == limitBeforeMul && digit > limitLastDigit) return null;
+
     result = result * r + digit;
   }
 
@@ -417,6 +437,13 @@ String decodeStringUtf8(
   var isVerbatim = true;
   for (var i = start; i < end; i++) {
     final b = source[i];
+    if (b < 0x20 || b == 34) {
+      throw FormatException(
+        'Unescaped control character or quote at offset $i',
+        source,
+        i,
+      );
+    }
     if (b == 92) {
       // '\\' escape present
       isVerbatim = false;
@@ -495,9 +522,9 @@ String decodeStringUtf8(
           );
       }
     } else if (byte <= 0x7F) {
-      if (byte < 0x20) {
+      if (byte < 0x20 || byte == 34) {
         throw FormatException(
-          'Unescaped control character 0x${byte.toRadixString(16)} '
+          'Unescaped control character or quote 0x${byte.toRadixString(16)} '
           'at offset $i',
           source,
           i,
@@ -590,7 +617,8 @@ bool isNullUtf8(Uint8List source, int start, int end) {
 bool isVerbatimUtf8(Uint8List source, int start, int end) {
   if (start < 0 || end > source.length || start > end) return false;
   for (var i = start; i < end; i++) {
-    if (source[i] == 92) return false; // '\\'
+    final b = source[i];
+    if (b < 0x20 || b == 92 || b == 34) return false;
   }
   return true;
 }
