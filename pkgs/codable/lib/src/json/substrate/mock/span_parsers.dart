@@ -101,7 +101,7 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     if (digit >= r) return null;
     hasDigits = true;
 
-    if (result > limitBeforeMul) return null;
+    if (result < 0 || result > limitBeforeMul) return null;
     if (result == limitBeforeMul && digit > limitLastDigit) return null;
 
     result = result * r + digit;
