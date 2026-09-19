@@ -13,6 +13,7 @@ import '../../contracts/encoder.dart';
 import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
+import 'driver_streaming.dart' as streaming_driver;
 
 const bool _isWasm = bool.fromEnvironment('dart.tool.dart2wasm');
 
@@ -263,6 +264,17 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
+  /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
+  /// and invokes [decode] on the resulting [JsonCodableDecoder] when closed,
+  /// emitting the decoded value to [sink].
+  static ByteConversionSink startChunkedConversion<T>(
+    Sink<T> sink,
+    T Function(Decoder decoder) decode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    return _JsonCodableChunkedDecoderSink<T>(sink, decode, userInfo);
+  }
+
   JsonTokenReader get reader {
     if (_reader != null) return _reader;
     final target = _activeValue ?? _decoded;
@@ -329,7 +341,12 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {
-    if (_reader != null) return null;
+    if (_reader != null) {
+      return streaming_driver.decodeUniformDoubleListFromReader(
+        _reader,
+        propertyAliases,
+      );
+    }
     final target = _activeValue ?? _decoded;
     if (target != null && target.isA<JSArray>()) {
       _activeValue = null;
@@ -1811,6 +1828,32 @@ final class JsonCodableEncoder implements Encoder {
     return jsBytes.toDart;
   }
 
+  /// Encodes a value directly into [sink] using a chunked [JsonTokenWriter].
+  static void toSink(
+    BytesBuilder sink,
+    void Function(Encoder encoder) encode, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    streaming_driver.JsonCodableEncoder.toSink(
+      sink,
+      encode,
+      userInfo: userInfo,
+    );
+  }
+
+  /// Starts a chunked conversion that streams encoded UTF-8 byte chunks
+  /// directly to [sink] via [JsonTokenWriter.toSink].
+  static ChunkedConversionSink<void Function(Encoder encoder)>
+  startChunkedConversion(
+    Sink<List<int>> sink, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    return streaming_driver.JsonCodableEncoder.startChunkedConversion(
+      sink,
+      userInfo: userInfo,
+    );
+  }
+
   @override
   KeyedEncoder keyed({KeyOptions? options}) {
     final obj = JSObject();
@@ -2171,5 +2214,47 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
     } else {
       encodeEncodable(value);
     }
+  }
+}
+
+final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
+  final Sink<T> _sink;
+  final T Function(Decoder decoder) _decode;
+  final Map<Object, Object?> _userInfo;
+  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  bool _isClosed = false;
+
+  _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
+
+  @override
+  void add(List<int> chunk) {
+    if (_isClosed) {
+      throw StateError('Cannot add to a closed sink');
+    }
+    _accumulator.add(chunk);
+  }
+
+  @override
+  void addSlice(List<int> chunk, int start, int end, bool isLast) {
+    if (_isClosed) {
+      throw StateError('Cannot addSlice to a closed sink');
+    }
+    RangeError.checkValidRange(start, end, chunk.length);
+    if (start < end) {
+      _accumulator.add(chunk.sublist(start, end));
+    }
+    if (isLast) {
+      close();
+    }
+  }
+
+  @override
+  void close() {
+    if (_isClosed) return;
+    _isClosed = true;
+    final bytes = _accumulator.takeBytes();
+    final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
+    _sink.add(_decode(decoder));
+    _sink.close();
   }
 }

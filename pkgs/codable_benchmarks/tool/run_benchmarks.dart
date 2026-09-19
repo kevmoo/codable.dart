@@ -22,6 +22,13 @@ Future<void> main(List<String> args) async {
           'substrate mode alongside the native_kernels pass.',
     )
     ..addFlag(
+      'streaming-only',
+      negatable: false,
+      help:
+          'Run only decode_stream_benchmark.dart and '
+          'encode_stream_benchmark.dart.',
+    )
+    ..addFlag(
       'dry-run',
       abbr: 'd',
       help: 'Print the command that would be run, then exit.',
@@ -77,13 +84,33 @@ Future<void> main(List<String> args) async {
   final benchmarkPkgDir = scriptFile.parent.parent.path;
   final workspaceRoot = p.dirname(p.dirname(benchmarkPkgDir));
 
+  final streamingOnly = results.flag('streaming-only');
+  final explicitFiles = results.rest
+      .where((arg) => arg.endsWith('_benchmark.dart'))
+      .toList();
+  final nonFileArgs = results.rest
+      .where((arg) => !arg.endsWith('_benchmark.dart'))
+      .toList();
+  final benchmarkFiles = explicitFiles.isNotEmpty
+      ? explicitFiles
+      : (streamingOnly
+            ? const [
+                'benchmark/decode_stream_benchmark.dart',
+                'benchmark/encode_stream_benchmark.dart',
+              ]
+            : const <String>[]);
+
   final pinCpu = results.option('pin-cpu');
+  final firstExtraArgs = <String>[
+    ...nonFileArgs,
+    if (benchmarkFiles.isNotEmpty) benchmarkFiles.first,
+  ];
   final nativeCmd = _buildBenchPressCommand(
     dartBin: sdkPath,
     pinCpu: pinCpu,
     nodePath: nodePath,
     d8Path: d8Path,
-    extraArgs: results.rest,
+    extraArgs: firstExtraArgs,
   );
 
   if (results.flag('dry-run')) {
@@ -93,52 +120,114 @@ Future<void> main(List<String> args) async {
       pinCpu: pinCpu,
       nodePath: nodePath,
       d8Path: d8Path,
-      extraArgs: results.rest,
+      extraArgs: firstExtraArgs,
       nativeCmd: nativeCmd,
     );
     exit(0);
   }
 
-  if (stockSdk != null) {
-    await _runStockPass(
-      stockSdk: stockSdk,
-      nativeDartBin: sdkPath,
-      workspaceRoot: workspaceRoot,
-      benchmarkPkgDir: benchmarkPkgDir,
-      pinCpu: pinCpu,
-      nodePath: nodePath,
-      d8Path: d8Path,
-      extraArgs: results.rest,
-    );
+  final passArgSets = benchmarkFiles.isEmpty
+      ? <List<String>>[nonFileArgs]
+      : <List<String>>[
+          for (final file in benchmarkFiles) <String>[...nonFileArgs, file],
+        ];
+
+  final benchJsonFile = File(p.join(benchmarkPkgDir, 'benchmark_results.json'));
+  final benchJsonBackupFile = File(
+    p.join(benchmarkPkgDir, '.dart_tool', 'benchmark_results.json.bak'),
+  );
+  final streamingJsonFile = File(
+    p.join(benchmarkPkgDir, 'streaming_benchmark_results.json'),
+  );
+
+  if (streamingOnly) {
+    benchJsonBackupFile.parent.createSync(recursive: true);
+    if (benchJsonFile.existsSync()) {
+      benchJsonFile.copySync(benchJsonBackupFile.path);
+      benchJsonFile.deleteSync();
+    }
   }
 
-  print('🚀 Running native_kernels benchmarks (Tier 1 & Tier 3)...');
-  await _runCheckedProcess(
-    nativeCmd.executable,
-    nativeCmd.arguments,
-    workingDirectory: benchmarkPkgDir,
-    errorLabel: 'Benchmark run',
-  );
+  try {
+    if (stockSdk != null) {
+      await _runStockPass(
+        stockSdk: stockSdk,
+        nativeDartBin: sdkPath,
+        workspaceRoot: workspaceRoot,
+        benchmarkPkgDir: benchmarkPkgDir,
+        pinCpu: pinCpu,
+        nodePath: nodePath,
+        d8Path: d8Path,
+        passArgSets: passArgSets,
+      );
+    }
 
-  print('\n📝 Patching environment...');
-  final patchArgs = <String>[
-    'run',
-    'tool/patch_environment.dart',
-    if (stockSdk != null) ...['--stock-sdk', stockSdk.dartBin],
-  ];
-  await _runCheckedProcess(
-    sdkPath,
-    patchArgs,
-    workingDirectory: benchmarkPkgDir,
-    errorLabel: 'patch_environment.dart',
-  );
+    print('🚀 Running native_kernels benchmarks (Tier 1 & Tier 3)...');
+    for (final argSet in passArgSets) {
+      final cmd = _buildBenchPressCommand(
+        dartBin: sdkPath,
+        pinCpu: pinCpu,
+        nodePath: nodePath,
+        d8Path: d8Path,
+        extraArgs: argSet,
+      );
+      await _runCheckedProcess(
+        cmd.executable,
+        cmd.arguments,
+        workingDirectory: benchmarkPkgDir,
+        errorLabel: 'Benchmark run',
+      );
+    }
+
+    print('\n📝 Patching environment...');
+    final patchArgs = <String>[
+      'run',
+      'tool/patch_environment.dart',
+      if (stockSdk != null) ...['--stock-sdk', stockSdk.dartBin],
+    ];
+    await _runCheckedProcess(
+      sdkPath,
+      patchArgs,
+      workingDirectory: benchmarkPkgDir,
+      errorLabel: 'patch_environment.dart',
+    );
+
+    if (streamingOnly && benchJsonFile.existsSync()) {
+      benchJsonFile.copySync(streamingJsonFile.path);
+    }
+  } finally {
+    if (streamingOnly && benchJsonBackupFile.existsSync()) {
+      benchJsonBackupFile.copySync(benchJsonFile.path);
+      benchJsonBackupFile.deleteSync();
+    }
+  }
 
   print('\n📊 Generating reports...');
+  if (!streamingOnly) {
+    await _runCheckedProcess(
+      sdkPath,
+      ['run', 'tool/generate_report.dart'],
+      workingDirectory: benchmarkPkgDir,
+      errorLabel: 'generate_report.dart',
+    );
+  }
   await _runCheckedProcess(
     sdkPath,
-    ['run', 'tool/generate_report.dart'],
+    [
+      'run',
+      'tool/generate_report.dart',
+      '--streaming',
+      if (streamingOnly) ...[
+        '-i',
+        'streaming_benchmark_results.json',
+        '-u',
+        'streaming_benchmark_results_unified.json',
+      ],
+      '--output-report',
+      'STREAMING_BENCHMARK_REPORT.md',
+    ],
     workingDirectory: benchmarkPkgDir,
-    errorLabel: 'generate_report.dart',
+    errorLabel: 'generate_report.dart --streaming',
   );
 
   print('\n✅ Local benchmarks completed successfully.');
@@ -296,7 +385,7 @@ Future<void> _runStockPass({
   required String? pinCpu,
   required String? nodePath,
   required String? d8Path,
-  required List<String> extraArgs,
+  required List<List<String>> passArgSets,
 }) async {
   final tempConfigFile = File(
     p.join(benchmarkPkgDir, '.dart_tool', 'bench_press_stock.yaml'),
@@ -339,22 +428,23 @@ matrix:
       - js
 ''');
 
-    final stockCmd = _buildBenchPressCommand(
-      dartBin: stockSdk.dartBin,
-      pinCpu: pinCpu,
-      nodePath: nodePath,
-      d8Path: d8Path,
-      extraArgs: extraArgs,
-      configPath: tempConfigFile.path,
-    );
-
     print('🚀 Running Stock Dart benchmarks (Tier 0 & Tier 2)...');
-    await _runCheckedProcess(
-      stockCmd.executable,
-      stockCmd.arguments,
-      workingDirectory: benchmarkPkgDir,
-      errorLabel: 'Stock Dart benchmark run',
-    );
+    for (final argSet in passArgSets) {
+      final stockCmd = _buildBenchPressCommand(
+        dartBin: stockSdk.dartBin,
+        pinCpu: pinCpu,
+        nodePath: nodePath,
+        d8Path: d8Path,
+        extraArgs: argSet,
+        configPath: tempConfigFile.path,
+      );
+      await _runCheckedProcess(
+        stockCmd.executable,
+        stockCmd.arguments,
+        workingDirectory: benchmarkPkgDir,
+        errorLabel: 'Stock Dart benchmark run',
+      );
+    }
   } finally {
     if (tempConfigFile.existsSync()) {
       tempConfigFile.deleteSync();
