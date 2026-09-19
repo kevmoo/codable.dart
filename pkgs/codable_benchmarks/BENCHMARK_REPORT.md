@@ -52,7 +52,7 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 | **WASM** | **0.940x** | `[0.981, 0.748, 1.018, 0.969, 1.017]` |
 <!-- mdformat on -->
 
-> **Control candidate**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. Because the fork only alters the UTF-8 *byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a value away from `1.000x` is harness or build drift, not an intentional code effect. (The AOT `canada` entry at `1.502x` is itself an unstable cell, not a speedup.) **Treat any speedup inside the control band as unresolved.**
+> **Control candidate**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. Because the fork only alters the UTF-8 *byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a value away from `1.000x` is harness or build drift, not an intentional code effect. **Treat any speedup inside the control band as unresolved.**
 >
 > **Sample stability**: 1 of 180 measured cells (1%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
 
