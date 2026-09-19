@@ -9,7 +9,10 @@ environment:
 resolution: workspace
 
 dependencies:
-  bench_press: ^0.3.0
+  bench_press:
+    git:
+      url: https://github.com/kevmoo/bench_press.git
+      ref: 5bb7e7ad99cc55d3095165ed1e9697663509c0fa
   codable: ^0.1.0-dev
   json_annotation: ^4.9.0
 
