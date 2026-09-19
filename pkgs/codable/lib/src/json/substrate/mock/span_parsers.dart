@@ -1,4 +1,13 @@
-import 'dart:convert';
+import 'dart:convert'
+    hide
+        JsonTokenReader,
+        JsonTokenWriter,
+        JsonTokenType,
+        JsonKeyOptions,
+        jsonUtf8,
+        jsonUtf8Decode,
+        jsonUtf8Encode,
+        JsonUtf8TokenWriter;
 import 'dart:typed_data';
 
 import 'eisel_lemire.dart';
@@ -62,6 +71,9 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
   }
 
+  final int limitBeforeMul = 9223372036854775807 ~/ r;
+  final int limitLastDigit = (9223372036854775807 % r) + (negative ? 1 : 0);
+
   var result = 0;
   var hasDigits = false;
   while (index < end) {
@@ -84,11 +96,17 @@ int? tryParseIntUtf8(Uint8List source, int start, int end, {int? radix}) {
     }
     if (digit >= r) return null;
     hasDigits = true;
+
+    if (result > limitBeforeMul) return null;
+    if (result == limitBeforeMul && digit > limitLastDigit) return null;
+
     result = result * r + digit;
   }
 
   if (!hasDigits) return null;
-  return negative ? -result : result;
+  return negative
+      ? (result == -9223372036854775808 ? result : -result)
+      : result;
 }
 
 /// Parses a 64-bit IEEE 754 floating point number directly from the UTF-8
@@ -417,6 +435,13 @@ String decodeStringUtf8(
   var isVerbatim = true;
   for (var i = start; i < end; i++) {
     final b = source[i];
+    if (b < 0x20 || b == 34) {
+      throw FormatException(
+        'Unescaped control character or quote at offset $i',
+        source,
+        i,
+      );
+    }
     if (b == 92) {
       // '\\' escape present
       isVerbatim = false;
@@ -590,7 +615,8 @@ bool isNullUtf8(Uint8List source, int start, int end) {
 bool isVerbatimUtf8(Uint8List source, int start, int end) {
   if (start < 0 || end > source.length || start > end) return false;
   for (var i = start; i < end; i++) {
-    if (source[i] == 92) return false; // '\\'
+    final b = source[i];
+    if (b < 0x20 || b == 92 || b == 34) return false;
   }
   return true;
 }

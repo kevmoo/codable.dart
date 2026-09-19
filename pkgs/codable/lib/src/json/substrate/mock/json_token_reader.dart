@@ -73,8 +73,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
-  static const int _containerArray = 1;
-  static const int _containerObject = 2;
+  static const int _stateArrayEmptyOrComma = 1;
+  static const int _stateArrayValue = 2;
+  static const int _stateObjectEmptyOrComma = 3;
+  static const int _stateObjectKey = 4;
+  static const int _stateObjectValue = 5;
 
   final Uint8List _bytes;
   int _offset = 0;
@@ -84,8 +87,6 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   );
 
   final List<int> _containerTypes = <int>[];
-  final List<int> _elementCounts = <int>[];
-  final List<int> _lastCheckedOffsets = <int>[];
 
   _MockJsonTokenReader(this._bytes);
 
@@ -140,7 +141,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @pragma('wasm:prefer-inline')
   void _onValueRead() {
     if (_containerTypes.isNotEmpty) {
-      _elementCounts[_containerTypes.length - 1]++;
+      final depth = _containerTypes.length - 1;
+      final state = _containerTypes[depth];
+      if (state == _stateObjectEmptyOrComma || state == _stateObjectValue) {
+        throw FormatException('Expected property name at offset $_offset');
+      } else if (state == _stateObjectKey) {
+        _containerTypes[depth] = _stateObjectValue;
+      } else if (state == _stateArrayEmptyOrComma) {
+        _containerTypes[depth] = _stateArrayValue;
+      } else {
+        throw FormatException('Expected comma at offset $_offset');
+      }
     }
   }
 
@@ -199,9 +210,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         );
       }
       _offset++;
-      _containerTypes.add(_containerObject);
-      _elementCounts.add(0);
-      _lastCheckedOffsets.add(-1);
+      _containerTypes.add(_stateObjectEmptyOrComma);
     } else {
       throw FormatException('Expected "{" at offset $_offset');
     }
@@ -210,14 +219,19 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endObject() {
     _skipWs();
-    if (_containerTypes.isEmpty || _containerTypes.last != _containerObject) {
+    if (_containerTypes.isEmpty) {
+      throw FormatException('Mismatched endObject at offset $_offset');
+    }
+    final state = _containerTypes.last;
+    if (state != _stateObjectEmptyOrComma && state != _stateObjectValue) {
+      if (state == _stateObjectKey) {
+        throw FormatException('Expected value at offset $_offset');
+      }
       throw FormatException('Mismatched endObject at offset $_offset');
     }
     if (_offset < _bytes.length && _bytes[_offset] == 125) {
       _offset++;
       _containerTypes.removeLast();
-      _elementCounts.removeLast();
-      _lastCheckedOffsets.removeLast();
       _onValueRead();
     } else {
       throw FormatException('Expected "}" at offset $_offset');
@@ -234,9 +248,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         );
       }
       _offset++;
-      _containerTypes.add(_containerArray);
-      _elementCounts.add(0);
-      _lastCheckedOffsets.add(-1);
+      _containerTypes.add(_stateArrayEmptyOrComma);
     } else {
       throw FormatException('Expected "[" at offset $_offset');
     }
@@ -245,14 +257,16 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @override
   void endArray() {
     _skipWs();
-    if (_containerTypes.isEmpty || _containerTypes.last != _containerArray) {
+    if (_containerTypes.isEmpty) {
+      throw FormatException('Mismatched endArray at offset $_offset');
+    }
+    final state = _containerTypes.last;
+    if (state != _stateArrayEmptyOrComma && state != _stateArrayValue) {
       throw FormatException('Mismatched endArray at offset $_offset');
     }
     if (_offset < _bytes.length && _bytes[_offset] == 93) {
       _offset++;
       _containerTypes.removeLast();
-      _elementCounts.removeLast();
-      _lastCheckedOffsets.removeLast();
       _onValueRead();
     } else {
       throw FormatException('Expected "]" at offset $_offset');
@@ -267,22 +281,24 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       return _offset < _bytes.length;
     }
     final depth = _containerTypes.length - 1;
-    final type = _containerTypes[depth];
-    final closeChar = type == _containerArray ? 93 : 125; // ']' or '}'
-    final count = _elementCounts[depth];
+    final state = _containerTypes[depth];
+
+    if (state == _stateObjectKey) {
+      throw FormatException('Expected value at offset $_offset');
+    }
+
+    final isArray =
+        state == _stateArrayEmptyOrComma || state == _stateArrayValue;
+    final closeChar = isArray ? 93 : 125; // ']' or '}'
 
     if (_bytes[_offset] == closeChar) {
       return false;
     }
 
-    if (count == 0) {
+    if (state == _stateArrayEmptyOrComma || state == _stateObjectEmptyOrComma) {
       if (_bytes[_offset] == 44) {
         throw FormatException('Unexpected leading comma at offset $_offset');
       }
-      return true;
-    }
-
-    if (_lastCheckedOffsets[depth] == _offset) {
       return true;
     }
 
@@ -297,13 +313,25 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     if (_offset < _bytes.length && _bytes[_offset] == closeChar) {
       throw FormatException('Trailing comma not allowed at offset $_offset');
     }
-    _lastCheckedOffsets[depth] = _offset;
+    _containerTypes[depth] = isArray
+        ? _stateArrayEmptyOrComma
+        : _stateObjectEmptyOrComma;
     return true;
   }
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   (int, int, bool) _scanPropertyName() {
+    if (_containerTypes.isEmpty) {
+      throw FormatException('Unexpected property name at offset $_offset');
+    }
+    final depth = _containerTypes.length - 1;
+    final state = _containerTypes[depth];
+    if (state != _stateObjectEmptyOrComma) {
+      throw FormatException('Unexpected property name at offset $_offset');
+    }
+    _containerTypes[depth] = _stateObjectKey;
+
     var i = _offset;
     while (i < _bytes.length && _isWs(_bytes[i])) {
       i++;
@@ -501,6 +529,16 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         _offset,
       );
     }
+
+    if (_containerTypes.isNotEmpty) {
+      final state = _containerTypes.last;
+      if (state == _stateObjectEmptyOrComma) {
+        nextName();
+        skipValue();
+        return;
+      }
+    }
+
     final b = _bytes[_offset];
     if (b == 123) {
       beginObject();

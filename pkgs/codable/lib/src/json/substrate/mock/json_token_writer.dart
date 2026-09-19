@@ -1,4 +1,13 @@
-import 'dart:convert';
+import 'dart:convert'
+    hide
+        JsonTokenReader,
+        JsonTokenWriter,
+        JsonTokenType,
+        JsonKeyOptions,
+        jsonUtf8,
+        jsonUtf8Decode,
+        jsonUtf8Encode,
+        JsonUtf8TokenWriter;
 import 'dart:typed_data';
 
 import '../writer_formatting.dart';

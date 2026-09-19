@@ -2,7 +2,16 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:convert';
+import 'dart:convert'
+    hide
+        JsonTokenReader,
+        JsonTokenWriter,
+        JsonTokenType,
+        JsonKeyOptions,
+        jsonUtf8,
+        jsonUtf8Decode,
+        jsonUtf8Encode,
+        JsonUtf8TokenWriter;
 import 'dart:typed_data';
 
 /// Pre-compiled key lookup options for fast-path UTF-8 property matching.

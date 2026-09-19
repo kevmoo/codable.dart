@@ -5,4 +5,4 @@
 /// Active substrate dispatcher (switched to native mode).
 library;
 
-export 'substrate_native.dart';
+export 'mock/substrate_mock.dart';
