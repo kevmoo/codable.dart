@@ -108,8 +108,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   bool _advanceChunk() {
     if (_chunks == null) return false;
     _chunkIndex++;
-    if (_chunkIndex < _chunks!.length) {
-      _bytes = _chunks![_chunkIndex];
+    if (_chunkIndex < _chunks.length) {
+      _bytes = _chunks[_chunkIndex];
       _offset = 0;
       return true;
     }
@@ -119,10 +119,10 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   bool _stitchNextChunk() {
-    if (_chunks == null || _chunkIndex + 1 >= _chunks!.length) {
+    if (_chunks == null || _chunkIndex + 1 >= _chunks.length) {
       return false;
     }
-    final next = _chunks![_chunkIndex + 1];
+    final next = _chunks[_chunkIndex + 1];
     final stitched = Uint8List(_bytes.length + next.length);
     stitched.setAll(0, _bytes);
     stitched.setAll(_bytes.length, next);
@@ -608,10 +608,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         if (b == 92) {
           hasEscapes = true;
           while (i + 1 >= _bytes.length) {
-            if (!_stitchNextChunk())
+            if (!_stitchNextChunk()) {
               throw FormatException(
                 'Unterminated escape sequence at offset $i',
               );
+            }
           }
           i += 2;
         } else if (b == 34) {
@@ -677,10 +678,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         }
         if (b == 92) {
           while (i + 1 >= _bytes.length) {
-            if (!_stitchNextChunk())
+            if (!_stitchNextChunk()) {
               throw FormatException(
                 'Unterminated escape sequence at offset $i',
               );
+            }
           }
           i += 2;
         } else if (b == 34) {
