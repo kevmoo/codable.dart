@@ -229,7 +229,20 @@ double? _extractMetricNs(Map<String, dynamic>? metrics, String metric) {
 
 /// Candidate that is not one of the compared implementations. Its movement
 /// between the two SDK passes bounds the measurement floor for the same run.
+///
+/// This is a *null experiment*: the Tier 1 / Tier 0 ratio must be exactly
+/// `1.000x`, because the source on this path is identical in both SDKs. Any
+/// deviation is harness, build, or measurement drift.
 const _controlCandidate = 'json_serializable_literal';
+
+/// Encode-side counterpart to [_controlCandidate].
+///
+/// There is no JSON encode path that is source-identical across the two SDKs
+/// — the fork relocates `JsonEncoder`, `_JsonEncoderSink` and
+/// `_JsonStringStringifier` out of `json.dart` — so the encode control has to
+/// be a non-JSON codec. `sdk/lib/convert/utf8.dart` is untouched and no
+/// `convert_patch.dart` references `_Utf8Encoder`.
+const _encodeControlCandidate = 'utf8_encode_control';
 
 String _candidateKeyFor(String candidate, String? sdk) =>
     sdk == 'stock' ? 'stock_$candidate' : candidate;
@@ -254,17 +267,22 @@ Set<String> collectUnstableCells(List<dynamic> benchmarksList) {
   return unstable;
 }
 
-/// Per-target Tier 1 / Tier 0 ratios for [_controlCandidate], across the
-/// canonical decode workloads.
+/// Per-target Tier 1 / Tier 0 ratios for [candidate], across the canonical
+/// workloads of [mode].
+///
+/// [mode] is a group suffix such as `decode`, `encode`, `decode_stream` or
+/// `encode_stream`. [candidate] defaults to the decode control; pass
+/// [_encodeControlCandidate] for the encode tables.
 Map<String, List<double>> extractControlRatios(
   List<dynamic> benchmarksList,
   String metric, {
-  String decodeMode = 'decode',
+  String mode = 'decode',
+  String candidate = _controlCandidate,
 }) {
   final byKey = <String, double>{};
   for (final raw in benchmarksList) {
     if (raw is! Map<String, dynamic>) continue;
-    if (raw['name'] != _controlCandidate) continue;
+    if (raw['name'] != candidate) continue;
     final target = raw['target'] as String?;
     final coords = raw['coordinates'] as Map<String, dynamic>?;
     final group = coords?['group'] as String?;
@@ -283,8 +301,8 @@ Map<String, List<double>> extractControlRatios(
   for (final target in canonicalTargets) {
     final ratios = <double>[];
     for (final ds in canonicalDatasets) {
-      final stock = byKey['$target|${ds}_$decodeMode|stock'];
-      final fork = byKey['$target|${ds}_$decodeMode|native_kernels'];
+      final stock = byKey['$target|${ds}_$mode|stock'];
+      final fork = byKey['$target|${ds}_$mode|native_kernels'];
       if (stock != null && fork != null && fork > 0) ratios.add(stock / fork);
     }
     if (ratios.isNotEmpty) out[target] = ratios;
@@ -398,7 +416,13 @@ String generateMarkdownReport(
   final controlRatios = extractControlRatios(
     benchmarksList,
     metric,
-    decodeMode: decodeMode,
+    mode: decodeMode,
+  );
+  final encodeControlRatios = extractControlRatios(
+    benchmarksList,
+    metric,
+    mode: encodeMode,
+    candidate: _encodeControlCandidate,
   );
 
   if (streaming) {
@@ -432,6 +456,7 @@ String generateMarkdownReport(
     _writeControlAndStabilitySection(
       buf,
       controlRatios,
+      encodeControlRatios,
       unstable,
       activeBenchmarksList.length,
     );
@@ -461,42 +486,63 @@ String generateMarkdownReport(
 void _writeControlAndStabilitySection(
   StringBuffer buf,
   Map<String, List<double>> controlRatios,
+  Map<String, List<double>> encodeControlRatios,
   Set<String> unstable,
   int totalCells,
 ) {
   buf.writeln('### 🎛️ Measurement Controls & Resolution Floor\n');
   buf.writeln(
-    'These two diagnostics bound how much of the tables above is signal. '
+    'These diagnostics bound how much of the tables above is signal. '
     'Read them before crediting any ratio.\n',
   );
 
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
-  buf.writeln(
-    '| Target Runtime | Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |',
-  );
-  buf.writeln('| :--- | :---: | :--- |');
-  for (final target in canonicalTargets) {
-    final ratios = controlRatios[target];
-    if (ratios == null || ratios.isEmpty) {
-      buf.writeln('| **${target.toUpperCase()}** | N/A | N/A |');
-      continue;
-    }
-    final per = ratios.map((r) => r.toStringAsFixed(3)).join(', ');
-    buf.writeln(
-      '| **${target.toUpperCase()}** | '
-      '**${_geomean(ratios).toStringAsFixed(3)}x** | `[$per]` |',
-    );
-  }
-  buf.writeln('<!-- mdformat on -->\n');
+  _writeControlTable(buf, 'Decode', controlRatios);
+  _writeControlTable(buf, 'Encode', encodeControlRatios);
 
   buf.writeln(
-    '> **Control candidate**: `$_controlCandidate` calls `jsonDecode(String)` '
-    'plus `.fromJson()` hydration. Because the fork only alters the UTF-8 '
-    '*byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a '
-    'value away from `1.000x` is harness or build drift, not an intentional '
-    'code effect. **Treat any speedup inside the control band as '
-    'unresolved.**',
+    '> **Decode control**: `$_controlCandidate` calls `jsonDecode(String)` '
+    'plus `.fromJson()` hydration. On AOT and JS the fork alters only the '
+    'UTF-8 *byte* parser (`_JsonUtf8Parser`), leaving this String path '
+    'source-identical.\n'
+    '>\n'
+    '> **Encode control**: `$_encodeControlCandidate` calls '
+    '`utf8.encode(String)`. There is no JSON encode path that is '
+    'source-identical across the two SDKs — the fork relocates '
+    '`JsonEncoder`, `_JsonEncoderSink` and `_JsonStringStringifier` out of '
+    '`json.dart` — so the encode control must be a non-JSON codec. '
+    '`sdk/lib/convert/utf8.dart` is untouched and no `convert_patch.dart` '
+    'references `_Utf8Encoder`.\n'
+    '>\n'
+    '> Both are **null experiments**: the ratio must be `1.000x` because the '
+    'source on those paths is identical in both SDKs. A value away from '
+    '`1.000x` is harness, build, or measurement drift. **Treat any speedup '
+    'inside the control band as unresolved.**',
   );
+
+  buf.writeln(
+    '>\n'
+    '> ⚠️ **The controls are NOT fully immune on Wasm.** On `dart2wasm`, '
+    '`dart:convert` *is* `sdk/lib/_internal/wasm/common/convert_patch.dart`, '
+    'a file this fork edits. Both control codecs live in that same '
+    'compilation unit, so a Wasm control deviation cannot cleanly separate '
+    '"our edit perturbed codegen or layout" from "harness drift". A fully '
+    'immune Wasm control would have to live outside `dart:convert` '
+    'entirely. Treat the Wasm control as a lower bound on drift, not a '
+    'complete account of it.',
+  );
+
+  buf.writeln(
+    '>\n'
+    '> **Which comparisons the control actually bounds.** Tier 0 and Tier 2 '
+    'run on the stock `dart` binary; Tier 1 and Tier 3 run on the fork '
+    'binary. Two binaries cannot share a process, so per-build and '
+    'per-process bias falls entirely on the **cross-pass** ratios — '
+    '*Tier 1 vs Tier 0*, *Tier 3 vs Tier 0*, and any Tier 2 vs Tier 1/3 '
+    'comparison. It **cancels** in the **same-pass** ratios: '
+    '*Tier 3 vs Tier 1* (both fork) and *Tier 2 vs Tier 0* (both stock). '
+    'Do not discount same-pass figures on control-drift grounds.',
+  );
+
   if (unstable.isNotEmpty) {
     final pct = (unstable.length / totalCells * 100).toStringAsFixed(0);
     buf.writeln(
@@ -507,6 +553,37 @@ void _writeControlAndStabilitySection(
     );
   }
   buf.writeln();
+}
+
+/// Emits one control table: a row per canonical target, with the geomean
+/// control drift and the per-dataset ratios behind it.
+///
+/// [label] is `Decode` or `Encode`. Targets with no control data render as
+/// `N/A` rather than being dropped, so a missing control is visible in the
+/// report instead of silently absent.
+void _writeControlTable(
+  StringBuffer buf,
+  String label,
+  Map<String, List<double>> ratios,
+) {
+  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
+  buf.writeln(
+    '| Target Runtime | $label Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |',
+  );
+  buf.writeln('| :--- | :---: | :--- |');
+  for (final target in canonicalTargets) {
+    final targetRatios = ratios[target];
+    if (targetRatios == null || targetRatios.isEmpty) {
+      buf.writeln('| **${target.toUpperCase()}** | N/A | N/A |');
+      continue;
+    }
+    final per = targetRatios.map((r) => r.toStringAsFixed(3)).join(', ');
+    buf.writeln(
+      '| **${target.toUpperCase()}** | '
+      '**${_geomean(targetRatios).toStringAsFixed(3)}x** | `[$per]` |',
+    );
+  }
+  buf.writeln('<!-- mdformat on -->\n');
 }
 
 void _writeProvenanceSection(
