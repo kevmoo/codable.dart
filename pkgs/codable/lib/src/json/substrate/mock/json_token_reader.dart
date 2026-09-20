@@ -619,7 +619,10 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       if (!_advanceChunk()) break;
       localI = 0;
     }
-    if (!foundColon) throw FormatException('Expected ":"');
+    if (!foundColon)
+      throw FormatException(
+        'Expected ":" at EOF (Chunk $_chunkIndex of ${_chunks?.length})',
+      );
 
     while (true) {
       while (localI < _bytes.length && _isWs(_bytes[localI])) {
@@ -645,7 +648,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     bool hasEscapes,
     bool needsColon,
   ) {
-    _straddlingBytes = _bytes.sublist(start, end);
+    final straddlingBytes = _bytes.sublist(start, end);
 
     int localI = _bytes.length;
     if (needsColon) {
@@ -658,7 +661,15 @@ final class _MockJsonTokenReader implements JsonTokenReader {
             localI++;
             break;
           } else {
-            throw FormatException('Expected ":"');
+            String context = "";
+            for (int k = -10; k <= 10; k++) {
+              if (localI + k >= 0 && localI + k < _bytes.length) {
+                context += String.fromCharCode(_bytes[localI + k]);
+              }
+            }
+            throw FormatException(
+              'Expected ":" but found "${String.fromCharCode(_bytes[localI])}" (${_bytes[localI]}) at offset $localI. Parsed string: [${String.fromCharCodes(straddlingBytes)}]. Context: [$context]',
+            );
           }
         }
         if (!_advanceChunk()) break;
@@ -674,6 +685,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       localI = 0;
     }
 
+    _straddlingBytes = straddlingBytes;
     _bytes = _straddlingBytes!;
     _offset = _bytes.length;
     _rebaseOffset = localI;
