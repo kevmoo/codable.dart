@@ -1404,7 +1404,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   final Sink<T> _sink;
   final T Function(Decoder decoder) _decode;
   final Map<Object, Object?> _userInfo;
-  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  final BytesBuilder _accumulator = BytesBuilder(copy: true);
   bool _isClosed = false;
 
   _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
