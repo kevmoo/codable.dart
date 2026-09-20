@@ -9,6 +9,10 @@ abstract interface class JsonTokenReader {
   /// Instantiates a pull-based token reader over [bytes].
   factory JsonTokenReader.fromBytes(Uint8List bytes) = _MockJsonTokenReader;
 
+  /// Instantiates a streaming token reader over a list of chunks.
+  factory JsonTokenReader.fromChunks(List<Uint8List> chunks) =
+      _MockJsonTokenReader.fromChunks;
+
   /// Peeks at the next token type without advancing the cursor.
   JsonTokenType peek();
 
@@ -73,8 +77,61 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
-  final Uint8List _bytes;
+  Uint8List _bytes;
   int _offset = 0;
+  final List<Uint8List>? _chunks;
+  int _chunkIndex = 0;
+  bool _isStitched = false;
+
+  _MockJsonTokenReader(this._bytes) : _chunks = null;
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _normalizeStitched() {
+    if (_isStitched) {
+      final lastChunk = _chunks![_chunkIndex];
+      final prefixLen = _bytes.length - lastChunk.length;
+      if (_offset >= prefixLen) {
+        _offset -= prefixLen;
+        _bytes = lastChunk;
+        _isStitched = false;
+      }
+    }
+  }
+
+  _MockJsonTokenReader.fromChunks(List<Uint8List> chunks)
+    : _chunks = chunks,
+      _bytes = chunks.isEmpty ? Uint8List(0) : chunks[0];
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool _advanceChunk() {
+    if (_chunks == null) return false;
+    _chunkIndex++;
+    if (_chunkIndex < _chunks!.length) {
+      _bytes = _chunks![_chunkIndex];
+      _offset = 0;
+      return true;
+    }
+    return false;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool _stitchNextChunk() {
+    if (_chunks == null || _chunkIndex + 1 >= _chunks!.length) {
+      return false;
+    }
+    final next = _chunks![_chunkIndex + 1];
+    final stitched = Uint8List(_bytes.length + next.length);
+    stitched.setAll(0, _bytes);
+    stitched.setAll(_bytes.length, next);
+    _bytes = stitched;
+    _chunkIndex++;
+    _isStitched = true;
+    return true;
+  }
+
   final List<String?> _stringCache = List<String?>.filled(
     _stringCacheSize,
     null,
@@ -86,8 +143,6 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   int _topType = 0;
   int _topState = 0;
   bool _hasReadRoot = false;
-
-  _MockJsonTokenReader(this._bytes);
 
   String _decodeCachedString(int start, int end) {
     final len = end - start;
@@ -131,8 +186,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   void _skipWs() {
-    while (_offset < _bytes.length && _isWs(_bytes[_offset])) {
-      _offset++;
+    _normalizeStitched();
+    while (true) {
+      while (_offset < _bytes.length && _isWs(_bytes[_offset])) {
+        _offset++;
+      }
+      if (_offset < _bytes.length) return;
+      if (!_advanceChunk()) return;
     }
   }
 
@@ -277,8 +337,12 @@ final class _MockJsonTokenReader implements JsonTokenReader {
             if (_bytes[_offset] == 125) return JsonTokenType.endObject;
             if (_bytes[_offset] == 44) {
               var i = _offset + 1;
-              while (i < _bytes.length && _isWs(_bytes[i])) {
-                i++;
+              while (true) {
+                while (i < _bytes.length && _isWs(_bytes[i])) {
+                  i++;
+                }
+                if (i < _bytes.length) break;
+                if (!_stitchNextChunk()) break; // EOF
               }
               if (i >= _bytes.length) {
                 throw FormatException(
@@ -321,8 +385,12 @@ final class _MockJsonTokenReader implements JsonTokenReader {
             if (_bytes[_offset] == 93) return JsonTokenType.endArray;
             if (_bytes[_offset] == 44) {
               var i = _offset + 1;
-              while (i < _bytes.length && _isWs(_bytes[i])) {
-                i++;
+              while (true) {
+                while (i < _bytes.length && _isWs(_bytes[i])) {
+                  i++;
+                }
+                if (i < _bytes.length) break;
+                if (!_stitchNextChunk()) break; // EOF
               }
               if (i >= _bytes.length) {
                 throw FormatException(
@@ -529,45 +597,64 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     final start = i + 1;
     i = start;
     var hasEscapes = false;
-    while (i < _bytes.length) {
-      final b = _bytes[i];
-      if (b < 0x20) {
-        throw FormatException(
-          'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
-        );
-      }
-      if (b == 92) {
-        hasEscapes = true;
-        if (i + 1 >= _bytes.length) {
-          throw FormatException('Unterminated escape sequence at offset $i');
+    while (true) {
+      while (i < _bytes.length) {
+        final b = _bytes[i];
+        if (b < 0x20) {
+          throw FormatException(
+            'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
+          );
         }
-        i += 2;
-      } else if (b == 34) {
-        break;
-      } else {
-        i++;
+        if (b == 92) {
+          hasEscapes = true;
+          while (i + 1 >= _bytes.length) {
+            if (!_stitchNextChunk())
+              throw FormatException(
+                'Unterminated escape sequence at offset $i',
+              );
+          }
+          i += 2;
+        } else if (b == 34) {
+          break;
+        } else {
+          i++;
+        }
       }
-    }
-    if (i >= _bytes.length) {
-      throw FormatException('Unterminated string literal at offset $start');
+      if (i < _bytes.length && _bytes[i] == 34) {
+        break;
+      }
+      if (!_stitchNextChunk()) {
+        throw FormatException('Unterminated string literal at offset $start');
+      }
     }
     final end = i;
     i++; // Advance past closing quote
 
     // Fused colon consumption & trailing whitespace
-    if (i < _bytes.length && _bytes[i] == 58) {
-      i++;
-    } else {
+    while (true) {
+      if (i < _bytes.length && _bytes[i] == 58) {
+        i++;
+        break;
+      }
       while (i < _bytes.length && _isWs(_bytes[i])) {
         i++;
       }
-      if (i >= _bytes.length || _bytes[i] != 58) {
+      if (i < _bytes.length) {
+        if (_bytes[i] != 58) throw FormatException('Expected ":" at offset $i');
+        i++;
+        break;
+      }
+      if (!_stitchNextChunk()) {
         throw FormatException('Expected ":" at offset $i');
       }
-      i++;
     }
-    while (i < _bytes.length && _isWs(_bytes[i])) {
-      i++;
+
+    while (true) {
+      while (i < _bytes.length && _isWs(_bytes[i])) {
+        i++;
+      }
+      if (i < _bytes.length) break;
+      if (!_stitchNextChunk()) break;
     }
     _offset = i;
     return (start, end, hasEscapes);
@@ -580,27 +667,34 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     }
     final start = _offset + 1;
     var i = start;
-    while (i < _bytes.length) {
-      final b = _bytes[i];
-      if (b < 0x20) {
-        throw FormatException(
-          'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
-        );
-      }
-      if (b == 92) {
-        if (i + 1 >= _bytes.length) {
-          throw FormatException('Unterminated escape sequence at offset $i');
+    while (true) {
+      while (i < _bytes.length) {
+        final b = _bytes[i];
+        if (b < 0x20) {
+          throw FormatException(
+            'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
+          );
         }
-        i += 2;
-      } else if (b == 34) {
-        final end = i;
-        _offset = i + 1;
-        return (start, end);
-      } else {
-        i++;
+        if (b == 92) {
+          while (i + 1 >= _bytes.length) {
+            if (!_stitchNextChunk())
+              throw FormatException(
+                'Unterminated escape sequence at offset $i',
+              );
+          }
+          i += 2;
+        } else if (b == 34) {
+          final end = i;
+          _offset = i + 1;
+          return (start, end);
+        } else {
+          i++;
+        }
+      }
+      if (!_stitchNextChunk()) {
+        throw FormatException('Unterminated string literal at offset $start');
       }
     }
-    throw FormatException('Unterminated string literal at offset $start');
   }
 
   @override
@@ -666,12 +760,16 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     _skipWs();
     final start = _offset;
     var i = start;
-    while (i < _bytes.length) {
-      final b = _bytes[i];
-      if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
-        break;
+    while (true) {
+      while (i < _bytes.length) {
+        final b = _bytes[i];
+        if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
+          break;
+        }
+        i++;
       }
-      i++;
+      if (i < _bytes.length) break;
+      if (!_stitchNextChunk()) break;
     }
     _offset = i;
     return (start, i);

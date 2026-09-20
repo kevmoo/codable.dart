@@ -42,6 +42,17 @@ final class JsonCodableDecoder implements Decoder {
     );
   }
 
+  factory JsonCodableDecoder.fromChunks(
+    List<Uint8List> chunks, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    return JsonCodableDecoder._(
+      JsonTokenReader.fromChunks(chunks),
+      null,
+      userInfo: userInfo,
+    );
+  }
+
   factory JsonCodableDecoder.fromString(
     String source, {
     Map<Object, Object?> userInfo = const {},
@@ -1404,7 +1415,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   final Sink<T> _sink;
   final T Function(Decoder decoder) _decode;
   final Map<Object, Object?> _userInfo;
-  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  final List<Uint8List> _chunks = [];
   bool _isClosed = false;
 
   _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
@@ -1414,7 +1425,11 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     if (_isClosed) {
       throw StateError('Cannot add to a closed sink');
     }
-    _accumulator.add(chunk);
+    if (chunk is Uint8List) {
+      _chunks.add(chunk);
+    } else {
+      _chunks.add(Uint8List.fromList(chunk));
+    }
   }
 
   @override
@@ -1424,7 +1439,13 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     }
     RangeError.checkValidRange(start, end, chunk.length);
     if (start < end) {
-      _accumulator.add(chunk.sublist(start, end));
+      if (chunk is Uint8List) {
+        _chunks.add(
+          Uint8List.fromList(Uint8List.sublistView(chunk, start, end)),
+        );
+      } else {
+        _chunks.add(Uint8List.fromList(chunk.sublist(start, end)));
+      }
     }
     if (isLast) {
       close();
@@ -1435,8 +1456,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   void close() {
     if (_isClosed) return;
     _isClosed = true;
-    final bytes = _accumulator.takeBytes();
-    final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
+    final decoder = JsonCodableDecoder.fromChunks(_chunks, userInfo: _userInfo);
     _sink.add(_decode(decoder));
     _sink.close();
   }
