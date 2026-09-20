@@ -49,12 +49,32 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 | :--- | :---: | :--- |
 | **AOT** | **0.993x** | `[0.999, 1.003, 0.991, 0.996, 0.977]` |
 | **JS** | **0.986x** | `[0.980, 1.000, 0.942, 1.000, 1.010]` |
-| **WASM** | **1.057x** | `[1.050, 1.292, 0.998, 1.001, 0.975]` |
+| **WASM** | ⚠️ **1.057x** *(retracted)* | `[1.050, ⚠️ 1.292 (retracted), 0.998, 1.001, 0.975]` |
 <!-- mdformat on -->
 
-> **Control candidate**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. Because the fork only alters the UTF-8 *byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a value away from `1.000x` is harness or build drift, not an intentional code effect. **Treat any speedup inside the control band as unresolved.**
+> [!WARNING]
+> **Retracted 2026-09-20: the WASM `canada.json` control cell (`1.292x`) and the WASM aggregate (`1.057x`) that contains it.**
 >
-> **Sample stability**: 2 of 180 measured cells (1%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
+> A later run of this same null experiment, on the same machine, produced **`0.748x`** for that cell (stock `19.841 ms` vs fork `26.540 ms`). A control that reads `+29%` in one run and `-25%` in another is not measuring a code effect. No third run repairs it: a third value would have no better claim to truth than the first two.
+>
+> `is_robust_stable: true` does **not** catch this. That flag measures dispersion *within* a single run; it says nothing about reproducibility *across* runs.
+
+> [!IMPORTANT]
+> **Also retracted: the precision these tables imply for any cross-pass ratio.**
+>
+> Baseline run-to-run drift is **2-10 points on every dataset and every target**, not the ~1% the formatting suggests. Tier 0 and Tier 2 are measured in one `bench_press` pass; Tier 1 and Tier 3 in a second. Any ratio spanning the two passes carries that drift.
+>
+> **Still quotable:** same-pass ratios are immune, because both operands come from one pass. The **Tier 3 vs Tier 1** and **Tier 2 vs Tier 0** columns stand as measured.
+>
+> Tracked as `#KNGTN`. These tables are regenerated once, after the harness defect is fixed — not before.
+
+> **Control candidate**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration.
+>
+> **Correction (2026-09-20):** this note previously asserted that "the fork only alters the UTF-8 *byte* parser (`_JsonUtf8Parser`), its String parser is untouched", and concluded that any deviation from `1.000x` was therefore pure drift. **That premise is false.** The fork adds a `maxDepth` field to `_JsonListener` and a `maxDepth != _noDepthLimit && stackLength >= maxDepth` test to `beginContainer()`; the String path runs that code on every container push, and stock has neither. The String path passes no `maxDepth`, so the test short-circuits on its first comparison — the real cost is one well-predicted branch per container. That is a small *systematic* bias, and it cannot produce the random sign-flipping swing described above. Both statements are true; neither explains the other.
+>
+> **Treat any speedup inside the control band as unresolved.**
+>
+> **Sample stability**: 2 of 180 measured cells (1%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements. Note the limitation recorded above: this flag does not detect cross-run irreproducibility.
 
 ### 🎯 AOT Target Detailed Breakdown
 
