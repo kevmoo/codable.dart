@@ -8,8 +8,6 @@ import 'span_parsers.dart';
 abstract interface class JsonTokenReader {
   /// Instantiates a pull-based token reader over [bytes].
   factory JsonTokenReader.fromBytes(Uint8List bytes) = _MockJsonTokenReader;
-
-  /// Instantiates a streaming token reader over a list of chunks.
   factory JsonTokenReader.fromChunks(List<Uint8List> chunks) =
       _MockJsonTokenReader.fromChunks;
 
@@ -77,60 +75,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   static const int _stringCacheMask = 127;
   static const int _maxCachedStringLength = 64;
 
+  Uint8List _chunkBytes;
   Uint8List _bytes;
   int _offset = 0;
-  final List<Uint8List>? _chunks;
+  final List<Uint8List?>? _chunks;
   int _chunkIndex = 0;
-  bool _isStitched = false;
-
-  _MockJsonTokenReader(this._bytes) : _chunks = null;
-
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void _normalizeStitched() {
-    if (_isStitched) {
-      final lastChunk = _chunks![_chunkIndex];
-      final prefixLen = _bytes.length - lastChunk.length;
-      if (_offset >= prefixLen) {
-        _offset -= prefixLen;
-        _bytes = lastChunk;
-        _isStitched = false;
-      }
-    }
-  }
-
-  _MockJsonTokenReader.fromChunks(List<Uint8List> chunks)
-    : _chunks = chunks,
-      _bytes = chunks.isEmpty ? Uint8List(0) : chunks[0];
-
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  bool _advanceChunk() {
-    if (_chunks == null) return false;
-    _chunkIndex++;
-    if (_chunkIndex < _chunks.length) {
-      _bytes = _chunks[_chunkIndex];
-      _offset = 0;
-      return true;
-    }
-    return false;
-  }
-
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  bool _stitchNextChunk() {
-    if (_chunks == null || _chunkIndex + 1 >= _chunks.length) {
-      return false;
-    }
-    final next = _chunks[_chunkIndex + 1];
-    final stitched = Uint8List(_bytes.length + next.length);
-    stitched.setAll(0, _bytes);
-    stitched.setAll(_bytes.length, next);
-    _bytes = stitched;
-    _chunkIndex++;
-    _isStitched = true;
-    return true;
-  }
+  Uint8List? _straddlingBytes;
+  int _rebaseOffset = 0;
 
   final List<String?> _stringCache = List<String?>.filled(
     _stringCacheSize,
@@ -143,6 +94,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   int _topType = 0;
   int _topState = 0;
   bool _hasReadRoot = false;
+
+  _MockJsonTokenReader(this._bytes) : _chunkBytes = _bytes, _chunks = null;
+
+  _MockJsonTokenReader.fromChunks(List<Uint8List> chunks)
+    : _chunks = List<Uint8List?>.of(chunks),
+      _bytes = chunks.isEmpty ? Uint8List(0) : chunks[0],
+      _chunkBytes = chunks.isEmpty ? Uint8List(0) : chunks[0] {
+    if (_chunks!.isNotEmpty) {
+      _chunks![0] = null;
+    }
+  }
 
   String _decodeCachedString(int start, int end) {
     final len = end - start;
@@ -183,16 +145,36 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   @pragma('wasm:prefer-inline')
   static bool _isWs(int b) => b == 0x20 || b == 0x0A || b == 0x0D || b == 0x09;
 
+  bool _advanceChunk() {
+    if (_chunks == null) return false;
+    if (_chunkIndex + 1 >= _chunks!.length) return false;
+    _chunkIndex++;
+    _chunkBytes = _chunks![_chunkIndex]!;
+    if (_straddlingBytes == null) {
+      _bytes = _chunkBytes;
+    }
+    _chunks![_chunkIndex] = null;
+    _offset = 0;
+    return true;
+  }
+
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   void _skipWs() {
-    _normalizeStitched();
+    if (_straddlingBytes != null) {
+      _bytes = _chunkBytes;
+      _offset = _rebaseOffset;
+      _straddlingBytes = null;
+    }
     while (true) {
       while (_offset < _bytes.length && _isWs(_bytes[_offset])) {
         _offset++;
       }
-      if (_offset < _bytes.length) return;
-      if (!_advanceChunk()) return;
+      if (_chunks != null && _offset >= _bytes.length) {
+        if (!_advanceChunk()) break;
+      } else {
+        break;
+      }
     }
   }
 
@@ -337,12 +319,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
             if (_bytes[_offset] == 125) return JsonTokenType.endObject;
             if (_bytes[_offset] == 44) {
               var i = _offset + 1;
-              while (true) {
-                while (i < _bytes.length && _isWs(_bytes[i])) {
-                  i++;
-                }
-                if (i < _bytes.length) break;
-                if (!_stitchNextChunk()) break; // EOF
+              while (i < _bytes.length && _isWs(_bytes[i])) {
+                i++;
               }
               if (i >= _bytes.length) {
                 throw FormatException(
@@ -385,12 +363,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
             if (_bytes[_offset] == 93) return JsonTokenType.endArray;
             if (_bytes[_offset] == 44) {
               var i = _offset + 1;
-              while (true) {
-                while (i < _bytes.length && _isWs(_bytes[i])) {
-                  i++;
-                }
-                if (i < _bytes.length) break;
-                if (!_stitchNextChunk()) break; // EOF
+              while (i < _bytes.length && _isWs(_bytes[i])) {
+                i++;
               }
               if (i >= _bytes.length) {
                 throw FormatException(
@@ -585,6 +559,127 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     return true;
   }
 
+  (int, int, bool) _stitchPropertyName(int start, int i, bool hasEscapes) {
+    BytesBuilder builder = BytesBuilder(copy: false);
+    builder.add(_bytes.sublist(start, i));
+
+    bool inEscape = false;
+    if (i == _bytes.length - 1 && _bytes[i] == 92) {
+      inEscape = true;
+      builder.add([92]);
+    }
+
+    bool foundQuote = false;
+    int localI = 0;
+    while (!foundQuote && _advanceChunk()) {
+      localI = 0;
+      while (localI < _bytes.length) {
+        if (inEscape) {
+          inEscape = false;
+          localI++;
+          continue;
+        }
+        final b = _bytes[localI];
+        if (b < 0x20) throw FormatException('Unescaped control');
+        if (b == 92) {
+          hasEscapes = true;
+          if (localI + 1 >= _bytes.length) {
+            inEscape = true;
+            localI++;
+          } else {
+            localI += 2;
+          }
+        } else if (b == 34) {
+          builder.add(_bytes.sublist(0, localI));
+          foundQuote = true;
+          localI++; // skip quote
+          break;
+        } else {
+          localI++;
+        }
+      }
+      if (!foundQuote) builder.add(_bytes);
+    }
+    if (!foundQuote) throw FormatException('Unterminated string');
+
+    bool foundColon = false;
+    while (true) {
+      while (localI < _bytes.length && _isWs(_bytes[localI])) {
+        localI++;
+      }
+      if (localI < _bytes.length) {
+        if (_bytes[localI] == 58) {
+          foundColon = true;
+          localI++;
+          break;
+        } else {
+          throw FormatException('Expected ":"');
+        }
+      }
+      if (!_advanceChunk()) break;
+      localI = 0;
+    }
+    if (!foundColon) throw FormatException('Expected ":"');
+
+    while (true) {
+      while (localI < _bytes.length && _isWs(_bytes[localI])) {
+        localI++;
+      }
+      if (localI < _bytes.length) {
+        break;
+      }
+      if (!_advanceChunk()) break;
+      localI = 0;
+    }
+
+    _straddlingBytes = builder.takeBytes();
+    _bytes = _straddlingBytes!;
+    _offset = _bytes.length;
+    _rebaseOffset = localI;
+    return (0, _straddlingBytes!.length, hasEscapes);
+  }
+
+  (int, int, bool) _stitchPropertyNameFinished(
+    int start,
+    int end,
+    bool hasEscapes,
+    bool needsColon,
+  ) {
+    _straddlingBytes = _bytes.sublist(start, end);
+
+    int localI = _bytes.length;
+    if (needsColon) {
+      bool foundColon = false;
+      while (true) {
+        while (localI < _bytes.length && _isWs(_bytes[localI])) localI++;
+        if (localI < _bytes.length) {
+          if (_bytes[localI] == 58) {
+            foundColon = true;
+            localI++;
+            break;
+          } else {
+            throw FormatException('Expected ":"');
+          }
+        }
+        if (!_advanceChunk()) break;
+        localI = 0;
+      }
+      if (!foundColon) throw FormatException('Expected ":"');
+    }
+
+    while (true) {
+      while (localI < _bytes.length && _isWs(_bytes[localI])) localI++;
+      if (localI < _bytes.length) break;
+      if (!_advanceChunk()) break;
+      localI = 0;
+    }
+
+    _bytes = _straddlingBytes!;
+    _offset = _bytes.length;
+    _rebaseOffset = localI;
+    return (0, _straddlingBytes!.length, hasEscapes);
+  }
+
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   (int, int, bool) _scanPropertyName() {
@@ -592,111 +687,137 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
     var i = _offset;
     if (i >= _bytes.length || _bytes[i] != 34) {
-      throw FormatException('Expected string at offset $i');
+      throw FormatException('Expected string');
     }
     final start = i + 1;
     i = start;
     var hasEscapes = false;
-    while (true) {
-      while (i < _bytes.length) {
-        final b = _bytes[i];
-        if (b < 0x20) {
-          throw FormatException(
-            'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
-          );
-        }
-        if (b == 92) {
-          hasEscapes = true;
-          while (i + 1 >= _bytes.length) {
-            if (!_stitchNextChunk()) {
-              throw FormatException(
-                'Unterminated escape sequence at offset $i',
-              );
-            }
-          }
-          i += 2;
-        } else if (b == 34) {
-          break;
-        } else {
-          i++;
-        }
+    while (i < _bytes.length) {
+      final b = _bytes[i];
+      if (b < 0x20) {
+        throw FormatException('Unescaped control character');
       }
-      if (i < _bytes.length && _bytes[i] == 34) {
+      if (b == 92) {
+        hasEscapes = true;
+        if (i + 1 >= _bytes.length) {
+          if (_chunks != null) return _stitchPropertyName(start, i, hasEscapes);
+          throw FormatException('Unterminated escape sequence');
+        }
+        i += 2;
+      } else if (b == 34) {
         break;
+      } else {
+        i++;
       }
-      if (!_stitchNextChunk()) {
-        throw FormatException('Unterminated string literal at offset $start');
-      }
+    }
+    if (i >= _bytes.length) {
+      if (_chunks != null) return _stitchPropertyName(start, i, hasEscapes);
+      throw FormatException('Unterminated string literal');
     }
     final end = i;
-    i++; // Advance past closing quote
+    i++;
 
-    // Fused colon consumption & trailing whitespace
-    while (true) {
-      if (i < _bytes.length && _bytes[i] == 58) {
-        i++;
-        break;
-      }
+    if (i < _bytes.length && _bytes[i] == 58) {
+      i++;
+    } else {
       while (i < _bytes.length && _isWs(_bytes[i])) {
         i++;
       }
-      if (i < _bytes.length) {
-        if (_bytes[i] != 58) throw FormatException('Expected ":" at offset $i');
-        i++;
-        break;
+      if (i >= _bytes.length) {
+        if (_chunks != null)
+          return _stitchPropertyNameFinished(start, end, hasEscapes, true);
+        throw FormatException('Expected ":"');
       }
-      if (!_stitchNextChunk()) {
-        throw FormatException('Expected ":" at offset $i');
-      }
+      if (_bytes[i] != 58) throw FormatException('Expected ":"');
+      i++;
     }
-
-    while (true) {
-      while (i < _bytes.length && _isWs(_bytes[i])) {
-        i++;
-      }
-      if (i < _bytes.length) break;
-      if (!_stitchNextChunk()) break;
+    while (i < _bytes.length && _isWs(_bytes[i])) {
+      i++;
+    }
+    if (i >= _bytes.length && _chunks != null) {
+      return _stitchPropertyNameFinished(start, end, hasEscapes, false);
     }
     _offset = i;
     return (start, end, hasEscapes);
   }
 
+  (int, int) _stitchStringSpan(int start, int i) {
+    BytesBuilder builder = BytesBuilder(copy: false);
+    builder.add(_bytes.sublist(start, i));
+
+    bool inEscape = false;
+    if (i == _bytes.length - 1 && _bytes[i] == 92) {
+      inEscape = true;
+      builder.add([92]);
+    }
+
+    bool foundQuote = false;
+    int localI = 0;
+    while (!foundQuote && _advanceChunk()) {
+      localI = 0;
+      while (localI < _bytes.length) {
+        if (inEscape) {
+          inEscape = false;
+          localI++;
+          continue;
+        }
+        final b = _bytes[localI];
+        if (b < 0x20) throw FormatException('Unescaped control');
+        if (b == 92) {
+          if (localI + 1 >= _bytes.length) {
+            inEscape = true;
+            localI++;
+          } else {
+            localI += 2;
+          }
+        } else if (b == 34) {
+          builder.add(_bytes.sublist(0, localI));
+          foundQuote = true;
+          localI++;
+          break;
+        } else {
+          localI++;
+        }
+      }
+      if (!foundQuote) builder.add(_bytes);
+    }
+    if (!foundQuote) throw FormatException('Unterminated string');
+
+    _straddlingBytes = builder.takeBytes();
+    _bytes = _straddlingBytes!;
+    _offset = _bytes.length;
+    _rebaseOffset = localI;
+    return (0, _straddlingBytes!.length);
+  }
+
   (int, int) _scanStringSpan() {
     _skipWs();
     if (_offset >= _bytes.length || _bytes[_offset] != 34) {
-      throw FormatException('Expected string at offset $_offset');
+      throw FormatException('Expected string');
     }
     final start = _offset + 1;
     var i = start;
-    while (true) {
-      while (i < _bytes.length) {
-        final b = _bytes[i];
-        if (b < 0x20) {
-          throw FormatException(
-            'Unescaped control character 0x${b.toRadixString(16)} at offset $i',
-          );
-        }
-        if (b == 92) {
-          while (i + 1 >= _bytes.length) {
-            if (!_stitchNextChunk()) {
-              throw FormatException(
-                'Unterminated escape sequence at offset $i',
-              );
-            }
-          }
-          i += 2;
-        } else if (b == 34) {
-          final end = i;
-          _offset = i + 1;
-          return (start, end);
-        } else {
-          i++;
-        }
+    while (i < _bytes.length) {
+      final b = _bytes[i];
+      if (b < 0x20) {
+        throw FormatException('Unescaped control character');
       }
-      if (!_stitchNextChunk()) {
-        throw FormatException('Unterminated string literal at offset $start');
+      if (b == 92) {
+        if (i + 1 >= _bytes.length) {
+          if (_chunks != null) return _stitchStringSpan(start, i);
+          throw FormatException('Unterminated escape sequence');
+        }
+        i += 2;
+      } else if (b == 34) {
+        final end = i;
+        _offset = i + 1;
+        return (start, end);
+      } else {
+        i++;
       }
     }
+    if (_chunks != null) return _stitchStringSpan(start, i);
+    throw FormatException('Unterminated string literal');
   }
 
   @override
@@ -758,21 +879,46 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     return _decodeCachedString(start, end);
   }
 
+  (int, int) _stitchValueSpan(int start, int i) {
+    BytesBuilder builder = BytesBuilder(copy: false);
+    builder.add(_bytes.sublist(start, i));
+
+    bool foundEnd = false;
+    int localI = 0;
+    while (!foundEnd && _advanceChunk()) {
+      localI = 0;
+      while (localI < _bytes.length) {
+        final b = _bytes[localI];
+        if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
+          builder.add(_bytes.sublist(0, localI));
+          foundEnd = true;
+          break;
+        }
+        localI++;
+      }
+      if (!foundEnd) builder.add(_bytes);
+    }
+
+    _straddlingBytes = builder.takeBytes();
+    _bytes = _straddlingBytes!;
+    _offset = _straddlingBytes!.length;
+    _rebaseOffset = localI;
+    return (0, _straddlingBytes!.length);
+  }
+
   (int, int) _scanValueSpan() {
     _skipWs();
     final start = _offset;
     var i = start;
-    while (true) {
-      while (i < _bytes.length) {
-        final b = _bytes[i];
-        if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
-          break;
-        }
-        i++;
+    while (i < _bytes.length) {
+      final b = _bytes[i];
+      if (b == 44 || b == 125 || b == 93 || _isWs(b)) {
+        _offset = i;
+        return (start, i);
       }
-      if (i < _bytes.length) break;
-      if (!_stitchNextChunk()) break;
+      i++;
     }
+    if (_chunks != null) return _stitchValueSpan(start, i);
     _offset = i;
     return (start, i);
   }
