@@ -2,11 +2,11 @@
 
 ### 📝 Provenance
 
-- **Run Timestamp**: 2026-09-19T20:37:01.130Z
-- **Stock Dart SDK (Tier 0 & Tier 2)**: 3.14.0-241.0.dev (dev) (Thu Sep 17 17:06:19 2026 -0700) on "linux_x64"
-- **New Dart SDK (Tier 1 & Tier 3)**: 3.14.0-json-next.04411fb24e8ed6395eb858265d1214c192d23419 (main) (Fri Sep 18 23:25:20 2026 -0700) on "linux_x64"
-- **Repo Commit**: 7136bcffa52b42363bf45b551e22367a7ab2471c
-- **Host OS**: linux, Hostname: kevmoo.c.googlers.com
+- **Run Timestamp**: 2026-09-20T02:50:19.821Z
+- **Stock Dart SDK (Tier 0 & Tier 2)**: 3.14.0-248.0.dev (dev) (Sat Sep 19 01:09:06 2026 -0700) on "macos_arm64"
+- **New Dart SDK (Tier 1 & Tier 3)**: 3.14.0-json-next.e676935b72bd801c2fdec5188d1e4d8e69dcbf61 (main) (Sat Sep 19 16:14:26 2026 -0700) on "macos_arm64"
+- **Repo Commit**: 78ffc3c94f13923624a5fcb80b905aecbe9dc490
+- **Host OS**: macos, Hostname: kevmoo-mac
 - **Trials**: 15 (reporting `median` latency)
 
 ### 🏛️ The 4 Dart Serialization Tiers
@@ -21,18 +21,18 @@
 <!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Tier / Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📥 Decode GeoMean<br/>(vs Tier 0 / vs Tier 1) | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode GeoMean<br/>(vs Tier 0 / vs Tier 1) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **AOT (`dart compile exe`)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 31 / 52 / 85 ]` | **1.00x** / **1.01x** | 🔴 `[ 26 / 35 / 48 ]` | **1.00x** / **0.46x** |
-| **AOT (`dart compile exe`)** | **Tier 1: `New + json_serial`** | 🔴 `[ 29 / 51 / 92 ]` | **0.99x** / **1.00x** | 🟡 `[ 58 / 76 / 99 ]` | **2.16x** / **1.00x** |
-| **AOT (`dart compile exe`)** | **Tier 2: `Stock + Codable [Mock]`** | 🔴 `[ 62 / 69 / 76 ]` | **1.33x** / **1.34x** | 🟢 `[ 96 / 96 / 97 ]` | **2.73x** / **1.27x** |
-| **AOT (`dart compile exe`)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 100 / 100 / 100 ]` | **1.93x** / **1.95x** | 🟢 `[ 100 / 100 / 100 ]` | **2.84x** / **1.32x** |
-| **JS (`dart2js` / Node 24 / V8)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 29 / 34 / 38 ]` | **1.00x** / **1.04x** | 🟡 `[ 63 / 80 / 100 ]` | **1.00x** / **0.90x** |
-| **JS (`dart2js` / Node 24 / V8)** | **Tier 1: `New + json_serial`** | 🔴 `[ 28 / 32 / 37 ]` | **0.96x** / **1.00x** | 🟡 `[ 79 / 89 / 99 ]` | **1.11x** / **1.00x** |
-| **JS (`dart2js` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🟢 `[ 100 / 100 / 100 ]` | **2.98x** / **3.10x** | 🟢 `[ 99 / 100 / 100 ]` | **1.25x** / **1.13x** |
-| **JS (`dart2js` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 90 / 94 / 98 ]` | **2.81x** / **2.92x** | 🟢 `[ 85 / 92 / 100 ]` | **1.16x** / **1.04x** |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 38 / 61 / 97 ]` | **1.00x** / **0.81x** | 🔴 `[ 40 / 46 / 53 ]` | **1.00x** / **0.54x** |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 1: `New + json_serial`** | 🟡 `[ 57 / 76 / 100 ]` | **1.24x** / **1.00x** | 🟡 `[ 75 / 85 / 96 ]` | **1.86x** / **1.00x** |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🔴 `[ 19 / 21 / 22 ]` | **0.34x** / **0.28x** | 🟢 `[ 100 / 100 / 100 ]` | **2.19x** / **1.18x** |
-| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🔴 `[ 48 / 69 / 100 ]` | **1.13x** / **0.91x** | 🟢 `[ 89 / 92 / 95 ]` | **2.02x** / **1.09x** |
+| **AOT (`dart compile exe`)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 31 / 46 / 71 ]` | **1.00x** / **0.92x** | 🔴 `[ 19 / 27 / 39 ]` | **1.00x** / **0.39x** |
+| **AOT (`dart compile exe`)** | **Tier 1: `New + json_serial`** | 🔴 `[ 36 / 50 / 71 ]` | **1.08x** / **1.00x** | 🔴 `[ 48 / 70 / 100 ]` | **2.54x** / **1.00x** |
+| **AOT (`dart compile exe`)** | **Tier 2: `Stock + Codable [Mock]`** | 🔴 `[ 57 / 64 / 71 ]` | **1.38x** / **1.27x** | 🟢 `[ 84 / 92 / 100 ]` | **3.36x** / **1.32x** |
+| **AOT (`dart compile exe`)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 100 / 100 / 100 ]` | **2.15x** / **1.98x** | 🟢 `[ 84 / 91 / 98 ]` | **3.32x** / **1.30x** |
+| **JS (`dart2js` / Node 24 / V8)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 31 / 34 / 37 ]` | **1.00x** / **1.03x** | 🟡 `[ 79 / 81 / 83 ]` | **1.00x** / **0.81x** |
+| **JS (`dart2js` / Node 24 / V8)** | **Tier 1: `New + json_serial`** | 🔴 `[ 30 / 33 / 36 ]` | **0.97x** / **1.00x** | 🟢 `[ 100 / 100 / 100 ]` | **1.23x** / **1.00x** |
+| **JS (`dart2js` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🟢 `[ 100 / 100 / 100 ]` | **2.96x** / **3.06x** | 🔴 `[ 47 / 64 / 87 ]` | **0.78x** / **0.64x** |
+| **JS (`dart2js` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 97 / 98 / 99 ]` | **2.90x** / **3.00x** | 🔴 `[ 45 / 63 / 87 ]` | **0.77x** / **0.63x** |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 40 / 60 / 91 ]` | **1.00x** / **0.83x** | 🔴 `[ 39 / 44 / 49 ]` | **1.00x** / **0.51x** |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 1: `New + json_serial`** | 🟡 `[ 52 / 72 / 100 ]` | **1.20x** / **1.00x** | 🟡 `[ 76 / 86 / 97 ]` | **1.97x** / **1.00x** |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🔴 `[ 22 / 22 / 23 ]` | **0.37x** / **0.31x** | 🟢 `[ 96 / 98 / 100 ]` | **2.23x** / **1.13x** |
+| **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🟡 `[ 59 / 77 / 100 ]` | **1.28x** / **1.07x** | 🟢 `[ 93 / 96 / 100 ]` | **2.20x** / **1.12x** |
 <!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed across all measured tiers). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
@@ -49,14 +49,14 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |
 | :--- | :---: | :--- |
-| **AOT** | **0.944x** | `[0.952, 0.936]` |
-| **JS** | **0.902x** | `[0.922, 0.882]` |
-| **WASM** | **1.277x** | `[1.196, 1.364]` |
+| **AOT** | **0.994x** | `[0.994, 0.995]` |
+| **JS** | **0.990x** | `[0.971, 1.010]` |
+| **WASM** | **1.155x** | `[1.024, 1.303]` |
 <!-- mdformat on -->
 
 > **Control candidate**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. Because the fork only alters the UTF-8 *byte* parser (`_JsonUtf8Parser`), its String parser is untouched — so a value away from `1.000x` is harness or build drift, not an intentional code effect. **Treat any speedup inside the control band as unresolved.**
 >
-> **Sample stability**: 42 of 72 measured cells (58%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
+> **Sample stability**: 2 of 72 measured cells (3%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
 
 ### 🎯 AOT Target Detailed Breakdown
 
@@ -65,12 +65,10 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.41 ms | 4.11 ms | 4.94 ms | **3.76 ms** | **1.07x** ⚠️ | **0.89x** ⚠️ | **1.17x** ⚠️ | **1.09x** ⚠️ |
-| **canada.json (2.25 MB)** | 49.35 ms | 53.84 ms | 24.95 ms | **15.54 ms** | **0.92x** ⚠️ | **1.98x** ⚠️ | **3.18x** ⚠️ | **3.47x** ⚠️ |
-| **Geometric Mean** | — | — | — | — | **0.99x** | **1.33x** | **1.93x** | **1.95x** |
+| **10k Coordinates (0.39 MB)** | 1.77 ms | 1.77 ms | 1.76 ms | **1.25 ms** | **1.00x** | **1.01x** | **1.42x** | **1.42x** |
+| **canada.json (2.25 MB)** | 18.99 ms | 16.15 ms | 10.11 ms | **5.81 ms** | **1.18x** | **1.88x** | **3.27x** | **2.78x** |
+| **Geometric Mean** | — | — | — | — | **1.08x** | **1.38x** | **2.15x** | **1.98x** |
 <!-- mdformat on -->
-
-> ⚠️ 2 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: AOT Encode Stream (BytesBuilder / ByteConversionSink)
@@ -78,12 +76,10 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 8.95 ms | 3.98 ms | 2.43 ms | **2.33 ms** | **2.25x** ⚠️ | **3.69x** ⚠️ | **3.85x** ⚠️ | **1.71x** ⚠️ |
-| **canada.json (2.25 MB)** | 40.28 ms | 19.46 ms | 19.86 ms | **19.18 ms** | **2.07x** | **2.03x** | **2.10x** | **1.01x** |
-| **Geometric Mean** | — | — | — | — | **2.16x** | **2.73x** | **2.84x** | **1.32x** |
+| **10k Coordinates (0.39 MB)** | 4.45 ms | 1.74 ms | 841.1 µs | **859.8 µs** | **2.55x** | **5.29x** | **5.17x** | **2.03x** |
+| **canada.json (2.25 MB)** | 18.48 ms | 7.29 ms | 8.65 ms | **8.67 ms** | **2.54x** | **2.14x** | **2.13x** | **0.84x** |
+| **Geometric Mean** | — | — | — | — | **2.54x** | **3.36x** | **3.32x** | **1.30x** |
 <!-- mdformat on -->
-
-> ⚠️ 1 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 ------------------------------------------------------------------------
@@ -95,12 +91,10 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 7.06 ms | 7.21 ms | 2.70 ms | **2.75 ms** | **0.98x** | **2.61x** ⚠️ | **2.57x** | **2.62x** |
-| **canada.json (2.25 MB)** | 53.00 ms | 56.00 ms | 15.57 ms | **17.29 ms** | **0.95x** ⚠️ | **3.40x** ⚠️ | **3.07x** ⚠️ | **3.24x** ⚠️ |
-| **Geometric Mean** | — | — | — | — | **0.96x** | **2.98x** | **2.81x** | **2.92x** |
+| **10k Coordinates (0.39 MB)** | 2.89 ms | 2.94 ms | 1.06 ms | **1.10 ms** | **0.98x** | **2.71x** | **2.63x** | **2.68x** |
+| **canada.json (2.25 MB)** | 21.75 ms | 22.75 ms | 6.73 ms | **6.80 ms** | **0.96x** | **3.23x** | **3.20x** | **3.35x** |
+| **Geometric Mean** | — | — | — | — | **0.97x** | **2.96x** | **2.90x** | **3.00x** |
 <!-- mdformat on -->
-
-> ⚠️ 2 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: JS Encode Stream (BytesBuilder / ByteConversionSink)
@@ -108,9 +102,9 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 10.13 ms | 8.09 ms | 6.47 ms | **6.43 ms** | **1.25x** | **1.56x** | **1.57x** | **1.26x** |
-| **canada.json (2.25 MB)** | 37.67 ms | 38.00 ms | 37.50 ms | **44.00 ms** | **0.99x** ⚠️ | **1.00x** ⚠️ | **0.86x** ⚠️ | **0.86x** ⚠️ |
-| **Geometric Mean** | — | — | — | — | **1.11x** | **1.25x** | **1.16x** | **1.04x** |
+| **10k Coordinates (0.39 MB)** | 4.59 ms | 3.64 ms | 4.21 ms | **4.21 ms** | **1.26x** ⚠️ | **1.09x** ⚠️ | **1.09x** ⚠️ | **0.87x** |
+| **canada.json (2.25 MB)** | 15.33 ms | 12.75 ms | 27.25 ms | **28.25 ms** | **1.20x** | **0.56x** | **0.54x** | **0.45x** |
+| **Geometric Mean** | — | — | — | — | **1.23x** | **0.78x** | **0.77x** | **0.63x** |
 <!-- mdformat on -->
 
 > ⚠️ 1 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
@@ -125,12 +119,10 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 4.33 ms | 4.20 ms | 18.72 ms | **8.76 ms** | **1.03x** ⚠️ | **0.23x** ⚠️ | **0.49x** ⚠️ | **0.48x** ⚠️ |
-| **canada.json (2.25 MB)** | 69.45 ms | 46.42 ms | 136.91 ms | **26.69 ms** | **1.50x** ⚠️ | **0.51x** ⚠️ | **2.60x** ⚠️ | **1.74x** ⚠️ |
-| **Geometric Mean** | — | — | — | — | **1.24x** | **0.34x** | **1.13x** | **0.91x** |
+| **10k Coordinates (0.39 MB)** | 2.14 ms | 1.95 ms | 8.45 ms | **3.29 ms** | **1.10x** | **0.25x** | **0.65x** | **0.59x** |
+| **canada.json (2.25 MB)** | 26.27 ms | 20.02 ms | 48.55 ms | **10.46 ms** | **1.31x** | **0.54x** | **2.51x** | **1.91x** |
+| **Geometric Mean** | — | — | — | — | **1.20x** | **0.37x** | **1.28x** | **1.07x** |
 <!-- mdformat on -->
-
-> ⚠️ 2 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: WASM Encode Stream (BytesBuilder / ByteConversionSink)
@@ -138,12 +130,10 @@ These two diagnostics bound how much of the tables above is signal. Read them be
 <!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **10k Coordinates (0.39 MB)** | 9.84 ms | 5.19 ms | 3.89 ms | **4.11 ms** | **1.90x** | **2.53x** | **2.40x** | **1.26x** |
-| **canada.json (2.25 MB)** | 49.50 ms | 27.22 ms | 26.11 ms | **29.19 ms** | **1.82x** ⚠️ | **1.90x** ⚠️ | **1.70x** ⚠️ | **0.93x** |
-| **Geometric Mean** | — | — | — | — | **1.86x** | **2.19x** | **2.02x** | **1.09x** |
+| **10k Coordinates (0.39 MB)** | 4.20 ms | 2.17 ms | 1.73 ms | **1.65 ms** | **1.94x** | **2.42x** | **2.54x** | **1.31x** |
+| **canada.json (2.25 MB)** | 20.69 ms | 10.34 ms | 10.08 ms | **10.86 ms** | **2.00x** | **2.05x** | **1.91x** | **0.95x** |
+| **Geometric Mean** | — | — | — | — | **1.97x** | **2.23x** | **2.20x** | **1.12x** |
 <!-- mdformat on -->
-
-> ⚠️ 1 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 ------------------------------------------------------------------------
@@ -155,18 +145,18 @@ Compares the chunked conversion sink latency (`32 KB` slices) against the in-mem
 <!-- mdformat off(prevent table wrapping) -->
 | Target | Mode & Dataset | Tier 0 Ratio (Stream / Mono) | Tier 1 Ratio (Stream / Mono) | Tier 2 Ratio (Stream / Mono) | Tier 3 Ratio (Stream / Mono) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **AOT** | 📥 Decode `10k Coordinates (0.39 MB)` | `0.99x` (4.41 ms vs 4.46 ms) | `0.87x` (4.11 ms vs 4.73 ms) | `1.13x` (4.94 ms vs 4.38 ms) | **`1.29x` (3.76 ms vs 2.90 ms)** |
-| **AOT** | 📥 Decode `canada.json (2.25 MB)` | `0.96x` (49.35 ms vs 51.47 ms) | `1.01x` (53.84 ms vs 53.44 ms) | `1.18x` (24.95 ms vs 21.08 ms) | **`1.28x` (15.54 ms vs 12.12 ms)** |
-| **AOT** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.86x` (8.95 ms vs 10.39 ms) | `0.78x` (3.98 ms vs 5.12 ms) | `0.74x` (2.43 ms vs 3.30 ms) | **`0.66x` (2.33 ms vs 3.51 ms)** |
-| **AOT** | 📤 Encode `canada.json (2.25 MB)` | `0.84x` (40.28 ms vs 48.16 ms) | `1.06x` (19.46 ms vs 18.35 ms) | `0.73x` (19.86 ms vs 27.09 ms) | **`0.68x` (19.18 ms vs 28.28 ms)** |
-| **JS** | 📥 Decode `10k Coordinates (0.39 MB)` | `1.41x` (7.06 ms vs 5.00 ms) | `1.43x` (7.21 ms vs 5.05 ms) | `1.03x` (2.70 ms vs 2.63 ms) | **`1.03x` (2.75 ms vs 2.67 ms)** |
-| **JS** | 📥 Decode `canada.json (2.25 MB)` | `1.49x` (53.00 ms vs 35.50 ms) | `1.40x` (56.00 ms vs 40.00 ms) | `1.02x` (15.57 ms vs 15.20 ms) | **`1.05x` (17.29 ms vs 16.40 ms)** |
-| **JS** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.56x` (10.13 ms vs 18.20 ms) | `0.55x` (8.09 ms vs 14.62 ms) | `1.79x` (6.47 ms vs 3.61 ms) | **`1.86x` (6.43 ms vs 3.45 ms)** |
-| **JS** | 📤 Encode `canada.json (2.25 MB)` | `1.01x` (37.67 ms vs 37.33 ms) | `1.00x` (38.00 ms vs 38.00 ms) | `1.58x` (37.50 ms vs 23.75 ms) | **`1.85x` (44.00 ms vs 23.75 ms)** |
-| **WASM** | 📥 Decode `10k Coordinates (0.39 MB)` | `1.00x` (4.33 ms vs 4.35 ms) | `1.04x` (4.20 ms vs 4.05 ms) | `0.96x` (18.72 ms vs 19.55 ms) | **`1.06x` (8.76 ms vs 8.24 ms)** |
-| **WASM** | 📥 Decode `canada.json (2.25 MB)` | `0.91x` (69.45 ms vs 76.20 ms) | `0.75x` (46.42 ms vs 62.19 ms) | `0.95x` (136.91 ms vs 144.71 ms) | **`1.21x` (26.69 ms vs 22.07 ms)** |
-| **WASM** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.90x` (9.84 ms vs 10.96 ms) | `0.96x` (5.19 ms vs 5.38 ms) | `0.98x` (3.89 ms vs 3.99 ms) | **`1.04x` (4.11 ms vs 3.95 ms)** |
-| **WASM** | 📤 Encode `canada.json (2.25 MB)` | `0.81x` (49.50 ms vs 61.00 ms) | `1.02x` (27.22 ms vs 26.79 ms) | `0.94x` (26.11 ms vs 27.72 ms) | **`1.02x` (29.19 ms vs 28.72 ms)** |
+| **AOT** | 📥 Decode `10k Coordinates (0.39 MB)` | `1.00x` (1.77 ms vs 1.77 ms) | `0.99x` (1.77 ms vs 1.79 ms) | `1.03x` (1.76 ms vs 1.71 ms) | **`1.05x` (1.25 ms vs 1.20 ms)** |
+| **AOT** | 📥 Decode `canada.json (2.25 MB)` | `1.00x` (18.99 ms vs 19.01 ms) | `1.00x` (16.15 ms vs 16.08 ms) | `1.06x` (10.11 ms vs 9.57 ms) | **`1.11x` (5.81 ms vs 5.25 ms)** |
+| **AOT** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.93x` (4.45 ms vs 4.77 ms) | `0.90x` (1.74 ms vs 1.93 ms) | `0.82x` (841.1 µs vs 1.03 ms) | **`0.81x` (859.8 µs vs 1.06 ms)** |
+| **AOT** | 📤 Encode `canada.json (2.25 MB)` | `0.95x` (18.48 ms vs 19.45 ms) | `0.94x` (7.29 ms vs 7.77 ms) | `0.90x` (8.65 ms vs 9.64 ms) | **`0.89x` (8.67 ms vs 9.78 ms)** |
+| **JS** | 📥 Decode `10k Coordinates (0.39 MB)` | `1.56x` (2.89 ms vs 1.85 ms) | `1.54x` (2.94 ms vs 1.91 ms) | `1.01x` (1.06 ms vs 1.05 ms) | **`1.02x` (1.10 ms vs 1.08 ms)** |
+| **JS** | 📥 Decode `canada.json (2.25 MB)` | `1.36x` (21.75 ms vs 16.00 ms) | `1.44x` (22.75 ms vs 15.83 ms) | `1.02x` (6.73 ms vs 6.60 ms) | **`1.05x` (6.80 ms vs 6.47 ms)** |
+| **JS** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.95x` (4.59 ms vs 4.86 ms) | `0.95x` (3.64 ms vs 3.85 ms) | `2.69x` (4.21 ms vs 1.56 ms) | **`2.68x` (4.21 ms vs 1.57 ms)** |
+| **JS** | 📤 Encode `canada.json (2.25 MB)` | `0.96x` (15.33 ms vs 16.00 ms) | `0.93x` (12.75 ms vs 13.75 ms) | `2.62x` (27.25 ms vs 10.40 ms) | **`2.54x` (28.25 ms vs 11.11 ms)** |
+| **WASM** | 📥 Decode `10k Coordinates (0.39 MB)` | `0.99x` (2.14 ms vs 2.16 ms) | `1.00x` (1.95 ms vs 1.95 ms) | `1.03x` (8.45 ms vs 8.24 ms) | **`1.04x` (3.29 ms vs 3.16 ms)** |
+| **WASM** | 📥 Decode `canada.json (2.25 MB)` | `0.99x` (26.27 ms vs 26.41 ms) | `0.99x` (20.02 ms vs 20.26 ms) | `1.01x` (48.55 ms vs 48.19 ms) | **`1.02x` (10.46 ms vs 10.22 ms)** |
+| **WASM** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.96x` (4.20 ms vs 4.37 ms) | `1.07x` (2.17 ms vs 2.03 ms) | `0.94x` (1.73 ms vs 1.85 ms) | **`0.90x` (1.65 ms vs 1.84 ms)** |
+| **WASM** | 📤 Encode `canada.json (2.25 MB)` | `0.96x` (20.69 ms vs 21.63 ms) | `0.98x` (10.34 ms vs 10.56 ms) | `0.78x` (10.08 ms vs 12.88 ms) | **`0.85x` (10.86 ms vs 12.79 ms)** |
 <!-- mdformat on -->
 
 ------------------------------------------------------------------------

@@ -222,6 +222,11 @@ Future<void> main(List<String> args) async {
         'streaming_benchmark_results.json',
         '-u',
         'streaming_benchmark_results_unified.json',
+      ] else ...[
+        '-i',
+        'benchmark_results.json',
+        '-u',
+        'streaming_benchmark_results_unified.json',
       ],
       '--output-report',
       'STREAMING_BENCHMARK_REPORT.md',
