@@ -6,9 +6,9 @@ import 'package:codable/src/json/substrate/mock/json_token_type.dart';
 
 void _expect(dynamic actual, dynamic expected) {
   if (actual != expected) {
-    print("FAILED");
-    print("ACTUAL: $actual");
-    print("EXPECTED: $expected");
+    print('FAILED');
+    print('ACTUAL: $actual');
+    print('EXPECTED: $expected');
     throw StateError('Mismatch');
   }
 }
@@ -27,19 +27,19 @@ void testSingleByteChunks() {
   reader.beginObject();
 
   _expect(reader.hasNext(), true);
-  _expect(reader.nextName(), "key");
-  _expect(reader.readString(), "value\n🚀");
+  _expect(reader.nextName(), 'key');
+  _expect(reader.readString(), 'value\n🚀');
 
   _expect(reader.hasNext(), true);
-  _expect(reader.nextName(), "num");
+  _expect(reader.nextName(), 'num');
   _expect(reader.readDouble(), -123.456);
 
   _expect(reader.hasNext(), true);
-  _expect(reader.nextName(), "b");
+  _expect(reader.nextName(), 'b');
   _expect(reader.readBool(), true);
 
   _expect(reader.hasNext(), true);
-  _expect(reader.nextName(), "n");
+  _expect(reader.nextName(), 'n');
   reader.readNull();
 
   _expect(reader.hasNext(), false);
@@ -67,7 +67,7 @@ void testSplitEscape() {
   ];
   final reader = JsonTokenReader.fromChunks(chunks);
   reader.beginArray();
-  _expect(reader.readString(), "a\nb");
+  _expect(reader.readString(), 'a\nb');
   reader.endArray();
 }
 
@@ -88,7 +88,7 @@ void testSplitUTF8() {
   ];
   final reader = JsonTokenReader.fromChunks(chunks);
   reader.beginArray();
-  _expect(reader.readString(), "🚀");
+  _expect(reader.readString(), '🚀');
   reader.endArray();
 }
 

@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:codable/codable_json.dart';
 import 'package:codable/src/json/driver/driver_streaming.dart';
@@ -16,7 +16,8 @@ void main() async {
   final resultSink = ChunkedConversionSink<dynamic>.withCallback((results) {});
 
   // On origin/main, startChunkedConversion builds BytesBuilder(copy:false)
-  // On rope-chunks branch, startChunkedConversion uses our new fromChunks boundary rope!
+  // On rope-chunks branch, startChunkedConversion uses our new fromChunks
+  // boundary rope!
   final byteSink = JsonCodableDecoder.startChunkedConversion<dynamic>(
     resultSink,
     (decoder) {
@@ -31,7 +32,7 @@ void main() async {
     },
   );
 
-  print('Starting execution... PID: ${pid}');
+  print('Starting execution... PID: $pid');
 
   await for (final chunk in stream) {
     byteSink.add(chunk);

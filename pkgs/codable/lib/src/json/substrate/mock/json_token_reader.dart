@@ -102,7 +102,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       _bytes = chunks.isEmpty ? Uint8List(0) : chunks[0],
       _chunkBytes = chunks.isEmpty ? Uint8List(0) : chunks[0] {
     if (_chunks!.isNotEmpty) {
-      _chunks![0] = null;
+      _chunks[0] = null;
     }
   }
 
@@ -147,13 +147,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   bool _advanceChunk() {
     if (_chunks == null) return false;
-    if (_chunkIndex + 1 >= _chunks!.length) return false;
+    if (_chunkIndex + 1 >= _chunks.length) return false;
     _chunkIndex++;
-    _chunkBytes = _chunks![_chunkIndex]!;
+    _chunkBytes = _chunks[_chunkIndex]!;
     if (_straddlingBytes == null) {
       _bytes = _chunkBytes;
     }
-    _chunks![_chunkIndex] = null;
+    _chunks[_chunkIndex] = null;
     _offset = 0;
     return true;
   }
@@ -560,17 +560,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   (int, int, bool) _stitchPropertyName(int start, int i, bool hasEscapes) {
-    BytesBuilder builder = BytesBuilder(copy: false);
+    var builder = BytesBuilder(copy: false);
     builder.add(_bytes.sublist(start, i));
 
-    bool inEscape = false;
+    var inEscape = false;
     if (i == _bytes.length - 1 && _bytes[i] == 92) {
       inEscape = true;
       builder.add([92]);
     }
 
-    bool foundQuote = false;
-    int localI = 0;
+    var foundQuote = false;
+    var localI = 0;
     while (!foundQuote && _advanceChunk()) {
       localI = 0;
       while (localI < _bytes.length) {
@@ -580,7 +580,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
           continue;
         }
         final b = _bytes[localI];
-        if (b < 0x20) throw FormatException('Unescaped control');
+        if (b < 0x20) throw const FormatException('Unescaped control');
         if (b == 92) {
           hasEscapes = true;
           if (localI + 1 >= _bytes.length) {
@@ -600,9 +600,9 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       if (!foundQuote) builder.add(_bytes);
     }
-    if (!foundQuote) throw FormatException('Unterminated string');
+    if (!foundQuote) throw const FormatException('Unterminated string');
 
-    bool foundColon = false;
+    var foundColon = false;
     while (true) {
       while (localI < _bytes.length && _isWs(_bytes[localI])) {
         localI++;
@@ -613,16 +613,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
           localI++;
           break;
         } else {
-          throw FormatException('Expected ":"');
+          throw const FormatException('Expected ":"');
         }
       }
       if (!_advanceChunk()) break;
       localI = 0;
     }
-    if (!foundColon)
+    if (!foundColon) {
       throw FormatException(
         'Expected ":" at EOF (Chunk $_chunkIndex of ${_chunks?.length})',
       );
+    }
 
     while (true) {
       while (localI < _bytes.length && _isWs(_bytes[localI])) {
@@ -650,24 +651,27 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   ) {
     final straddlingBytes = _bytes.sublist(start, end);
 
-    int localI = _bytes.length;
+    var localI = _bytes.length;
     if (needsColon) {
-      bool foundColon = false;
+      var foundColon = false;
       while (true) {
-        while (localI < _bytes.length && _isWs(_bytes[localI])) localI++;
+        while (localI < _bytes.length && _isWs(_bytes[localI])) {
+          localI++;
+        }
         if (localI < _bytes.length) {
           if (_bytes[localI] == 58) {
             foundColon = true;
             localI++;
             break;
           } else {
-            String context = "";
-            for (int k = -10; k <= 10; k++) {
+            var context = '';
+            for (var k = -10; k <= 10; k++) {
               if (localI + k >= 0 && localI + k < _bytes.length) {
                 context += String.fromCharCode(_bytes[localI + k]);
               }
             }
             throw FormatException(
+              // ignore: lines_longer_than_80_chars
               'Expected ":" but found "${String.fromCharCode(_bytes[localI])}" (${_bytes[localI]}) at offset $localI. Parsed string: [${String.fromCharCodes(straddlingBytes)}]. Context: [$context]',
             );
           }
@@ -675,11 +679,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         if (!_advanceChunk()) break;
         localI = 0;
       }
-      if (!foundColon) throw FormatException('Expected ":"');
+      if (!foundColon) throw const FormatException('Expected ":"');
     }
 
     while (true) {
-      while (localI < _bytes.length && _isWs(_bytes[localI])) localI++;
+      while (localI < _bytes.length && _isWs(_bytes[localI])) {
+        localI++;
+      }
       if (localI < _bytes.length) break;
       if (!_advanceChunk()) break;
       localI = 0;
@@ -699,7 +705,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
     var i = _offset;
     if (i >= _bytes.length || _bytes[i] != 34) {
-      throw FormatException('Expected string');
+      throw const FormatException('Expected string');
     }
     final start = i + 1;
     i = start;
@@ -707,13 +713,13 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     while (i < _bytes.length) {
       final b = _bytes[i];
       if (b < 0x20) {
-        throw FormatException('Unescaped control character');
+        throw const FormatException('Unescaped control character');
       }
       if (b == 92) {
         hasEscapes = true;
         if (i + 1 >= _bytes.length) {
           if (_chunks != null) return _stitchPropertyName(start, i, hasEscapes);
-          throw FormatException('Unterminated escape sequence');
+          throw const FormatException('Unterminated escape sequence');
         }
         i += 2;
       } else if (b == 34) {
@@ -724,7 +730,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     }
     if (i >= _bytes.length) {
       if (_chunks != null) return _stitchPropertyName(start, i, hasEscapes);
-      throw FormatException('Unterminated string literal');
+      throw const FormatException('Unterminated string literal');
     }
     final end = i;
     i++;
@@ -736,11 +742,12 @@ final class _MockJsonTokenReader implements JsonTokenReader {
         i++;
       }
       if (i >= _bytes.length) {
-        if (_chunks != null)
+        if (_chunks != null) {
           return _stitchPropertyNameFinished(start, end, hasEscapes, true);
-        throw FormatException('Expected ":"');
+        }
+        throw const FormatException('Expected ":"');
       }
-      if (_bytes[i] != 58) throw FormatException('Expected ":"');
+      if (_bytes[i] != 58) throw const FormatException('Expected ":"');
       i++;
     }
     while (i < _bytes.length && _isWs(_bytes[i])) {
@@ -754,17 +761,17 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   (int, int) _stitchStringSpan(int start, int i) {
-    BytesBuilder builder = BytesBuilder(copy: false);
+    var builder = BytesBuilder(copy: false);
     builder.add(_bytes.sublist(start, i));
 
-    bool inEscape = false;
+    var inEscape = false;
     if (i == _bytes.length - 1 && _bytes[i] == 92) {
       inEscape = true;
       builder.add([92]);
     }
 
-    bool foundQuote = false;
-    int localI = 0;
+    var foundQuote = false;
+    var localI = 0;
     while (!foundQuote && _advanceChunk()) {
       localI = 0;
       while (localI < _bytes.length) {
@@ -774,7 +781,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
           continue;
         }
         final b = _bytes[localI];
-        if (b < 0x20) throw FormatException('Unescaped control');
+        if (b < 0x20) throw const FormatException('Unescaped control');
         if (b == 92) {
           if (localI + 1 >= _bytes.length) {
             inEscape = true;
@@ -793,7 +800,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       if (!foundQuote) builder.add(_bytes);
     }
-    if (!foundQuote) throw FormatException('Unterminated string');
+    if (!foundQuote) throw const FormatException('Unterminated string');
 
     _straddlingBytes = builder.takeBytes();
     _bytes = _straddlingBytes!;
@@ -805,19 +812,19 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   (int, int) _scanStringSpan() {
     _skipWs();
     if (_offset >= _bytes.length || _bytes[_offset] != 34) {
-      throw FormatException('Expected string');
+      throw const FormatException('Expected string');
     }
     final start = _offset + 1;
     var i = start;
     while (i < _bytes.length) {
       final b = _bytes[i];
       if (b < 0x20) {
-        throw FormatException('Unescaped control character');
+        throw const FormatException('Unescaped control character');
       }
       if (b == 92) {
         if (i + 1 >= _bytes.length) {
           if (_chunks != null) return _stitchStringSpan(start, i);
-          throw FormatException('Unterminated escape sequence');
+          throw const FormatException('Unterminated escape sequence');
         }
         i += 2;
       } else if (b == 34) {
@@ -829,7 +836,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
     }
     if (_chunks != null) return _stitchStringSpan(start, i);
-    throw FormatException('Unterminated string literal');
+    throw const FormatException('Unterminated string literal');
   }
 
   @override
@@ -892,11 +899,11 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   (int, int) _stitchValueSpan(int start, int i) {
-    BytesBuilder builder = BytesBuilder(copy: false);
+    var builder = BytesBuilder(copy: false);
     builder.add(_bytes.sublist(start, i));
 
-    bool foundEnd = false;
-    int localI = 0;
+    var foundEnd = false;
+    var localI = 0;
     while (!foundEnd && _advanceChunk()) {
       localI = 0;
       while (localI < _bytes.length) {

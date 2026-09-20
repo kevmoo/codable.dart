@@ -17,23 +17,23 @@ void main() {
 
   assert(reader.hasNext() == true);
   var name = reader.nextName();
-  print("Name 1: \$name");
-  assert(name == "name");
+  print('Name 1: \$name');
+  assert(name == 'name');
 
   var val1 = reader.readString();
-  print("Value 1: \$val1");
-  assert(val1 == "Alice");
+  print('Value 1: \$val1');
+  assert(val1 == 'Alice');
 
   assert(reader.hasNext() == true);
   var name2 = reader.nextName();
-  print("Name 2: \$name2");
-  assert(name2 == "age");
+  print('Name 2: \$name2');
+  assert(name2 == 'age');
 
   var val2 = reader.readInt();
-  print("Value 2: \$val2");
+  print('Value 2: \$val2');
   assert(val2 == 25);
 
   assert(reader.hasNext() == false);
   reader.endObject();
-  print("SUCCESS");
+  print('SUCCESS');
 }
