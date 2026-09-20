@@ -35,10 +35,22 @@ final utf8JsonEncoder = json.encoder.fuse(utf8.encoder);
 class EncData {
   final String name;
   final Uint8List bytes;
+
+  /// The dataset decoded to a Dart String.
+  ///
+  /// Only the encode control consumes this. It is materialised here, at setup
+  /// time, so the control measures `utf8.encode` and nothing else.
+  final String string;
   final Object jsModel;
   final void Function(Encoder) codableEncode;
 
-  EncData._(this.name, this.bytes, this.jsModel, this.codableEncode);
+  EncData._(
+    this.name,
+    this.bytes,
+    this.string,
+    this.jsModel,
+    this.codableEncode,
+  );
 
   factory EncData(String name) {
     final bytes = getDatasetBytes(name);
@@ -91,7 +103,7 @@ class EncData {
       default:
         throw Exception();
     }
-    return EncData._(name, bytes, jsModel, codableEncode);
+    return EncData._(name, bytes, utf8.decode(bytes), jsModel, codableEncode);
   }
 }
 
@@ -147,6 +159,29 @@ void main(List<String> args) async {
       'codable': (d) {
         final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
         Blackhole.consume(outBytes);
+      },
+      // Null-experiment control for the ENCODE tables.
+      //
+      // Its Tier 1 / Tier 0 ratio must be exactly 1.000x, because
+      // `sdk/lib/convert/utf8.dart` is byte-identical between the stock SDK
+      // and the fork, and no VM or Wasm `convert_patch.dart` references
+      // `_Utf8Encoder` at all. Any deviation is harness, build, or
+      // measurement drift.
+      //
+      // Note the asymmetry with the decode control: on the decode side we can
+      // hide in the String parser, because the fork only altered the UTF-8
+      // *byte* parser. There is no encode analogue — the fork relocates
+      // `JsonEncoder`, `_JsonEncoderSink` and `_JsonStringStringifier` out of
+      // `json.dart` into `json_utf8.dart`, so NO JSON encode path is
+      // source-identical. The control therefore has to be a non-JSON codec.
+      //
+      // `latin1.encode` and `ascii.encode` are more stable but throw on
+      // `twitter.json` and `citm_catalog.json`, which contain code units
+      // above 0xFF. `base64.encode` is a viable alternative (marginally more
+      // stable) but is bytes->String, the wrong direction to be sensitive to
+      // the string-scanning drift that threatens the encode measurements.
+      'utf8_encode_control': (d) {
+        Blackhole.consume(utf8.encode(d.string));
       },
     },
   );
