@@ -8,64 +8,39 @@ import 'dart:typed_data';
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable_json.dart';
 
-import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
-import 'package:codable_benchmarks/src/models/codable/canada.dart'
-    as codable_canada;
-import 'package:codable_benchmarks/src/models/codable/citm_catalog.dart'
-    as codable_citm;
-import 'package:codable_benchmarks/src/models/codable/coordinate.dart'
-    as codable_coord;
-import 'package:codable_benchmarks/src/models/codable/small.dart'
-    as codable_small;
-import 'package:codable_benchmarks/src/models/codable/twitter.dart'
-    as codable_twitter;
-import 'package:codable_benchmarks/src/models/json_serializable/canada.dart'
-    as js_canada;
-import 'package:codable_benchmarks/src/models/json_serializable/citm_catalog.dart'
-    as js_citm;
-import 'package:codable_benchmarks/src/models/json_serializable/coordinate.dart'
-    as js_coord;
-import 'package:codable_benchmarks/src/models/json_serializable/small.dart'
-    as js_small;
-import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
-    as js_twitter;
+import '../data/embedded_datasets.dart';
+import '../models/codable/canada.dart' as codable_canada;
+import '../models/codable/citm_catalog.dart' as codable_citm;
+import '../models/codable/coordinate.dart' as codable_coord;
+import '../models/codable/small.dart' as codable_small;
+import '../models/codable/twitter.dart' as codable_twitter;
+import '../models/json_serializable/canada.dart' as js_canada;
+import '../models/json_serializable/citm_catalog.dart' as js_citm;
+import '../models/json_serializable/coordinate.dart' as js_coord;
+import '../models/json_serializable/small.dart' as js_small;
+import '../models/json_serializable/twitter.dart' as js_twitter;
 
 final utf8JsonDecoder = utf8.decoder.fuse(json.decoder);
 
-class Data {
+class DecodeData {
   final String name;
   final Uint8List bytes;
   final String string;
-  Data(this.name)
+
+  DecodeData(this.name)
     : bytes = getDatasetBytes(name),
       string = utf8.decode(getDatasetBytes(name));
 }
 
-void main(List<String> args) async {
-  print('\n============================================================');
-  print('🎯 SUBSTRATE METADATA');
-  print(
-    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
-  );
-  print('============================================================\n');
-
-  final datasets = [
-    'coordinates',
-    'canada',
-    'citm_catalog',
-    'small',
-    'twitter',
-  ];
-  final cases = datasets.map(Data.new).toList();
-
-  final groups = BenchmarkGroup.matrix<Data>(
-    cases: cases,
-    name: (d) => '${d.name}_decode',
+BenchmarkGroup createDecodeBenchmarkGroup(String dataset) {
+  final d = DecodeData(dataset);
+  return BenchmarkGroup.compare(
+    name: '${d.name}_decode',
     config: const BenchmarkConfig(forceRun: true),
-    throughput: (d) => Throughput.bytes(d.bytes.length),
+    throughput: Throughput.bytes(d.bytes.length),
     baseline: (
       'json_serializable',
-      (d) {
+      () {
         final dynamic jsonAst = utf8JsonDecoder.convert(d.bytes);
         switch (d.name) {
           case 'coordinates':
@@ -106,7 +81,7 @@ void main(List<String> args) async {
       },
     ),
     candidates: {
-      'json_serializable_literal': (d) {
+      'json_serializable_literal': () {
         final dynamic jsonAst = jsonDecode(d.string);
         switch (d.name) {
           case 'coordinates':
@@ -145,7 +120,7 @@ void main(List<String> args) async {
             break;
         }
       },
-      'codable': (d) {
+      'codable': () {
         final decoder = JsonCodableDecoder.fromBytes(d.bytes);
         switch (d.name) {
           case 'coordinates':
@@ -167,7 +142,7 @@ void main(List<String> args) async {
             break;
         }
       },
-      'codable_js': (d) {
+      'codable_js': () {
         final decoder = JsonCodableDecoder.fromBytes(
           d.bytes,
           userInfo: const {#forceJsDom: true},
@@ -194,6 +169,16 @@ void main(List<String> args) async {
       },
     },
   );
+}
 
-  await mainBenchmarkSuite(groups.toList(), args);
+Future<void> mainDecodeCase(String dataset, List<String> args) async {
+  print('\n============================================================');
+  print('🎯 SUBSTRATE METADATA');
+  print(
+    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
+  );
+  print('Workload: $dataset');
+  print('============================================================\n');
+
+  await mainBenchmarkGroup(createDecodeBenchmarkGroup(dataset), args);
 }

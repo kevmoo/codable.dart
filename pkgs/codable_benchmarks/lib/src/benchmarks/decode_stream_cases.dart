@@ -8,30 +8,13 @@ import 'dart:typed_data';
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable_json.dart';
 
-import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
-import 'package:codable_benchmarks/src/models/codable/canada.dart'
-    as codable_canada;
-import 'package:codable_benchmarks/src/models/codable/citm_catalog.dart'
-    as codable_citm;
-import 'package:codable_benchmarks/src/models/codable/coordinate.dart'
-    as codable_coord;
-import 'package:codable_benchmarks/src/models/codable/small.dart'
-    as codable_small;
-import 'package:codable_benchmarks/src/models/codable/twitter.dart'
-    as codable_twitter;
-import 'package:codable_benchmarks/src/models/json_serializable/canada.dart'
-    as js_canada;
-import 'package:codable_benchmarks/src/models/json_serializable/citm_catalog.dart'
-    as js_citm;
-import 'package:codable_benchmarks/src/models/json_serializable/coordinate.dart'
-    as js_coord;
-import 'package:codable_benchmarks/src/models/json_serializable/small.dart'
-    as js_small;
-import 'package:codable_benchmarks/src/models/json_serializable/twitter.dart'
-    as js_twitter;
+import '../data/embedded_datasets.dart';
+import '../models/codable/canada.dart' as codable_canada;
+import '../models/codable/coordinate.dart' as codable_coord;
+import '../models/json_serializable/canada.dart' as js_canada;
+import '../models/json_serializable/coordinate.dart' as js_coord;
 
-const int streamChunkSize = 32 * 1024; // 32 KB
-
+const int streamChunkSize = 32 * 1024;
 final utf8JsonDecoder = utf8.decoder.fuse(json.decoder);
 
 List<Uint8List> sliceBytesIntoChunks(
@@ -74,14 +57,6 @@ Object _hydrateJsonSerializable(String name, Object? jsonAst) {
       return js_canada.CanadaFeatureCollection.fromJson(
         jsonAst as Map<String, dynamic>,
       );
-    case 'citm_catalog':
-      return js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>);
-    case 'small':
-      return js_small.SmallDocument.fromJson(jsonAst as Map<String, dynamic>);
-    case 'twitter':
-      return js_twitter.TwitterResponse.fromJson(
-        jsonAst as Map<String, dynamic>,
-      );
     default:
       throw ArgumentError.value(name, 'name', 'Unknown dataset');
   }
@@ -93,12 +68,6 @@ Object _decodeCodable(String name, Decoder decoder) {
       return codable_coord.Coordinate.decodeList(decoder);
     case 'canada':
       return codable_canada.CanadaFeatureCollection.decode(decoder);
-    case 'citm_catalog':
-      return codable_citm.CitmCatalog.decode(decoder);
-    case 'small':
-      return codable_small.SmallDocument.decode(decoder);
-    case 'twitter':
-      return codable_twitter.TwitterResponse.decode(decoder);
     default:
       throw ArgumentError.value(name, 'name', 'Unknown dataset');
   }
@@ -118,26 +87,15 @@ class StreamDecodeData {
       stringChunks = sliceStringIntoChunks(utf8.decode(getDatasetBytes(name)));
 }
 
-void main(List<String> args) async {
-  print('\n============================================================');
-  print('🎯 SUBSTRATE METADATA (STREAM DECODE)');
-  print(
-    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
-  );
-  print('Chunk Size: $streamChunkSize bytes (32 KB)');
-  print('============================================================\n');
-
-  final datasets = ['coordinates', 'canada'];
-  final cases = datasets.map(StreamDecodeData.new).toList();
-
-  final streamGroups = BenchmarkGroup.matrix<StreamDecodeData>(
-    cases: cases,
-    name: (d) => '${d.name}_decode_stream',
+BenchmarkGroup createDecodeStreamBenchmarkGroup(String dataset) {
+  final d = StreamDecodeData(dataset);
+  return BenchmarkGroup.compare(
+    name: '${d.name}_decode_stream',
     config: const BenchmarkConfig(forceRun: true),
-    throughput: (d) => Throughput.bytes(d.bytes.length),
+    throughput: Throughput.bytes(d.bytes.length),
     baseline: (
       'json_serializable',
-      (d) {
+      () {
         Object? jsonAst;
         final resultSink = ChunkedConversionSink<Object?>.withCallback((
           results,
@@ -153,7 +111,7 @@ void main(List<String> args) async {
       },
     ),
     candidates: {
-      'json_serializable_literal': (d) {
+      'json_serializable_literal': () {
         Object? jsonAst;
         final resultSink = ChunkedConversionSink<Object?>.withCallback((
           results,
@@ -167,7 +125,7 @@ void main(List<String> args) async {
         sink.close();
         Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
       },
-      'codable': (d) {
+      'codable': () {
         Object? hydrated;
         final resultSink = ChunkedConversionSink<Object?>.withCallback((
           results,
@@ -184,7 +142,7 @@ void main(List<String> args) async {
         sink.close();
         Blackhole.consume(hydrated);
       },
-      'codable_js': (d) {
+      'codable_js': () {
         Object? hydrated;
         final resultSink = ChunkedConversionSink<Object?>.withCallback((
           results,
@@ -204,37 +162,17 @@ void main(List<String> args) async {
       },
     },
   );
+}
 
-  final monoGroups = BenchmarkGroup.matrix<StreamDecodeData>(
-    cases: cases,
-    name: (d) => '${d.name}_decode',
-    config: const BenchmarkConfig(forceRun: true),
-    throughput: (d) => Throughput.bytes(d.bytes.length),
-    baseline: (
-      'json_serializable',
-      (d) {
-        final jsonAst = utf8JsonDecoder.convert(d.bytes);
-        Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
-      },
-    ),
-    candidates: {
-      'json_serializable_literal': (d) {
-        final jsonAst = jsonDecode(d.string);
-        Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
-      },
-      'codable': (d) {
-        final decoder = JsonCodableDecoder.fromBytes(d.bytes);
-        Blackhole.consume(_decodeCodable(d.name, decoder));
-      },
-      'codable_js': (d) {
-        final decoder = JsonCodableDecoder.fromBytes(
-          d.bytes,
-          userInfo: const {#forceJsDom: true},
-        );
-        Blackhole.consume(_decodeCodable(d.name, decoder));
-      },
-    },
+Future<void> mainDecodeStreamCase(String dataset, List<String> args) async {
+  print('\n============================================================');
+  print('🎯 SUBSTRATE METADATA (STREAM DECODE)');
+  print(
+    'Mode: ${isMockSubstrate ? "MOCK (pure-Dart)" : "NATIVE (dart:convert)"}',
   );
+  print('Workload: $dataset');
+  print('Chunk Size: $streamChunkSize bytes (32 KB)');
+  print('============================================================\n');
 
-  await mainBenchmarkSuite([...streamGroups, ...monoGroups], args);
+  await mainBenchmarkGroup(createDecodeStreamBenchmarkGroup(dataset), args);
 }

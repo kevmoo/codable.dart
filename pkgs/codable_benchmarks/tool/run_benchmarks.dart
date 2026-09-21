@@ -21,12 +21,17 @@ Future<void> main(List<String> args) async {
           '(e.g. ~/github/flutter/bin/dart) to run a Stock Dart pass in mock '
           'substrate mode alongside the native_kernels pass.',
     )
+    ..addOption(
+      'dataset',
+      abbr: 'w',
+      help:
+          'Run benchmarks only for a specific dataset '
+          '(e.g. canada, coordinates, citm_catalog, small, twitter).',
+    )
     ..addFlag(
       'streaming-only',
       negatable: false,
-      help:
-          'Run only decode_stream_benchmark.dart and '
-          'encode_stream_benchmark.dart.',
+      help: 'Run only streaming benchmarks (decode_stream and encode_stream).',
     )
     ..addFlag(
       'dry-run',
@@ -91,14 +96,49 @@ Future<void> main(List<String> args) async {
   final nonFileArgs = results.rest
       .where((arg) => !arg.endsWith('_benchmark.dart'))
       .toList();
-  final benchmarkFiles = explicitFiles.isNotEmpty
+
+  const canonicalWorkloadDatasets = [
+    'coordinates',
+    'canada',
+    'citm_catalog',
+    'small',
+    'twitter',
+  ];
+  const canonicalStreamWorkloadDatasets = ['coordinates', 'canada'];
+
+  final List<String> canonicalFiles;
+  if (streamingOnly) {
+    canonicalFiles = [
+      for (final ds in canonicalStreamWorkloadDatasets) ...[
+        'benchmark/decode_stream_${ds}_benchmark.dart',
+        'benchmark/encode_stream_${ds}_benchmark.dart',
+      ],
+    ];
+  } else {
+    canonicalFiles = [
+      for (final ds in canonicalWorkloadDatasets) ...[
+        'benchmark/decode_${ds}_benchmark.dart',
+        'benchmark/encode_${ds}_benchmark.dart',
+      ],
+    ];
+  }
+
+  var benchmarkFiles = explicitFiles.isNotEmpty
       ? explicitFiles
-      : (streamingOnly
-            ? const [
-                'benchmark/decode_stream_benchmark.dart',
-                'benchmark/encode_stream_benchmark.dart',
-              ]
-            : const <String>[]);
+      : canonicalFiles;
+
+  final datasetFilter = results.option('dataset');
+  if (datasetFilter != null && datasetFilter.isNotEmpty) {
+    benchmarkFiles = benchmarkFiles
+        .where((f) => f.contains('_${datasetFilter}_benchmark.dart'))
+        .toList();
+    if (benchmarkFiles.isEmpty) {
+      stderr.writeln(
+        'Error: No benchmark files match dataset "$datasetFilter".',
+      );
+      exit(1);
+    }
+  }
 
   final pinCpu = results.option('pin-cpu');
   final firstExtraArgs = <String>[
