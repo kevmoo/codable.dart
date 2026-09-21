@@ -228,20 +228,24 @@ double? _extractMetricNs(Map<String, dynamic>? metrics, String metric) {
 }
 
 /// Candidate that is not one of the compared implementations. Its movement
-/// between the two SDK passes bounds the measurement floor for the same run.
+/// between the SDK passes bounds the measurement drift for the same run.
 ///
-/// This is a *null experiment*: the Tier 1 / Tier 0 ratio must be exactly
-/// `1.000x`, because the source on this path is identical in both SDKs. Any
-/// deviation is harness, build, or measurement drift.
+/// Note: This is *not* a pure null experiment. Even if the source on this
+/// path is identical in both SDKs, the SDK under test may perform code motion
+/// across library boundaries that causes snapshot or layout shifts underneath
+/// the control (e.g., relocating JSON code into `dart:_internal` which links
+/// into everything). Measured deviation bounds the combination of codebase
+/// layout collateral and environmental noise.
 const _controlCandidate = 'json_serializable_literal';
 
 /// Encode-side counterpart to [_controlCandidate].
 ///
-/// There is no JSON encode path that is source-identical across the two SDKs
-/// — the fork relocates `JsonEncoder`, `_JsonEncoderSink` and
-/// `_JsonStringStringifier` out of `json.dart` — so the encode control has to
-/// be a non-JSON codec. `sdk/lib/convert/utf8.dart` is untouched and no
-/// `convert_patch.dart` references `_Utf8Encoder`.
+/// Like the decode control, this is not a pure null experiment when the SDK
+/// under test contains broad code layout shifts. Moreover, there is no JSON
+/// encode path that is source-identical across the two SDKs — the fork
+/// relocates `JsonEncoder` out of `json.dart` — so the encode control has to
+/// be a non-JSON codec. `sdk/lib/convert/utf8.dart` is source-identical but
+/// its performance may still drift due to the same layout collateral.
 const _encodeControlCandidate = 'utf8_encode_control';
 
 String _candidateKeyFor(String candidate, String? sdk) =>
