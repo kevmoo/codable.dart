@@ -192,6 +192,16 @@ Future<void> main(List<String> args) async {
           : 'cross-host environment mismatch';
       print('🧹 Clearing existing benchmark_results.json ($reason)...');
       benchJsonFile.deleteSync();
+      final unifiedJsonFile = File(
+        p.join(benchmarkPkgDir, 'benchmark_results_unified.json'),
+      );
+      if (unifiedJsonFile.existsSync()) unifiedJsonFile.deleteSync();
+      final streamingUnifiedJsonFile = File(
+        p.join(benchmarkPkgDir, 'streaming_benchmark_results_unified.json'),
+      );
+      if (streamingUnifiedJsonFile.existsSync()) {
+        streamingUnifiedJsonFile.deleteSync();
+      }
     }
   }
 

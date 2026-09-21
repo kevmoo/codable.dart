@@ -228,20 +228,24 @@ double? _extractMetricNs(Map<String, dynamic>? metrics, String metric) {
 }
 
 /// Candidate that is not one of the compared implementations. Its movement
-/// between the two SDK passes bounds the measurement floor for the same run.
+/// between the SDK passes bounds the measurement drift for the same run.
 ///
-/// This is a *null experiment*: the Tier 1 / Tier 0 ratio must be exactly
-/// `1.000x`, because the source on this path is identical in both SDKs. Any
-/// deviation is harness, build, or measurement drift.
+/// Note: This is *not* a pure null experiment. Even if the source on this
+/// path is identical in both SDKs, the SDK under test may perform code motion
+/// across library boundaries that causes snapshot or layout shifts underneath
+/// the control (e.g., relocating JSON code into `dart:_internal` which links
+/// into everything). Measured deviation bounds the combination of codebase
+/// layout collateral and environmental noise.
 const _controlCandidate = 'json_serializable_literal';
 
 /// Encode-side counterpart to [_controlCandidate].
 ///
-/// There is no JSON encode path that is source-identical across the two SDKs
-/// — the fork relocates `JsonEncoder`, `_JsonEncoderSink` and
-/// `_JsonStringStringifier` out of `json.dart` — so the encode control has to
-/// be a non-JSON codec. `sdk/lib/convert/utf8.dart` is untouched and no
-/// `convert_patch.dart` references `_Utf8Encoder`.
+/// Like the decode control, this is not a pure null experiment when the SDK
+/// under test contains broad code layout shifts. Moreover, there is no JSON
+/// encode path that is source-identical across the two SDKs — the fork
+/// relocates `JsonEncoder` out of `json.dart` — so the encode control has to
+/// be a non-JSON codec. `sdk/lib/convert/utf8.dart` is source-identical but
+/// its performance may still drift due to the same layout collateral.
 const _encodeControlCandidate = 'utf8_encode_control';
 
 String _candidateKeyFor(String candidate, String? sdk) =>
@@ -513,22 +517,24 @@ void _writeControlAndStabilitySection(
     '`sdk/lib/convert/utf8.dart` is untouched and no `convert_patch.dart` '
     'references `_Utf8Encoder`.\n'
     '>\n'
-    '> Both are **null experiments**: the ratio must be `1.000x` because the '
-    'source on those paths is identical in both SDKs. A value away from '
-    '`1.000x` is harness, build, or measurement drift. **Treat any speedup '
-    'inside the control band as unresolved.**',
-  );
-
-  buf.writeln(
+    '> **Codebase Layout Collateral**: The source on those paths is '
+    'identical in both SDKs. However, because SDK forks often relocate '
+    'hundreds of lines across libraries (e.g., into `dart:_internal`), '
+    'measurements may drift due to snapshot alignment and cross-library '
+    'code layout shifts underneath the control. A moving control is NOT '
+    'by itself proof of a contaminated run — rather, its ratio bounds '
+    '**layout collateral + environmental noise**.\n'
     '>\n'
-    '> ⚠️ **The controls are NOT fully immune on Wasm.** On `dart2wasm`, '
-    '`dart:convert` *is* `sdk/lib/_internal/wasm/common/convert_patch.dart`, '
-    'a file this fork edits. Both control codecs live in that same '
-    'compilation unit, so a Wasm control deviation cannot cleanly separate '
-    '"our edit perturbed codegen or layout" from "harness drift". A fully '
-    'immune Wasm control would have to live outside `dart:convert` '
-    'entirely. Treat the Wasm control as a lower bound on drift, not a '
-    'complete account of it.',
+    '> ⚠️ **Actionable Rule: Compare each cell against its own '
+    'runtime\'s control band, never a pooled band.** Control spread is '
+    'not a fixed property of a backend, and it does not necessarily '
+    'track how much of that backend the fork edited — a run in which '
+    'the least-edited backend shows the widest spread and the '
+    'most-edited the narrowest is evidence of apparatus noise rather '
+    'than of the patch. Re-derive the band per runtime from the '
+    'current run instead of carrying numbers forward from a previous '
+    'one, and treat per-tier maxima from small samples as weak '
+    'statistics.',
   );
 
   buf.writeln(
