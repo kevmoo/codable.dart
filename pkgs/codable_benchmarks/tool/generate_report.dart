@@ -526,12 +526,15 @@ void _writeControlAndStabilitySection(
     '**layout collateral + environmental noise**.\n'
     '>\n'
     '> ⚠️ **Actionable Rule: Compare each cell against its own '
-    'runtime\'s control band, never a pooled band.** The extent of layout '
-    'collateral varies dramatically by compiler architecture (e.g., JS '
-    'is highly sensitive despite no file edits, while Wasm and AOT absorb '
-    'large perturbations cleanly). Note that per-tier maxima in small '
-    'samples (n=7) are weak statistics; rely on the robust '
-    'stratification ordering rather than individual extremes.',
+    'runtime\'s control band, never a pooled band.** Control spread is '
+    'not a fixed property of a backend, and it does not necessarily '
+    'track how much of that backend the fork edited — a run in which '
+    'the least-edited backend shows the widest spread and the '
+    'most-edited the narrowest is evidence of apparatus noise rather '
+    'than of the patch. Re-derive the band per runtime from the '
+    'current run instead of carrying numbers forward from a previous '
+    'one, and treat per-tier maxima from small samples as weak '
+    'statistics.',
   );
 
   buf.writeln(
