@@ -98,46 +98,65 @@ class EncData {
 
 BenchmarkGroup createEncodeBenchmarkGroup(String dataset) {
   final d = EncData(dataset);
-  return BenchmarkGroup.compare(
-    name: '${d.name}_encode',
-    config: const BenchmarkConfig(forceRun: true),
-    throughput: Throughput.bytes(d.bytes.length),
-    baseline: (
-      'json_serializable',
-      () {
-        dynamic res;
-        switch (d.name) {
-          case 'coordinates':
-            res = (d.jsModel as List<js_coord.Coordinate>)
-                .map((e) => e.toJson())
-                .toList();
-            break;
-          case 'canada':
-            res = (d.jsModel as js_canada.CanadaFeatureCollection).toJson();
-            break;
-          case 'citm_catalog':
-            res = (d.jsModel as js_citm.CitmCatalog).toJson();
-            break;
-          case 'small':
-            res = (d.jsModel as js_small.SmallDocument).toJson();
-            break;
-          case 'twitter':
-            res = (d.jsModel as js_twitter.TwitterResponse).toJson();
-            break;
-        }
-        Blackhole.consume(utf8JsonEncoder.convert(res));
-      },
+  final throughput = Throughput.bytes(d.bytes.length);
+  final groupName = '${d.name}_encode';
+
+  void runJsonSerializable() {
+    dynamic res;
+    switch (d.name) {
+      case 'coordinates':
+        res = (d.jsModel as List<js_coord.Coordinate>)
+            .map((e) => e.toJson())
+            .toList();
+        break;
+      case 'canada':
+        res = (d.jsModel as js_canada.CanadaFeatureCollection).toJson();
+        break;
+      case 'citm_catalog':
+        res = (d.jsModel as js_citm.CitmCatalog).toJson();
+        break;
+      case 'small':
+        res = (d.jsModel as js_small.SmallDocument).toJson();
+        break;
+      case 'twitter':
+        res = (d.jsModel as js_twitter.TwitterResponse).toJson();
+        break;
+    }
+    Blackhole.consume(utf8JsonEncoder.convert(res));
+  }
+
+  void runCodable() {
+    final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
+    Blackhole.consume(outBytes);
+  }
+
+  void runUtf8EncodeControl() {
+    Blackhole.consume(utf8.encode(d.string));
+  }
+
+  return BenchmarkGroup(groupName, [
+    BenchmarkVariant(
+      'codable',
+      runCodable,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
     ),
-    candidates: {
-      'codable': () {
-        final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
-        Blackhole.consume(outBytes);
-      },
-      'utf8_encode_control': () {
-        Blackhole.consume(utf8.encode(d.string));
-      },
-    },
-  );
+    BenchmarkVariant(
+      'utf8_encode_control',
+      runUtf8EncodeControl,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
+    ),
+    BenchmarkVariant(
+      'json_serializable',
+      runJsonSerializable,
+      group: groupName,
+      isBaseline: true,
+      throughput: throughput,
+    ),
+  ], config: const BenchmarkConfig(forceRun: true));
 }
 
 Future<void> mainEncodeCase(String dataset, List<String> args) async {

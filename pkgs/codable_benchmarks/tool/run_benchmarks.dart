@@ -120,6 +120,10 @@ Future<void> main(List<String> args) async {
         'benchmark/decode_${ds}_benchmark.dart',
         'benchmark/encode_${ds}_benchmark.dart',
       ],
+      for (final ds in canonicalStreamWorkloadDatasets) ...[
+        'benchmark/decode_stream_${ds}_benchmark.dart',
+        'benchmark/encode_stream_${ds}_benchmark.dart',
+      ],
     ];
   }
 
@@ -141,16 +145,13 @@ Future<void> main(List<String> args) async {
   }
 
   final pinCpu = results.option('pin-cpu');
-  final firstExtraArgs = <String>[
-    ...nonFileArgs,
-    if (benchmarkFiles.isNotEmpty) benchmarkFiles.first,
-  ];
+  final allBenchmarkArgs = <String>[...nonFileArgs, ...benchmarkFiles];
   final nativeCmd = _buildBenchPressCommand(
     dartBin: sdkPath,
     pinCpu: pinCpu,
     nodePath: nodePath,
     d8Path: d8Path,
-    extraArgs: firstExtraArgs,
+    extraArgs: allBenchmarkArgs,
   );
 
   if (results.flag('dry-run')) {
@@ -160,17 +161,13 @@ Future<void> main(List<String> args) async {
       pinCpu: pinCpu,
       nodePath: nodePath,
       d8Path: d8Path,
-      extraArgs: firstExtraArgs,
+      extraArgs: allBenchmarkArgs,
       nativeCmd: nativeCmd,
     );
     exit(0);
   }
 
-  final passArgSets = benchmarkFiles.isEmpty
-      ? <List<String>>[nonFileArgs]
-      : <List<String>>[
-          for (final file in benchmarkFiles) <String>[...nonFileArgs, file],
-        ];
+  final passArgSets = <List<String>>[allBenchmarkArgs];
 
   final benchJsonFile = File(p.join(benchmarkPkgDir, 'benchmark_results.json'));
   final benchJsonBackupFile = File(

@@ -89,79 +89,100 @@ class StreamDecodeData {
 
 BenchmarkGroup createDecodeStreamBenchmarkGroup(String dataset) {
   final d = StreamDecodeData(dataset);
-  return BenchmarkGroup.compare(
-    name: '${d.name}_decode_stream',
-    config: const BenchmarkConfig(forceRun: true),
-    throughput: Throughput.bytes(d.bytes.length),
-    baseline: (
-      'json_serializable',
-      () {
-        Object? jsonAst;
-        final resultSink = ChunkedConversionSink<Object?>.withCallback((
-          results,
-        ) {
-          jsonAst = results.first;
-        });
-        final sink = utf8JsonDecoder.startChunkedConversion(resultSink);
-        for (final chunk in d.chunks) {
-          sink.add(chunk);
-        }
-        sink.close();
-        Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
-      },
+  final throughput = Throughput.bytes(d.bytes.length);
+  final groupName = '${d.name}_decode_stream';
+
+  void runJsonSerializable() {
+    Object? jsonAst;
+    final resultSink = ChunkedConversionSink<Object?>.withCallback((results) {
+      jsonAst = results.first;
+    });
+    final sink = utf8JsonDecoder.startChunkedConversion(resultSink);
+    for (final chunk in d.chunks) {
+      sink.add(chunk);
+    }
+    sink.close();
+    Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
+  }
+
+  void runJsonSerializableLiteral() {
+    Object? jsonAst;
+    final resultSink = ChunkedConversionSink<Object?>.withCallback((results) {
+      jsonAst = results.first;
+    });
+    final sink = json.decoder.startChunkedConversion(resultSink);
+    for (final chunk in d.stringChunks) {
+      sink.add(chunk);
+    }
+    sink.close();
+    Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
+  }
+
+  void runCodable() {
+    Object? hydrated;
+    final resultSink = ChunkedConversionSink<Object?>.withCallback((results) {
+      hydrated = results.first;
+    });
+    final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
+      resultSink,
+      (decoder) => _decodeCodable(d.name, decoder),
+    );
+    for (final chunk in d.chunks) {
+      sink.add(chunk);
+    }
+    sink.close();
+    Blackhole.consume(hydrated);
+  }
+
+  void runCodableJs() {
+    Object? hydrated;
+    final resultSink = ChunkedConversionSink<Object?>.withCallback((results) {
+      hydrated = results.first;
+    });
+    final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
+      resultSink,
+      (decoder) => _decodeCodable(d.name, decoder),
+      userInfo: const {#forceJsDom: true},
+    );
+    for (final chunk in d.chunks) {
+      sink.add(chunk);
+    }
+    sink.close();
+    Blackhole.consume(hydrated);
+  }
+
+  // Order candidates so zero-copy/streaming runs on a clean heap first,
+  // followed by literal decode, and the heap-allocating DOM parser last.
+  return BenchmarkGroup(groupName, [
+    BenchmarkVariant(
+      'codable',
+      runCodable,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
     ),
-    candidates: {
-      'json_serializable_literal': () {
-        Object? jsonAst;
-        final resultSink = ChunkedConversionSink<Object?>.withCallback((
-          results,
-        ) {
-          jsonAst = results.first;
-        });
-        final sink = json.decoder.startChunkedConversion(resultSink);
-        for (final chunk in d.stringChunks) {
-          sink.add(chunk);
-        }
-        sink.close();
-        Blackhole.consume(_hydrateJsonSerializable(d.name, jsonAst));
-      },
-      'codable': () {
-        Object? hydrated;
-        final resultSink = ChunkedConversionSink<Object?>.withCallback((
-          results,
-        ) {
-          hydrated = results.first;
-        });
-        final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
-          resultSink,
-          (decoder) => _decodeCodable(d.name, decoder),
-        );
-        for (final chunk in d.chunks) {
-          sink.add(chunk);
-        }
-        sink.close();
-        Blackhole.consume(hydrated);
-      },
-      'codable_js': () {
-        Object? hydrated;
-        final resultSink = ChunkedConversionSink<Object?>.withCallback((
-          results,
-        ) {
-          hydrated = results.first;
-        });
-        final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
-          resultSink,
-          (decoder) => _decodeCodable(d.name, decoder),
-          userInfo: const {#forceJsDom: true},
-        );
-        for (final chunk in d.chunks) {
-          sink.add(chunk);
-        }
-        sink.close();
-        Blackhole.consume(hydrated);
-      },
-    },
-  );
+    BenchmarkVariant(
+      'codable_js',
+      runCodableJs,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
+    ),
+    BenchmarkVariant(
+      'json_serializable_literal',
+      runJsonSerializableLiteral,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
+    ),
+    BenchmarkVariant(
+      'json_serializable',
+      runJsonSerializable,
+      group: groupName,
+      isBaseline: true,
+      throughput: throughput,
+    ),
+  ], config: const BenchmarkConfig(forceRun: true));
 }
 
 Future<void> mainDecodeStreamCase(String dataset, List<String> args) async {

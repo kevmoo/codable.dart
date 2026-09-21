@@ -102,32 +102,43 @@ Object _serializeJsonSerializable(StreamEncData d) {
 
 BenchmarkGroup createEncodeStreamBenchmarkGroup(String dataset) {
   final d = StreamEncData(dataset);
-  return BenchmarkGroup.compare(
-    name: '${d.name}_encode_stream',
-    config: const BenchmarkConfig(forceRun: true),
-    throughput: Throughput.bytes(d.bytes.length),
-    baseline: (
-      'json_serializable',
-      () {
-        final byteBuilder = BytesBuilder(copy: false);
-        final byteSink = _BytesBuilderSink(byteBuilder);
-        final sink = utf8JsonEncoder.startChunkedConversion(byteSink);
-        sink.add(_serializeJsonSerializable(d));
-        sink.close();
-        Blackhole.consume(byteBuilder.length);
-      },
+  final throughput = Throughput.bytes(d.bytes.length);
+  final groupName = '${d.name}_encode_stream';
+
+  void runJsonSerializable() {
+    final byteBuilder = BytesBuilder(copy: false);
+    final byteSink = _BytesBuilderSink(byteBuilder);
+    final sink = utf8JsonEncoder.startChunkedConversion(byteSink);
+    sink.add(_serializeJsonSerializable(d));
+    sink.close();
+    Blackhole.consume(byteBuilder.length);
+  }
+
+  void runCodable() {
+    final byteBuilder = BytesBuilder(copy: false);
+    final byteSink = _BytesBuilderSink(byteBuilder);
+    final sink = JsonCodableEncoder.startChunkedConversion(byteSink);
+    sink.add(d.codableEncode);
+    sink.close();
+    Blackhole.consume(byteBuilder.length);
+  }
+
+  return BenchmarkGroup(groupName, [
+    BenchmarkVariant(
+      'codable',
+      runCodable,
+      group: groupName,
+      isBaseline: false,
+      throughput: throughput,
     ),
-    candidates: {
-      'codable': () {
-        final byteBuilder = BytesBuilder(copy: false);
-        final byteSink = _BytesBuilderSink(byteBuilder);
-        final sink = JsonCodableEncoder.startChunkedConversion(byteSink);
-        sink.add(d.codableEncode);
-        sink.close();
-        Blackhole.consume(byteBuilder.length);
-      },
-    },
-  );
+    BenchmarkVariant(
+      'json_serializable',
+      runJsonSerializable,
+      group: groupName,
+      isBaseline: true,
+      throughput: throughput,
+    ),
+  ], config: const BenchmarkConfig(forceRun: true));
 }
 
 Future<void> mainEncodeStreamCase(String dataset, List<String> args) async {
