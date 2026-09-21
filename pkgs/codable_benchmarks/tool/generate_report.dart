@@ -517,22 +517,20 @@ void _writeControlAndStabilitySection(
     '`sdk/lib/convert/utf8.dart` is untouched and no `convert_patch.dart` '
     'references `_Utf8Encoder`.\n'
     '>\n'
-    '> Both are **null experiments**: the ratio must be `1.000x` because the '
-    'source on those paths is identical in both SDKs. A value away from '
-    '`1.000x` is harness, build, or measurement drift. **Treat any speedup '
-    'inside the control band as unresolved.**',
-  );
-
-  buf.writeln(
+    '> **Codebase Layout Collateral**: The source on those paths is identical '
+    'in both SDKs. However, because SDK forks often relocate hundreds of lines '
+    'across libraries (e.g., into `dart:_internal`), measurements may drift due '
+    'to snapshot alignment and cross-library code layout shifts underneath the '
+    'control. A moving control is NOT by itself proof of a contaminated run — '
+    'rather, its ratio bounds **layout collateral + environmental noise**.\n'
     '>\n'
-    '> ⚠️ **The controls are NOT fully immune on Wasm.** On `dart2wasm`, '
-    '`dart:convert` *is* `sdk/lib/_internal/wasm/common/convert_patch.dart`, '
-    'a file this fork edits. Both control codecs live in that same '
-    'compilation unit, so a Wasm control deviation cannot cleanly separate '
-    '"our edit perturbed codegen or layout" from "harness drift". A fully '
-    'immune Wasm control would have to live outside `dart:convert` '
-    'entirely. Treat the Wasm control as a lower bound on drift, not a '
-    'complete account of it.',
+    '> ⚠️ **Actionable Rule: Compare each cell against its own runtime\'s '
+    'control band, never a pooled band.** The extent of layout collateral varies '
+    'dramatically by compiler architecture (e.g., JS is highly sensitive '
+    'despite no file edits, while Wasm and AOT absorb large perturbations '
+    'cleanly). Note that per-tier maxima in small samples (n=7) are weak '
+    'statistics; rely on the robust stratification ordering rather than '
+    'individual extremes.',
   );
 
   buf.writeln(
