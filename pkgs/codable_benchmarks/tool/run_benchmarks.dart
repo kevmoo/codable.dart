@@ -371,10 +371,24 @@ String? _which(String command) {
 String? _findNativeSdk(String home) {
   final explicit = Platform.environment['CODABLE_NATIVE_SDK'];
   if (explicit != null && explicit.isNotEmpty) {
-    final dart = explicit.endsWith('/bin/dart')
-        ? explicit
-        : '$explicit/bin/dart';
+    final expanded = explicit.startsWith('~')
+        ? explicit.replaceFirst('~', home)
+        : explicit;
+    final dart = expanded.endsWith('/bin/dart')
+        ? expanded
+        : '$expanded/bin/dart';
     if (File(dart).existsSync()) return dart;
+    // An explicitly requested SDK is authoritative. Falling through to the
+    // default below would benchmark a different SDK than was asked for and
+    // still stamp the run as successful, which is exactly the class of silent
+    // mismeasurement CODABLE_NATIVE_SDK exists to avoid.
+    stderr.writeln(
+      'Error: CODABLE_NATIVE_SDK is set to "$explicit" but no Dart '
+      'executable exists at "$dart".\n'
+      'Refusing to fall back to the default SDK, which would silently '
+      'benchmark a different SDK than requested.',
+    );
+    exit(1);
   }
   final candidate =
       '$home/.local/share/dart-sdk-json-utf8-kernels/dart-sdk/bin/dart';
