@@ -1,3 +1,9 @@
+# NOTE: tool/run_benchmarks.dart does NOT use this file for the native pass.
+# It generates .dart_tool/bench_press_native.yaml pinned to the SDK resolved
+# from CODABLE_NATIVE_SDK and passes it with `-c`, because bench_press treats
+# this file's `sdk` axis as `customSdkPath`, which outranks both DART_SDK and
+# the launching executable. Editing the path below only affects direct
+# `dart run bench_press` invocations.
 version: 1
 defaults:
   targets: [aot, wasm, js]
