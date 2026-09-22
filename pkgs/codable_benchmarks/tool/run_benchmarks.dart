@@ -58,10 +58,22 @@ Future<void> main(List<String> args) async {
   final nodePath =
       _findExecutable(['$home/.local/share/mise/installs/node/24/bin/node']) ??
       _which('node');
+  // jsvu installs the V8 shell as `v8`, not `d8`, so probe both names before
+  // falling back to PATH.
   final d8Path =
-      _findExecutable(['$home/.jsvu/bin/d8', '$home/.jsvu/d8']) ?? _which('d8');
+      _findExecutable([
+        '$home/.jsvu/bin/d8',
+        '$home/.jsvu/d8',
+        '$home/.jsvu/bin/v8',
+        '$home/.jsvu/v8',
+      ]) ??
+      _which('d8') ??
+      _which('v8');
 
   final sdkPath = _findNativeSdk(home);
+  final nativeSdkRoot = sdkPath == null
+      ? null
+      : p.dirname(p.dirname(p.normalize(p.absolute(sdkPath))));
   if (sdkPath == null) {
     stderr.writeln(
       'Error: Mandatory Dart SDK native_kernels not found.\n'
@@ -147,12 +159,24 @@ Future<void> main(List<String> args) async {
 
   final pinCpu = results.option('pin-cpu');
   final allBenchmarkArgs = <String>[...nonFileArgs, ...benchmarkFiles];
+  // The checked-in bench_press.yaml pins the `native_kernels` sdk axis to a
+  // hardcoded path. bench_press treats that as `customSdkPath`, which outranks
+  // both DART_SDK and the launching executable, so CODABLE_NATIVE_SDK would
+  // otherwise select the launcher (and the reported dart_version) while a
+  // different SDK was actually compiled and measured. Generate a config
+  // pinned to the SDK we resolved, exactly as the stock pass already does.
+  final nativeConfigFile = _writeNativeConfig(
+    benchmarkPkgDir: benchmarkPkgDir,
+    sdkRoot: nativeSdkRoot,
+  );
+
   final nativeCmd = _buildBenchPressCommand(
     dartBin: sdkPath,
     pinCpu: pinCpu,
     nodePath: nodePath,
     d8Path: d8Path,
     extraArgs: allBenchmarkArgs,
+    configPath: nativeConfigFile.path,
   );
 
   if (results.flag('dry-run')) {
@@ -221,12 +245,14 @@ Future<void> main(List<String> args) async {
 
     print('🚀 Running native_kernels benchmarks (Tier 1 & Tier 3)...');
     for (final argSet in passArgSets) {
+      // Must stay in sync with `nativeCmd` above, which feeds --dry-run.
       final cmd = _buildBenchPressCommand(
         dartBin: sdkPath,
         pinCpu: pinCpu,
         nodePath: nodePath,
         d8Path: d8Path,
         extraArgs: argSet,
+        configPath: nativeConfigFile.path,
       );
       await _runCheckedProcess(
         cmd.executable,
@@ -293,6 +319,36 @@ Future<void> main(List<String> args) async {
   );
 
   print('\n✅ Local benchmarks completed successfully.');
+}
+
+/// Writes a bench_press config whose `native_kernels` sdk axis points at
+/// [sdkRoot], so the measured SDK always matches the resolved one.
+File _writeNativeConfig({
+  required String benchmarkPkgDir,
+  required String? sdkRoot,
+}) {
+  final file = File(
+    p.join(benchmarkPkgDir, '.dart_tool', 'bench_press_native.yaml'),
+  );
+  file.parent.createSync(recursive: true);
+  file.writeAsStringSync('''
+version: 1
+defaults:
+  targets: [aot, wasm, js]
+  trials: 15
+matrix:
+  baseline:
+    sdk: native_kernels
+    runtime: aot
+  axes:
+    sdk:
+      native_kernels: "$sdkRoot"
+    runtime:
+      - aot
+      - wasm
+      - js
+''');
+  return file;
 }
 
 String? _findExecutable(List<String> paths) {

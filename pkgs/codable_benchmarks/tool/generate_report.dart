@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:args/args.dart';
+import 'package:path/path.dart' as p;
 
 const List<String> canonicalTargets = ['aot', 'js', 'wasm'];
 
@@ -82,6 +83,8 @@ void main(List<String> args) {
   }
 
   final dynamic jsonRoot = jsonDecode(inputFile.readAsStringSync());
+
+  _assertMeasuredSdkMatchesReported(jsonRoot);
   final benchmarksList = _extractBenchmarksList(jsonRoot, inputFile.path);
   final metricFlag = argResults.option('metric')!;
 
@@ -1208,3 +1211,69 @@ String _formatSpeedup(double baseUs, double candUs) {
 
 String _formatRatioGeoMean(List<double> ratios) =>
     ratios.isEmpty ? 'N/A' : '**${_geomean(ratios).toStringAsFixed(2)}x**';
+
+/// Hard-fails when the SDK bench_press actually compiled against disagrees
+/// with the SDK stamped into the results.
+///
+/// `environment.dart_version` is written by whichever `dart` *launched* the
+/// harness, while bench_press compiles with whatever its config's sdk axis
+/// resolves to (`customSdkPath`, which outranks both `DART_SDK` and the
+/// launching executable). When those two diverge, the report claims one SDK
+/// and measures another, silently. That produces a plausible — and completely
+/// invalid — A/B, so refuse to emit a report at all.
+void _assertMeasuredSdkMatchesReported(dynamic jsonRoot) {
+  if (jsonRoot is! Map<String, dynamic>) return;
+  final env = jsonRoot['environment'] as Map<String, dynamic>?;
+  final reported = env?['dart_version'] as String?;
+  if (reported == null || reported.isEmpty) return;
+
+  final buildDir = Directory(p.join('.dart_tool', 'bench_press', 'build'));
+  if (!buildDir.existsSync()) return;
+
+  final measured = <String, String>{};
+  for (final entity in buildDir.listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.cache_key')) continue;
+    for (final line in entity.readAsLinesSync()) {
+      if (!line.startsWith('dartExe:')) continue;
+      final dartExe = line.substring('dartExe:'.length).trim();
+      if (dartExe.isEmpty || !File(dartExe).existsSync()) break;
+      final version = _probeDartVersion(dartExe);
+      if (version != null) measured[dartExe] = version;
+      break;
+    }
+  }
+  if (measured.isEmpty) return;
+
+  final mismatched = measured.entries
+      .where((e) => !reported.startsWith(e.value) && e.value != reported)
+      .toList();
+  if (mismatched.isEmpty) return;
+
+  stderr.writeln(
+    '\nERROR: SDK mismatch — the report would claim one SDK and describe '
+    'measurements taken with another.\n'
+    '  reported (environment.dart_version): $reported',
+  );
+  for (final e in mismatched) {
+    stderr.writeln('  measured  (${e.key}): ${e.value}');
+  }
+  stderr.writeln(
+    '\nbench_press compiles against its config\'s `sdk` axis, which outranks '
+    'CODABLE_NATIVE_SDK and DART_SDK. Point the config at the SDK you intend '
+    'to measure, delete .dart_tool/bench_press/build, and re-run.\n'
+    'Refusing to generate a report.',
+  );
+  exit(1);
+}
+
+String? _probeDartVersion(String dartExe) {
+  try {
+    final result = Process.runSync(dartExe, ['--version']);
+    if (result.exitCode != 0) return null;
+    final text = '${result.stdout}${result.stderr}';
+    final match = RegExp(r'Dart SDK version: (\S+)').firstMatch(text);
+    return match?.group(1);
+  } on ProcessException {
+    return null;
+  }
+}
