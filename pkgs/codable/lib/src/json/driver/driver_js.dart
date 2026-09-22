@@ -278,6 +278,7 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   JsonTokenReader get reader {
+    _payloadEscaped = true;
     if (_reader != null) return _reader;
     final target = _activeValue ?? _decoded;
     final bytes = (target == _decoded && _bytes != null)

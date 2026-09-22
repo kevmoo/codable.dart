@@ -26,7 +26,10 @@ final class JsonCodableDecoder implements Decoder {
 
   /// Exposes the underlying pull-based token reader for direct, devirtualized
   /// decoding.
-  JsonTokenReader get reader => _reader;
+  JsonTokenReader get reader {
+    _payloadEscaped = true;
+    return _reader;
+  }
 
   @override
   Uint8List? get payload {
@@ -190,7 +193,11 @@ Float64List? decodeUniformDoubleListFromReader(
       }
     }
     reader.endArray();
-    return outLen == out.length ? out : Float64List.sublistView(out, 0, outLen);
+    if (outLen == out.length) return out;
+    if (out.length - outLen <= 512 || outLen >= (out.length >> 2)) {
+      return Float64List.sublistView(out, 0, outLen);
+    }
+    return out.sublist(0, outLen);
   } on CodableException {
     rethrow;
   } on Object catch (e) {

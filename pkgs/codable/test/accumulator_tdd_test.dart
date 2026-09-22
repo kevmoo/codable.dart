@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:codable/codable_json.dart';
+import 'package:codable/src/json/driver/scratch_byte_accumulator.dart';
 import 'package:test/test.dart';
 
 Uint8List? _asNullable(Uint8List? b) => b;
@@ -9,37 +10,31 @@ Uint8List? _asNullable(Uint8List? b) => b;
 void main() {
   group('ScratchByteAccumulator TDD', () {
     test('1. Cross-Stream Pool Reuse & Truncation Safety', () {
-      // 100 KB JSON payload
+      // 100 KB JSON payload decoded via normal Decoder API (unkeyed) so
+      // neither decoder.payload nor decoder.reader is touched and the 128 KB
+      // buffer returns to the static pool.
       final largeBytes = Uint8List(100 * 1024);
       largeBytes.fillRange(0, largeBytes.length, 32); // ' '
       largeBytes[0] = 91; // '['
+      largeBytes[1] = 49; // '1'
       largeBytes[largeBytes.length - 1] = 93; // ']'
 
-      int? firstLength;
-      int? firstBufferLength;
+      int? decodedElement;
       final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
-          final bytes = _asNullable(
-            (decoder as JsonCodableDecoder).reader.bytes,
-          );
-          firstLength = bytes?.length;
-          firstBufferLength = bytes?.buffer.lengthInBytes;
-          if (bytes != null) {
-            expect(
-              bytes.offsetInBytes % 8,
-              0,
-              reason: 'payload must be 8-byte aligned',
-            );
-            Float64List.sublistView(bytes, 0, 0); // Smoke test
-          }
+          final unkeyed = decoder.unkeyed();
+          expect(unkeyed.hasNext(), isTrue);
+          decodedElement = unkeyed.readInt();
+          expect(unkeyed.hasNext(), isFalse);
         },
       );
       sink1.add(largeBytes);
       sink1.close();
-      expect(firstLength, equals(largeBytes.length));
+      expect(decodedElement, equals(1));
 
-      // 200-byte JSON payload
+      // 200-byte JSON payload in Stream 2 should reuse the 128 KB pooled
+      // buffer from Stream 1 while strictly truncating its view to [0, 200).
       final smallPayload = utf8.encode('{"a":1,"b":2}${' ' * 187}');
       expect(smallPayload.length, 200);
 
@@ -50,14 +45,25 @@ void main() {
       final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
+          final keyed = decoder.keyed();
+          expect(keyed.nextKey(), equals('a'));
+          keyed.skipValue();
+          expect(keyed.nextKey(), equals('b'));
+          keyed.skipValue();
+          expect(keyed.hasNextKey(), isFalse);
+
+          // Now inspect the backing buffer at the end of Stream 2:
           final bytes = _asNullable(
             (decoder as JsonCodableDecoder).reader.bytes,
           );
           secondLength = bytes?.length;
           secondBufferLength = bytes?.buffer.lengthInBytes;
-          // Capture list elements to ensure trailing garbage from Stream 1
-          // didn't leak into the 200-byte logical slice.
           if (bytes != null) {
+            expect(
+              bytes.offsetInBytes % 8,
+              0,
+              reason: 'payload must be 8-byte aligned',
+            );
             secondPayload = Uint8List.fromList(bytes);
           }
         },
@@ -68,26 +74,24 @@ void main() {
       expect(secondLength, equals(smallPayload.length));
       expect(secondPayload, equals(smallPayload));
 
-      // Verify pool reuse: capacity from Stream 1 (100+ KB) is reused for
-      // Stream 2.
-      if (secondBufferLength != null && firstBufferLength != null) {
+      // Verify pool reuse: Stream 2's backing buffer is the 128 KB buffer
+      // pooled by Stream 1 (>= 100 KB), not a newly allocated 64 KB buffer.
+      if (secondBufferLength != null) {
         expect(
           secondBufferLength,
-          equals(firstBufferLength),
-          reason: 'Stream 2 should reuse strictly pooled buffer from Stream 1',
+          greaterThanOrEqualTo(100 * 1024),
+          reason: 'Stream 2 should reuse pooled 128 KB buffer from Stream 1',
         );
       }
     });
 
-    test('2. decoder.payload Escape Guard (Use-After-Free Protection)', () {
+    test('2a. decoder.payload Escape Guard (Use-After-Free Protection)', () {
       final payload1 = utf8.encode('[1, 2, 3]');
 
       Uint8List? escapedPayload;
       final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
-          // Take a sublistView to strictly hold a reference to the buffer
-          // slice. The underlying buffer must not be mutated by reuse.
           escapedPayload = Uint8List.sublistView(
             decoder.payload!,
             0,
@@ -112,9 +116,42 @@ void main() {
       sink2.add(payload2);
       sink2.close();
 
-      // escapedPayload from Stream 1 should not be corrupted by Stream 2
       expect(escapedPayload, equals(capturedBytes));
     });
+
+    test(
+      '2b. decoder.reader.bytes Escape Guard (Use-After-Free Protection)',
+      () {
+        // Stream 1 retains reader.bytes without ever touching decoder.payload.
+        final first = utf8.encode('[11111111,22222222,33333333]');
+        Uint8List? retained;
+        final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
+          ChunkedConversionSink.withCallback((_) {}),
+          (decoder) {
+            retained = _asNullable(
+              (decoder as JsonCodableDecoder).reader.bytes,
+            );
+          },
+        );
+        sink1
+          ..add(first)
+          ..close();
+
+        expect(retained, isNotNull);
+        final snapshot = Uint8List.fromList(retained!);
+
+        // Stream 2 decodes a different payload and must not overwrite retained.
+        final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
+          ChunkedConversionSink.withCallback((_) {}),
+          (decoder) {},
+        );
+        sink2
+          ..add(utf8.encode('[99999999,88888888,77777777]'))
+          ..close();
+
+        expect(retained, equals(snapshot));
+      },
+    );
 
     test('3. Re-Entrant / Nested startChunkedConversion Safety', () {
       final outerPayload = utf8.encode('{"outer": true}');
@@ -161,41 +198,35 @@ void main() {
         },
       );
 
-      // addSlice(chunk, start, end, isLast)
-      // "[1": index 7..9
       sink.addSlice(rawData, 7, 9, false);
-      // ", 2, 3]": index 9..16
       sink.addSlice(rawData, 9, 16, true);
 
       expect(finalPayload, equals(utf8.encode('[1, 2, 3]')));
     });
 
     test('5. > 4 MB Pool Cap Release', () {
-      // Create a payload > 4MB
       final largeBytes = Uint8List(4 * 1024 * 1024 + 1024);
       largeBytes.fillRange(0, largeBytes.length, 32);
       largeBytes[0] = 91; // '['
+      largeBytes[1] = 49; // '1'
       largeBytes[largeBytes.length - 1] = 93; // ']'
 
-      int? finalizedLength;
-      int? largeBufferLength;
+      int? decodedValue;
       final sink = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
-          final bytes = _asNullable(
-            (decoder as JsonCodableDecoder).reader.bytes,
-          );
-          finalizedLength = bytes?.length;
-          largeBufferLength = bytes?.buffer.lengthInBytes;
+          final unkeyed = decoder.unkeyed();
+          expect(unkeyed.hasNext(), isTrue);
+          decodedValue = unkeyed.readInt();
+          expect(unkeyed.hasNext(), isFalse);
         },
       );
 
       sink.add(largeBytes);
       sink.close();
+      expect(decodedValue, equals(1));
 
-      expect(finalizedLength, equals(largeBytes.length));
-
-      // Subsequent small decode
+      // Subsequent small decode must NOT inherit a >4MB buffer from the pool
       final small = utf8.encode('{}');
       Uint8List? smallPayload;
       int? smallBufferLength;
@@ -210,15 +241,56 @@ void main() {
       sink2.close();
 
       expect(smallPayload, equals(small));
-
-      // Ensure the >4MB buffer was NOT retained in the pool
-      if (smallBufferLength != null && largeBufferLength != null) {
+      if (smallBufferLength != null) {
         expect(
           smallBufferLength,
-          lessThan(largeBufferLength!),
+          lessThanOrEqualTo(4 * 1024 * 1024),
           reason: 'Buffers > 4MB must not be retained in the static pool',
         );
       }
     });
+
+    test('6. ScratchByteAccumulator reuse after release(canPool: false)', () {
+      final acc = ScratchByteAccumulator();
+      acc.add([1, 2, 3]);
+      acc.release(canPool: false);
+
+      // Re-adding after release(canPool: false) must recover from 0-length
+      // buffer without hanging and start at index 0.
+      acc.add([4, 5, 6, 7]);
+      final bytes = acc.takeBytes();
+      expect(bytes, equals([4, 5, 6, 7]));
+      acc.release(canPool: true);
+    });
+
+    test(
+      '7. Small uniform double list in large payload shrinks backing buffer',
+      () {
+        // 2-row uniform coordinate array followed by 100 KB of whitespace
+        final jsonText = '[{"x":1.5,"y":2.5},{"x":3.5,"y":4.5}]${' ' * 100000}';
+        final payload = Uint8List.fromList(utf8.encode(jsonText));
+
+        Float64List? result;
+        final sink = JsonCodableDecoder.startChunkedConversion<void>(
+          ChunkedConversionSink.withCallback((_) {}),
+          (decoder) {
+            result = decoder.decodeUniformDoubleList(const [
+              ['x'],
+              ['y'],
+            ]);
+          },
+        );
+        sink.add(payload);
+        sink.close();
+
+        expect(result, equals([1.5, 2.5, 3.5, 4.5]));
+        expect(
+          result!.buffer.lengthInBytes,
+          equals(4 * 8),
+          reason:
+              'Tiny array in 100KB payload must not pin the oversized buffer',
+        );
+      },
+    );
   });
 }

@@ -6,6 +6,7 @@ import 'dart:typed_data';
 /// `BytesBuilder.takeBytes()`, and eliminates geometric buffer doublings
 /// while preserving peak RSS compliance.
 final class ScratchByteAccumulator {
+  static const int _initialCapacity = 64 * 1024; // 64 KB initial capacity
   static const int _maxPooledCapacity = 4 * 1024 * 1024; // 4 MB pool cap
   static Uint8List? _pooledBuffer;
 
@@ -18,7 +19,7 @@ final class ScratchByteAccumulator {
       _buffer = pooled;
       _pooledBuffer = null;
     } else {
-      _buffer = Uint8List(64 * 1024); // 64 KB initial capacity
+      _buffer = Uint8List(_initialCapacity);
     }
   }
 
@@ -36,7 +37,7 @@ final class ScratchByteAccumulator {
 
   void _ensureCapacity(int required) {
     if (required <= _buffer.length) return;
-    var newCapacity = _buffer.length * 2;
+    var newCapacity = _buffer.isEmpty ? _initialCapacity : _buffer.length * 2;
     while (newCapacity < required) {
       newCapacity *= 2;
     }
@@ -52,6 +53,7 @@ final class ScratchByteAccumulator {
   }
 
   void release({required bool canPool}) {
+    _length = 0;
     if (canPool && _buffer.length <= _maxPooledCapacity) {
       _pooledBuffer = _buffer;
     }
