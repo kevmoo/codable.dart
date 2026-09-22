@@ -1229,15 +1229,6 @@ String _formatSpeedup(double baseUs, double candUs) {
 String _formatRatioGeoMean(List<double> ratios) =>
     ratios.isEmpty ? 'N/A' : '**${_geomean(ratios).toStringAsFixed(2)}x**';
 
-/// Hard-fails when the SDK bench_press actually compiled against disagrees
-/// with the SDK stamped into the results.
-///
-/// `environment.dart_version` is written by whichever `dart` *launched* the
-/// harness, while bench_press compiles with whatever its config's sdk axis
-/// resolves to (`customSdkPath`, which outranks both `DART_SDK` and the
-/// launching executable). When those two diverge, the report claims one SDK
-/// and measures another, silently. That produces a plausible — and completely
-/// invalid — A/B, so refuse to emit a report at all.
 /// Refuses to emit a report when the SDK that produced the measurements
 /// disagrees with the SDK stamped into the results.
 ///
@@ -1257,7 +1248,41 @@ void _assertMeasuredSdkMatchesReported(
   String? expectSdk,
   String? expectStockSdk,
 }) {
-  if (jsonRoot is! Map<String, dynamic>) return;
+  final problems = collectSdkMismatchProblems(
+    jsonRoot,
+    expectSdk: expectSdk,
+    expectStockSdk: expectStockSdk,
+  );
+  if (problems.isEmpty) return;
+
+  stderr.writeln(
+    '\nERROR: SDK mismatch — this report would describe measurements taken '
+    'with a different SDK than it claims.\n',
+  );
+  for (final problem in problems) {
+    stderr.writeln('  $problem');
+  }
+  stderr.writeln(
+    '\nbench_press compiles against its config\'s `sdk` axis, which outranks '
+    'CODABLE_NATIVE_SDK and DART_SDK. Point the config at the SDK you intend '
+    'to measure, delete .dart_tool/bench_press/build, and re-run.\n'
+    'Refusing to generate a report.',
+  );
+  exit(1);
+}
+
+/// Collects human-readable descriptions of any disagreements between the SDKs
+/// stamped in [jsonRoot]'s `environment` block, the caller-declared SDK paths
+/// ([expectSdk], [expectStockSdk]), and any surviving `bench_press`
+/// `.cache_key` build artifacts under [buildDir].
+List<String> collectSdkMismatchProblems(
+  dynamic jsonRoot, {
+  String? expectSdk,
+  String? expectStockSdk,
+  Directory? buildDir,
+  String? Function(String dartExe) probeVersion = _probeDartVersion,
+}) {
+  if (jsonRoot is! Map<String, dynamic>) return const [];
   final env = jsonRoot['environment'] as Map<String, dynamic>?;
   final reported = env?['dart_version'] as String?;
 
@@ -1265,7 +1290,7 @@ void _assertMeasuredSdkMatchesReported(
 
   void checkDeclared(String? sdkPath, String? stamped, String label) {
     if (sdkPath == null || sdkPath.isEmpty) return;
-    final version = _probeDartVersion(_dartBinFor(sdkPath));
+    final version = probeVersion(_dartBinFor(sdkPath));
     if (version == null) {
       problems.add(
         '$label: could not run the declared SDK to determine its version: '
@@ -1280,7 +1305,7 @@ void _assertMeasuredSdkMatchesReported(
       );
       return;
     }
-    if (!stamped.startsWith(version) && stamped != version) {
+    if (!_matchesStampedVersion(stamped, version)) {
       problems.add(
         '$label:\n'
         '    declared by caller: $version ($sdkPath)\n'
@@ -1300,22 +1325,23 @@ void _assertMeasuredSdkMatchesReported(
   // cache survives. Absent after a clean, which is why it cannot be the only
   // check.
   if (reported != null && reported.isNotEmpty) {
-    final buildDir = Directory(p.join('.dart_tool', 'bench_press', 'build'));
-    if (buildDir.existsSync()) {
+    final effectiveBuildDir =
+        buildDir ?? Directory(p.join('.dart_tool', 'bench_press', 'build'));
+    if (effectiveBuildDir.existsSync()) {
       final measured = <String, String>{};
-      for (final entity in buildDir.listSync(recursive: true)) {
+      for (final entity in effectiveBuildDir.listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.cache_key')) continue;
         for (final line in entity.readAsLinesSync()) {
           if (!line.startsWith('dartExe:')) continue;
           final dartExe = line.substring('dartExe:'.length).trim();
           if (dartExe.isEmpty || !File(dartExe).existsSync()) break;
-          final version = _probeDartVersion(dartExe);
+          final version = probeVersion(dartExe);
           if (version != null) measured[dartExe] = version;
           break;
         }
       }
       for (final e in measured.entries) {
-        if (!reported.startsWith(e.value) && e.value != reported) {
+        if (!_matchesStampedVersion(reported, e.value)) {
           problems.add(
             'compiled artifact:\n'
             '    built against:      ${e.value} (${e.key})\n'
@@ -1326,23 +1352,11 @@ void _assertMeasuredSdkMatchesReported(
     }
   }
 
-  if (problems.isEmpty) return;
-
-  stderr.writeln(
-    '\nERROR: SDK mismatch — this report would describe measurements taken '
-    'with a different SDK than it claims.\n',
-  );
-  for (final problem in problems) {
-    stderr.writeln('  $problem');
-  }
-  stderr.writeln(
-    '\nbench_press compiles against its config\'s `sdk` axis, which outranks '
-    'CODABLE_NATIVE_SDK and DART_SDK. Point the config at the SDK you intend '
-    'to measure, delete .dart_tool/bench_press/build, and re-run.\n'
-    'Refusing to generate a report.',
-  );
-  exit(1);
+  return problems;
 }
+
+bool _matchesStampedVersion(String stamped, String probed) =>
+    stamped == probed || stamped.startsWith('$probed ');
 
 /// Resolves [sdkPath] to a `dart` executable, accepting either an SDK root or
 /// the executable itself.
@@ -1357,9 +1371,12 @@ String? _probeDartVersion(String dartExe) {
   try {
     final result = Process.runSync(dartExe, ['--version']);
     if (result.exitCode != 0) return null;
-    final text = '${result.stdout}${result.stderr}';
-    final match = RegExp(r'Dart SDK version: (\S+)').firstMatch(text);
-    return match?.group(1);
+    final text = '${result.stdout}\n${result.stderr}'.trim();
+    final match = RegExp(
+      r'^Dart SDK version:\s*(.+)$',
+      multiLine: true,
+    ).firstMatch(text);
+    return match?.group(1)?.trim();
   } on ProcessException {
     return null;
   }

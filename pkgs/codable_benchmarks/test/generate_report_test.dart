@@ -2,7 +2,10 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:checks/checks.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 import '../tool/generate_report.dart';
@@ -205,5 +208,161 @@ void main() {
           .contains('Streaming vs. Monolithic Single-Buffer Overhead');
       check(streamReport).contains('`1.10x`');
     });
+  });
+
+  group('collectSdkMismatchProblems', () {
+    const versionA =
+        '3.14.0-json-next.c52b7fec (main) (Mon Sep 21 10:53:03 2026 -0700) '
+        'on "linux_x64"';
+    const versionB =
+        '3.14.0-json-next.8045fcd2 (main) (Sat Sep 12 19:08:49 2026 -0700) '
+        'on "linux_x64"';
+    const stockVersion =
+        '3.14.0-248.0.dev (dev) (Sat Sep 19 01:09:06 2026 -0700) '
+        'on "linux_x64"';
+
+    test(
+      'passes when declared SDKs match stamped versions without build cache',
+      () {
+        final problems = collectSdkMismatchProblems(
+          {
+            'environment': {
+              'dart_version': versionA,
+              'stock_dart_version': stockVersion,
+            },
+          },
+          expectSdk: '/sdk/native',
+          expectStockSdk: '/sdk/stock/bin/dart',
+          buildDir: Directory(
+            p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+          ),
+          probeVersion: (exe) => switch (exe) {
+            '/sdk/native/bin/dart' => versionA,
+            '/sdk/stock/bin/dart' => stockVersion,
+            _ => null,
+          },
+        );
+        check(problems).isEmpty();
+      },
+    );
+
+    test(
+      'fails when declared native SDK disagrees even if build cache is absent',
+      () {
+        final problems = collectSdkMismatchProblems(
+          {
+            'environment': {'dart_version': versionA},
+          },
+          expectSdk: '/sdk/native-b',
+          buildDir: Directory(
+            p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+          ),
+          probeVersion: (exe) =>
+              exe == '/sdk/native-b/bin/dart' ? versionB : null,
+        );
+        check(problems).length.equals(1);
+        check(problems.single)
+          ..contains('native SDK:')
+          ..contains('declared by caller: $versionB (/sdk/native-b)')
+          ..contains('stamped in results: $versionA');
+      },
+    );
+
+    test('rejects same-commit rebuild with different timestamp and prefix '
+        'false-positives', () {
+      const rebuiltSameCommit =
+          '3.14.0-json-next.c52b7fec (main) '
+          '(Mon Sep 21 14:20:11 2026 -0700) on "linux_x64"';
+      final rebuildProblems = collectSdkMismatchProblems(
+        {
+          'environment': {'dart_version': versionA},
+        },
+        expectSdk: '/sdk/native',
+        buildDir: Directory(
+          p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+        ),
+        probeVersion: (_) => rebuiltSameCommit,
+      );
+      check(rebuildProblems).length.equals(1);
+
+      final prefixProblems = collectSdkMismatchProblems(
+        {
+          'environment': {
+            'dart_version':
+                '3.14.0-edge.8045fcd2 (main) '
+                '(Sat Sep 12 19:08:49 2026 -0700)',
+          },
+        },
+        expectSdk: '/sdk/native',
+        buildDir: Directory(
+          p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+        ),
+        probeVersion: (_) => '3.14.0-edge',
+      );
+      check(prefixProblems).length.equals(1);
+    });
+
+    test('distinguishes unrunnable SDK and missing stamp', () {
+      final problems = collectSdkMismatchProblems(
+        {'environment': <String, Object?>{}},
+        expectSdk: '/sdk/missing',
+        expectStockSdk: '/sdk/stock',
+        buildDir: Directory(
+          p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+        ),
+        probeVersion: (exe) =>
+            exe == '/sdk/stock/bin/dart' ? stockVersion : null,
+      );
+      check(problems).length.equals(2);
+      check(problems[0]).contains(
+        'native SDK: could not run the declared SDK to determine its version: '
+        '/sdk/missing',
+      );
+      check(problems[1]).contains(
+        'stock SDK: results carry no version stamp to compare against '
+        '$stockVersion',
+      );
+    });
+
+    test('secondary cache_key scan detects stale compiled artifact', () {
+      final tempDir = Directory.systemTemp.createTempSync(
+        'codable_report_test_',
+      );
+      try {
+        final fakeDart = File(p.join(tempDir.path, 'fake_dart'))
+          ..writeAsStringSync('');
+        File(p.join(tempDir.path, 'target.cache_key'))
+            .writeAsStringSync('dartExe: ${fakeDart.path}\n');
+        final problems = collectSdkMismatchProblems(
+          {
+            'environment': {'dart_version': versionA},
+          },
+          buildDir: tempDir,
+          probeVersion: (exe) => exe == fakeDart.path ? versionB : null,
+        );
+        check(problems).length.equals(1);
+        check(problems.single)
+          ..contains('compiled artifact:')
+          ..contains('built against:      $versionB (${fakeDart.path})')
+          ..contains('stamped in results: $versionA');
+      } finally {
+        tempDir.deleteSync(recursive: true);
+      }
+    });
+
+    test(
+      'passes standalone when neither flags nor build cache are present',
+      () {
+        final problems = collectSdkMismatchProblems(
+          {
+            'environment': {'dart_version': versionA},
+          },
+          buildDir: Directory(
+            p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
+          ),
+        );
+        check(problems).isEmpty();
+      },
+    );
   });
 }
