@@ -371,9 +371,12 @@ String? _which(String command) {
 String? _findNativeSdk(String home) {
   final explicit = Platform.environment['CODABLE_NATIVE_SDK'];
   if (explicit != null && explicit.isNotEmpty) {
-    final dart = explicit.endsWith('/bin/dart')
-        ? explicit
-        : '$explicit/bin/dart';
+    final expanded = explicit.startsWith('~')
+        ? explicit.replaceFirst('~', home)
+        : explicit;
+    final dart = expanded.endsWith('/bin/dart')
+        ? expanded
+        : '$expanded/bin/dart';
     if (File(dart).existsSync()) return dart;
     // An explicitly requested SDK is authoritative. Falling through to the
     // default below would benchmark a different SDK than was asked for and
