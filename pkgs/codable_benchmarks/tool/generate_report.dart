@@ -36,6 +36,19 @@ void main(List<String> args) {
       help: 'Path to bench_press output JSON file.',
     )
     ..addOption(
+      'expect-sdk',
+      help:
+          'Path to the Dart SDK the caller intends these results to '
+          'describe. The report is refused if it disagrees with '
+          'environment.dart_version.',
+    )
+    ..addOption(
+      'expect-stock-sdk',
+      help:
+          'Path to the Stock Dart SDK the caller intends these results to '
+          'describe, checked against environment.stock_dart_version.',
+    )
+    ..addOption(
       'output-report',
       abbr: 'r',
       defaultsTo: 'BENCHMARK_REPORT.md',
@@ -84,7 +97,11 @@ void main(List<String> args) {
 
   final dynamic jsonRoot = jsonDecode(inputFile.readAsStringSync());
 
-  _assertMeasuredSdkMatchesReported(jsonRoot);
+  _assertMeasuredSdkMatchesReported(
+    jsonRoot,
+    expectSdk: argResults.option('expect-sdk'),
+    expectStockSdk: argResults.option('expect-stock-sdk'),
+  );
   final benchmarksList = _extractBenchmarksList(jsonRoot, inputFile.path);
   final metricFlag = argResults.option('metric')!;
 
@@ -1221,41 +1238,102 @@ String _formatRatioGeoMean(List<double> ratios) =>
 /// launching executable). When those two diverge, the report claims one SDK
 /// and measures another, silently. That produces a plausible — and completely
 /// invalid — A/B, so refuse to emit a report at all.
-void _assertMeasuredSdkMatchesReported(dynamic jsonRoot) {
+/// Refuses to emit a report when the SDK that produced the measurements
+/// disagrees with the SDK stamped into the results.
+///
+/// `environment.dart_version` is written by whichever `dart` *launched* the
+/// harness, which is not necessarily the SDK bench_press compiled and ran.
+/// When those diverge the report describes one SDK while claiming another,
+/// silently invalidating any A/B built on it.
+///
+/// [expectSdk] and [expectStockSdk] are the SDKs the caller says these results
+/// describe. They are the authoritative check: unlike bench_press's build
+/// cache, they cannot be removed by cleaning `.dart_tool`, so a report
+/// generated after `rm -rf .dart_tool/bench_press/build` is still verified.
+///
+/// The build cache is still consulted as a secondary signal when present.
+void _assertMeasuredSdkMatchesReported(
+  dynamic jsonRoot, {
+  String? expectSdk,
+  String? expectStockSdk,
+}) {
   if (jsonRoot is! Map<String, dynamic>) return;
   final env = jsonRoot['environment'] as Map<String, dynamic>?;
   final reported = env?['dart_version'] as String?;
-  if (reported == null || reported.isEmpty) return;
 
-  final buildDir = Directory(p.join('.dart_tool', 'bench_press', 'build'));
-  if (!buildDir.existsSync()) return;
+  final problems = <String>[];
 
-  final measured = <String, String>{};
-  for (final entity in buildDir.listSync(recursive: true)) {
-    if (entity is! File || !entity.path.endsWith('.cache_key')) continue;
-    for (final line in entity.readAsLinesSync()) {
-      if (!line.startsWith('dartExe:')) continue;
-      final dartExe = line.substring('dartExe:'.length).trim();
-      if (dartExe.isEmpty || !File(dartExe).existsSync()) break;
-      final version = _probeDartVersion(dartExe);
-      if (version != null) measured[dartExe] = version;
-      break;
+  void checkDeclared(String? sdkPath, String? stamped, String label) {
+    if (sdkPath == null || sdkPath.isEmpty) return;
+    final version = _probeDartVersion(_dartBinFor(sdkPath));
+    if (version == null) {
+      problems.add(
+        '$label: could not run the declared SDK to determine its version: '
+        '$sdkPath',
+      );
+      return;
+    }
+    if (stamped == null || stamped.isEmpty) {
+      problems.add(
+        '$label: results carry no version stamp to compare against '
+        '$version (did patch_environment.dart run?)',
+      );
+      return;
+    }
+    if (!stamped.startsWith(version) && stamped != version) {
+      problems.add(
+        '$label:\n'
+        '    declared by caller: $version ($sdkPath)\n'
+        '    stamped in results: $stamped',
+      );
     }
   }
-  if (measured.isEmpty) return;
 
-  final mismatched = measured.entries
-      .where((e) => !reported.startsWith(e.value) && e.value != reported)
-      .toList();
-  if (mismatched.isEmpty) return;
+  checkDeclared(expectSdk, reported, 'native SDK');
+  checkDeclared(
+    expectStockSdk,
+    env?['stock_dart_version'] as String?,
+    'stock SDK',
+  );
+
+  // Secondary signal: whatever bench_press last compiled against, if its build
+  // cache survives. Absent after a clean, which is why it cannot be the only
+  // check.
+  if (reported != null && reported.isNotEmpty) {
+    final buildDir = Directory(p.join('.dart_tool', 'bench_press', 'build'));
+    if (buildDir.existsSync()) {
+      final measured = <String, String>{};
+      for (final entity in buildDir.listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.cache_key')) continue;
+        for (final line in entity.readAsLinesSync()) {
+          if (!line.startsWith('dartExe:')) continue;
+          final dartExe = line.substring('dartExe:'.length).trim();
+          if (dartExe.isEmpty || !File(dartExe).existsSync()) break;
+          final version = _probeDartVersion(dartExe);
+          if (version != null) measured[dartExe] = version;
+          break;
+        }
+      }
+      for (final e in measured.entries) {
+        if (!reported.startsWith(e.value) && e.value != reported) {
+          problems.add(
+            'compiled artifact:\n'
+            '    built against:      ${e.value} (${e.key})\n'
+            '    stamped in results: $reported',
+          );
+        }
+      }
+    }
+  }
+
+  if (problems.isEmpty) return;
 
   stderr.writeln(
-    '\nERROR: SDK mismatch — the report would claim one SDK and describe '
-    'measurements taken with another.\n'
-    '  reported (environment.dart_version): $reported',
+    '\nERROR: SDK mismatch — this report would describe measurements taken '
+    'with a different SDK than it claims.\n',
   );
-  for (final e in mismatched) {
-    stderr.writeln('  measured  (${e.key}): ${e.value}');
+  for (final problem in problems) {
+    stderr.writeln('  $problem');
   }
   stderr.writeln(
     '\nbench_press compiles against its config\'s `sdk` axis, which outranks '
@@ -1264,6 +1342,15 @@ void _assertMeasuredSdkMatchesReported(dynamic jsonRoot) {
     'Refusing to generate a report.',
   );
   exit(1);
+}
+
+/// Resolves [sdkPath] to a `dart` executable, accepting either an SDK root or
+/// the executable itself.
+String _dartBinFor(String sdkPath) {
+  if (sdkPath.endsWith('${p.separator}dart') || sdkPath.endsWith('/dart')) {
+    return sdkPath;
+  }
+  return p.join(sdkPath, 'bin', 'dart');
 }
 
 String? _probeDartVersion(String dartExe) {

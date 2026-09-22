@@ -289,7 +289,15 @@ Future<void> main(List<String> args) async {
   if (!streamingOnly) {
     await _runCheckedProcess(
       sdkPath,
-      ['run', 'tool/generate_report.dart'],
+      [
+        'run',
+        'tool/generate_report.dart',
+        // Declare the SDKs this run measured so the report can verify them
+        // without depending on bench_press's build cache, which a clean
+        // removes.
+        '--expect-sdk', sdkPath,
+        if (stockSdk != null) ...['--expect-stock-sdk', stockSdk.dartBin],
+      ],
       workingDirectory: benchmarkPkgDir,
       errorLabel: 'generate_report.dart',
     );
@@ -300,6 +308,9 @@ Future<void> main(List<String> args) async {
       'run',
       'tool/generate_report.dart',
       '--streaming',
+      '--expect-sdk',
+      sdkPath,
+      if (stockSdk != null) ...['--expect-stock-sdk', stockSdk.dartBin],
       if (streamingOnly) ...[
         '-i',
         'streaming_benchmark_results.json',
