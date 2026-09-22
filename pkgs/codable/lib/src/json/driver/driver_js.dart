@@ -14,6 +14,7 @@ import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 import 'driver_streaming.dart' as streaming_driver;
+import 'scratch_byte_accumulator.dart';
 
 const bool _isWasm = bool.fromEnvironment('dart.tool.dart2wasm');
 
@@ -222,6 +223,7 @@ final class JsonCodableDecoder implements Decoder {
   final JSAny? _decoded;
   final JsonTokenReader? _reader;
   final Uint8List? _bytes;
+  bool _payloadEscaped = false;
   @override
   final Map<Object, Object?> userInfo;
 
@@ -331,7 +333,10 @@ final class JsonCodableDecoder implements Decoder {
   KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
 
   @override
-  Uint8List? get payload => _bytes ?? _reader?.bytes;
+  Uint8List? get payload {
+    _payloadEscaped = true;
+    return _bytes ?? _reader?.bytes;
+  }
 
   @override
   SingleValueDecoder singleValueContainer() => singleValue();
@@ -2221,7 +2226,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   final Sink<T> _sink;
   final T Function(Decoder decoder) _decode;
   final Map<Object, Object?> _userInfo;
-  final BytesBuilder _accumulator = BytesBuilder(copy: false);
+  final ScratchByteAccumulator _accumulator = ScratchByteAccumulator();
   bool _isClosed = false;
 
   _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
@@ -2241,7 +2246,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     }
     RangeError.checkValidRange(start, end, chunk.length);
     if (start < end) {
-      _accumulator.add(chunk.sublist(start, end));
+      _accumulator.addSlice(chunk, start, end);
     }
     if (isLast) {
       close();
@@ -2254,7 +2259,11 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     _isClosed = true;
     final bytes = _accumulator.takeBytes();
     final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
-    _sink.add(_decode(decoder));
+    try {
+      _sink.add(_decode(decoder));
+    } finally {
+      _accumulator.release(canPool: !decoder._payloadEscaped);
+    }
     _sink.close();
   }
 }

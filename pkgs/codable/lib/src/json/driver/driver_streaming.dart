@@ -12,12 +12,15 @@ import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 import 'adaptive_writer.dart';
+import 'scratch_byte_accumulator.dart';
 
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
 final class JsonCodableDecoder implements Decoder {
   final JsonTokenReader _reader;
   final Uint8List? _bytes;
+  bool _payloadEscaped = false;
+
   @override
   final Map<Object, Object?> userInfo;
 
@@ -26,7 +29,10 @@ final class JsonCodableDecoder implements Decoder {
   JsonTokenReader get reader => _reader;
 
   @override
-  Uint8List? get payload => _bytes ?? _reader.bytes;
+  Uint8List? get payload {
+    _payloadEscaped = true;
+    return _bytes ?? _reader.bytes;
+  }
 
   JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}})
     : _bytes = null;
@@ -134,7 +140,11 @@ Float64List? decodeUniformDoubleListFromReader(
 
   try {
     reader.beginArray();
-    var out = Float64List(256 * kCount);
+    var estimatedRows = (reader.bytes.length ~/ (10 * kCount + 8)).clamp(
+      256,
+      16384,
+    );
+    var out = Float64List(estimatedRows * kCount);
     var outLen = 0;
     final row = Float64List(kCount);
 
@@ -180,7 +190,7 @@ Float64List? decodeUniformDoubleListFromReader(
       }
     }
     reader.endArray();
-    return outLen == out.length ? out : out.sublist(0, outLen);
+    return outLen == out.length ? out : Float64List.sublistView(out, 0, outLen);
   } on CodableException {
     rethrow;
   } on Object catch (e) {
@@ -1404,7 +1414,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   final Sink<T> _sink;
   final T Function(Decoder decoder) _decode;
   final Map<Object, Object?> _userInfo;
-  final BytesBuilder _accumulator = BytesBuilder(copy: true);
+  final ScratchByteAccumulator _accumulator = ScratchByteAccumulator();
   bool _isClosed = false;
 
   _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
@@ -1424,7 +1434,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     }
     RangeError.checkValidRange(start, end, chunk.length);
     if (start < end) {
-      _accumulator.add(chunk.sublist(start, end));
+      _accumulator.addSlice(chunk, start, end);
     }
     if (isLast) {
       close();
@@ -1437,7 +1447,11 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     _isClosed = true;
     final bytes = _accumulator.takeBytes();
     final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
-    _sink.add(_decode(decoder));
+    try {
+      _sink.add(_decode(decoder));
+    } finally {
+      _accumulator.release(canPool: !decoder._payloadEscaped);
+    }
     _sink.close();
   }
 }
