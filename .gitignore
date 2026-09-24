@@ -4,7 +4,6 @@ pubspec.lock
 build/
 .DS_Store
 .agents/
-.deslop/
 *.exe
 benchmark_*.json
 pkgs/codable_benchmarks/benchmark_*.json
