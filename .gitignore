@@ -11,3 +11,4 @@ pkgs/codable_benchmarks/benchmark_*.json
 !pkgs/codable_benchmarks/benchmark_results_unified.json
 BENCHMARK_REPORT_*.md
 pkgs/codable_benchmarks/BENCHMARK_REPORT_*.md
+pkgs/codable/lib/src/json/substrate/substrate.dart
