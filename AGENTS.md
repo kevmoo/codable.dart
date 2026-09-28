@@ -7,19 +7,28 @@ The `mock/` substrate is ONLY a compilation stub for unmodified SDKs and CI; it 
 
 **Mandatory Verification Step:**
 Before generating PRs, writing optimization code, or running benchmarks, check the substrate state:
-1. Ensure `pkgs/codable/lib/src/json/substrate/substrate.dart` points to `substrate_native.dart`.
+1. Ensure `pkgs/codable/lib/src/json/substrate/substrate.dart` (an untracked generated file) exists and points to `substrate_native.dart` (generate with `dart run tool/switch_substrate.dart native` for native SDK work, or `mock` for stock SDK testing).
 2. Ensure you are targeting the right codebase. Performance changes should be applied to `dart-sdk` (`sdk/lib/convert/...`) rather than `pkgs/codable/lib/src/json/substrate/mock/...`.
 3. Do not run benchmarks on mock without explicitly providing `--allow-mock`.
 
 ## Two substrates, one API
 
-`pkgs/codable/lib/src/json/substrate/substrate.dart` selects which
-implementation of `JsonTokenReader`/`JsonTokenWriter`/`JsonUtf8Decoder` the
-package compiles against:
+`pkgs/codable/lib/src/json/substrate/substrate.dart` is an **untracked,
+gitignored generated file** that selects which implementation of
+`JsonTokenReader`/`JsonTokenWriter`/`JsonUtf8Decoder` the package compiles
+against:
 
-- **native** (default): `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
+- **native**: `dart:convert` from the dedicated `dart-sdk-json-next` Dart SDK build
   (`kevmoo/dart-sdk-json-next` `main` branch).
 - **mock** (what CI runs): the pure-Dart copy in `substrate/mock/`.
+
+Because `substrate.dart` is untracked, a fresh clone or new worktree must
+generate it before running `dart analyze` or `dart test`:
+
+```bash
+dart run tool/switch_substrate.dart mock     # Stock Dart SDK / CI
+dart run tool/switch_substrate.dart native   # Private json-utf8 Dart SDK
+```
 
 The mock exists so the package builds on a stock SDK. It must stay
 source-compatible with the SDK API: same names, same positional/named
@@ -28,8 +37,7 @@ throws `RangeError` on non-positive values; `toBytes()` returns a copy).
 When you add or change a member in `substrate/mock/`, check the corresponding
 declaration in the SDK's `sdk/lib/convert/json_utf8.dart` first.
 
-CI automatically switches `substrate.dart` to the mock substrate in `.github/workflows/dart.yml`.
-For local testing on a stock SDK, switch with `dart run tool/switch_substrate.dart mock|native`.
+CI automatically generates `substrate.dart` in `mock` mode in `.github/workflows/dart.yml`.
 
 ## Native-substrate check
 
@@ -44,8 +52,10 @@ You can also run the check standalone:
 dart run tool/native_sdk_check.dart
 ```
 
-It switches to the native substrate, runs `dart analyze` (errors and warnings fatal, infos not) with
-the private SDK, and restores the mock substrate. SDK discovery order:
+It stages the workspace into a hermetic temporary directory, generates the
+`native` substrate there, and runs `dart analyze` (errors and warnings fatal,
+infos not) with the private SDK—leaving the working tree and active local
+`substrate.dart` completely untouched. SDK discovery order:
 `$CODABLE_NATIVE_SDK`, `~/.local/share/dart-sdk-json-utf8-kernels/dart-sdk`,
 `~/github/dart-sdk/core/agent-json-utf8-kernels/sdk/out/ReleaseX64/dart-sdk`.
 

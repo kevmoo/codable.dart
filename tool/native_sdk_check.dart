@@ -24,13 +24,15 @@ library;
 
 import 'dart:io';
 
+import 'switch_substrate.dart';
+
 const skippedExitCode = 3;
 
 const _sentinelLibrary = 'lib/convert/json_utf8.dart';
 
 final _repoRoot = File(Platform.script.toFilePath()).parent.parent.path;
 
-void main() async {
+void main() {
   final dart = _findNativeDart();
   if (dart == null) {
     stderr.writeln(
@@ -41,24 +43,24 @@ void main() async {
   }
   stdout.writeln('Using native SDK: $dart');
 
-  final substrate = File(
-    '$_repoRoot/pkgs/codable/lib/src/json/substrate/substrate.dart',
-  );
-  final original = substrate.readAsStringSync();
+  final tempDir = Directory.systemTemp.createTempSync('codable_native_check_');
   var failed = false;
   try {
-    _run('dart', ['run', 'tool/switch_substrate.dart', 'native']);
-    _run(dart, ['pub', 'get']);
-    // Infos are not fatal here: a few lints (e.g. `unnecessary_import` of
-    // the substrate file) only fire in native mode and are correct for mock.
-    failed = !_run(dart, [
-      'analyze',
-      'pkgs/codable/lib',
-      'pkgs/codable_benchmarks',
-    ]);
+    _stageWorkspace(Directory(_repoRoot), tempDir);
+    writeSubstrate('native', repoRoot: tempDir.path);
+    if (!_run(dart, ['pub', 'get'], workingDirectory: tempDir.path)) {
+      failed = true;
+    } else {
+      // Infos are not fatal here: a few lints (e.g. `unnecessary_import` of
+      // the substrate file) only fire in native mode and are correct for mock.
+      failed = !_run(dart, [
+        'analyze',
+        'pkgs/codable/lib',
+        'pkgs/codable_benchmarks',
+      ], workingDirectory: tempDir.path);
+    }
   } finally {
-    substrate.writeAsStringSync(original);
-    _run('dart', ['pub', 'get']);
+    tempDir.deleteSync(recursive: true);
   }
   if (failed) {
     stderr.writeln(
@@ -68,6 +70,39 @@ void main() async {
     exit(1);
   }
   stdout.writeln('PASS: native substrate analyzes clean.');
+}
+
+void _stageWorkspace(Directory sourceRoot, Directory targetRoot) {
+  for (final fileName in [
+    'pubspec.yaml',
+    'pubspec.lock',
+    'analysis_options.yaml',
+  ]) {
+    final file = File('${sourceRoot.path}/$fileName');
+    if (file.existsSync()) {
+      file.copySync('${targetRoot.path}/$fileName');
+    }
+  }
+  _copyDirectory(
+    Directory('${sourceRoot.path}/pkgs'),
+    Directory('${targetRoot.path}/pkgs'),
+  );
+}
+
+void _copyDirectory(Directory source, Directory target) {
+  target.createSync(recursive: true);
+  for (final entity in source.listSync(followLinks: false)) {
+    final name = entity.uri.pathSegments.where((s) => s.isNotEmpty).lastOrNull;
+    if (name == null || name == '.dart_tool' || name == 'build') continue;
+    final destPath = '${target.path}/$name';
+    if (entity is File) {
+      entity.copySync(destPath);
+    } else if (entity is Directory) {
+      _copyDirectory(entity, Directory(destPath));
+    } else if (entity is Link) {
+      Link(destPath).createSync(entity.targetSync());
+    }
+  }
 }
 
 String? _findNativeDart() {
@@ -107,9 +142,9 @@ String? _dartIn(String path) {
   return dart.existsSync() ? dart.path : null;
 }
 
-bool _run(String exe, List<String> args) {
+bool _run(String exe, List<String> args, {required String workingDirectory}) {
   stdout.writeln('\$ ${[exe, ...args].join(' ')}');
-  final result = Process.runSync(exe, args, workingDirectory: _repoRoot);
+  final result = Process.runSync(exe, args, workingDirectory: workingDirectory);
   stdout.write(result.stdout);
   stderr.write(result.stderr);
   return result.exitCode == 0;
