@@ -1,6 +1,6 @@
 name: codable_benchmarks
 description: End-to-end performance and cross-language serialization benchmarks for package:codable.
-version: 0.1.0-dev
+version: 0.1.0-wip
 publish_to: none
 
 environment:
@@ -13,7 +13,7 @@ dependencies:
     git:
       url: https://github.com/kevmoo/bench_press.git
       ref: 12cc3e8
-  codable: ^0.1.0-dev
+  codable: ^2.0.0-wip
   json_annotation: ^4.9.0
 
 dev_dependencies:
@@ -21,7 +21,7 @@ dev_dependencies:
   args: ^2.4.0
   build_runner: ^2.4.14
   checks: ^0.3.0
-  codable_builder: ^0.1.0-dev
+  codable_builder: ^0.1.0-wip
   dart_flutter_team_lints: ^3.0.0
   http: ^1.1.0
   json_serializable: ^6.9.0

@@ -4,8 +4,6 @@
 
 // ignore_for_file: deprecated_member_use, lines_longer_than_80_chars
 
-import 'dart:convert';
-
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -61,20 +59,6 @@ final class DecoderGeneratorHelper {
           "'${field.aliases[i]}';",
         );
       }
-    }
-
-    buffer.writeln();
-    buffer.writeln('  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys');
-    for (final field in nonIgnoredFields) {
-      final suffix = toSafeIdentifierSuffix(field.name);
-      final encoded = utf8.encode(jsonEncode(field.wireName));
-      buffer.writeln(
-        '  static const List<int> wireNameBytes$suffix = $encoded;',
-      );
-      buffer.writeln(
-        '  static const StaticKey staticKey$suffix = '
-        'StaticKey(name$suffix, key$suffix, wireNameBytes$suffix);',
-      );
     }
 
     buffer.writeln();
@@ -269,7 +253,7 @@ final class DecoderGeneratorHelper {
   void _writeKeyedSelectLoop(StringBuffer buffer, String schemaName) {
     buffer.writeln('  var seen = $schemaName.none;');
     buffer.writeln();
-    buffer.writeln('  while (keyed.hasNextKey()) {');
+    buffer.writeln('  while (keyed.moveNextKey()) {');
     buffer.writeln(
       '    switch (keyed.selectKeyIndex($schemaName.keyOptions)) {',
     );
@@ -453,7 +437,7 @@ final class DecoderGeneratorHelper {
         '$indent{\n'
         '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
         '$indent  final l = <Float64List>[];\n'
-        '$indent  while (u.hasNext()) {\n'
+        '$indent  while (u.moveNext()) {\n'
         '$indent    l.add(u.decodeFloat64List());\n'
         '$indent  }\n'
         '$indent  ${field.name} = l;\n'
@@ -464,7 +448,7 @@ final class DecoderGeneratorHelper {
         '$indent{\n'
         '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
         '$indent  final l = <Int64List>[];\n'
-        '$indent  while (u.hasNext()) {\n'
+        '$indent  while (u.moveNext()) {\n'
         '$indent    l.add(Int64List.fromList(u.decodeIntList()));\n'
         '$indent  }\n'
         '$indent  ${field.name} = l;\n'
@@ -481,7 +465,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <List<double>>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    l.add(u.decodeDoubleList());\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -492,7 +476,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <Float64List>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    l.add(u.decodeFloat64List());\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -505,7 +489,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <List<int>>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    l.add(u.decodeIntList());\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -518,7 +502,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <List<String>>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    l.add(u.decodeStringList());\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -531,7 +515,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <List<bool>>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    l.add(u.decodeBoolList());\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -564,7 +548,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final l = <$nestedName?>[];\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    if (u.isNextNull()) {\n'
           '$indent      u.readNull();\n'
           '$indent      l.add(null);\n'
@@ -762,7 +746,7 @@ final class DecoderGeneratorHelper {
           '$indent{\n'
           '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
           '$indent  final s = <$nestedName?>{};\n'
-          '$indent  while (u.hasNext()) {\n'
+          '$indent  while (u.moveNext()) {\n'
           '$indent    if (u.isNextNull()) {\n'
           '$indent      u.readNull();\n'
           '$indent      s.add(null);\n'
@@ -818,7 +802,7 @@ final class DecoderGeneratorHelper {
       '$indent{\n'
       '$indent  final k = keyed.nestedDecoder().keyed();\n'
       '$indent  final m = <String, $valTypeStr>{};\n'
-      '$indent  while (k.hasNextKey()) {\n'
+      '$indent  while (k.moveNextKey()) {\n'
       '$indent    final key = k.nextKey();',
     );
     if (isValNullable) {
@@ -904,7 +888,7 @@ final class DecoderGeneratorHelper {
 
     buffer.writeln('  final unkeyed = decoder.unkeyed();');
     buffer.writeln('  final list = <${model.className}>[];');
-    buffer.writeln('  while (unkeyed.hasNext()) {');
+    buffer.writeln('  while (unkeyed.moveNext()) {');
     buffer.writeln(
       '    list.add(_\$${model.className}FromDecoder(unkeyed.nestedDecoder()));',
     );

@@ -51,9 +51,9 @@ Future<void> _generateModelPart(File file) async {
 }
 
 void main() async {
-  var modelsDir = Directory('benchmark/models/codable');
+  var modelsDir = Directory('lib/src/models/codable');
   if (!modelsDir.existsSync()) {
-    modelsDir = Directory('pkgs/codable_benchmarks/benchmark/models/codable');
+    modelsDir = Directory('pkgs/codable_benchmarks/lib/src/models/codable');
   }
   final modelFiles = modelsDir
       .listSync()

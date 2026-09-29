@@ -114,7 +114,7 @@ void main() {
         DateTime? createdAt;
         (int, int)? nullSpan;
 
-        while (keyed.hasNextKey()) {
+        while (keyed.moveNextKey()) {
           final key = keyed.nextKey();
           switch (key) {
             case 'uuid':
@@ -158,7 +158,7 @@ void main() {
         final unkeyed = decoder.unkeyed();
 
         final dates = <DateTime?>[];
-        while (unkeyed.hasNext()) {
+        while (unkeyed.moveNext()) {
           final span = unkeyed.readNullableStringSpan();
           if (span == null) {
             dates.add(null);

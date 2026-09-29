@@ -81,9 +81,10 @@ final class Enterprise {
   void encode(Encoder encoder) => _$EnterpriseToEncoder(this, encoder);
 }
 
-final class ZipCodeDecoder {
+final class ZipCodeDecoder implements CustomCodable<String> {
   const ZipCodeDecoder();
 
+  @override
   String decode(Decoder decoder) {
     final sv = decoder.singleValue();
     if (sv.isNull()) {
@@ -97,7 +98,8 @@ final class ZipCodeDecoder {
     }
   }
 
-  void encodeToEncoder(String value, Encoder encoder) {
+  @override
+  void encode(String value, Encoder encoder) {
     encoder.singleValue().encodeString(value);
   }
 }

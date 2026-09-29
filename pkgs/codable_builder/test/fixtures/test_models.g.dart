@@ -4,10 +4,6 @@
 
 part of 'test_models.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Point
 // =============================================================================
@@ -15,12 +11,6 @@ extension type const _$PointSchema(int _value) {
   // String Name Constants
   static const String nameX = 'x';
   static const String nameY = 'y';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesX = [34, 120, 34];
-  static const StaticKey staticKeyX = StaticKey(nameX, keyX, wireNameBytesX);
-  static const List<int> wireNameBytesY = [34, 121, 34];
-  static const StaticKey staticKeyY = StaticKey(nameY, keyY, wireNameBytesY);
 
   // Key Indices for selectKeyIndex()
   static const int keyX = 0;
@@ -80,7 +70,7 @@ Point _$PointFromDecoder(Decoder decoder) {
   double? y;
   var seen = _$PointSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$PointSchema.keyOptions)) {
       case _$PointSchema.keyX:
         if ((seen._value & _$PointSchema.x._value) != 0) {
@@ -127,7 +117,7 @@ List<Point> _$PointListFromDecoder(Decoder decoder) {
 
   final unkeyed = decoder.unkeyed();
   final list = <Point>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$PointFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -138,8 +128,8 @@ List<Point> _$PointListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$PointToEncoder(Point instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDoubleKey(_$PointSchema.staticKeyX, instance.x);
-  keyed.encodeDoubleKey(_$PointSchema.staticKeyY, instance.y);
+  keyed.encodeDouble(_$PointSchema.nameX, instance.x);
+  keyed.encodeDouble(_$PointSchema.nameY, instance.y);
 }
 
 // =============================================================================
@@ -154,65 +144,6 @@ extension type const _$UserAccountSchema(int _value) {
   static const String nameRole = 'role';
   static const String nameTags = 'tags';
   static const String nameLocation = 'location';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesEmailAddress = [
-    34,
-    101,
-    109,
-    97,
-    105,
-    108,
-    95,
-    97,
-    100,
-    100,
-    114,
-    101,
-    115,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyEmailAddress = StaticKey(
-    nameEmailAddress,
-    keyEmailAddress,
-    wireNameBytesEmailAddress,
-  );
-  static const List<int> wireNameBytesRole = [34, 114, 111, 108, 101, 34];
-  static const StaticKey staticKeyRole = StaticKey(
-    nameRole,
-    keyRole,
-    wireNameBytesRole,
-  );
-  static const List<int> wireNameBytesTags = [34, 116, 97, 103, 115, 34];
-  static const StaticKey staticKeyTags = StaticKey(
-    nameTags,
-    keyTags,
-    wireNameBytesTags,
-  );
-  static const List<int> wireNameBytesLocation = [
-    34,
-    108,
-    111,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyLocation = StaticKey(
-    nameLocation,
-    keyLocation,
-    wireNameBytesLocation,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -303,7 +234,7 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
   var internalId = '';
   var seen = _$UserAccountSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$UserAccountSchema.keyOptions)) {
       case _$UserAccountSchema.keyId:
         if ((seen._value & _$UserAccountSchema.id._value) != 0) {
@@ -371,7 +302,7 @@ UserAccount _$UserAccountFromDecoder(Decoder decoder) {
 List<UserAccount> _$UserAccountListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserAccount>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$UserAccountFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -382,18 +313,17 @@ List<UserAccount> _$UserAccountListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserAccountToEncoder(UserAccount instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$UserAccountSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(
-    _$UserAccountSchema.staticKeyEmailAddress,
+  keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
+  keyed.encodeString(
+    _$UserAccountSchema.nameEmailAddress,
     instance.emailAddress,
   );
-  keyed.encodeStringKey(_$UserAccountSchema.staticKeyRole, instance.role.name);
-  keyed.encodeStringListKey(_$UserAccountSchema.staticKeyTags, instance.tags);
+  keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
+  keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
   if (instance.location != null) {
-    keyed.encodeListKey<double>(
-      _$UserAccountSchema.staticKeyLocation,
-      List.generate(2, (i) => instance.location![i]),
-      (v, e) => e.singleValue().encodeDouble(v),
+    keyed.encodeDoubleList(
+      _$UserAccountSchema.nameLocation,
+      instance.location!,
     );
   }
 }
@@ -405,29 +335,6 @@ extension type const _$AddressSchema(int _value) {
   // String Name Constants
   static const String nameCity = 'city';
   static const String nameStreet = 'street';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesCity = [34, 99, 105, 116, 121, 34];
-  static const StaticKey staticKeyCity = StaticKey(
-    nameCity,
-    keyCity,
-    wireNameBytesCity,
-  );
-  static const List<int> wireNameBytesStreet = [
-    34,
-    115,
-    116,
-    114,
-    101,
-    101,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyStreet = StaticKey(
-    nameStreet,
-    keyStreet,
-    wireNameBytesStreet,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyCity = 0;
@@ -487,7 +394,7 @@ Address _$AddressFromDecoder(Decoder decoder) {
   String? street;
   var seen = _$AddressSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$AddressSchema.keyOptions)) {
       case _$AddressSchema.keyCity:
         if ((seen._value & _$AddressSchema.city._value) != 0) {
@@ -521,7 +428,7 @@ Address _$AddressFromDecoder(Decoder decoder) {
 List<Address> _$AddressListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Address>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$AddressFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -532,8 +439,8 @@ List<Address> _$AddressListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$AddressToEncoder(Address instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$AddressSchema.staticKeyCity, instance.city);
-  keyed.encodeStringKey(_$AddressSchema.staticKeyStreet, instance.street);
+  keyed.encodeString(_$AddressSchema.nameCity, instance.city);
+  keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
 }
 
 // =============================================================================
@@ -546,94 +453,6 @@ extension type const _$EnterpriseSchema(int _value) {
   static const String nameBranches = 'branches';
   static const String nameCategories = 'categories';
   static const String nameHeadcountByDept = 'headcountByDept';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
-  static const StaticKey staticKeyName = StaticKey(
-    nameName,
-    keyName,
-    wireNameBytesName,
-  );
-  static const List<int> wireNameBytesHeadquarter = [
-    34,
-    104,
-    101,
-    97,
-    100,
-    113,
-    117,
-    97,
-    114,
-    116,
-    101,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyHeadquarter = StaticKey(
-    nameHeadquarter,
-    keyHeadquarter,
-    wireNameBytesHeadquarter,
-  );
-  static const List<int> wireNameBytesBranches = [
-    34,
-    98,
-    114,
-    97,
-    110,
-    99,
-    104,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyBranches = StaticKey(
-    nameBranches,
-    keyBranches,
-    wireNameBytesBranches,
-  );
-  static const List<int> wireNameBytesCategories = [
-    34,
-    99,
-    97,
-    116,
-    101,
-    103,
-    111,
-    114,
-    105,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyCategories = StaticKey(
-    nameCategories,
-    keyCategories,
-    wireNameBytesCategories,
-  );
-  static const List<int> wireNameBytesHeadcountByDept = [
-    34,
-    104,
-    101,
-    97,
-    100,
-    99,
-    111,
-    117,
-    110,
-    116,
-    66,
-    121,
-    68,
-    101,
-    112,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyHeadcountByDept = StaticKey(
-    nameHeadcountByDept,
-    keyHeadcountByDept,
-    wireNameBytesHeadcountByDept,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyName = 0;
@@ -706,7 +525,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
   var headcountByDept = const <String, int>{};
   var seen = _$EnterpriseSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$EnterpriseSchema.keyOptions)) {
       case _$EnterpriseSchema.keyName:
         if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
@@ -732,7 +551,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
         {
           final k = keyed.nestedDecoder().keyed();
           final m = <String, int>{};
-          while (k.hasNextKey()) {
+          while (k.moveNextKey()) {
             final key = k.nextKey();
             m[key] = k.readInt();
           }
@@ -763,7 +582,7 @@ Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
 List<Enterprise> _$EnterpriseListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Enterprise>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$EnterpriseFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -774,23 +593,23 @@ List<Enterprise> _$EnterpriseListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$EnterpriseToEncoder(Enterprise instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$EnterpriseSchema.staticKeyName, instance.name);
-  keyed.encodeValueKey(
-    _$EnterpriseSchema.staticKeyHeadquarter,
+  keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
+  keyed.encodeValue(
+    _$EnterpriseSchema.nameHeadquarter,
     instance.headquarter,
     _$AddressToEncoder,
   );
-  keyed.encodeListKey(
-    _$EnterpriseSchema.staticKeyBranches,
+  keyed.encodeList(
+    _$EnterpriseSchema.nameBranches,
     instance.branches,
     _$AddressToEncoder,
   );
-  keyed.encodeStringListKey(
-    _$EnterpriseSchema.staticKeyCategories,
+  keyed.encodeStringList(
+    _$EnterpriseSchema.nameCategories,
     instance.categories.toList(),
   );
-  keyed.encodeValueKey(
-    _$EnterpriseSchema.staticKeyHeadcountByDept,
+  keyed.encodeValue(
+    _$EnterpriseSchema.nameHeadcountByDept,
     instance.headcountByDept,
     (map, e) {
       final k = e.keyed();
@@ -808,20 +627,6 @@ extension type const _$UserProfileCustomSchema(int _value) {
   // String Name Constants
   static const String nameId = 'id';
   static const String nameZip = 'zip';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesZip = [34, 122, 105, 112, 34];
-  static const StaticKey staticKeyZip = StaticKey(
-    nameZip,
-    keyZip,
-    wireNameBytesZip,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -885,7 +690,7 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
   String? zip;
   var seen = _$UserProfileCustomSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$UserProfileCustomSchema.keyOptions)) {
       case _$UserProfileCustomSchema.keyId:
         if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
@@ -919,7 +724,7 @@ UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
 List<UserProfileCustom> _$UserProfileCustomListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <UserProfileCustom>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$UserProfileCustomFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -930,11 +735,11 @@ List<UserProfileCustom> _$UserProfileCustomListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserProfileCustomToEncoder(UserProfileCustom instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$UserProfileCustomSchema.staticKeyId, instance.id);
-  keyed.encodeValueKey(
-    _$UserProfileCustomSchema.staticKeyZip,
+  keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
+  keyed.encodeValue(
+    _$UserProfileCustomSchema.nameZip,
     instance.zip,
-    (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e),
+    const ZipCodeDecoder().encode,
   );
 }
 
@@ -947,56 +752,6 @@ extension type const _$TeamSchema(int _value) {
   static const String nameRoles = 'roles';
   static const String nameNullableTags = 'nullableTags';
   static const String nameScores = 'scores';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
-  static const StaticKey staticKeyName = StaticKey(
-    nameName,
-    keyName,
-    wireNameBytesName,
-  );
-  static const List<int> wireNameBytesRoles = [34, 114, 111, 108, 101, 115, 34];
-  static const StaticKey staticKeyRoles = StaticKey(
-    nameRoles,
-    keyRoles,
-    wireNameBytesRoles,
-  );
-  static const List<int> wireNameBytesNullableTags = [
-    34,
-    110,
-    117,
-    108,
-    108,
-    97,
-    98,
-    108,
-    101,
-    84,
-    97,
-    103,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyNullableTags = StaticKey(
-    nameNullableTags,
-    keyNullableTags,
-    wireNameBytesNullableTags,
-  );
-  static const List<int> wireNameBytesScores = [
-    34,
-    115,
-    99,
-    111,
-    114,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyScores = StaticKey(
-    nameScores,
-    keyScores,
-    wireNameBytesScores,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyName = 0;
@@ -1057,7 +812,7 @@ Team _$TeamFromDecoder(Decoder decoder) {
   var scores = const <String, int?>{};
   var seen = _$TeamSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TeamSchema.keyOptions)) {
       case _$TeamSchema.keyName:
         if ((seen._value & _$TeamSchema.name._value) != 0) {
@@ -1080,7 +835,7 @@ Team _$TeamFromDecoder(Decoder decoder) {
         {
           final k = keyed.nestedDecoder().keyed();
           final m = <String, int?>{};
-          while (k.hasNextKey()) {
+          while (k.moveNextKey()) {
             final key = k.nextKey();
             if (k.isNextNull()) {
               k.readNull();
@@ -1115,7 +870,7 @@ Team _$TeamFromDecoder(Decoder decoder) {
 List<Team> _$TeamListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Team>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TeamFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -1126,22 +881,21 @@ List<Team> _$TeamListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TeamToEncoder(Team instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$TeamSchema.staticKeyName, instance.name);
-  keyed.encodeListKey(_$TeamSchema.staticKeyRoles, instance.roles, (item, e) {
+  keyed.encodeString(_$TeamSchema.nameName, instance.name);
+  keyed.encodeList(_$TeamSchema.nameRoles, instance.roles, (item, e) {
     e.singleValue().encodeString(item.name);
   });
-  keyed.encodeListKey(
-    _$TeamSchema.staticKeyNullableTags,
-    instance.nullableTags,
-    (item, e) {
-      if (item == null) {
-        e.singleValue().encodeNull();
-      } else {
-        e.singleValue().encodeString(item);
-      }
-    },
-  );
-  keyed.encodeValueKey(_$TeamSchema.staticKeyScores, instance.scores, (map, e) {
+  keyed.encodeList(_$TeamSchema.nameNullableTags, instance.nullableTags, (
+    item,
+    e,
+  ) {
+    if (item == null) {
+      e.singleValue().encodeNull();
+    } else {
+      e.singleValue().encodeString(item);
+    }
+  });
+  keyed.encodeValue(_$TeamSchema.nameScores, instance.scores, (map, e) {
     final k = e.keyed();
     for (final entry in map.entries) {
       k.encodeNullableInt(entry.key, entry.value);
@@ -1161,105 +915,6 @@ extension type const _$PrimitiveCollectionsModelSchema(int _value) {
   static const String nameFloat64s = 'float64s';
   static const String nameMatrix = 'matrix';
   static const String nameNestedFloats = 'nestedFloats';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesInts = [34, 105, 110, 116, 115, 34];
-  static const StaticKey staticKeyInts = StaticKey(
-    nameInts,
-    keyInts,
-    wireNameBytesInts,
-  );
-  static const List<int> wireNameBytesDoubles = [
-    34,
-    100,
-    111,
-    117,
-    98,
-    108,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyDoubles = StaticKey(
-    nameDoubles,
-    keyDoubles,
-    wireNameBytesDoubles,
-  );
-  static const List<int> wireNameBytesStrings = [
-    34,
-    115,
-    116,
-    114,
-    105,
-    110,
-    103,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyStrings = StaticKey(
-    nameStrings,
-    keyStrings,
-    wireNameBytesStrings,
-  );
-  static const List<int> wireNameBytesBools = [34, 98, 111, 111, 108, 115, 34];
-  static const StaticKey staticKeyBools = StaticKey(
-    nameBools,
-    keyBools,
-    wireNameBytesBools,
-  );
-  static const List<int> wireNameBytesFloat64s = [
-    34,
-    102,
-    108,
-    111,
-    97,
-    116,
-    54,
-    52,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyFloat64s = StaticKey(
-    nameFloat64s,
-    keyFloat64s,
-    wireNameBytesFloat64s,
-  );
-  static const List<int> wireNameBytesMatrix = [
-    34,
-    109,
-    97,
-    116,
-    114,
-    105,
-    120,
-    34,
-  ];
-  static const StaticKey staticKeyMatrix = StaticKey(
-    nameMatrix,
-    keyMatrix,
-    wireNameBytesMatrix,
-  );
-  static const List<int> wireNameBytesNestedFloats = [
-    34,
-    110,
-    101,
-    115,
-    116,
-    101,
-    100,
-    70,
-    108,
-    111,
-    97,
-    116,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyNestedFloats = StaticKey(
-    nameNestedFloats,
-    keyNestedFloats,
-    wireNameBytesNestedFloats,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyInts = 0;
@@ -1337,7 +992,7 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
   var nestedFloats = const <Float64List>[];
   var seen = _$PrimitiveCollectionsModelSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(
       _$PrimitiveCollectionsModelSchema.keyOptions,
     )) {
@@ -1365,7 +1020,7 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
         {
           final u = keyed.nestedDecoder().unkeyed();
           final l = <List<double>>[];
-          while (u.hasNext()) {
+          while (u.moveNext()) {
             l.add(u.decodeDoubleList());
           }
           matrix = l;
@@ -1375,7 +1030,7 @@ PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
         {
           final u = keyed.nestedDecoder().unkeyed();
           final l = <Float64List>[];
-          while (u.hasNext()) {
+          while (u.moveNext()) {
             l.add(u.decodeFloat64List());
           }
           nestedFloats = l;
@@ -1409,7 +1064,7 @@ List<PrimitiveCollectionsModel> _$PrimitiveCollectionsModelListFromDecoder(
 ) {
   final unkeyed = decoder.unkeyed();
   final list = <PrimitiveCollectionsModel>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$PrimitiveCollectionsModelFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -1423,28 +1078,28 @@ void _$PrimitiveCollectionsModelToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  keyed.encodeIntListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyInts,
+  keyed.encodeIntList(
+    _$PrimitiveCollectionsModelSchema.nameInts,
     instance.ints,
   );
-  keyed.encodeDoubleListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyDoubles,
+  keyed.encodeDoubleList(
+    _$PrimitiveCollectionsModelSchema.nameDoubles,
     instance.doubles,
   );
-  keyed.encodeStringListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyStrings,
+  keyed.encodeStringList(
+    _$PrimitiveCollectionsModelSchema.nameStrings,
     instance.strings,
   );
-  keyed.encodeBoolListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyBools,
+  keyed.encodeBoolList(
+    _$PrimitiveCollectionsModelSchema.nameBools,
     instance.bools,
   );
-  keyed.encodeDoubleListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyFloat64s,
+  keyed.encodeDoubleList(
+    _$PrimitiveCollectionsModelSchema.nameFloat64s,
     instance.float64s,
   );
-  keyed.encodeListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyMatrix,
+  keyed.encodeList(
+    _$PrimitiveCollectionsModelSchema.nameMatrix,
     instance.matrix,
     (item, e) {
       e.unkeyed().encodeList(item, (item, e2) {
@@ -1452,8 +1107,8 @@ void _$PrimitiveCollectionsModelToEncoder(
       });
     },
   );
-  keyed.encodeListKey(
-    _$PrimitiveCollectionsModelSchema.staticKeyNestedFloats,
+  keyed.encodeList(
+    _$PrimitiveCollectionsModelSchema.nameNestedFloats,
     instance.nestedFloats,
     (item, e) {
       e.unkeyed().encodeList(

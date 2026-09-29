@@ -11,7 +11,7 @@ import 'package:codable/codable_json.dart';
 part 'generic_response_example.g.dart';
 
 /// Generic payload envelope demonstrating parameterized type decoding
-/// without intermediate DOM map structures.
+/// without intermediate object tree map structures.
 class BaseResponse<T> {
   final int status;
   final String message;
@@ -32,7 +32,7 @@ class BaseResponse<T> {
     String? message;
     T? data;
 
-    while (keyed.hasNextKey()) {
+    while (keyed.moveNextKey()) {
       final key = keyed.nextKey();
       switch (key) {
         case 'status':

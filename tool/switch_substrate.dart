@@ -51,7 +51,19 @@ export 'mock/substrate_mock.dart';
 /// Active substrate dispatcher (switched to native mode).
 library;
 
+import 'dart:convert' show JsonTokenReader;
+
 export 'substrate_native.dart';
+
+/// Compatibility extension bridging `moveNext()` to `hasNext()` on
+/// `dart:convert`'s [JsonTokenReader].
+extension JsonTokenReaderMoveNext on JsonTokenReader {
+  /// Advances past any delimiter and checks if the current container has
+  /// more elements.
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool moveNext() => hasNext();
+}
 ''');
   } else {
     throw ArgumentError.value(mode, 'mode', 'Expected "mock" or "native".');

@@ -19,138 +19,75 @@ abstract interface class Encoder {
 
   /// Opens a single-value container for writing a standalone scalar value.
   SingleValueEncoder singleValue();
-
-  /// Swift-ergonomic alias for [keyed].
-  KeyedEncoder container({KeyOptions? options});
-
-  /// Swift-ergonomic alias for [unkeyed].
-  UnkeyedEncoder unkeyedContainer();
-
-  /// Swift-ergonomic alias for [singleValue].
-  SingleValueEncoder singleValueContainer();
 }
 
 /// Keyed encoder for writing object key-value pairs.
 abstract interface class KeyedEncoder {
-  /// Encodes a non-nullable integer value for string [key].
+  /// Encodes a non-nullable integer value for [key].
   void encodeInt(String key, int value);
 
-  /// Encodes a non-nullable integer value for [key].
-  void encodeIntKey(StaticKey key, int value);
-
-  /// Encodes a nullable integer value for string [key].
+  /// Encodes a nullable integer value for [key].
   void encodeNullableInt(String key, int? value);
 
-  /// Encodes a nullable integer value for [key].
-  void encodeNullableIntKey(StaticKey key, int? value);
-
-  /// Encodes a non-nullable double value for string [key].
+  /// Encodes a non-nullable double value for [key].
   void encodeDouble(String key, double value);
 
-  /// Encodes a non-nullable double value for [key].
-  void encodeDoubleKey(StaticKey key, double value);
-
-  /// Encodes a nullable double value for string [key].
+  /// Encodes a nullable double value for [key].
   void encodeNullableDouble(String key, double? value);
 
-  /// Encodes a nullable double value for [key].
-  void encodeNullableDoubleKey(StaticKey key, double? value);
-
-  /// Encodes a non-nullable String value for string [key].
+  /// Encodes a non-nullable String value for [key].
   void encodeString(String key, String value);
 
-  /// Encodes a non-nullable String value for [key].
-  void encodeStringKey(StaticKey key, String value);
-
-  /// Encodes a nullable String value for string [key].
+  /// Encodes a nullable String value for [key].
   void encodeNullableString(String key, String? value);
 
-  /// Encodes a nullable String value for [key].
-  void encodeNullableStringKey(StaticKey key, String? value);
-
-  /// Encodes a non-nullable boolean value for string [key].
+  /// Encodes a non-nullable boolean value for [key].
   void encodeBool(String key, bool value);
 
-  /// Encodes a non-nullable boolean value for [key].
-  void encodeBoolKey(StaticKey key, bool value);
-
-  /// Encodes a nullable boolean value for string [key].
+  /// Encodes a nullable boolean value for [key].
   void encodeNullableBool(String key, bool? value);
 
-  /// Encodes a nullable boolean value for [key].
-  void encodeNullableBoolKey(StaticKey key, bool? value);
-
-  /// Encodes an explicit null value for string [key].
+  /// Encodes an explicit null value for [key].
   void encodeNull(String key);
 
-  /// Encodes an explicit null value for [key].
-  void encodeNullKey(StaticKey key);
-
-  /// Encodes a custom value [value] for string [key] using [encode].
-  void encodeValue<T>(String key, T value, EncoderCallback<T> encode);
-
   /// Encodes a custom value [value] for [key] using [encode].
-  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode);
-
-  /// Encodes a nullable custom value [value] for string [key] using [encode].
-  void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode);
-
-  /// Encodes a nullable custom value [value] for [key] using [encode].
-  void encodeNullableValueKey<T>(
-    StaticKey key,
-    T? value,
-    EncoderCallback<T> encode,
+  void encodeValue<T>(
+    String key,
+    T value,
+    void Function(T value, Encoder encoder) encode,
   );
 
-  /// Encodes an [Encodable] object for string [key].
-  void encodeEncodable(String key, Encodable value);
+  /// Encodes a nullable custom value [value] for [key] using [encode].
+  void encodeNullableValue<T>(
+    String key,
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  );
 
   /// Encodes an [Encodable] object for [key].
-  void encodeEncodableKey(StaticKey key, Encodable value);
-
-  /// Encodes a nullable [Encodable] object for string [key].
-  void encodeNullableEncodable(String key, Encodable? value);
+  void encodeEncodable(String key, Encodable value);
 
   /// Encodes a nullable [Encodable] object for [key].
-  void encodeNullableEncodableKey(StaticKey key, Encodable? value);
+  void encodeNullableEncodable(String key, Encodable? value);
 
-  /// Encodes an iterable of [elements] for string [key] using [encode].
+  /// Encodes an iterable of [elements] for [key] using [encode].
   void encodeList<T>(
     String key,
     Iterable<T> elements,
-    EncoderCallback<T> encode,
+    void Function(T value, Encoder encoder) encode,
   );
-
-  /// Encodes an iterable of [elements] for [key] using [encode].
-  void encodeListKey<T>(
-    StaticKey key,
-    Iterable<T> elements,
-    EncoderCallback<T> encode,
-  );
-
-  /// Encodes an integer list for string [key].
-  void encodeIntList(String key, List<int> values);
 
   /// Encodes an integer list for [key].
-  void encodeIntListKey(StaticKey key, List<int> values);
-
-  /// Encodes a double list for string [key].
-  void encodeDoubleList(String key, List<double> values);
+  void encodeIntList(String key, List<int> values);
 
   /// Encodes a double list for [key].
-  void encodeDoubleListKey(StaticKey key, List<double> values);
-
-  /// Encodes a String list for string [key].
-  void encodeStringList(String key, List<String> values);
+  void encodeDoubleList(String key, List<double> values);
 
   /// Encodes a String list for [key].
-  void encodeStringListKey(StaticKey key, List<String> values);
-
-  /// Encodes a bool list for string [key].
-  void encodeBoolList(String key, List<bool> values);
+  void encodeStringList(String key, List<String> values);
 
   /// Encodes a bool list for [key].
-  void encodeBoolListKey(StaticKey key, List<bool> values);
+  void encodeBoolList(String key, List<bool> values);
 }
 
 /// Unkeyed encoder for writing sequential elements into an array.
@@ -183,10 +120,16 @@ abstract interface class UnkeyedEncoder {
   void encodeNull();
 
   /// Encodes a custom element [value] using [encode].
-  void encodeElement<T>(T value, EncoderCallback<T> encode);
+  void encodeElement<T>(
+    T value,
+    void Function(T value, Encoder encoder) encode,
+  );
 
   /// Encodes a nullable custom element [value] using [encode].
-  void encodeNullableElement<T>(T? value, EncoderCallback<T> encode);
+  void encodeNullableElement<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  );
 
   /// Encodes an [Encodable] element.
   void encodeEncodable(Encodable value);
@@ -195,7 +138,10 @@ abstract interface class UnkeyedEncoder {
   void encodeNullableEncodable(Encodable? value);
 
   /// Encodes a nested list of [elements] using [encode].
-  void encodeList<T>(Iterable<T> elements, EncoderCallback<T> encode);
+  void encodeList<T>(
+    Iterable<T> elements,
+    void Function(T value, Encoder encoder) encode,
+  );
 }
 
 /// Single-value encoder for writing a standalone scalar value.
@@ -228,10 +174,13 @@ abstract interface class SingleValueEncoder {
   void encodeNull();
 
   /// Encodes a custom scalar value [value] using [encode].
-  void encode<T>(T value, EncoderCallback<T> encode);
+  void encode<T>(T value, void Function(T value, Encoder encoder) encode);
 
   /// Encodes a nullable custom scalar value [value] using [encode].
-  void encodeNullable<T>(T? value, EncoderCallback<T> encode);
+  void encodeNullable<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  );
 
   /// Encodes an [Encodable] scalar value.
   void encodeEncodable(Encodable value);

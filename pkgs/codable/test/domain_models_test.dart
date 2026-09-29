@@ -2,7 +2,7 @@
 //
 // Covers:
 // - Coordinate: primitive float streaming, alias keys ('lat'/'latitude', 'lon'/'longitude'), equality, hash code
-// - UserProfile: string enum UserRole, ZipCodeDecoder CustomFieldDecoder, Golden Mask bitmask validation, tags
+// - UserProfile: string enum UserRole, ZipCodeDecoder CustomCodable, Golden Mask bitmask validation, tags
 // - Vehicle Polymorphic Hierarchy: Vehicle, Car, Bicycle, SuperDecodable, leading/middle/trailing discriminators
 // - Bit-Exact JSON Roundtrip Validation vs standard jsonEncode / jsonDecode
 // - Tier 1 (Happy Path), Tier 2 (Boundary & Errors), Tier 3 (Pairwise Interactions)
@@ -79,15 +79,6 @@ final class _TestDecoder implements Decoder {
   }
 
   @override
-  KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
-
-  @override
-  UnkeyedDecoder unkeyedContainer() => unkeyed();
-
-  @override
-  SingleValueDecoder singleValueContainer() => singleValue();
-
-  @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
       null;
 }
@@ -109,14 +100,11 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  bool hasNextKey() => _currentIndex + 1 < _entries.length;
-
-  @override
-  bool hasNext() => hasNextKey();
+  bool moveNextKey() => _currentIndex + 1 < _entries.length;
 
   @override
   String nextKey() {
-    if (!hasNextKey()) {
+    if (!moveNextKey()) {
       throw const CodableException('No more keys available in KeyedDecoder');
     }
     _currentIndex++;
@@ -124,18 +112,11 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  String? peekKey() => hasNextKey() ? _entries[_currentIndex + 1].key : null;
-
-  @override
-  int selectKey(List<String> keys) {
-    if (!hasNextKey()) return -1;
-    _currentIndex++;
-    return keys.indexOf(_entries[_currentIndex].key);
-  }
+  String? peekKey() => moveNextKey() ? _entries[_currentIndex + 1].key : null;
 
   @override
   int selectKeyIndex(KeyOptions options) {
-    if (!hasNextKey()) return -1;
+    if (!moveNextKey()) return -1;
     _currentIndex++;
     return options.indexOf(_entries[_currentIndex].key);
   }
@@ -227,9 +208,6 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  void skipField() => skipValue();
-
-  @override
   void skipValue() {
     // Current value skipped
   }
@@ -239,17 +217,17 @@ final class _TestKeyedDecoder implements KeyedDecoder {
       _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo);
 
   @override
-  T decodeValue<T>(DecoderCallback<T> decoder) =>
+  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
       decoder(_TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo));
 
   @override
-  T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
+  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
     if (_currentValue == null) return null;
     return decodeValue(decoder);
   }
 
   @override
-  List<T> decodeList<T>(DecoderCallback<T> decoder) {
+  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
     final v = _currentValue;
     if (v is List<dynamic>) {
       return v
@@ -260,7 +238,7 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
+  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
     if (_currentValue == null) return null;
     return decodeList(decoder);
   }
@@ -338,7 +316,7 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 }
 
-final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
+final class _TestMappedDecoder implements MappedDecoder {
   final Map<String, dynamic> _map;
   final _TestDecoder _rootDecoder;
 
@@ -346,9 +324,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
 
   @override
   bool containsKey(String key) => _map.containsKey(key);
-
-  @override
-  bool containsStaticKey(StaticKey key) => _map.containsKey(key.name);
 
   @override
   int readInt(String key) {
@@ -363,16 +338,10 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  int readIntKey(StaticKey key) => readInt(key.name);
-
-  @override
   int? readNullableInt(String key) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return readInt(key);
   }
-
-  @override
-  int? readNullableIntKey(StaticKey key) => readNullableInt(key.name);
 
   @override
   double readDouble(String key) {
@@ -387,16 +356,10 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  double readDoubleKey(StaticKey key) => readDouble(key.name);
-
-  @override
   double? readNullableDouble(String key) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return readDouble(key);
   }
-
-  @override
-  double? readNullableDoubleKey(StaticKey key) => readNullableDouble(key.name);
 
   @override
   String readString(String key) {
@@ -411,16 +374,10 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  String readStringKey(StaticKey key) => readString(key.name);
-
-  @override
   String? readNullableString(String key) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return readString(key);
   }
-
-  @override
-  String? readNullableStringKey(StaticKey key) => readNullableString(key.name);
 
   @override
   bool readBool(String key) {
@@ -435,29 +392,20 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  bool readBoolKey(StaticKey key) => readBool(key.name);
-
-  @override
   bool? readNullableBool(String key) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return readBool(key);
   }
 
   @override
-  bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
-
-  @override
   bool isNull(String key) => _map[key] == null;
-
-  @override
-  bool isNullKey(StaticKey key) => isNull(key.name);
 
   @override
   Decoder nestedDecoder(String key) =>
       _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo);
 
   @override
-  T decodeKey<T>(String key, DecoderCallback<T> decoder) {
+  T decodeKey<T>(String key, T Function(Decoder decoder) decoder) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
@@ -465,21 +413,13 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeKey(key.name, decoder);
-
-  @override
-  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
+  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return decodeKey(key, decoder);
   }
 
   @override
-  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeNullableKey(key.name, decoder);
-
-  @override
-  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
+  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
@@ -493,10 +433,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
       'Expected List for key "$key", found ${v.runtimeType}',
     );
   }
-
-  @override
-  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeListKey(key.name, decoder);
 
   @override
   List<int> decodeIntList(String key) {
@@ -516,9 +452,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  List<int> decodeIntListKey(StaticKey key) => decodeIntList(key.name);
-
-  @override
   List<double> decodeDoubleList(String key) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
@@ -536,9 +469,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
       'Expected List<double> for key "$key", found ${v.runtimeType}',
     );
   }
-
-  @override
-  List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
 
   @override
   Float64List decodeFloat64List(String key) {
@@ -566,10 +496,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  Float64List decodeFloat64ListKey(StaticKey key) =>
-      decodeFloat64List(key.name);
-
-  @override
   List<String> decodeStringList(String key) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
@@ -589,9 +515,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
   }
 
   @override
-  List<String> decodeStringListKey(StaticKey key) => decodeStringList(key.name);
-
-  @override
   List<bool> decodeBoolList(String key) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
@@ -609,9 +532,6 @@ final class _TestMappedDecoder with MappedDecoderBase implements MappedDecoder {
       'Expected List<bool> for key "$key", found ${v.runtimeType}',
     );
   }
-
-  @override
-  List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
 }
 
 final class _TestUnkeyedDecoder implements UnkeyedDecoder {
@@ -622,11 +542,11 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   _TestUnkeyedDecoder(this._list, this._rootDecoder);
 
   @override
-  bool hasNext() => _index < _list.length;
+  bool moveNext() => _index < _list.length;
 
   @override
   int readInt() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -636,7 +556,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   int? readNullableInt() {
-    if (!hasNext()) return null;
+    if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
@@ -646,7 +566,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   double readDouble() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -656,7 +576,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   double? readNullableDouble() {
-    if (!hasNext()) return null;
+    if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
@@ -666,7 +586,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   String readString() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -676,7 +596,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   String? readNullableString() {
-    if (!hasNext()) return null;
+    if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
@@ -699,7 +619,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool readBool() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -709,7 +629,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool? readNullableBool() {
-    if (!hasNext()) return null;
+    if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
@@ -719,13 +639,13 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool isNextNull() {
-    if (!hasNext()) return false;
+    if (!moveNext()) return false;
     return _list[_index] == null;
   }
 
   @override
   void readNull() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -736,12 +656,12 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   void skipElement() {
-    if (hasNext()) _index++;
+    if (moveNext()) _index++;
   }
 
   @override
   Decoder nestedDecoder() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -749,8 +669,8 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T decodeElement<T>(DecoderCallback<T> decoder) {
-    if (!hasNext()) {
+  T decodeElement<T>(T Function(Decoder decoder) decoder) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -758,8 +678,8 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
-    if (!hasNext()) return null;
+  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
+    if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
@@ -769,7 +689,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<int> decodeIntList() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -781,7 +701,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<double> decodeDoubleList() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -793,7 +713,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   Float64List decodeFloat64List() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -809,7 +729,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<String> decodeStringList() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -821,7 +741,7 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   List<bool> decodeBoolList() {
-    if (!hasNext()) {
+    if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
@@ -928,11 +848,11 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
-  T decode<T>(DecoderCallback<T> decoder) =>
+  T decode<T>(T Function(Decoder decoder) decoder) =>
       decoder(_TestDecoder(_value, userInfo: _rootDecoder.userInfo));
 
   @override
-  T? decodeNullable<T>(DecoderCallback<T> decoder) {
+  T? decodeNullable<T>(T Function(Decoder decoder) decoder) {
     if (_value == null) return null;
     return decode(decoder);
   }
@@ -961,15 +881,6 @@ final class _TestEncoder implements Encoder {
 
   @override
   SingleValueEncoder singleValue() => _TestSingleValueEncoder(this);
-
-  @override
-  KeyedEncoder container({KeyOptions? options}) => keyed(options: options);
-
-  @override
-  UnkeyedEncoder unkeyedContainer() => unkeyed();
-
-  @override
-  SingleValueEncoder singleValueContainer() => singleValue();
 }
 
 final class _TestKeyedEncoder implements KeyedEncoder {
@@ -982,73 +893,46 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeInt(String key, int value) => _map[key] = value;
 
   @override
-  void encodeIntKey(StaticKey key, int value) => _map[key.name] = value;
-
-  @override
   void encodeNullableInt(String key, int? value) => _map[key] = value;
-
-  @override
-  void encodeNullableIntKey(StaticKey key, int? value) =>
-      _map[key.name] = value;
 
   @override
   void encodeDouble(String key, double value) => _map[key] = value;
 
   @override
-  void encodeDoubleKey(StaticKey key, double value) => _map[key.name] = value;
-
-  @override
   void encodeNullableDouble(String key, double? value) => _map[key] = value;
-
-  @override
-  void encodeNullableDoubleKey(StaticKey key, double? value) =>
-      _map[key.name] = value;
 
   @override
   void encodeString(String key, String value) => _map[key] = value;
 
   @override
-  void encodeStringKey(StaticKey key, String value) => _map[key.name] = value;
-
-  @override
   void encodeNullableString(String key, String? value) => _map[key] = value;
-
-  @override
-  void encodeNullableStringKey(StaticKey key, String? value) =>
-      _map[key.name] = value;
 
   @override
   void encodeBool(String key, bool value) => _map[key] = value;
 
   @override
-  void encodeBoolKey(StaticKey key, bool value) => _map[key.name] = value;
-
-  @override
   void encodeNullableBool(String key, bool? value) => _map[key] = value;
-
-  @override
-  void encodeNullableBoolKey(StaticKey key, bool? value) =>
-      _map[key.name] = value;
 
   @override
   void encodeNull(String key) => _map[key] = null;
 
   @override
-  void encodeNullKey(StaticKey key) => _map[key.name] = null;
-
-  @override
-  void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
+  void encodeValue<T>(
+    String key,
+    T value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _map[key] = child.output;
   }
 
   @override
-  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
-      encodeValue(key.name, value, encode);
-
-  @override
-  void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
+  void encodeNullableValue<T>(
+    String key,
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value == null) {
       encodeNull(key);
     } else {
@@ -1057,22 +941,11 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableValueKey<T>(
-    StaticKey key,
-    T? value,
-    EncoderCallback<T> encode,
-  ) => encodeNullableValue(key.name, value, encode);
-
-  @override
   void encodeEncodable(String key, Encodable value) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     value.encode(child);
     _map[key] = child.output;
   }
-
-  @override
-  void encodeEncodableKey(StaticKey key, Encodable value) =>
-      encodeEncodable(key.name, value);
 
   @override
   void encodeNullableEncodable(String key, Encodable? value) {
@@ -1084,14 +957,10 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
-      encodeNullableEncodable(key.name, value);
-
-  @override
   void encodeList<T>(
     String key,
     Iterable<T> elements,
-    EncoderCallback<T> encode,
+    void Function(T value, Encoder encoder) encode,
   ) {
     final list = <dynamic>[];
     for (final el in elements) {
@@ -1103,43 +972,20 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeListKey<T>(
-    StaticKey key,
-    Iterable<T> elements,
-    EncoderCallback<T> encode,
-  ) => encodeList(key.name, elements, encode);
-
-  @override
   void encodeIntList(String key, List<int> values) =>
       _map[key] = List<int>.from(values);
-
-  @override
-  void encodeIntListKey(StaticKey key, List<int> values) =>
-      encodeIntList(key.name, values);
 
   @override
   void encodeDoubleList(String key, List<double> values) =>
       _map[key] = List<double>.from(values);
 
   @override
-  void encodeDoubleListKey(StaticKey key, List<double> values) =>
-      encodeDoubleList(key.name, values);
-
-  @override
   void encodeStringList(String key, List<String> values) =>
       _map[key] = List<String>.from(values);
 
   @override
-  void encodeStringListKey(StaticKey key, List<String> values) =>
-      encodeStringList(key.name, values);
-
-  @override
   void encodeBoolList(String key, List<bool> values) =>
       _map[key] = List<bool>.from(values);
-
-  @override
-  void encodeBoolListKey(StaticKey key, List<bool> values) =>
-      encodeBoolList(key.name, values);
 }
 
 final class _TestUnkeyedEncoder implements UnkeyedEncoder {
@@ -1176,14 +1022,20 @@ final class _TestUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNull() => _list.add(null);
 
   @override
-  void encodeElement<T>(T value, EncoderCallback<T> encode) {
+  void encodeElement<T>(
+    T value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _list.add(child.output);
   }
 
   @override
-  void encodeNullableElement<T>(T? value, EncoderCallback<T> encode) {
+  void encodeNullableElement<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value == null) {
       encodeNull();
     } else {
@@ -1208,7 +1060,10 @@ final class _TestUnkeyedEncoder implements UnkeyedEncoder {
   }
 
   @override
-  void encodeList<T>(Iterable<T> elements, EncoderCallback<T> encode) {
+  void encodeList<T>(
+    Iterable<T> elements,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     for (final el in elements) {
       encodeElement(el, encode);
     }
@@ -1248,14 +1103,17 @@ final class _TestSingleValueEncoder implements SingleValueEncoder {
   void encodeNull() => _rootEncoder.output = null;
 
   @override
-  void encode<T>(T value, EncoderCallback<T> encode) {
+  void encode<T>(T value, void Function(T value, Encoder encoder) encode) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _rootEncoder.output = child.output;
   }
 
   @override
-  void encodeNullable<T>(T? value, EncoderCallback<T> encode) {
+  void encodeNullable<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value == null) {
       encodeNull();
     } else {
@@ -1386,9 +1244,10 @@ enum UserRole {
 }
 
 /// Custom field decoder normalizing zip codes from int (90210) or string ("90210").
-class ZipCodeDecoder {
+class ZipCodeDecoder implements CustomCodable<String> {
   const ZipCodeDecoder();
 
+  @override
   String decode(Decoder decoder) {
     final single = decoder.singleValue();
     try {
@@ -1398,12 +1257,13 @@ class ZipCodeDecoder {
     }
   }
 
-  void encodeToEncoder(String value, Encoder encoder) {
+  @override
+  void encode(String value, Encoder encoder) {
     encoder.singleValue().encodeString(value);
   }
 }
 
-/// Model 2: Complex Domain Model with Enum, CustomFieldDecoder & Golden Mask validation.
+/// Model 2: Complex Domain Model with Enum, CustomCodable & Golden Mask validation.
 @Codable()
 class UserProfile implements Encodable {
   final String id;
@@ -2349,7 +2209,7 @@ void main() {
         final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
           final unkeyed = decoder.unkeyed();
           final result = <Coordinate>[];
-          while (unkeyed.hasNext()) {
+          while (unkeyed.moveNext()) {
             result.add(unkeyed.decodeElement(Coordinate.decode));
           }
           return result;
@@ -2389,7 +2249,7 @@ void main() {
         final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
           final unkeyed = decoder.unkeyed();
           final result = <UserProfile>[];
-          while (unkeyed.hasNext()) {
+          while (unkeyed.moveNext()) {
             result.add(unkeyed.decodeElement(UserProfile.decode));
           }
           return result;
@@ -2421,7 +2281,7 @@ void main() {
           final decodedFleet = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
             final unkeyed = decoder.unkeyed();
             final result = <Vehicle>[];
-            while (unkeyed.hasNext()) {
+            while (unkeyed.moveNext()) {
               result.add(unkeyed.decodeElement(Vehicle.decode));
             }
             return result;
@@ -2441,7 +2301,7 @@ void main() {
         final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
           final unkeyed = decoder.unkeyed();
           final result = <Coordinate>[];
-          while (unkeyed.hasNext()) {
+          while (unkeyed.moveNext()) {
             result.add(unkeyed.decodeElement(Coordinate.decode));
           }
           return result;
@@ -2459,7 +2319,7 @@ void main() {
       final list = TestJsonDriver.decodeString(jsonStr, (decoder) {
         final unkeyed = decoder.unkeyed();
         final result = <Coordinate>[];
-        while (unkeyed.hasNext()) {
+        while (unkeyed.moveNext()) {
           result.add(unkeyed.decodeElement(Coordinate.decode));
         }
         return result;
@@ -2484,7 +2344,7 @@ void main() {
       final fleet = TestJsonDriver.decodeString(jsonStr, (decoder) {
         final unkeyed = decoder.unkeyed();
         final result = <Vehicle>[];
-        while (unkeyed.hasNext()) {
+        while (unkeyed.moveNext()) {
           result.add(unkeyed.decodeElement(Vehicle.decode));
         }
         return result;
@@ -2522,16 +2382,19 @@ void main() {
     });
 
     test(
-      'StaticKey descriptors with Coordinate and UserProfile mapped lookups',
+      'KeyOptions descriptors with Coordinate and UserProfile key lookups',
       () {
-        const latKey = StaticKey('lat', 0);
-        const lonKey = StaticKey('lon', 1);
+        final options = KeyOptions.of(const [
+          'lat',
+          'latitude',
+          'lon',
+          'longitude',
+        ]);
 
-        check(latKey.name).equals('lat');
-        check(latKey.index).equals(0);
-        check(latKey == const StaticKey('lat', 0)).isTrue();
-        check(latKey == const StaticKey('latitude', 0)).isFalse();
-        check(lonKey.toString()).contains('lon');
+        check(options.length).equals(4);
+        check(options.indexOf('lat')).equals(0);
+        check(options.indexOf('longitude')).equals(3);
+        check(options.indexOf('unknown')).equals(-1);
       },
     );
 

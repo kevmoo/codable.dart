@@ -209,23 +209,23 @@ void main() {
 
       final options = JsonKeyOptions.of(['id', 'price', 'active', 'comment']);
 
-      check(reader.hasNext()).isTrue();
+      check(reader.moveNext()).isTrue();
       check(reader.selectName(options)).equals(0);
       check(reader.readInt()).equals(101);
 
-      check(reader.hasNext()).isTrue();
+      check(reader.moveNext()).isTrue();
       check(reader.selectName(options)).equals(1);
       check(reader.readDouble()).equals(19.99);
 
-      check(reader.hasNext()).isTrue();
+      check(reader.moveNext()).isTrue();
       check(reader.selectName(options)).equals(2);
       check(reader.readBool()).equals(true);
 
-      check(reader.hasNext()).isTrue();
+      check(reader.moveNext()).isTrue();
       check(reader.selectName(options)).equals(3);
       reader.readNull();
 
-      check(reader.hasNext()).isFalse();
+      check(reader.moveNext()).isFalse();
       reader.endObject();
     });
 
@@ -297,7 +297,7 @@ void main() {
       final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
       final keyed = decoder.keyed();
       double? x, y, z;
-      while (keyed.hasNextKey()) {
+      while (keyed.moveNextKey()) {
         final key = keyed.nextKey();
         if (key == 'x') {
           x = keyed.readDouble();

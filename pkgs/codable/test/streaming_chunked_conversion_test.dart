@@ -23,7 +23,7 @@ final class _Point implements Encodable {
     double? x;
     double? y;
     String? label;
-    while (c.hasNextKey()) {
+    while (c.moveNextKey()) {
       switch (c.nextKey()) {
         case 'x':
           x = c.readDouble();
@@ -44,7 +44,7 @@ final class _Point implements Encodable {
   static List<_Point> decodeList(Decoder decoder) {
     final u = decoder.unkeyed();
     final out = <_Point>[];
-    while (u.hasNext()) {
+    while (u.moveNext()) {
       out.add(u.decodeElement(_Point.decode));
     }
     return out;

@@ -18,17 +18,17 @@ class NestedValueExample {
     reader.beginObject();
     final values = <String>[];
 
-    while (reader.hasNext()) {
+    while (reader.moveNext()) {
       final key = reader.nextName();
       if (key == 'root_items') {
         reader.beginObject();
-        while (reader.hasNext()) {
+        while (reader.moveNext()) {
           final subKey = reader.nextName();
           if (subKey == 'items') {
             reader.beginArray();
-            while (reader.hasNext()) {
+            while (reader.moveNext()) {
               reader.beginObject();
-              while (reader.hasNext()) {
+              while (reader.moveNext()) {
                 final itemField = reader.nextName();
                 if (itemField == 'name') {
                   values.add(reader.readString());

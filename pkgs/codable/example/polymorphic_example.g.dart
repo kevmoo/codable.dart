@@ -4,10 +4,6 @@
 
 part of 'polymorphic_example.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Car
 // =============================================================================
@@ -15,31 +11,6 @@ extension type const _$CarSchema(int _value) {
   // String Name Constants
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameDoors = 'doors';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesMaxSpeed = [
-    34,
-    109,
-    97,
-    120,
-    83,
-    112,
-    101,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyMaxSpeed = StaticKey(
-    nameMaxSpeed,
-    keyMaxSpeed,
-    wireNameBytesMaxSpeed,
-  );
-  static const List<int> wireNameBytesDoors = [34, 100, 111, 111, 114, 115, 34];
-  static const StaticKey staticKeyDoors = StaticKey(
-    nameDoors,
-    keyDoors,
-    wireNameBytesDoors,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
@@ -99,7 +70,7 @@ Car _$CarFromDecoder(Decoder decoder) {
   int? doors;
   var seen = _$CarSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
       case _$CarSchema.keyMaxSpeed:
         if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
@@ -133,7 +104,7 @@ Car _$CarFromDecoder(Decoder decoder) {
 List<Car> _$CarListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Car>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CarFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -144,8 +115,8 @@ List<Car> _$CarListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CarToEncoder(Car instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeIntKey(_$CarSchema.staticKeyMaxSpeed, instance.maxSpeed);
-  keyed.encodeIntKey(_$CarSchema.staticKeyDoors, instance.doors);
+  keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+  keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
 }
 
 // =============================================================================
@@ -155,41 +126,6 @@ extension type const _$BicycleSchema(int _value) {
   // String Name Constants
   static const String nameMaxSpeed = 'maxSpeed';
   static const String nameHasBell = 'hasBell';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesMaxSpeed = [
-    34,
-    109,
-    97,
-    120,
-    83,
-    112,
-    101,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyMaxSpeed = StaticKey(
-    nameMaxSpeed,
-    keyMaxSpeed,
-    wireNameBytesMaxSpeed,
-  );
-  static const List<int> wireNameBytesHasBell = [
-    34,
-    104,
-    97,
-    115,
-    66,
-    101,
-    108,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyHasBell = StaticKey(
-    nameHasBell,
-    keyHasBell,
-    wireNameBytesHasBell,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyMaxSpeed = 0;
@@ -251,7 +187,7 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
   bool? hasBell;
   var seen = _$BicycleSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
       case _$BicycleSchema.keyMaxSpeed:
         if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
@@ -285,7 +221,7 @@ Bicycle _$BicycleFromDecoder(Decoder decoder) {
 List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Bicycle>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$BicycleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -296,6 +232,6 @@ List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$BicycleToEncoder(Bicycle instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeIntKey(_$BicycleSchema.staticKeyMaxSpeed, instance.maxSpeed);
-  keyed.encodeBoolKey(_$BicycleSchema.staticKeyHasBell, instance.hasBell);
+  keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+  keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
 }

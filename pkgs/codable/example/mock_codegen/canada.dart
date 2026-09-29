@@ -6,16 +6,18 @@ import 'package:codable/codable.dart';
 
 part 'canada.g.dart';
 
-final class CanadaCoordinatesDecoder {
+final class CanadaCoordinatesDecoder
+    implements CustomCodable<List<List<Float64List>>> {
   const CanadaCoordinatesDecoder();
 
+  @override
   List<List<Float64List>> decode(Decoder decoder) {
     final unkeyed = decoder.unkeyed();
     final coords = <List<Float64List>>[];
-    while (unkeyed.hasNext()) {
+    while (unkeyed.moveNext()) {
       final poly = <Float64List>[];
       final u1 = unkeyed.decodeElement((d1) => d1.unkeyed());
-      while (u1.hasNext()) {
+      while (u1.moveNext()) {
         poly.add(u1.decodeFloat64List());
       }
       coords.add(poly);
@@ -23,7 +25,8 @@ final class CanadaCoordinatesDecoder {
     return coords;
   }
 
-  void encodeToEncoder(List<List<Float64List>> coordinates, Encoder encoder) {
+  @override
+  void encode(List<List<Float64List>> coordinates, Encoder encoder) {
     final unkeyed = encoder.unkeyed();
     for (final poly in coordinates) {
       unkeyed.encodeElement(poly, (polyList, e1) {

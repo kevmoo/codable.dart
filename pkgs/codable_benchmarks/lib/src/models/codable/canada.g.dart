@@ -4,24 +4,12 @@
 
 part of 'canada.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for CanadaProperties
 // =============================================================================
 extension type const _$CanadaPropertiesSchema(int _value) {
   // String Name Constants
   static const String nameName = 'name';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
-  static const StaticKey staticKeyName = StaticKey(
-    nameName,
-    keyName,
-    wireNameBytesName,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyName = 0;
@@ -53,7 +41,7 @@ CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
   var name = '';
   var seen = _$CanadaPropertiesSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CanadaPropertiesSchema.keyOptions)) {
       case _$CanadaPropertiesSchema.keyName:
         name = keyed.readString();
@@ -76,7 +64,7 @@ CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
 List<CanadaProperties> _$CanadaPropertiesListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaProperties>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CanadaPropertiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -87,7 +75,7 @@ List<CanadaProperties> _$CanadaPropertiesListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaPropertiesToEncoder(CanadaProperties instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$CanadaPropertiesSchema.staticKeyName, instance.name);
+  keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
 }
 
 // =============================================================================
@@ -97,34 +85,6 @@ extension type const _$CanadaGeometrySchema(int _value) {
   // String Name Constants
   static const String nameType = 'type';
   static const String nameCoordinates = 'coordinates';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
-  static const StaticKey staticKeyType = StaticKey(
-    nameType,
-    keyType,
-    wireNameBytesType,
-  );
-  static const List<int> wireNameBytesCoordinates = [
-    34,
-    99,
-    111,
-    111,
-    114,
-    100,
-    105,
-    110,
-    97,
-    116,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyCoordinates = StaticKey(
-    nameCoordinates,
-    keyCoordinates,
-    wireNameBytesCoordinates,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyType = 0;
@@ -179,7 +139,7 @@ CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
   var coordinates = const <List<List<double>>>[];
   var seen = _$CanadaGeometrySchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CanadaGeometrySchema.keyOptions)) {
       case _$CanadaGeometrySchema.keyType:
         if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
@@ -211,7 +171,7 @@ CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
 List<CanadaGeometry> _$CanadaGeometryListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaGeometry>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CanadaGeometryFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -222,11 +182,11 @@ List<CanadaGeometry> _$CanadaGeometryListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaGeometryToEncoder(CanadaGeometry instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$CanadaGeometrySchema.staticKeyType, instance.type);
-  keyed.encodeValueKey(
-    _$CanadaGeometrySchema.staticKeyCoordinates,
+  keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
+  keyed.encodeValue(
+    _$CanadaGeometrySchema.nameCoordinates,
     instance.coordinates,
-    (v, e) => const CanadaCoordinatesDecoder().encodeToEncoder(v, e),
+    const CanadaCoordinatesDecoder().encode,
   );
 }
 
@@ -238,50 +198,6 @@ extension type const _$CanadaFeatureSchema(int _value) {
   static const String nameType = 'type';
   static const String nameProperties = 'properties';
   static const String nameGeometry = 'geometry';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
-  static const StaticKey staticKeyType = StaticKey(
-    nameType,
-    keyType,
-    wireNameBytesType,
-  );
-  static const List<int> wireNameBytesProperties = [
-    34,
-    112,
-    114,
-    111,
-    112,
-    101,
-    114,
-    116,
-    105,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyProperties = StaticKey(
-    nameProperties,
-    keyProperties,
-    wireNameBytesProperties,
-  );
-  static const List<int> wireNameBytesGeometry = [
-    34,
-    103,
-    101,
-    111,
-    109,
-    101,
-    116,
-    114,
-    121,
-    34,
-  ];
-  static const StaticKey staticKeyGeometry = StaticKey(
-    nameGeometry,
-    keyGeometry,
-    wireNameBytesGeometry,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyType = 0;
@@ -355,7 +271,7 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
   CanadaGeometry? geometry;
   var seen = _$CanadaFeatureSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CanadaFeatureSchema.keyOptions)) {
       case _$CanadaFeatureSchema.keyType:
         if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
@@ -400,7 +316,7 @@ CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
 List<CanadaFeature> _$CanadaFeatureListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaFeature>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CanadaFeatureFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -411,14 +327,14 @@ List<CanadaFeature> _$CanadaFeatureListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CanadaFeatureToEncoder(CanadaFeature instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$CanadaFeatureSchema.staticKeyType, instance.type);
-  keyed.encodeValueKey(
-    _$CanadaFeatureSchema.staticKeyProperties,
+  keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
+  keyed.encodeValue(
+    _$CanadaFeatureSchema.nameProperties,
     instance.properties,
     _$CanadaPropertiesToEncoder,
   );
-  keyed.encodeValueKey(
-    _$CanadaFeatureSchema.staticKeyGeometry,
+  keyed.encodeValue(
+    _$CanadaFeatureSchema.nameGeometry,
     instance.geometry,
     _$CanadaGeometryToEncoder,
   );
@@ -431,31 +347,6 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
   // String Name Constants
   static const String nameType = 'type';
   static const String nameFeatures = 'features';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesType = [34, 116, 121, 112, 101, 34];
-  static const StaticKey staticKeyType = StaticKey(
-    nameType,
-    keyType,
-    wireNameBytesType,
-  );
-  static const List<int> wireNameBytesFeatures = [
-    34,
-    102,
-    101,
-    97,
-    116,
-    117,
-    114,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyFeatures = StaticKey(
-    nameFeatures,
-    keyFeatures,
-    wireNameBytesFeatures,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyType = 0;
@@ -516,7 +407,7 @@ CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
   var features = const <CanadaFeature>[];
   var seen = _$CanadaFeatureCollectionSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CanadaFeatureCollectionSchema.keyOptions)) {
       case _$CanadaFeatureCollectionSchema.keyType:
         if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
@@ -548,7 +439,7 @@ List<CanadaFeatureCollection> _$CanadaFeatureCollectionListFromDecoder(
 ) {
   final unkeyed = decoder.unkeyed();
   final list = <CanadaFeatureCollection>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CanadaFeatureCollectionFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -562,12 +453,9 @@ void _$CanadaFeatureCollectionToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(
-    _$CanadaFeatureCollectionSchema.staticKeyType,
-    instance.type,
-  );
-  keyed.encodeListKey(
-    _$CanadaFeatureCollectionSchema.staticKeyFeatures,
+  keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
+  keyed.encodeList(
+    _$CanadaFeatureCollectionSchema.nameFeatures,
     instance.features,
     _$CanadaFeatureToEncoder,
   );

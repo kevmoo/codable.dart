@@ -1,14 +1,8 @@
-/// Core Encodable, Decodable, and Codable contracts and callback typedefs.
+/// Core [Encodable] and [Decodable] contracts.
 library;
 
 import 'decoder.dart';
 import 'encoder.dart';
-
-/// Callback type for decoding a value of type [T] from a [Decoder].
-typedef DecoderCallback<T> = T Function(Decoder decoder);
-
-/// Callback type for encoding a value of type [T] to an [Encoder].
-typedef EncoderCallback<T> = void Function(T value, Encoder encoder);
 
 /// Base contract for domain objects that can serialize themselves to an
 /// [Encoder].
@@ -17,9 +11,7 @@ abstract interface class Encodable {
   void encode(Encoder encoder);
 }
 
-/// Base contract for domain objects that can deserialize themselves from a
-/// [Decoder].
-abstract interface class Decodable<T> {
-  /// Decodes and returns an instance of [T] from the given [decoder].
-  T decode(Decoder decoder);
-}
+/// Marker contract for domain objects that deserialize themselves from a
+/// [Decoder] via a `static T decode(Decoder decoder)` factory or static method.
+// ignore: empty_container_bodies
+abstract interface class Decodable<T> {}

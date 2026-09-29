@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'codable.dart';
 import 'static_key.dart';
 
 /// Top-level decoding context providing access to specialized decoding
@@ -27,15 +26,6 @@ abstract interface class Decoder {
   /// Opens a single-value container for reading standalone scalars.
   SingleValueDecoder singleValue();
 
-  /// Swift-ergonomic alias for [keyed].
-  KeyedDecoder container({KeyOptions? options});
-
-  /// Swift-ergonomic alias for [unkeyed].
-  UnkeyedDecoder unkeyedContainer();
-
-  /// Swift-ergonomic alias for [singleValue].
-  SingleValueDecoder singleValueContainer();
-
   /// Decodes a flat [Float64List] from a uniform array of numeric objects
   /// using [propertyAliases] for each field, or `null` if the underlying
   /// driver does not support vectorized/interop extraction.
@@ -44,34 +34,25 @@ abstract interface class Decoder {
 
 /// Sequential streaming decoder matching keys in incoming stream order.
 abstract interface class KeyedDecoder {
-  /// Whether more key-value pairs remain in the current object.
-  bool hasNextKey();
+  /// Advances to the next key-value pair in the object, consuming any comma
+  /// delimiter.
+  bool moveNextKey();
 
-  /// Whether more key-value pairs remain in the current object (alias
-  /// for [hasNextKey]).
-  bool hasNext();
-
-  /// Reads and returns the next field key as a String.
+  /// Reads the next field key as a [String].
   String nextKey();
 
   /// Peeks at the upcoming field key without consuming it, or `null` if at the
-  /// end of the object.
+  /// end of the object or if the driver does not support lookahead.
   String? peekKey();
 
-  /// Selects the index of the next key from pre-compiled [options], or -1 if
+  /// Selects the index of the next key from pre-compiled [options], or `-1` if
   /// unknown.
   int selectKeyIndex(KeyOptions options);
-
-  /// Selects the index of the next key from a list of [keys], or -1 if unknown.
-  int selectKey(List<String> keys);
 
   /// Selects the index of the next string value from pre-compiled [options].
   int selectStringIndex(KeyOptions options);
 
-  /// Skips the upcoming field and its value without allocating memory.
-  void skipField();
-
-  /// Skips the upcoming value (alias for [skipField]).
+  /// Skips the upcoming value without allocating memory.
   void skipValue();
 
   /// Whether the next value token is null.
@@ -111,21 +92,21 @@ abstract interface class KeyedDecoder {
   /// Reads a nullable boolean value.
   bool? readNullableBool();
 
-  /// Returns a child [Decoder] positioned at the current field value for
+  /// Creates a child [Decoder] positioned at the current field value for
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
 
   /// Decodes a nested value using [decoder].
-  T decodeValue<T>(DecoderCallback<T> decoder);
+  T decodeValue<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a nullable nested value using [decoder].
-  T? decodeNullableValue<T>(DecoderCallback<T> decoder);
+  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a generic list of items using the element [decoder].
-  List<T> decodeList<T>(DecoderCallback<T> decoder);
+  List<T> decodeList<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a nullable generic list of items using the element [decoder].
-  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder);
+  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder);
 
   /// Specialized zero-allocation fast primitive integer list decoder.
   List<int> decodeIntList();
@@ -148,190 +129,67 @@ abstract interface class MappedDecoder {
   /// Whether [key] is present in the container.
   bool containsKey(String key);
 
-  /// Whether [key] is present in the container.
-  bool containsStaticKey(StaticKey key);
-
   /// Whether the value associated with [key] is null.
   bool isNull(String key);
 
-  /// Whether the value associated with [key] is null.
-  bool isNullKey(StaticKey key);
-
-  /// Reads a non-nullable integer value by string [key].
+  /// Reads a non-nullable integer value by [key].
   int readInt(String key);
 
-  /// Reads a non-nullable integer value by [key].
-  int readIntKey(StaticKey key);
-
-  /// Reads a nullable integer value by string [key].
+  /// Reads a nullable integer value by [key].
   int? readNullableInt(String key);
 
-  /// Reads a nullable integer value by [key].
-  int? readNullableIntKey(StaticKey key);
-
-  /// Reads a non-nullable double value by string [key].
+  /// Reads a non-nullable double value by [key].
   double readDouble(String key);
 
-  /// Reads a non-nullable double value by [key].
-  double readDoubleKey(StaticKey key);
-
-  /// Reads a nullable double value by string [key].
+  /// Reads a nullable double value by [key].
   double? readNullableDouble(String key);
 
-  /// Reads a nullable double value by [key].
-  double? readNullableDoubleKey(StaticKey key);
-
-  /// Reads a non-nullable String value by string [key].
+  /// Reads a non-nullable String value by [key].
   String readString(String key);
 
-  /// Reads a non-nullable String value by [key].
-  String readStringKey(StaticKey key);
-
-  /// Reads a nullable String value by string [key].
+  /// Reads a nullable String value by [key].
   String? readNullableString(String key);
 
-  /// Reads a nullable String value by [key].
-  String? readNullableStringKey(StaticKey key);
-
-  /// Reads a non-nullable boolean value by string [key].
+  /// Reads a non-nullable boolean value by [key].
   bool readBool(String key);
 
-  /// Reads a non-nullable boolean value by [key].
-  bool readBoolKey(StaticKey key);
-
-  /// Reads a nullable boolean value by string [key].
+  /// Reads a nullable boolean value by [key].
   bool? readNullableBool(String key);
 
-  /// Reads a nullable boolean value by [key].
-  bool? readNullableBoolKey(StaticKey key);
-
-  /// Returns a child [Decoder] positioned at [key] for direct inlined decoding
+  /// Creates a child [Decoder] positioned at [key] for direct inlined decoding
   /// of nested models without closure allocation.
   Decoder nestedDecoder(String key);
 
-  /// Returns a child [Decoder] positioned at [key] for direct inlined decoding
-  /// of nested models without closure allocation.
-  Decoder nestedStaticKeyDecoder(StaticKey key);
-
   /// Decodes a value associated with [key] using [decoder].
-  T decodeKey<T>(String key, DecoderCallback<T> decoder);
-
-  /// Decodes a value associated with [key] using [decoder].
-  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder);
+  T decodeKey<T>(String key, T Function(Decoder decoder) decoder);
 
   /// Decodes a nullable value associated with [key] using [decoder].
-  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder);
-
-  /// Decodes a nullable value associated with [key] using [decoder].
-  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder);
+  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder);
 
   /// Decodes a list of values associated with [key] using [decoder].
-  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder);
-
-  /// Decodes a list of values associated with [key] using [decoder].
-  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder);
-
-  /// Decodes an integer list associated with string [key].
-  List<int> decodeIntList(String key);
+  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder);
 
   /// Decodes an integer list associated with [key].
-  List<int> decodeIntListKey(StaticKey key);
-
-  /// Decodes a double list associated with string [key].
-  List<double> decodeDoubleList(String key);
+  List<int> decodeIntList(String key);
 
   /// Decodes a double list associated with [key].
-  List<double> decodeDoubleListKey(StaticKey key);
-
-  /// Decodes a double list associated with string [key] directly as an unboxed
-  /// [Float64List].
-  Float64List decodeFloat64List(String key);
+  List<double> decodeDoubleList(String key);
 
   /// Decodes a double list associated with [key] directly as an unboxed
   /// [Float64List].
-  Float64List decodeFloat64ListKey(StaticKey key);
-
-  /// Decodes a String list associated with string [key].
-  List<String> decodeStringList(String key);
+  Float64List decodeFloat64List(String key);
 
   /// Decodes a String list associated with [key].
-  List<String> decodeStringListKey(StaticKey key);
-
-  /// Decodes a bool list associated with string [key].
-  List<bool> decodeBoolList(String key);
+  List<String> decodeStringList(String key);
 
   /// Decodes a bool list associated with [key].
-  List<bool> decodeBoolListKey(StaticKey key);
-}
-
-/// Provides default delegation for [MappedDecoder] static key methods.
-mixin MappedDecoderBase implements MappedDecoder {
-  @override
-  bool containsStaticKey(StaticKey key) => containsKey(key.name);
-
-  @override
-  bool isNullKey(StaticKey key) => isNull(key.name);
-
-  @override
-  int readIntKey(StaticKey key) => readInt(key.name);
-
-  @override
-  int? readNullableIntKey(StaticKey key) => readNullableInt(key.name);
-
-  @override
-  double readDoubleKey(StaticKey key) => readDouble(key.name);
-
-  @override
-  double? readNullableDoubleKey(StaticKey key) => readNullableDouble(key.name);
-
-  @override
-  String readStringKey(StaticKey key) => readString(key.name);
-
-  @override
-  String? readNullableStringKey(StaticKey key) => readNullableString(key.name);
-
-  @override
-  bool readBoolKey(StaticKey key) => readBool(key.name);
-
-  @override
-  bool? readNullableBoolKey(StaticKey key) => readNullableBool(key.name);
-
-  @override
-  Decoder nestedStaticKeyDecoder(StaticKey key) => nestedDecoder(key.name);
-
-  @override
-  T decodeStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeKey(key.name, decoder);
-
-  @override
-  T? decodeNullableStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeNullableKey(key.name, decoder);
-
-  @override
-  List<T> decodeListStaticKey<T>(StaticKey key, DecoderCallback<T> decoder) =>
-      decodeListKey(key.name, decoder);
-
-  @override
-  List<int> decodeIntListKey(StaticKey key) => decodeIntList(key.name);
-
-  @override
-  List<double> decodeDoubleListKey(StaticKey key) => decodeDoubleList(key.name);
-
-  @override
-  Float64List decodeFloat64ListKey(StaticKey key) =>
-      decodeFloat64List(key.name);
-
-  @override
-  List<String> decodeStringListKey(StaticKey key) => decodeStringList(key.name);
-
-  @override
-  List<bool> decodeBoolListKey(StaticKey key) => decodeBoolList(key.name);
+  List<bool> decodeBoolList(String key);
 }
 
 /// Sequential decoder for homogeneous or heterogeneous arrays / lists.
 abstract interface class UnkeyedDecoder {
-  /// Whether more elements remain in the sequence.
-  bool hasNext();
+  /// Advances to the next element in the array, consuming any comma delimiter.
+  bool moveNext();
 
   /// Whether the next element in the sequence is null.
   bool isNextNull();
@@ -374,15 +232,15 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable boolean element.
   bool? readNullableBool();
 
-  /// Returns a child [Decoder] positioned at the current array element for
+  /// Creates a child [Decoder] positioned at the current array element for
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
 
   /// Decodes an element using [decoder].
-  T decodeElement<T>(DecoderCallback<T> decoder);
+  T decodeElement<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a nullable element using [decoder].
-  T? decodeNullableElement<T>(DecoderCallback<T> decoder);
+  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a nested contiguous list of integers.
   List<int> decodeIntList();
@@ -440,13 +298,13 @@ abstract interface class SingleValueDecoder {
   /// Reads a nullable boolean value.
   bool? readNullableBool();
 
-  /// Returns a child [Decoder] for direct inlined decoding of nested models
+  /// Creates a child [Decoder] for direct inlined decoding of nested models
   /// without closure allocation.
   Decoder nestedDecoder();
 
   /// Decodes a single value using [decoder].
-  T decode<T>(DecoderCallback<T> decoder);
+  T decode<T>(T Function(Decoder decoder) decoder);
 
   /// Decodes a single nullable value using [decoder].
-  T? decodeNullable<T>(DecoderCallback<T> decoder);
+  T? decodeNullable<T>(T Function(Decoder decoder) decoder);
 }

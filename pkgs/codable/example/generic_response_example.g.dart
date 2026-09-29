@@ -4,10 +4,6 @@
 
 part of 'generic_response_example.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Article
 // =============================================================================
@@ -16,35 +12,6 @@ extension type const _$ArticleSchema(int _value) {
   static const String nameId = 'id';
   static const String nameTitle = 'title';
   static const String nameAuthor = 'author';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesTitle = [34, 116, 105, 116, 108, 101, 34];
-  static const StaticKey staticKeyTitle = StaticKey(
-    nameTitle,
-    keyTitle,
-    wireNameBytesTitle,
-  );
-  static const List<int> wireNameBytesAuthor = [
-    34,
-    97,
-    117,
-    116,
-    104,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyAuthor = StaticKey(
-    nameAuthor,
-    keyAuthor,
-    wireNameBytesAuthor,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -107,7 +74,7 @@ Article _$ArticleFromDecoder(Decoder decoder) {
   User? author;
   var seen = _$ArticleSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$ArticleSchema.keyOptions)) {
       case _$ArticleSchema.keyId:
         if ((seen._value & _$ArticleSchema.id._value) != 0) {
@@ -149,7 +116,7 @@ Article _$ArticleFromDecoder(Decoder decoder) {
 List<Article> _$ArticleListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <Article>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$ArticleFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -160,11 +127,11 @@ List<Article> _$ArticleListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$ArticleToEncoder(Article instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeIntKey(_$ArticleSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(_$ArticleSchema.staticKeyTitle, instance.title);
+  keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
+  keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
   if (instance.author != null) {
-    keyed.encodeValueKey(
-      _$ArticleSchema.staticKeyAuthor,
+    keyed.encodeValue(
+      _$ArticleSchema.nameAuthor,
       instance.author!,
       _$UserToEncoder,
     );
@@ -178,20 +145,6 @@ extension type const _$UserSchema(int _value) {
   // String Name Constants
   static const String nameId = 'id';
   static const String nameEmail = 'email';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesEmail = [34, 101, 109, 97, 105, 108, 34];
-  static const StaticKey staticKeyEmail = StaticKey(
-    nameEmail,
-    keyEmail,
-    wireNameBytesEmail,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -251,7 +204,7 @@ User _$UserFromDecoder(Decoder decoder) {
   String? email;
   var seen = _$UserSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$UserSchema.keyOptions)) {
       case _$UserSchema.keyId:
         if ((seen._value & _$UserSchema.id._value) != 0) {
@@ -285,7 +238,7 @@ User _$UserFromDecoder(Decoder decoder) {
 List<User> _$UserListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <User>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$UserFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -296,6 +249,6 @@ List<User> _$UserListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$UserToEncoder(User instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeIntKey(_$UserSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(_$UserSchema.staticKeyEmail, instance.email);
+  keyed.encodeInt(_$UserSchema.nameId, instance.id);
+  keyed.encodeString(_$UserSchema.nameEmail, instance.email);
 }

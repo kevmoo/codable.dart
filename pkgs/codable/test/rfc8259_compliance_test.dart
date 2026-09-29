@@ -53,15 +53,15 @@ void main() {
     });
   });
   group('Defect 4, 5, 6: State machine parity', () {
-    test('Truncated stream hasNext returns false or throws at EOF', () {
+    test('Truncated stream moveNext returns false or throws at EOF', () {
       final bytes = Uint8List.fromList('[1,'.codeUnits);
       final reader = JsonTokenReader.fromBytes(bytes);
       reader.beginArray();
-      expect(reader.hasNext(), isTrue);
+      expect(reader.moveNext(), isTrue);
       expect(reader.readInt(), 1);
-      expect(reader.hasNext, throwsA(isA<FormatException>()));
+      expect(reader.moveNext, throwsA(isA<FormatException>()));
     });
-    test('Direct nextName reads fine without hasNext', () {
+    test('Direct nextName reads fine without moveNext', () {
       final bytes = Uint8List.fromList('{"a": 1, "b": 2}'.codeUnits);
       final reader = JsonTokenReader.fromBytes(bytes);
       reader.beginObject();
@@ -71,7 +71,7 @@ void main() {
       expect(reader.readInt(), 2);
       reader.endObject();
     });
-    test('Direct array read without hasNext', () {
+    test('Direct array read without moveNext', () {
       final bytes = Uint8List.fromList('[1, 2]'.codeUnits);
       final reader = JsonTokenReader.fromBytes(bytes);
       reader.beginArray();

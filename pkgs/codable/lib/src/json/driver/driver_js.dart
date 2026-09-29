@@ -210,9 +210,9 @@ Object? _jsToDart(JSAny? value) {
   return null;
 }
 
-/// Concrete high-performance DOM/JS JSON decoder connecting `package:codable`
-/// contracts directly to browser engine `JSON.parse` and native JavaScript
-/// objects.
+/// Concrete high-performance JS object-tree JSON decoder connecting
+/// `package:codable` contracts directly to browser engine `JSON.parse` and
+/// native JavaScript objects.
 ///
 /// NOTE: Because `JSON.parse` uses IEEE-754 64-bit floating-point numbers on
 /// Web targets, integers outside the safe integer range
@@ -304,7 +304,7 @@ final class JsonCodableDecoder implements Decoder {
   @override
   MappedDecoder mapped() {
     if (_reader != null) {
-      return _JsonCodableStreamingMappedDecoder(this);
+      return streaming_driver.createMappedDecoderFromReader(_reader, userInfo);
     }
     return _JsonCodableMappedDecoder(
       this,
@@ -332,19 +332,10 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   @override
-  KeyedDecoder container({KeyOptions? options}) => keyed(options: options);
-
-  @override
   Uint8List? get payload {
     _payloadEscaped = true;
     return _bytes ?? _reader?.bytes;
   }
-
-  @override
-  SingleValueDecoder singleValueContainer() => singleValue();
-
-  @override
-  UnkeyedDecoder unkeyedContainer() => unkeyed();
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {
@@ -478,19 +469,16 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
-  bool hasNextKey() {
+  bool moveNextKey() {
     if (_ended) return false;
     _ensureStarted();
-    final has = _reader.hasNext();
+    final has = _reader.moveNext();
     if (!has) {
       _reader.endObject();
       _ended = true;
     }
     return has;
   }
-
-  @override
-  bool hasNext() => hasNextKey();
 
   @override
   String nextKey() {
@@ -515,12 +503,6 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
-  int selectKey(List<String> keys) {
-    _ensureStarted();
-    return _reader.selectName(JsonKeyOptions.of(keys));
-  }
-
-  @override
   int selectStringIndex(KeyOptions options) {
     _ensureStarted();
     final compiled = identical(options, _options)
@@ -529,9 +511,6 @@ final class _JsonCodableStreamingKeyedDecoder
               as JsonKeyOptions);
     return _reader.selectString(compiled);
   }
-
-  @override
-  void skipField() => skipValue();
 
   @override
   void skipValue() {
@@ -543,10 +522,11 @@ final class _JsonCodableStreamingKeyedDecoder
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
-  T decodeValue<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
+      decoder(_rootDecoder);
 
   @override
-  T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
+  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
     if (isNextNull()) {
       readNull();
       return null;
@@ -555,11 +535,11 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
-  List<T> decodeList<T>(DecoderCallback<T> decoder) {
+  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
     _ensureStarted();
     final list = <T>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(decoder(_rootDecoder));
     }
     _reader.endArray();
@@ -567,7 +547,7 @@ final class _JsonCodableStreamingKeyedDecoder
   }
 
   @override
-  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
+  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
     if (isNextNull()) {
       readNull();
       return null;
@@ -580,7 +560,7 @@ final class _JsonCodableStreamingKeyedDecoder
     _ensureStarted();
     final list = <int>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readInt());
     }
     _reader.endArray();
@@ -592,7 +572,7 @@ final class _JsonCodableStreamingKeyedDecoder
     _ensureStarted();
     final list = <double>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readDouble());
     }
     _reader.endArray();
@@ -604,7 +584,7 @@ final class _JsonCodableStreamingKeyedDecoder
     _ensureStarted();
     final list = <double>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readDouble());
     }
     _reader.endArray();
@@ -616,7 +596,7 @@ final class _JsonCodableStreamingKeyedDecoder
     _ensureStarted();
     final list = <String>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readString());
     }
     _reader.endArray();
@@ -628,166 +608,12 @@ final class _JsonCodableStreamingKeyedDecoder
     _ensureStarted();
     final list = <bool>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readBool());
     }
     _reader.endArray();
     return list;
   }
-}
-
-final class _JsonCodableStreamingMappedDecoder
-    with MappedDecoderBase
-    implements MappedDecoder {
-  final JsonCodableDecoder _rootDecoder;
-  late final Map<String, Object?> _map;
-
-  _JsonCodableStreamingMappedDecoder(this._rootDecoder) {
-    _map = _readObject(_rootDecoder._reader!);
-  }
-
-  static Map<String, Object?> _readObject(JsonTokenReader reader) {
-    reader.beginObject();
-    final map = <String, Object?>{};
-    while (reader.hasNext()) {
-      final key = reader.nextName();
-      map[key] = _readValue(reader);
-    }
-    reader.endObject();
-    return map;
-  }
-
-  static Object? _readValue(JsonTokenReader reader) {
-    final type = reader.peek();
-    switch (type) {
-      case JsonTokenType.nullValue:
-        reader.readNull();
-        return null;
-      case JsonTokenType.boolean:
-        return reader.readBool();
-      case JsonTokenType.number:
-        return reader.readDouble();
-      case JsonTokenType.string:
-        return reader.readString();
-      case JsonTokenType.beginObject:
-        return _readObject(reader);
-      case JsonTokenType.beginArray:
-        reader.beginArray();
-        final list = <Object?>[];
-        while (reader.hasNext()) {
-          list.add(_readValue(reader));
-        }
-        reader.endArray();
-        return list;
-      default:
-        reader.skipValue();
-        return null;
-    }
-  }
-
-  @override
-  bool containsKey(String key) => _map.containsKey(key);
-
-  @override
-  bool isNull(String key) => _map[key] == null;
-
-  @override
-  int readInt(String key) {
-    final v = _map[key];
-    if (v is num) return v.toInt();
-    throw CodableException('Expected int for $key, found $v');
-  }
-
-  @override
-  int? readNullableInt(String key) => _map[key] == null ? null : readInt(key);
-
-  @override
-  double readDouble(String key) {
-    final v = _map[key];
-    if (v is num) return v.toDouble();
-    throw CodableException('Expected double for $key, found $v');
-  }
-
-  @override
-  double? readNullableDouble(String key) =>
-      _map[key] == null ? null : readDouble(key);
-
-  @override
-  String readString(String key) {
-    final v = _map[key];
-    if (v is String) return v;
-    throw CodableException('Expected String for $key, found $v');
-  }
-
-  @override
-  String? readNullableString(String key) =>
-      _map[key] == null ? null : readString(key);
-
-  @override
-  bool readBool(String key) {
-    final v = _map[key];
-    if (v is bool) return v;
-    throw CodableException('Expected bool for $key, found $v');
-  }
-
-  @override
-  bool? readNullableBool(String key) =>
-      _map[key] == null ? null : readBool(key);
-
-  @override
-  Decoder nestedDecoder(String key) {
-    final v = _map[key];
-    if (v == null) {
-      throw CodableException('Missing required key $key in mapped decoder');
-    }
-    return JsonCodableDecoder.fromString(jsonEncode(v));
-  }
-
-  @override
-  T decodeKey<T>(String key, DecoderCallback<T> decoder) {
-    final v = _map[key];
-    if (v == null) {
-      throw CodableException('Missing required key $key in mapped decoder');
-    }
-    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
-  }
-
-  @override
-  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) {
-    final v = _map[key];
-    if (v == null) return null;
-    return decoder(JsonCodableDecoder.fromString(jsonEncode(v)));
-  }
-
-  @override
-  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
-    final v = _map[key];
-    if (v is List) {
-      return v
-          .map((e) => decoder(JsonCodableDecoder.fromString(jsonEncode(e))))
-          .toList();
-    }
-    throw CodableException('Expected list for $key, found $v');
-  }
-
-  @override
-  List<int> decodeIntList(String key) => (_map[key] as List).cast<int>();
-
-  @override
-  List<double> decodeDoubleList(String key) =>
-      (_map[key] as List).map((e) => (e as num).toDouble()).toList();
-
-  @override
-  Float64List decodeFloat64List(String key) => Float64List.fromList(
-    (_map[key] as List).map((e) => (e as num).toDouble()).toList(),
-  );
-
-  @override
-  List<String> decodeStringList(String key) =>
-      (_map[key] as List).cast<String>();
-
-  @override
-  List<bool> decodeBoolList(String key) => (_map[key] as List).cast<bool>();
 }
 
 final class _JsonCodableStreamingUnkeyedDecoder
@@ -809,9 +635,9 @@ final class _JsonCodableStreamingUnkeyedDecoder
   }
 
   @override
-  bool hasNext() {
+  bool moveNext() {
     _ensureStarted();
-    final has = _reader.hasNext();
+    final has = _reader.moveNext();
     if (!has) {
       _reader.endArray();
     }
@@ -828,10 +654,11 @@ final class _JsonCodableStreamingUnkeyedDecoder
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
-  T decodeElement<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+  T decodeElement<T>(T Function(Decoder decoder) decoder) =>
+      decoder(_rootDecoder);
 
   @override
-  T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
+  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
     if (isNextNull()) {
       readNull();
       return null;
@@ -844,7 +671,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     final list = <int>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readInt());
     }
     _reader.endArray();
@@ -856,7 +683,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     final list = <double>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readDouble());
     }
     _reader.endArray();
@@ -868,7 +695,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     final list = <double>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readDouble());
     }
     _reader.endArray();
@@ -880,7 +707,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     final list = <String>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readString());
     }
     _reader.endArray();
@@ -892,7 +719,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
     _ensureStarted();
     final list = <bool>[];
     _reader.beginArray();
-    while (_reader.hasNext()) {
+    while (_reader.moveNext()) {
       list.add(_reader.readBool());
     }
     _reader.endArray();
@@ -919,10 +746,10 @@ final class _JsonCodableStreamingSingleValueDecoder
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
-  T decode<T>(DecoderCallback<T> decoder) => decoder(_rootDecoder);
+  T decode<T>(T Function(Decoder decoder) decoder) => decoder(_rootDecoder);
 
   @override
-  T? decodeNullable<T>(DecoderCallback<T> decoder) =>
+  T? decodeNullable<T>(T Function(Decoder decoder) decoder) =>
       isNull() ? null : decode(decoder);
 }
 
@@ -966,20 +793,17 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  bool hasNextKey() => _hasActiveValue || _advanceToNextMatchingProperty();
-
-  @override
-  bool hasNext() => hasNextKey();
+  bool moveNextKey() => _hasActiveValue || _advanceToNextMatchingProperty();
 
   @override
   bool isNextNull() {
-    if (!hasNextKey()) return false;
+    if (!moveNextKey()) return false;
     return _activeValue == null;
   }
 
   @override
   void readNull() {
-    if (!hasNextKey()) {
+    if (!moveNextKey()) {
       throw const CodableException('No more keys available in KeyedDecoder');
     }
     if (_activeValue != null) {
@@ -998,7 +822,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   String nextKey() {
-    if (!hasNextKey()) {
+    if (!moveNextKey()) {
       throw const CodableException('No more keys in object');
     }
     return _activeKey!;
@@ -1006,7 +830,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   String? peekKey() {
-    if (!hasNextKey()) return null;
+    if (!moveNextKey()) return null;
     return _activeKey;
   }
 
@@ -1018,14 +842,8 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
         !_hasActiveValue) {
       _options = options;
     }
-    if (!hasNextKey()) return -1;
+    if (!moveNextKey()) return -1;
     return options.indexOf(_activeKey!);
-  }
-
-  @override
-  int selectKey(List<String> keys) {
-    if (!hasNextKey()) return -1;
-    return keys.indexOf(_activeKey!);
   }
 
   @override
@@ -1035,16 +853,13 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  void skipField() => skipValue();
-
-  @override
   void skipValue() {
-    if (!hasNextKey()) return;
+    if (!moveNextKey()) return;
     _consumeValue();
   }
 
   JSAny? _consumeValue() {
-    if (!hasNextKey()) {
+    if (!moveNextKey()) {
       throw const CodableException('No more keys in object');
     }
     _hasActiveValue = false;
@@ -1061,7 +876,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  T decodeValue<T>(DecoderCallback<T> decoder) {
+  T decodeValue<T>(T Function(Decoder decoder) decoder) {
     final val = _consumeValue();
     return decoder(
       JsonCodableDecoder._(val, null, userInfo: _rootDecoder.userInfo),
@@ -1069,7 +884,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  T? decodeNullableValue<T>(DecoderCallback<T> decoder) {
+  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
     final val = _consumeValue();
     if (val == null) return null;
     return decoder(
@@ -1078,7 +893,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  List<T> decodeList<T>(DecoderCallback<T> decoder) {
+  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
     final val = _consumeValue();
     if (val != null && val.isA<JSArray>()) {
       final arr = val as JSArray;
@@ -1100,7 +915,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  List<T>? decodeNullableList<T>(DecoderCallback<T> decoder) {
+  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
     final val = _consumeValue();
     if (val == null) return null;
     if (val.isA<JSArray>()) {
@@ -1269,9 +1084,7 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
   }
 }
 
-final class _JsonCodableMappedDecoder
-    with MappedDecoderBase
-    implements MappedDecoder {
+final class _JsonCodableMappedDecoder implements MappedDecoder {
   final JsonCodableDecoder _rootDecoder;
   final JSObject _map;
 
@@ -1361,7 +1174,7 @@ final class _JsonCodableMappedDecoder
   );
 
   @override
-  T decodeKey<T>(String key, DecoderCallback<T> decoder) => decoder(
+  T decodeKey<T>(String key, T Function(Decoder decoder) decoder) => decoder(
     JsonCodableDecoder._(
       _map.getProperty<JSAny?>(key.toJS),
       null,
@@ -1370,11 +1183,11 @@ final class _JsonCodableMappedDecoder
   );
 
   @override
-  T? decodeNullableKey<T>(String key, DecoderCallback<T> decoder) =>
+  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder) =>
       isNull(key) ? null : decodeKey(key, decoder);
 
   @override
-  List<T> decodeListKey<T>(String key, DecoderCallback<T> decoder) {
+  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v != null && v.isA<JSArray>()) {
       final arr = v as JSArray;
@@ -1494,11 +1307,11 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   _JsonCodableUnkeyedDecoder(this._rootDecoder, this._list);
 
   @override
-  bool hasNext() => _currentIndex < _list.length;
+  bool moveNext() => _currentIndex < _list.length;
 
   @override
   bool isNextNull() {
-    if (!hasNext()) return false;
+    if (!moveNext()) return false;
     return _list.getProperty<JSAny?>(_currentIndex.toJS) == null;
   }
 
@@ -1528,7 +1341,7 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T decodeElement<T>(DecoderCallback<T> decoder) {
+  T decodeElement<T>(T Function(Decoder decoder) decoder) {
     final value = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
     return decoder(
@@ -1537,7 +1350,7 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T? decodeNullableElement<T>(DecoderCallback<T> decoder) {
+  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
     final value = _list.getProperty<JSAny?>(_currentIndex.toJS);
     _currentIndex++;
     if (value == null) return null;
@@ -1791,20 +1604,21 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
       JsonCodableDecoder._(_val, null, userInfo: _rootDecoder.userInfo);
 
   @override
-  T decode<T>(DecoderCallback<T> decoder) => decoder(
+  T decode<T>(T Function(Decoder decoder) decoder) => decoder(
     JsonCodableDecoder._(_val, null, userInfo: _rootDecoder.userInfo),
   );
 
   @override
-  T? decodeNullable<T>(DecoderCallback<T> decoder) =>
+  T? decodeNullable<T>(T Function(Decoder decoder) decoder) =>
       isNull() ? null : decode(decoder);
 }
 
 @JS('JSON.stringify')
 external JSString _jsonStringify(JSAny? value);
 
-/// Concrete high-performance DOM/JS JSON encoder connecting `package:codable`
-/// contracts directly to native JavaScript objects and `JSON.stringify`.
+/// Concrete high-performance JS object-tree JSON encoder connecting
+/// `package:codable` contracts directly to native JavaScript objects and
+/// `JSON.stringify`.
 final class JsonCodableEncoder implements Encoder {
   JSAny? _root;
   @override
@@ -1877,15 +1691,6 @@ final class JsonCodableEncoder implements Encoder {
 
   @override
   SingleValueEncoder singleValue() => _JsonCodableJsSingleValueEncoder(this);
-
-  @override
-  KeyedEncoder container({KeyOptions? options}) => keyed(options: options);
-
-  @override
-  UnkeyedEncoder unkeyedContainer() => unkeyed();
-
-  @override
-  SingleValueEncoder singleValueContainer() => singleValue();
 }
 
 final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
@@ -1898,23 +1703,12 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   void encodeInt(String key, int value) => _object[key] = value.toJS;
 
   @override
-  void encodeIntKey(StaticKey key, int value) => encodeInt(key.name, value);
-
-  @override
   void encodeNullableInt(String key, int? value) {
     if (value != null) _object[key] = value.toJS;
   }
 
   @override
-  void encodeNullableIntKey(StaticKey key, int? value) =>
-      encodeNullableInt(key.name, value);
-
-  @override
   void encodeDouble(String key, double value) => _object[key] = value.toJS;
-
-  @override
-  void encodeDoubleKey(StaticKey key, double value) =>
-      encodeDouble(key.name, value);
 
   @override
   void encodeNullableDouble(String key, double? value) {
@@ -1922,15 +1716,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableDoubleKey(StaticKey key, double? value) =>
-      encodeNullableDouble(key.name, value);
-
-  @override
   void encodeString(String key, String value) => _object[key] = value.toJS;
-
-  @override
-  void encodeStringKey(StaticKey key, String value) =>
-      encodeString(key.name, value);
 
   @override
   void encodeNullableString(String key, String? value) {
@@ -1938,14 +1724,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableStringKey(StaticKey key, String? value) =>
-      encodeNullableString(key.name, value);
-
-  @override
   void encodeBool(String key, bool value) => _object[key] = value.toJS;
-
-  @override
-  void encodeBoolKey(StaticKey key, bool value) => encodeBool(key.name, value);
 
   @override
   void encodeNullableBool(String key, bool? value) {
@@ -1953,39 +1732,29 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableBoolKey(StaticKey key, bool? value) =>
-      encodeNullableBool(key.name, value);
-
-  @override
   void encodeNull(String key) => _object[key] = null;
 
   @override
-  void encodeNullKey(StaticKey key) => encodeNull(key.name);
-
-  @override
-  void encodeValue<T>(String key, T value, EncoderCallback<T> encode) {
+  void encodeValue<T>(
+    String key,
+    T value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _object[key] = child._root;
   }
 
   @override
-  void encodeValueKey<T>(StaticKey key, T value, EncoderCallback<T> encode) =>
-      encodeValue(key.name, value, encode);
-
-  @override
-  void encodeNullableValue<T>(String key, T? value, EncoderCallback<T> encode) {
+  void encodeNullableValue<T>(
+    String key,
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value != null) {
       encodeValue(key, value, encode);
     }
   }
-
-  @override
-  void encodeNullableValueKey<T>(
-    StaticKey key,
-    T? value,
-    EncoderCallback<T> encode,
-  ) => encodeNullableValue(key.name, value, encode);
 
   @override
   void encodeEncodable(String key, Encodable value) {
@@ -1995,10 +1764,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeEncodableKey(StaticKey key, Encodable value) =>
-      encodeEncodable(key.name, value);
-
-  @override
   void encodeNullableEncodable(String key, Encodable? value) {
     if (value != null) {
       encodeEncodable(key, value);
@@ -2006,14 +1771,10 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeNullableEncodableKey(StaticKey key, Encodable? value) =>
-      encodeNullableEncodable(key.name, value);
-
-  @override
   void encodeList<T>(
     String key,
     Iterable<T> elements,
-    EncoderCallback<T> encode,
+    void Function(T value, Encoder encoder) encode,
   ) {
     final array = JSArray<JSAny?>();
     for (final e in elements) {
@@ -2025,13 +1786,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeListKey<T>(
-    StaticKey key,
-    Iterable<T> elements,
-    EncoderCallback<T> encode,
-  ) => encodeList(key.name, elements, encode);
-
-  @override
   void encodeIntList(String key, List<int> values) {
     final array = JSArray<JSNumber>.withLength(values.length);
     for (var i = 0; i < values.length; i++) {
@@ -2039,10 +1793,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     }
     _object[key] = array;
   }
-
-  @override
-  void encodeIntListKey(StaticKey key, List<int> values) =>
-      encodeIntList(key.name, values);
 
   @override
   void encodeDoubleList(String key, List<double> values) {
@@ -2054,10 +1804,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeDoubleListKey(StaticKey key, List<double> values) =>
-      encodeDoubleList(key.name, values);
-
-  @override
   void encodeStringList(String key, List<String> values) {
     final array = JSArray<JSString>.withLength(values.length);
     for (var i = 0; i < values.length; i++) {
@@ -2067,10 +1813,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeStringListKey(StaticKey key, List<String> values) =>
-      encodeStringList(key.name, values);
-
-  @override
   void encodeBoolList(String key, List<bool> values) {
     final array = JSArray<JSBoolean>.withLength(values.length);
     for (var i = 0; i < values.length; i++) {
@@ -2078,10 +1820,6 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     }
     _object[key] = array;
   }
-
-  @override
-  void encodeBoolListKey(StaticKey key, List<bool> values) =>
-      encodeBoolList(key.name, values);
 }
 
 final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
@@ -2118,14 +1856,20 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNull() => _array.add(null);
 
   @override
-  void encodeElement<T>(T value, EncoderCallback<T> encode) {
+  void encodeElement<T>(
+    T value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _array.add(child._root);
   }
 
   @override
-  void encodeNullableElement<T>(T? value, EncoderCallback<T> encode) {
+  void encodeNullableElement<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value == null) {
       _array.add(null);
     } else {
@@ -2134,7 +1878,10 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   }
 
   @override
-  void encodeList<T>(Iterable<T> elements, EncoderCallback<T> encode) {
+  void encodeList<T>(
+    Iterable<T> elements,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     for (final e in elements) {
       encodeElement(e, encode);
     }
@@ -2190,14 +1937,17 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
   void encodeNull() => _rootEncoder._root = null;
 
   @override
-  void encode<T>(T value, EncoderCallback<T> encode) {
+  void encode<T>(T value, void Function(T value, Encoder encoder) encode) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encode(value, child);
     _rootEncoder._root = child._root;
   }
 
   @override
-  void encodeNullable<T>(T? value, EncoderCallback<T> encode) {
+  void encodeNullable<T>(
+    T? value,
+    void Function(T value, Encoder encoder) encode,
+  ) {
     if (value == null) {
       _rootEncoder._root = null;
     } else {

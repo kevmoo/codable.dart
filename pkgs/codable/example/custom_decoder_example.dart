@@ -10,9 +10,10 @@ part 'custom_decoder_example.g.dart';
 
 /// Custom field decoder normalizing timestamp representations (integer epoch
 /// milliseconds or ISO 8601 strings) into a standard [DateTime].
-final class DateTimeEpochDecoder {
+final class DateTimeEpochDecoder implements CustomCodable<DateTime> {
   const DateTimeEpochDecoder();
 
+  @override
   DateTime decode(Decoder decoder) {
     if (decoder is JsonCodableDecoder) {
       final token = decoder.reader.peek();
@@ -30,7 +31,8 @@ final class DateTimeEpochDecoder {
     return DateTime.parse(str);
   }
 
-  void encodeToEncoder(DateTime value, Encoder encoder) {
+  @override
+  void encode(DateTime value, Encoder encoder) {
     encoder.singleValue().encodeInt(value.millisecondsSinceEpoch);
   }
 }
