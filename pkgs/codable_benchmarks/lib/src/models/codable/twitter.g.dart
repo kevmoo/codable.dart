@@ -4,10 +4,6 @@
 
 part of 'twitter.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -15,54 +11,6 @@ extension type const _$TwitterMetadataSchema(int _value) {
   // String Name Constants
   static const String nameResultType = 'result_type';
   static const String nameIsoLanguageCode = 'iso_language_code';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesResultType = [
-    34,
-    114,
-    101,
-    115,
-    117,
-    108,
-    116,
-    95,
-    116,
-    121,
-    112,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyResultType = StaticKey(
-    nameResultType,
-    keyResultType,
-    wireNameBytesResultType,
-  );
-  static const List<int> wireNameBytesIsoLanguageCode = [
-    34,
-    105,
-    115,
-    111,
-    95,
-    108,
-    97,
-    110,
-    103,
-    117,
-    97,
-    103,
-    101,
-    95,
-    99,
-    111,
-    100,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyIsoLanguageCode = StaticKey(
-    nameIsoLanguageCode,
-    keyIsoLanguageCode,
-    wireNameBytesIsoLanguageCode,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyResultType = 0;
@@ -97,7 +45,7 @@ TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
   var isoLanguageCode = '';
   var seen = _$TwitterMetadataSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterMetadataSchema.keyOptions)) {
       case _$TwitterMetadataSchema.keyResultType:
         resultType = keyed.readString();
@@ -126,7 +74,7 @@ TwitterMetadata _$TwitterMetadataFromDecoder(Decoder decoder) {
 List<TwitterMetadata> _$TwitterMetadataListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterMetadata>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterMetadataFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -137,12 +85,12 @@ List<TwitterMetadata> _$TwitterMetadataListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterMetadataToEncoder(TwitterMetadata instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(
-    _$TwitterMetadataSchema.staticKeyResultType,
+  keyed.encodeString(
+    _$TwitterMetadataSchema.nameResultType,
     instance.resultType,
   );
-  keyed.encodeStringKey(
-    _$TwitterMetadataSchema.staticKeyIsoLanguageCode,
+  keyed.encodeString(
+    _$TwitterMetadataSchema.nameIsoLanguageCode,
     instance.isoLanguageCode,
   );
 }
@@ -157,71 +105,6 @@ extension type const _$TwitterUserMentionSchema(int _value) {
   static const String nameId = 'id';
   static const String nameIdStr = 'id_str';
   static const String nameIndices = 'indices';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesScreenName = [
-    34,
-    115,
-    99,
-    114,
-    101,
-    101,
-    110,
-    95,
-    110,
-    97,
-    109,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyScreenName = StaticKey(
-    nameScreenName,
-    keyScreenName,
-    wireNameBytesScreenName,
-  );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
-  static const StaticKey staticKeyName = StaticKey(
-    nameName,
-    keyName,
-    wireNameBytesName,
-  );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesIdStr = [
-    34,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
-    nameIdStr,
-    keyIdStr,
-    wireNameBytesIdStr,
-  );
-  static const List<int> wireNameBytesIndices = [
-    34,
-    105,
-    110,
-    100,
-    105,
-    99,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyIndices = StaticKey(
-    nameIndices,
-    keyIndices,
-    wireNameBytesIndices,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyScreenName = 0;
@@ -309,7 +192,7 @@ TwitterUserMention _$TwitterUserMentionFromDecoder(Decoder decoder) {
   var indices = const <int>[];
   var seen = _$TwitterUserMentionSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterUserMentionSchema.keyOptions)) {
       case _$TwitterUserMentionSchema.keyScreenName:
         if ((seen._value & _$TwitterUserMentionSchema.screenName._value) != 0) {
@@ -366,7 +249,7 @@ TwitterUserMention _$TwitterUserMentionFromDecoder(Decoder decoder) {
 List<TwitterUserMention> _$TwitterUserMentionListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUserMention>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterUserMentionFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -380,23 +263,14 @@ void _$TwitterUserMentionToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(
-    _$TwitterUserMentionSchema.staticKeyScreenName,
+  keyed.encodeString(
+    _$TwitterUserMentionSchema.nameScreenName,
     instance.screenName,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserMentionSchema.staticKeyName,
-    instance.name,
-  );
-  keyed.encodeIntKey(_$TwitterUserMentionSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(
-    _$TwitterUserMentionSchema.staticKeyIdStr,
-    instance.idStr,
-  );
-  keyed.encodeIntListKey(
-    _$TwitterUserMentionSchema.staticKeyIndices,
-    instance.indices,
-  );
+  keyed.encodeString(_$TwitterUserMentionSchema.nameName, instance.name);
+  keyed.encodeInt(_$TwitterUserMentionSchema.nameId, instance.id);
+  keyed.encodeString(_$TwitterUserMentionSchema.nameIdStr, instance.idStr);
+  keyed.encodeIntList(_$TwitterUserMentionSchema.nameIndices, instance.indices);
 }
 
 // =============================================================================
@@ -408,71 +282,6 @@ extension type const _$TwitterUrlSchema(int _value) {
   static const String nameExpandedUrl = 'expanded_url';
   static const String nameDisplayUrl = 'display_url';
   static const String nameIndices = 'indices';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
-  static const StaticKey staticKeyUrl = StaticKey(
-    nameUrl,
-    keyUrl,
-    wireNameBytesUrl,
-  );
-  static const List<int> wireNameBytesExpandedUrl = [
-    34,
-    101,
-    120,
-    112,
-    97,
-    110,
-    100,
-    101,
-    100,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyExpandedUrl = StaticKey(
-    nameExpandedUrl,
-    keyExpandedUrl,
-    wireNameBytesExpandedUrl,
-  );
-  static const List<int> wireNameBytesDisplayUrl = [
-    34,
-    100,
-    105,
-    115,
-    112,
-    108,
-    97,
-    121,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyDisplayUrl = StaticKey(
-    nameDisplayUrl,
-    keyDisplayUrl,
-    wireNameBytesDisplayUrl,
-  );
-  static const List<int> wireNameBytesIndices = [
-    34,
-    105,
-    110,
-    100,
-    105,
-    99,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyIndices = StaticKey(
-    nameIndices,
-    keyIndices,
-    wireNameBytesIndices,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyUrl = 0;
@@ -549,7 +358,7 @@ TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
   var indices = const <int>[];
   var seen = _$TwitterUrlSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterUrlSchema.keyOptions)) {
       case _$TwitterUrlSchema.keyUrl:
         if ((seen._value & _$TwitterUrlSchema.url._value) != 0) {
@@ -598,7 +407,7 @@ TwitterUrl _$TwitterUrlFromDecoder(Decoder decoder) {
 List<TwitterUrl> _$TwitterUrlListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUrl>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterUrlFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -609,16 +418,10 @@ List<TwitterUrl> _$TwitterUrlListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterUrlToEncoder(TwitterUrl instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeStringKey(_$TwitterUrlSchema.staticKeyUrl, instance.url);
-  keyed.encodeStringKey(
-    _$TwitterUrlSchema.staticKeyExpandedUrl,
-    instance.expandedUrl,
-  );
-  keyed.encodeStringKey(
-    _$TwitterUrlSchema.staticKeyDisplayUrl,
-    instance.displayUrl,
-  );
-  keyed.encodeIntListKey(_$TwitterUrlSchema.staticKeyIndices, instance.indices);
+  keyed.encodeString(_$TwitterUrlSchema.nameUrl, instance.url);
+  keyed.encodeString(_$TwitterUrlSchema.nameExpandedUrl, instance.expandedUrl);
+  keyed.encodeString(_$TwitterUrlSchema.nameDisplayUrl, instance.displayUrl);
+  keyed.encodeIntList(_$TwitterUrlSchema.nameIndices, instance.indices);
 }
 
 // =============================================================================
@@ -627,14 +430,6 @@ void _$TwitterUrlToEncoder(TwitterUrl instance, Encoder encoder) {
 extension type const _$TwitterEntitiesUrlsSchema(int _value) {
   // String Name Constants
   static const String nameUrls = 'urls';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34];
-  static const StaticKey staticKeyUrls = StaticKey(
-    nameUrls,
-    keyUrls,
-    wireNameBytesUrls,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyUrls = 0;
@@ -668,7 +463,7 @@ TwitterEntitiesUrls _$TwitterEntitiesUrlsFromDecoder(Decoder decoder) {
   var urls = const <TwitterUrl>[];
   var seen = _$TwitterEntitiesUrlsSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterEntitiesUrlsSchema.keyOptions)) {
       case _$TwitterEntitiesUrlsSchema.keyUrls:
         urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
@@ -693,7 +488,7 @@ List<TwitterEntitiesUrls> _$TwitterEntitiesUrlsListFromDecoder(
 ) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterEntitiesUrls>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterEntitiesUrlsFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -707,8 +502,8 @@ void _$TwitterEntitiesUrlsToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  keyed.encodeListKey(
-    _$TwitterEntitiesUrlsSchema.staticKeyUrls,
+  keyed.encodeList(
+    _$TwitterEntitiesUrlsSchema.nameUrls,
     instance.urls,
     _$TwitterUrlToEncoder,
   );
@@ -721,34 +516,6 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
   // String Name Constants
   static const String nameUrl = 'url';
   static const String nameDescription = 'description';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
-  static const StaticKey staticKeyUrl = StaticKey(
-    nameUrl,
-    keyUrl,
-    wireNameBytesUrl,
-  );
-  static const List<int> wireNameBytesDescription = [
-    34,
-    100,
-    101,
-    115,
-    99,
-    114,
-    105,
-    112,
-    116,
-    105,
-    111,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyDescription = StaticKey(
-    nameDescription,
-    keyDescription,
-    wireNameBytesDescription,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyUrl = 0;
@@ -785,7 +552,7 @@ TwitterUserEntities _$TwitterUserEntitiesFromDecoder(Decoder decoder) {
   TwitterEntitiesUrls? description;
   var seen = _$TwitterUserEntitiesSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterUserEntitiesSchema.keyOptions)) {
       case _$TwitterUserEntitiesSchema.keyUrl:
         if (keyed.isNextNull()) {
@@ -823,7 +590,7 @@ List<TwitterUserEntities> _$TwitterUserEntitiesListFromDecoder(
 ) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUserEntities>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterUserEntitiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -838,15 +605,15 @@ void _$TwitterUserEntitiesToEncoder(
 ) {
   final keyed = encoder.keyed();
   if (instance.url != null) {
-    keyed.encodeValueKey(
-      _$TwitterUserEntitiesSchema.staticKeyUrl,
+    keyed.encodeValue(
+      _$TwitterUserEntitiesSchema.nameUrl,
       instance.url!,
       _$TwitterEntitiesUrlsToEncoder,
     );
   }
   if (instance.description != null) {
-    keyed.encodeValueKey(
-      _$TwitterUserEntitiesSchema.staticKeyDescription,
+    keyed.encodeValue(
+      _$TwitterUserEntitiesSchema.nameDescription,
       instance.description!,
       _$TwitterEntitiesUrlsToEncoder,
     );
@@ -860,36 +627,6 @@ extension type const _$TwitterEntitiesSchema(int _value) {
   // String Name Constants
   static const String nameUrls = 'urls';
   static const String nameUserMentions = 'user_mentions';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesUrls = [34, 117, 114, 108, 115, 34];
-  static const StaticKey staticKeyUrls = StaticKey(
-    nameUrls,
-    keyUrls,
-    wireNameBytesUrls,
-  );
-  static const List<int> wireNameBytesUserMentions = [
-    34,
-    117,
-    115,
-    101,
-    114,
-    95,
-    109,
-    101,
-    110,
-    116,
-    105,
-    111,
-    110,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyUserMentions = StaticKey(
-    nameUserMentions,
-    keyUserMentions,
-    wireNameBytesUserMentions,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyUrls = 0;
@@ -924,7 +661,7 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
   var userMentions = const <TwitterUserMention>[];
   var seen = _$TwitterEntitiesSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterEntitiesSchema.keyOptions)) {
       case _$TwitterEntitiesSchema.keyUrls:
         urls = _$TwitterUrlListFromDecoder(keyed.nestedDecoder());
@@ -952,7 +689,7 @@ TwitterEntities _$TwitterEntitiesFromDecoder(Decoder decoder) {
 List<TwitterEntities> _$TwitterEntitiesListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterEntities>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterEntitiesFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -963,13 +700,13 @@ List<TwitterEntities> _$TwitterEntitiesListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterEntitiesToEncoder(TwitterEntities instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeListKey(
-    _$TwitterEntitiesSchema.staticKeyUrls,
+  keyed.encodeList(
+    _$TwitterEntitiesSchema.nameUrls,
     instance.urls,
     _$TwitterUrlToEncoder,
   );
-  keyed.encodeListKey(
-    _$TwitterEntitiesSchema.staticKeyUserMentions,
+  keyed.encodeList(
+    _$TwitterEntitiesSchema.nameUserMentions,
     instance.userMentions,
     _$TwitterUserMentionToEncoder,
   );
@@ -1025,944 +762,6 @@ extension type const _$TwitterUserSchema(int _value) {
   static const String nameFollowing = 'following';
   static const String nameFollowRequestSent = 'follow_request_sent';
   static const String nameNotifications = 'notifications';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesIdStr = [
-    34,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
-    nameIdStr,
-    keyIdStr,
-    wireNameBytesIdStr,
-  );
-  static const List<int> wireNameBytesName = [34, 110, 97, 109, 101, 34];
-  static const StaticKey staticKeyName = StaticKey(
-    nameName,
-    keyName,
-    wireNameBytesName,
-  );
-  static const List<int> wireNameBytesScreenName = [
-    34,
-    115,
-    99,
-    114,
-    101,
-    101,
-    110,
-    95,
-    110,
-    97,
-    109,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyScreenName = StaticKey(
-    nameScreenName,
-    keyScreenName,
-    wireNameBytesScreenName,
-  );
-  static const List<int> wireNameBytesLocation = [
-    34,
-    108,
-    111,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyLocation = StaticKey(
-    nameLocation,
-    keyLocation,
-    wireNameBytesLocation,
-  );
-  static const List<int> wireNameBytesDescription = [
-    34,
-    100,
-    101,
-    115,
-    99,
-    114,
-    105,
-    112,
-    116,
-    105,
-    111,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyDescription = StaticKey(
-    nameDescription,
-    keyDescription,
-    wireNameBytesDescription,
-  );
-  static const List<int> wireNameBytesUrl = [34, 117, 114, 108, 34];
-  static const StaticKey staticKeyUrl = StaticKey(
-    nameUrl,
-    keyUrl,
-    wireNameBytesUrl,
-  );
-  static const List<int> wireNameBytesEntities = [
-    34,
-    101,
-    110,
-    116,
-    105,
-    116,
-    105,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyEntities = StaticKey(
-    nameEntities,
-    keyEntities,
-    wireNameBytesEntities,
-  );
-  static const List<int> wireNameBytesProtected = [
-    34,
-    112,
-    114,
-    111,
-    116,
-    101,
-    99,
-    116,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyProtected = StaticKey(
-    nameProtected,
-    keyProtected,
-    wireNameBytesProtected,
-  );
-  static const List<int> wireNameBytesFollowersCount = [
-    34,
-    102,
-    111,
-    108,
-    108,
-    111,
-    119,
-    101,
-    114,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyFollowersCount = StaticKey(
-    nameFollowersCount,
-    keyFollowersCount,
-    wireNameBytesFollowersCount,
-  );
-  static const List<int> wireNameBytesFriendsCount = [
-    34,
-    102,
-    114,
-    105,
-    101,
-    110,
-    100,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyFriendsCount = StaticKey(
-    nameFriendsCount,
-    keyFriendsCount,
-    wireNameBytesFriendsCount,
-  );
-  static const List<int> wireNameBytesListedCount = [
-    34,
-    108,
-    105,
-    115,
-    116,
-    101,
-    100,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyListedCount = StaticKey(
-    nameListedCount,
-    keyListedCount,
-    wireNameBytesListedCount,
-  );
-  static const List<int> wireNameBytesCreatedAt = [
-    34,
-    99,
-    114,
-    101,
-    97,
-    116,
-    101,
-    100,
-    95,
-    97,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyCreatedAt = StaticKey(
-    nameCreatedAt,
-    keyCreatedAt,
-    wireNameBytesCreatedAt,
-  );
-  static const List<int> wireNameBytesFavouritesCount = [
-    34,
-    102,
-    97,
-    118,
-    111,
-    117,
-    114,
-    105,
-    116,
-    101,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyFavouritesCount = StaticKey(
-    nameFavouritesCount,
-    keyFavouritesCount,
-    wireNameBytesFavouritesCount,
-  );
-  static const List<int> wireNameBytesUtcOffset = [
-    34,
-    117,
-    116,
-    99,
-    95,
-    111,
-    102,
-    102,
-    115,
-    101,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyUtcOffset = StaticKey(
-    nameUtcOffset,
-    keyUtcOffset,
-    wireNameBytesUtcOffset,
-  );
-  static const List<int> wireNameBytesTimeZone = [
-    34,
-    116,
-    105,
-    109,
-    101,
-    95,
-    122,
-    111,
-    110,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyTimeZone = StaticKey(
-    nameTimeZone,
-    keyTimeZone,
-    wireNameBytesTimeZone,
-  );
-  static const List<int> wireNameBytesGeoEnabled = [
-    34,
-    103,
-    101,
-    111,
-    95,
-    101,
-    110,
-    97,
-    98,
-    108,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyGeoEnabled = StaticKey(
-    nameGeoEnabled,
-    keyGeoEnabled,
-    wireNameBytesGeoEnabled,
-  );
-  static const List<int> wireNameBytesVerified = [
-    34,
-    118,
-    101,
-    114,
-    105,
-    102,
-    105,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyVerified = StaticKey(
-    nameVerified,
-    keyVerified,
-    wireNameBytesVerified,
-  );
-  static const List<int> wireNameBytesStatusesCount = [
-    34,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    101,
-    115,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyStatusesCount = StaticKey(
-    nameStatusesCount,
-    keyStatusesCount,
-    wireNameBytesStatusesCount,
-  );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34];
-  static const StaticKey staticKeyLang = StaticKey(
-    nameLang,
-    keyLang,
-    wireNameBytesLang,
-  );
-  static const List<int> wireNameBytesContributorsEnabled = [
-    34,
-    99,
-    111,
-    110,
-    116,
-    114,
-    105,
-    98,
-    117,
-    116,
-    111,
-    114,
-    115,
-    95,
-    101,
-    110,
-    97,
-    98,
-    108,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyContributorsEnabled = StaticKey(
-    nameContributorsEnabled,
-    keyContributorsEnabled,
-    wireNameBytesContributorsEnabled,
-  );
-  static const List<int> wireNameBytesIsTranslator = [
-    34,
-    105,
-    115,
-    95,
-    116,
-    114,
-    97,
-    110,
-    115,
-    108,
-    97,
-    116,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyIsTranslator = StaticKey(
-    nameIsTranslator,
-    keyIsTranslator,
-    wireNameBytesIsTranslator,
-  );
-  static const List<int> wireNameBytesIsTranslationEnabled = [
-    34,
-    105,
-    115,
-    95,
-    116,
-    114,
-    97,
-    110,
-    115,
-    108,
-    97,
-    116,
-    105,
-    111,
-    110,
-    95,
-    101,
-    110,
-    97,
-    98,
-    108,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyIsTranslationEnabled = StaticKey(
-    nameIsTranslationEnabled,
-    keyIsTranslationEnabled,
-    wireNameBytesIsTranslationEnabled,
-  );
-  static const List<int> wireNameBytesProfileBackgroundColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyProfileBackgroundColor = StaticKey(
-    nameProfileBackgroundColor,
-    keyProfileBackgroundColor,
-    wireNameBytesProfileBackgroundColor,
-  );
-  static const List<int> wireNameBytesProfileBackgroundImageUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyProfileBackgroundImageUrl = StaticKey(
-    nameProfileBackgroundImageUrl,
-    keyProfileBackgroundImageUrl,
-    wireNameBytesProfileBackgroundImageUrl,
-  );
-  static const List<int> wireNameBytesProfileBackgroundImageUrlHttps = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    95,
-    104,
-    116,
-    116,
-    112,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyProfileBackgroundImageUrlHttps = StaticKey(
-    nameProfileBackgroundImageUrlHttps,
-    keyProfileBackgroundImageUrlHttps,
-    wireNameBytesProfileBackgroundImageUrlHttps,
-  );
-  static const List<int> wireNameBytesProfileBackgroundTile = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    116,
-    105,
-    108,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyProfileBackgroundTile = StaticKey(
-    nameProfileBackgroundTile,
-    keyProfileBackgroundTile,
-    wireNameBytesProfileBackgroundTile,
-  );
-  static const List<int> wireNameBytesProfileImageUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyProfileImageUrl = StaticKey(
-    nameProfileImageUrl,
-    keyProfileImageUrl,
-    wireNameBytesProfileImageUrl,
-  );
-  static const List<int> wireNameBytesProfileImageUrlHttps = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    95,
-    117,
-    114,
-    108,
-    95,
-    104,
-    116,
-    116,
-    112,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyProfileImageUrlHttps = StaticKey(
-    nameProfileImageUrlHttps,
-    keyProfileImageUrlHttps,
-    wireNameBytesProfileImageUrlHttps,
-  );
-  static const List<int> wireNameBytesProfileBannerUrl = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    98,
-    97,
-    110,
-    110,
-    101,
-    114,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyProfileBannerUrl = StaticKey(
-    nameProfileBannerUrl,
-    keyProfileBannerUrl,
-    wireNameBytesProfileBannerUrl,
-  );
-  static const List<int> wireNameBytesProfileLinkColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    108,
-    105,
-    110,
-    107,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyProfileLinkColor = StaticKey(
-    nameProfileLinkColor,
-    keyProfileLinkColor,
-    wireNameBytesProfileLinkColor,
-  );
-  static const List<int> wireNameBytesProfileSidebarBorderColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    115,
-    105,
-    100,
-    101,
-    98,
-    97,
-    114,
-    95,
-    98,
-    111,
-    114,
-    100,
-    101,
-    114,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyProfileSidebarBorderColor = StaticKey(
-    nameProfileSidebarBorderColor,
-    keyProfileSidebarBorderColor,
-    wireNameBytesProfileSidebarBorderColor,
-  );
-  static const List<int> wireNameBytesProfileSidebarFillColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    115,
-    105,
-    100,
-    101,
-    98,
-    97,
-    114,
-    95,
-    102,
-    105,
-    108,
-    108,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyProfileSidebarFillColor = StaticKey(
-    nameProfileSidebarFillColor,
-    keyProfileSidebarFillColor,
-    wireNameBytesProfileSidebarFillColor,
-  );
-  static const List<int> wireNameBytesProfileTextColor = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    116,
-    101,
-    120,
-    116,
-    95,
-    99,
-    111,
-    108,
-    111,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyProfileTextColor = StaticKey(
-    nameProfileTextColor,
-    keyProfileTextColor,
-    wireNameBytesProfileTextColor,
-  );
-  static const List<int> wireNameBytesProfileUseBackgroundImage = [
-    34,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    117,
-    115,
-    101,
-    95,
-    98,
-    97,
-    99,
-    107,
-    103,
-    114,
-    111,
-    117,
-    110,
-    100,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyProfileUseBackgroundImage = StaticKey(
-    nameProfileUseBackgroundImage,
-    keyProfileUseBackgroundImage,
-    wireNameBytesProfileUseBackgroundImage,
-  );
-  static const List<int> wireNameBytesDefaultProfile = [
-    34,
-    100,
-    101,
-    102,
-    97,
-    117,
-    108,
-    116,
-    95,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyDefaultProfile = StaticKey(
-    nameDefaultProfile,
-    keyDefaultProfile,
-    wireNameBytesDefaultProfile,
-  );
-  static const List<int> wireNameBytesDefaultProfileImage = [
-    34,
-    100,
-    101,
-    102,
-    97,
-    117,
-    108,
-    116,
-    95,
-    112,
-    114,
-    111,
-    102,
-    105,
-    108,
-    101,
-    95,
-    105,
-    109,
-    97,
-    103,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyDefaultProfileImage = StaticKey(
-    nameDefaultProfileImage,
-    keyDefaultProfileImage,
-    wireNameBytesDefaultProfileImage,
-  );
-  static const List<int> wireNameBytesFollowing = [
-    34,
-    102,
-    111,
-    108,
-    108,
-    111,
-    119,
-    105,
-    110,
-    103,
-    34,
-  ];
-  static const StaticKey staticKeyFollowing = StaticKey(
-    nameFollowing,
-    keyFollowing,
-    wireNameBytesFollowing,
-  );
-  static const List<int> wireNameBytesFollowRequestSent = [
-    34,
-    102,
-    111,
-    108,
-    108,
-    111,
-    119,
-    95,
-    114,
-    101,
-    113,
-    117,
-    101,
-    115,
-    116,
-    95,
-    115,
-    101,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyFollowRequestSent = StaticKey(
-    nameFollowRequestSent,
-    keyFollowRequestSent,
-    wireNameBytesFollowRequestSent,
-  );
-  static const List<int> wireNameBytesNotifications = [
-    34,
-    110,
-    111,
-    116,
-    105,
-    102,
-    105,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyNotifications = StaticKey(
-    nameNotifications,
-    keyNotifications,
-    wireNameBytesNotifications,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyId = 0;
@@ -2157,7 +956,7 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
   var notifications = false;
   var seen = _$TwitterUserSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterUserSchema.keyOptions)) {
       case _$TwitterUserSchema.keyId:
         if ((seen._value & _$TwitterUserSchema.id._value) != 0) {
@@ -2383,7 +1182,7 @@ TwitterUser _$TwitterUserFromDecoder(Decoder decoder) {
 List<TwitterUser> _$TwitterUserListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterUser>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterUserFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -2394,157 +1193,121 @@ List<TwitterUser> _$TwitterUserListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterUserToEncoder(TwitterUser instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeIntKey(_$TwitterUserSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(_$TwitterUserSchema.staticKeyIdStr, instance.idStr);
-  keyed.encodeStringKey(_$TwitterUserSchema.staticKeyName, instance.name);
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyScreenName,
-    instance.screenName,
-  );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyLocation,
-    instance.location,
-  );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyDescription,
-    instance.description,
-  );
+  keyed.encodeInt(_$TwitterUserSchema.nameId, instance.id);
+  keyed.encodeString(_$TwitterUserSchema.nameIdStr, instance.idStr);
+  keyed.encodeString(_$TwitterUserSchema.nameName, instance.name);
+  keyed.encodeString(_$TwitterUserSchema.nameScreenName, instance.screenName);
+  keyed.encodeString(_$TwitterUserSchema.nameLocation, instance.location);
+  keyed.encodeString(_$TwitterUserSchema.nameDescription, instance.description);
   if (instance.url != null) {
-    keyed.encodeStringKey(_$TwitterUserSchema.staticKeyUrl, instance.url!);
+    keyed.encodeString(_$TwitterUserSchema.nameUrl, instance.url!);
   }
   if (instance.entities != null) {
-    keyed.encodeValueKey(
-      _$TwitterUserSchema.staticKeyEntities,
+    keyed.encodeValue(
+      _$TwitterUserSchema.nameEntities,
       instance.entities!,
       _$TwitterUserEntitiesToEncoder,
     );
   }
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyProtected,
-    instance.protected,
-  );
-  keyed.encodeIntKey(
-    _$TwitterUserSchema.staticKeyFollowersCount,
+  keyed.encodeBool(_$TwitterUserSchema.nameProtected, instance.protected);
+  keyed.encodeInt(
+    _$TwitterUserSchema.nameFollowersCount,
     instance.followersCount,
   );
-  keyed.encodeIntKey(
-    _$TwitterUserSchema.staticKeyFriendsCount,
-    instance.friendsCount,
-  );
-  keyed.encodeIntKey(
-    _$TwitterUserSchema.staticKeyListedCount,
-    instance.listedCount,
-  );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyCreatedAt,
-    instance.createdAt,
-  );
-  keyed.encodeIntKey(
-    _$TwitterUserSchema.staticKeyFavouritesCount,
+  keyed.encodeInt(_$TwitterUserSchema.nameFriendsCount, instance.friendsCount);
+  keyed.encodeInt(_$TwitterUserSchema.nameListedCount, instance.listedCount);
+  keyed.encodeString(_$TwitterUserSchema.nameCreatedAt, instance.createdAt);
+  keyed.encodeInt(
+    _$TwitterUserSchema.nameFavouritesCount,
     instance.favouritesCount,
   );
   if (instance.utcOffset != null) {
-    keyed.encodeIntKey(
-      _$TwitterUserSchema.staticKeyUtcOffset,
-      instance.utcOffset!,
-    );
+    keyed.encodeInt(_$TwitterUserSchema.nameUtcOffset, instance.utcOffset!);
   }
   if (instance.timeZone != null) {
-    keyed.encodeStringKey(
-      _$TwitterUserSchema.staticKeyTimeZone,
-      instance.timeZone!,
-    );
+    keyed.encodeString(_$TwitterUserSchema.nameTimeZone, instance.timeZone!);
   }
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyGeoEnabled,
-    instance.geoEnabled,
-  );
-  keyed.encodeBoolKey(_$TwitterUserSchema.staticKeyVerified, instance.verified);
-  keyed.encodeIntKey(
-    _$TwitterUserSchema.staticKeyStatusesCount,
+  keyed.encodeBool(_$TwitterUserSchema.nameGeoEnabled, instance.geoEnabled);
+  keyed.encodeBool(_$TwitterUserSchema.nameVerified, instance.verified);
+  keyed.encodeInt(
+    _$TwitterUserSchema.nameStatusesCount,
     instance.statusesCount,
   );
-  keyed.encodeStringKey(_$TwitterUserSchema.staticKeyLang, instance.lang);
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyContributorsEnabled,
+  keyed.encodeString(_$TwitterUserSchema.nameLang, instance.lang);
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameContributorsEnabled,
     instance.contributorsEnabled,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyIsTranslator,
-    instance.isTranslator,
-  );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyIsTranslationEnabled,
+  keyed.encodeBool(_$TwitterUserSchema.nameIsTranslator, instance.isTranslator);
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameIsTranslationEnabled,
     instance.isTranslationEnabled,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileBackgroundColor,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileBackgroundColor,
     instance.profileBackgroundColor,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileBackgroundImageUrl,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileBackgroundImageUrl,
     instance.profileBackgroundImageUrl,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileBackgroundImageUrlHttps,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileBackgroundImageUrlHttps,
     instance.profileBackgroundImageUrlHttps,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyProfileBackgroundTile,
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameProfileBackgroundTile,
     instance.profileBackgroundTile,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileImageUrl,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileImageUrl,
     instance.profileImageUrl,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileImageUrlHttps,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileImageUrlHttps,
     instance.profileImageUrlHttps,
   );
   if (instance.profileBannerUrl != null) {
-    keyed.encodeStringKey(
-      _$TwitterUserSchema.staticKeyProfileBannerUrl,
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileBannerUrl,
       instance.profileBannerUrl!,
     );
   }
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileLinkColor,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileLinkColor,
     instance.profileLinkColor,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileSidebarBorderColor,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileSidebarBorderColor,
     instance.profileSidebarBorderColor,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileSidebarFillColor,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileSidebarFillColor,
     instance.profileSidebarFillColor,
   );
-  keyed.encodeStringKey(
-    _$TwitterUserSchema.staticKeyProfileTextColor,
+  keyed.encodeString(
+    _$TwitterUserSchema.nameProfileTextColor,
     instance.profileTextColor,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyProfileUseBackgroundImage,
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameProfileUseBackgroundImage,
     instance.profileUseBackgroundImage,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyDefaultProfile,
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameDefaultProfile,
     instance.defaultProfile,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyDefaultProfileImage,
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameDefaultProfileImage,
     instance.defaultProfileImage,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyFollowing,
-    instance.following,
-  );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyFollowRequestSent,
+  keyed.encodeBool(_$TwitterUserSchema.nameFollowing, instance.following);
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameFollowRequestSent,
     instance.followRequestSent,
   );
-  keyed.encodeBoolKey(
-    _$TwitterUserSchema.staticKeyNotifications,
+  keyed.encodeBool(
+    _$TwitterUserSchema.nameNotifications,
     instance.notifications,
   );
 }
@@ -2575,422 +1338,6 @@ extension type const _$TwitterStatusSchema(int _value) {
   static const String namePossiblySensitive = 'possibly_sensitive';
   static const String nameLang = 'lang';
   static const String nameRetweetedStatus = 'retweeted_status';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesMetadata = [
-    34,
-    109,
-    101,
-    116,
-    97,
-    100,
-    97,
-    116,
-    97,
-    34,
-  ];
-  static const StaticKey staticKeyMetadata = StaticKey(
-    nameMetadata,
-    keyMetadata,
-    wireNameBytesMetadata,
-  );
-  static const List<int> wireNameBytesCreatedAt = [
-    34,
-    99,
-    114,
-    101,
-    97,
-    116,
-    101,
-    100,
-    95,
-    97,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyCreatedAt = StaticKey(
-    nameCreatedAt,
-    keyCreatedAt,
-    wireNameBytesCreatedAt,
-  );
-  static const List<int> wireNameBytesId = [34, 105, 100, 34];
-  static const StaticKey staticKeyId = StaticKey(
-    nameId,
-    keyId,
-    wireNameBytesId,
-  );
-  static const List<int> wireNameBytesIdStr = [
-    34,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyIdStr = StaticKey(
-    nameIdStr,
-    keyIdStr,
-    wireNameBytesIdStr,
-  );
-  static const List<int> wireNameBytesText = [34, 116, 101, 120, 116, 34];
-  static const StaticKey staticKeyText = StaticKey(
-    nameText,
-    keyText,
-    wireNameBytesText,
-  );
-  static const List<int> wireNameBytesSource = [
-    34,
-    115,
-    111,
-    117,
-    114,
-    99,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeySource = StaticKey(
-    nameSource,
-    keySource,
-    wireNameBytesSource,
-  );
-  static const List<int> wireNameBytesTruncated = [
-    34,
-    116,
-    114,
-    117,
-    110,
-    99,
-    97,
-    116,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyTruncated = StaticKey(
-    nameTruncated,
-    keyTruncated,
-    wireNameBytesTruncated,
-  );
-  static const List<int> wireNameBytesInReplyToStatusId = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    95,
-    105,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyInReplyToStatusId = StaticKey(
-    nameInReplyToStatusId,
-    keyInReplyToStatusId,
-    wireNameBytesInReplyToStatusId,
-  );
-  static const List<int> wireNameBytesInReplyToStatusIdStr = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyInReplyToStatusIdStr = StaticKey(
-    nameInReplyToStatusIdStr,
-    keyInReplyToStatusIdStr,
-    wireNameBytesInReplyToStatusIdStr,
-  );
-  static const List<int> wireNameBytesInReplyToUserId = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    117,
-    115,
-    101,
-    114,
-    95,
-    105,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyInReplyToUserId = StaticKey(
-    nameInReplyToUserId,
-    keyInReplyToUserId,
-    wireNameBytesInReplyToUserId,
-  );
-  static const List<int> wireNameBytesInReplyToUserIdStr = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    117,
-    115,
-    101,
-    114,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyInReplyToUserIdStr = StaticKey(
-    nameInReplyToUserIdStr,
-    keyInReplyToUserIdStr,
-    wireNameBytesInReplyToUserIdStr,
-  );
-  static const List<int> wireNameBytesInReplyToScreenName = [
-    34,
-    105,
-    110,
-    95,
-    114,
-    101,
-    112,
-    108,
-    121,
-    95,
-    116,
-    111,
-    95,
-    115,
-    99,
-    114,
-    101,
-    101,
-    110,
-    95,
-    110,
-    97,
-    109,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyInReplyToScreenName = StaticKey(
-    nameInReplyToScreenName,
-    keyInReplyToScreenName,
-    wireNameBytesInReplyToScreenName,
-  );
-  static const List<int> wireNameBytesUser = [34, 117, 115, 101, 114, 34];
-  static const StaticKey staticKeyUser = StaticKey(
-    nameUser,
-    keyUser,
-    wireNameBytesUser,
-  );
-  static const List<int> wireNameBytesRetweetCount = [
-    34,
-    114,
-    101,
-    116,
-    119,
-    101,
-    101,
-    116,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyRetweetCount = StaticKey(
-    nameRetweetCount,
-    keyRetweetCount,
-    wireNameBytesRetweetCount,
-  );
-  static const List<int> wireNameBytesFavoriteCount = [
-    34,
-    102,
-    97,
-    118,
-    111,
-    114,
-    105,
-    116,
-    101,
-    95,
-    99,
-    111,
-    117,
-    110,
-    116,
-    34,
-  ];
-  static const StaticKey staticKeyFavoriteCount = StaticKey(
-    nameFavoriteCount,
-    keyFavoriteCount,
-    wireNameBytesFavoriteCount,
-  );
-  static const List<int> wireNameBytesEntities = [
-    34,
-    101,
-    110,
-    116,
-    105,
-    116,
-    105,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyEntities = StaticKey(
-    nameEntities,
-    keyEntities,
-    wireNameBytesEntities,
-  );
-  static const List<int> wireNameBytesFavorited = [
-    34,
-    102,
-    97,
-    118,
-    111,
-    114,
-    105,
-    116,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyFavorited = StaticKey(
-    nameFavorited,
-    keyFavorited,
-    wireNameBytesFavorited,
-  );
-  static const List<int> wireNameBytesRetweeted = [
-    34,
-    114,
-    101,
-    116,
-    119,
-    101,
-    101,
-    116,
-    101,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyRetweeted = StaticKey(
-    nameRetweeted,
-    keyRetweeted,
-    wireNameBytesRetweeted,
-  );
-  static const List<int> wireNameBytesPossiblySensitive = [
-    34,
-    112,
-    111,
-    115,
-    115,
-    105,
-    98,
-    108,
-    121,
-    95,
-    115,
-    101,
-    110,
-    115,
-    105,
-    116,
-    105,
-    118,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyPossiblySensitive = StaticKey(
-    namePossiblySensitive,
-    keyPossiblySensitive,
-    wireNameBytesPossiblySensitive,
-  );
-  static const List<int> wireNameBytesLang = [34, 108, 97, 110, 103, 34];
-  static const StaticKey staticKeyLang = StaticKey(
-    nameLang,
-    keyLang,
-    wireNameBytesLang,
-  );
-  static const List<int> wireNameBytesRetweetedStatus = [
-    34,
-    114,
-    101,
-    116,
-    119,
-    101,
-    101,
-    116,
-    101,
-    100,
-    95,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyRetweetedStatus = StaticKey(
-    nameRetweetedStatus,
-    keyRetweetedStatus,
-    wireNameBytesRetweetedStatus,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyMetadata = 0;
@@ -3126,7 +1473,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
   TwitterStatus? retweetedStatus;
   var seen = _$TwitterStatusSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterStatusSchema.keyOptions)) {
       case _$TwitterStatusSchema.keyMetadata:
         if (keyed.isNextNull()) {
@@ -3301,7 +1648,7 @@ TwitterStatus _$TwitterStatusFromDecoder(Decoder decoder) {
 List<TwitterStatus> _$TwitterStatusListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterStatus>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterStatusFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -3313,94 +1660,82 @@ List<TwitterStatus> _$TwitterStatusListFromDecoder(Decoder decoder) {
 void _$TwitterStatusToEncoder(TwitterStatus instance, Encoder encoder) {
   final keyed = encoder.keyed();
   if (instance.metadata != null) {
-    keyed.encodeValueKey(
-      _$TwitterStatusSchema.staticKeyMetadata,
+    keyed.encodeValue(
+      _$TwitterStatusSchema.nameMetadata,
       instance.metadata!,
       _$TwitterMetadataToEncoder,
     );
   }
-  keyed.encodeStringKey(
-    _$TwitterStatusSchema.staticKeyCreatedAt,
-    instance.createdAt,
-  );
-  keyed.encodeIntKey(_$TwitterStatusSchema.staticKeyId, instance.id);
-  keyed.encodeStringKey(_$TwitterStatusSchema.staticKeyIdStr, instance.idStr);
-  keyed.encodeStringKey(_$TwitterStatusSchema.staticKeyText, instance.text);
-  keyed.encodeStringKey(_$TwitterStatusSchema.staticKeySource, instance.source);
-  keyed.encodeBoolKey(
-    _$TwitterStatusSchema.staticKeyTruncated,
-    instance.truncated,
-  );
+  keyed.encodeString(_$TwitterStatusSchema.nameCreatedAt, instance.createdAt);
+  keyed.encodeInt(_$TwitterStatusSchema.nameId, instance.id);
+  keyed.encodeString(_$TwitterStatusSchema.nameIdStr, instance.idStr);
+  keyed.encodeString(_$TwitterStatusSchema.nameText, instance.text);
+  keyed.encodeString(_$TwitterStatusSchema.nameSource, instance.source);
+  keyed.encodeBool(_$TwitterStatusSchema.nameTruncated, instance.truncated);
   if (instance.inReplyToStatusId != null) {
-    keyed.encodeIntKey(
-      _$TwitterStatusSchema.staticKeyInReplyToStatusId,
+    keyed.encodeInt(
+      _$TwitterStatusSchema.nameInReplyToStatusId,
       instance.inReplyToStatusId!,
     );
   }
   if (instance.inReplyToStatusIdStr != null) {
-    keyed.encodeStringKey(
-      _$TwitterStatusSchema.staticKeyInReplyToStatusIdStr,
+    keyed.encodeString(
+      _$TwitterStatusSchema.nameInReplyToStatusIdStr,
       instance.inReplyToStatusIdStr!,
     );
   }
   if (instance.inReplyToUserId != null) {
-    keyed.encodeIntKey(
-      _$TwitterStatusSchema.staticKeyInReplyToUserId,
+    keyed.encodeInt(
+      _$TwitterStatusSchema.nameInReplyToUserId,
       instance.inReplyToUserId!,
     );
   }
   if (instance.inReplyToUserIdStr != null) {
-    keyed.encodeStringKey(
-      _$TwitterStatusSchema.staticKeyInReplyToUserIdStr,
+    keyed.encodeString(
+      _$TwitterStatusSchema.nameInReplyToUserIdStr,
       instance.inReplyToUserIdStr!,
     );
   }
   if (instance.inReplyToScreenName != null) {
-    keyed.encodeStringKey(
-      _$TwitterStatusSchema.staticKeyInReplyToScreenName,
+    keyed.encodeString(
+      _$TwitterStatusSchema.nameInReplyToScreenName,
       instance.inReplyToScreenName!,
     );
   }
   if (instance.user != null) {
-    keyed.encodeValueKey(
-      _$TwitterStatusSchema.staticKeyUser,
+    keyed.encodeValue(
+      _$TwitterStatusSchema.nameUser,
       instance.user!,
       _$TwitterUserToEncoder,
     );
   }
-  keyed.encodeIntKey(
-    _$TwitterStatusSchema.staticKeyRetweetCount,
+  keyed.encodeInt(
+    _$TwitterStatusSchema.nameRetweetCount,
     instance.retweetCount,
   );
-  keyed.encodeIntKey(
-    _$TwitterStatusSchema.staticKeyFavoriteCount,
+  keyed.encodeInt(
+    _$TwitterStatusSchema.nameFavoriteCount,
     instance.favoriteCount,
   );
   if (instance.entities != null) {
-    keyed.encodeValueKey(
-      _$TwitterStatusSchema.staticKeyEntities,
+    keyed.encodeValue(
+      _$TwitterStatusSchema.nameEntities,
       instance.entities!,
       _$TwitterEntitiesToEncoder,
     );
   }
-  keyed.encodeBoolKey(
-    _$TwitterStatusSchema.staticKeyFavorited,
-    instance.favorited,
-  );
-  keyed.encodeBoolKey(
-    _$TwitterStatusSchema.staticKeyRetweeted,
-    instance.retweeted,
-  );
+  keyed.encodeBool(_$TwitterStatusSchema.nameFavorited, instance.favorited);
+  keyed.encodeBool(_$TwitterStatusSchema.nameRetweeted, instance.retweeted);
   if (instance.possiblySensitive != null) {
-    keyed.encodeBoolKey(
-      _$TwitterStatusSchema.staticKeyPossiblySensitive,
+    keyed.encodeBool(
+      _$TwitterStatusSchema.namePossiblySensitive,
       instance.possiblySensitive!,
     );
   }
-  keyed.encodeStringKey(_$TwitterStatusSchema.staticKeyLang, instance.lang);
+  keyed.encodeString(_$TwitterStatusSchema.nameLang, instance.lang);
   if (instance.retweetedStatus != null) {
-    keyed.encodeValueKey(
-      _$TwitterStatusSchema.staticKeyRetweetedStatus,
+    keyed.encodeValue(
+      _$TwitterStatusSchema.nameRetweetedStatus,
       instance.retweetedStatus!,
       _$TwitterStatusToEncoder,
     );
@@ -3421,154 +1756,6 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
   static const String nameCount = 'count';
   static const String nameSinceId = 'since_id';
   static const String nameSinceIdStr = 'since_id_str';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesCompletedIn = [
-    34,
-    99,
-    111,
-    109,
-    112,
-    108,
-    101,
-    116,
-    101,
-    100,
-    95,
-    105,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyCompletedIn = StaticKey(
-    nameCompletedIn,
-    keyCompletedIn,
-    wireNameBytesCompletedIn,
-  );
-  static const List<int> wireNameBytesMaxId = [
-    34,
-    109,
-    97,
-    120,
-    95,
-    105,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeyMaxId = StaticKey(
-    nameMaxId,
-    keyMaxId,
-    wireNameBytesMaxId,
-  );
-  static const List<int> wireNameBytesMaxIdStr = [
-    34,
-    109,
-    97,
-    120,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeyMaxIdStr = StaticKey(
-    nameMaxIdStr,
-    keyMaxIdStr,
-    wireNameBytesMaxIdStr,
-  );
-  static const List<int> wireNameBytesNextResults = [
-    34,
-    110,
-    101,
-    120,
-    116,
-    95,
-    114,
-    101,
-    115,
-    117,
-    108,
-    116,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyNextResults = StaticKey(
-    nameNextResults,
-    keyNextResults,
-    wireNameBytesNextResults,
-  );
-  static const List<int> wireNameBytesQuery = [34, 113, 117, 101, 114, 121, 34];
-  static const StaticKey staticKeyQuery = StaticKey(
-    nameQuery,
-    keyQuery,
-    wireNameBytesQuery,
-  );
-  static const List<int> wireNameBytesRefreshUrl = [
-    34,
-    114,
-    101,
-    102,
-    114,
-    101,
-    115,
-    104,
-    95,
-    117,
-    114,
-    108,
-    34,
-  ];
-  static const StaticKey staticKeyRefreshUrl = StaticKey(
-    nameRefreshUrl,
-    keyRefreshUrl,
-    wireNameBytesRefreshUrl,
-  );
-  static const List<int> wireNameBytesCount = [34, 99, 111, 117, 110, 116, 34];
-  static const StaticKey staticKeyCount = StaticKey(
-    nameCount,
-    keyCount,
-    wireNameBytesCount,
-  );
-  static const List<int> wireNameBytesSinceId = [
-    34,
-    115,
-    105,
-    110,
-    99,
-    101,
-    95,
-    105,
-    100,
-    34,
-  ];
-  static const StaticKey staticKeySinceId = StaticKey(
-    nameSinceId,
-    keySinceId,
-    wireNameBytesSinceId,
-  );
-  static const List<int> wireNameBytesSinceIdStr = [
-    34,
-    115,
-    105,
-    110,
-    99,
-    101,
-    95,
-    105,
-    100,
-    95,
-    115,
-    116,
-    114,
-    34,
-  ];
-  static const StaticKey staticKeySinceIdStr = StaticKey(
-    nameSinceIdStr,
-    keySinceIdStr,
-    wireNameBytesSinceIdStr,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyCompletedIn = 0;
@@ -3676,7 +1863,7 @@ TwitterSearchMetadata _$TwitterSearchMetadataFromDecoder(Decoder decoder) {
   var sinceIdStr = '0';
   var seen = _$TwitterSearchMetadataSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterSearchMetadataSchema.keyOptions)) {
       case _$TwitterSearchMetadataSchema.keyCompletedIn:
         if ((seen._value & _$TwitterSearchMetadataSchema.completedIn._value) !=
@@ -3757,7 +1944,7 @@ List<TwitterSearchMetadata> _$TwitterSearchMetadataListFromDecoder(
 ) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterSearchMetadata>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterSearchMetadataFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -3771,40 +1958,28 @@ void _$TwitterSearchMetadataToEncoder(
   Encoder encoder,
 ) {
   final keyed = encoder.keyed();
-  keyed.encodeDoubleKey(
-    _$TwitterSearchMetadataSchema.staticKeyCompletedIn,
+  keyed.encodeDouble(
+    _$TwitterSearchMetadataSchema.nameCompletedIn,
     instance.completedIn,
   );
-  keyed.encodeIntKey(
-    _$TwitterSearchMetadataSchema.staticKeyMaxId,
-    instance.maxId,
-  );
-  keyed.encodeStringKey(
-    _$TwitterSearchMetadataSchema.staticKeyMaxIdStr,
+  keyed.encodeInt(_$TwitterSearchMetadataSchema.nameMaxId, instance.maxId);
+  keyed.encodeString(
+    _$TwitterSearchMetadataSchema.nameMaxIdStr,
     instance.maxIdStr,
   );
-  keyed.encodeStringKey(
-    _$TwitterSearchMetadataSchema.staticKeyNextResults,
+  keyed.encodeString(
+    _$TwitterSearchMetadataSchema.nameNextResults,
     instance.nextResults,
   );
-  keyed.encodeStringKey(
-    _$TwitterSearchMetadataSchema.staticKeyQuery,
-    instance.query,
-  );
-  keyed.encodeStringKey(
-    _$TwitterSearchMetadataSchema.staticKeyRefreshUrl,
+  keyed.encodeString(_$TwitterSearchMetadataSchema.nameQuery, instance.query);
+  keyed.encodeString(
+    _$TwitterSearchMetadataSchema.nameRefreshUrl,
     instance.refreshUrl,
   );
-  keyed.encodeIntKey(
-    _$TwitterSearchMetadataSchema.staticKeyCount,
-    instance.count,
-  );
-  keyed.encodeIntKey(
-    _$TwitterSearchMetadataSchema.staticKeySinceId,
-    instance.sinceId,
-  );
-  keyed.encodeStringKey(
-    _$TwitterSearchMetadataSchema.staticKeySinceIdStr,
+  keyed.encodeInt(_$TwitterSearchMetadataSchema.nameCount, instance.count);
+  keyed.encodeInt(_$TwitterSearchMetadataSchema.nameSinceId, instance.sinceId);
+  keyed.encodeString(
+    _$TwitterSearchMetadataSchema.nameSinceIdStr,
     instance.sinceIdStr,
   );
 }
@@ -3816,49 +1991,6 @@ extension type const _$TwitterResponseSchema(int _value) {
   // String Name Constants
   static const String nameStatuses = 'statuses';
   static const String nameSearchMetadata = 'search_metadata';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesStatuses = [
-    34,
-    115,
-    116,
-    97,
-    116,
-    117,
-    115,
-    101,
-    115,
-    34,
-  ];
-  static const StaticKey staticKeyStatuses = StaticKey(
-    nameStatuses,
-    keyStatuses,
-    wireNameBytesStatuses,
-  );
-  static const List<int> wireNameBytesSearchMetadata = [
-    34,
-    115,
-    101,
-    97,
-    114,
-    99,
-    104,
-    95,
-    109,
-    101,
-    116,
-    97,
-    100,
-    97,
-    116,
-    97,
-    34,
-  ];
-  static const StaticKey staticKeySearchMetadata = StaticKey(
-    nameSearchMetadata,
-    keySearchMetadata,
-    wireNameBytesSearchMetadata,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyStatuses = 0;
@@ -3917,7 +2049,7 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
   TwitterSearchMetadata? searchMetadata;
   var seen = _$TwitterResponseSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$TwitterResponseSchema.keyOptions)) {
       case _$TwitterResponseSchema.keyStatuses:
         statuses = _$TwitterStatusListFromDecoder(keyed.nestedDecoder());
@@ -3950,7 +2082,7 @@ TwitterResponse _$TwitterResponseFromDecoder(Decoder decoder) {
 List<TwitterResponse> _$TwitterResponseListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <TwitterResponse>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$TwitterResponseFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -3961,13 +2093,13 @@ List<TwitterResponse> _$TwitterResponseListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$TwitterResponseToEncoder(TwitterResponse instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeListKey(
-    _$TwitterResponseSchema.staticKeyStatuses,
+  keyed.encodeList(
+    _$TwitterResponseSchema.nameStatuses,
     instance.statuses,
     _$TwitterStatusToEncoder,
   );
-  keyed.encodeValueKey(
-    _$TwitterResponseSchema.staticKeySearchMetadata,
+  keyed.encodeValue(
+    _$TwitterResponseSchema.nameSearchMetadata,
     instance.searchMetadata,
     _$TwitterSearchMetadataToEncoder,
   );

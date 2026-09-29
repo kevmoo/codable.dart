@@ -180,6 +180,16 @@ final class AdaptiveJsonTokenWriter implements JsonTokenWriter {
     }
     _topState = 1;
     final len = name.length;
+    if (len <= 32 && isSimpleAsciiString(name)) {
+      _ensureCapacity(len + 3);
+      _buffer[_cursor++] = 0x22; // '"'
+      for (var i = 0; i < len; i++) {
+        _buffer[_cursor++] = name.codeUnitAt(i);
+      }
+      _buffer[_cursor++] = 0x22; // '"'
+      _buffer[_cursor++] = 0x3A; // ':'
+      return;
+    }
     _ensureCapacity(len * 6 + 3);
     final written = writeStringToBuffer(name, _buffer, _cursor);
     _cursor += written;

@@ -4,35 +4,12 @@
 
 part of 'tuple_example.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for CoordinatePair
 // =============================================================================
 extension type const _$CoordinatePairSchema(int _value) {
   // String Name Constants
   static const String nameLocation = 'location';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesLocation = [
-    34,
-    108,
-    111,
-    99,
-    97,
-    116,
-    105,
-    111,
-    110,
-    34,
-  ];
-  static const StaticKey staticKeyLocation = StaticKey(
-    nameLocation,
-    keyLocation,
-    wireNameBytesLocation,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyLocation = 0;
@@ -64,7 +41,7 @@ CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
   Float64List? location;
   var seen = _$CoordinatePairSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CoordinatePairSchema.keyOptions)) {
       case _$CoordinatePairSchema.keyLocation:
         if (keyed.isNextNull()) {
@@ -92,7 +69,7 @@ CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
 List<CoordinatePair> _$CoordinatePairListFromDecoder(Decoder decoder) {
   final unkeyed = decoder.unkeyed();
   final list = <CoordinatePair>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CoordinatePairFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -104,10 +81,9 @@ List<CoordinatePair> _$CoordinatePairListFromDecoder(Decoder decoder) {
 void _$CoordinatePairToEncoder(CoordinatePair instance, Encoder encoder) {
   final keyed = encoder.keyed();
   if (instance.location != null) {
-    keyed.encodeListKey<double>(
-      _$CoordinatePairSchema.staticKeyLocation,
-      List.generate(2, (i) => instance.location![i]),
-      (v, e) => e.singleValue().encodeDouble(v),
+    keyed.encodeDoubleList(
+      _$CoordinatePairSchema.nameLocation,
+      instance.location!,
     );
   }
 }

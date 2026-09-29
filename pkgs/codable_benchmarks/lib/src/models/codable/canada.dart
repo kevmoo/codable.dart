@@ -6,16 +6,18 @@ import 'package:codable/codable.dart';
 
 part 'canada.g.dart';
 
-final class CanadaCoordinatesDecoder {
+final class CanadaCoordinatesDecoder
+    implements CustomCodable<List<List<List<double>>>> {
   const CanadaCoordinatesDecoder();
 
+  @override
   List<List<List<double>>> decode(Decoder decoder) {
     final unkeyed = decoder.unkeyed();
     final coords = <List<List<double>>>[];
-    while (unkeyed.hasNext()) {
+    while (unkeyed.moveNext()) {
       final poly = <List<double>>[];
       final u1 = unkeyed.decodeElement((d1) => d1.unkeyed());
-      while (u1.hasNext()) {
+      while (u1.moveNext()) {
         poly.add(u1.decodeDoubleList());
       }
       coords.add(poly);
@@ -23,7 +25,8 @@ final class CanadaCoordinatesDecoder {
     return coords;
   }
 
-  void encodeToEncoder(List<List<List<double>>> coordinates, Encoder encoder) {
+  @override
+  void encode(List<List<List<double>>> coordinates, Encoder encoder) {
     final unkeyed = encoder.unkeyed();
     for (final poly in coordinates) {
       unkeyed.encodeElement(poly, (polyList, e1) {

@@ -189,14 +189,14 @@ void _consumeJsonValue(JsonTokenReader reader, [int depth = 0]) {
   switch (token) {
     case JsonTokenType.beginObject:
       reader.beginObject();
-      while (reader.hasNext()) {
+      while (reader.moveNext()) {
         reader.nextName();
         _consumeJsonValue(reader, depth + 1);
       }
       reader.endObject();
     case JsonTokenType.beginArray:
       reader.beginArray();
-      while (reader.hasNext()) {
+      while (reader.moveNext()) {
         _consumeJsonValue(reader, depth + 1);
       }
       reader.endArray();

@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'package:codable/codable_json.dart';
 
 /// Demonstrates high-throughput, zero-allocation streaming deserialization
-/// directly over UTF-8 bytes without intermediate Map DOM allocations.
+/// directly over UTF-8 bytes without intermediate Map object tree allocations.
 class CoordinateTelemetry {
   final double lat;
   final double lon;
@@ -19,7 +19,7 @@ class CoordinateTelemetry {
     double? lat;
     double? lon;
 
-    while (keyed.hasNextKey()) {
+    while (keyed.moveNextKey()) {
       final key = keyed.nextKey();
       if (key == 'lat') {
         lat = keyed.readDouble();
@@ -49,7 +49,7 @@ void main() {
   final unkeyed = decoder.unkeyed();
 
   final points = <CoordinateTelemetry>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     points.add(unkeyed.decodeElement(CoordinateTelemetry.decode));
   }
 

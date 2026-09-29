@@ -4,10 +4,6 @@
 
 part of 'coordinate.dart';
 
-// **************************************************************************
-// CodableGenerator
-// **************************************************************************
-
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -17,43 +13,6 @@ extension type const _$CoordinateSchema(int _value) {
   static const String aliasLatitudeLat = 'lat';
   static const String nameLongitude = 'longitude';
   static const String aliasLongitudeLon = 'lon';
-
-  // Pre-encoded UTF-8 Wire Name Bytes and StaticKeys
-  static const List<int> wireNameBytesLatitude = [
-    34,
-    108,
-    97,
-    116,
-    105,
-    116,
-    117,
-    100,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyLatitude = StaticKey(
-    nameLatitude,
-    keyLatitude,
-    wireNameBytesLatitude,
-  );
-  static const List<int> wireNameBytesLongitude = [
-    34,
-    108,
-    111,
-    110,
-    103,
-    105,
-    116,
-    117,
-    100,
-    101,
-    34,
-  ];
-  static const StaticKey staticKeyLongitude = StaticKey(
-    nameLongitude,
-    keyLongitude,
-    wireNameBytesLongitude,
-  );
 
   // Key Indices for selectKeyIndex()
   static const int keyLatitude = 0;
@@ -119,7 +78,7 @@ Coordinate _$CoordinateFromDecoder(Decoder decoder) {
   double? longitude;
   var seen = _$CoordinateSchema.none;
 
-  while (keyed.hasNextKey()) {
+  while (keyed.moveNextKey()) {
     switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
       case _$CoordinateSchema.keyLatitude:
       case _$CoordinateSchema.aliasKeyLatitudeLat:
@@ -171,7 +130,7 @@ List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
 
   final unkeyed = decoder.unkeyed();
   final list = <Coordinate>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     list.add(_$CoordinateFromDecoder(unkeyed.nestedDecoder()));
   }
   return list;
@@ -182,12 +141,6 @@ List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
 // =============================================================================
 void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
   final keyed = encoder.keyed();
-  keyed.encodeDoubleKey(
-    _$CoordinateSchema.staticKeyLatitude,
-    instance.latitude,
-  );
-  keyed.encodeDoubleKey(
-    _$CoordinateSchema.staticKeyLongitude,
-    instance.longitude,
-  );
+  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
 }

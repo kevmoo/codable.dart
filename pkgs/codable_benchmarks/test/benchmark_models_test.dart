@@ -26,7 +26,7 @@ void main() {
         final decoder = JsonCodableDecoder.fromBytes(bytes);
         final unkeyed = decoder.unkeyed();
         final coordinates = <Coordinate>[];
-        while (unkeyed.hasNext()) {
+        while (unkeyed.moveNext()) {
           coordinates.add(Coordinate.decode(decoder));
         }
 

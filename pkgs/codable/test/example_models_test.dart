@@ -122,9 +122,9 @@ void main() {
       check(example.nestedValues[2]).equals('cherry');
     });
 
-    test('TupleExample: CoordinatePair decoding', () {
+    test('TupleExample: CoordinatePair decoding and encoding', () {
       final json = Uint8List.fromList(
-        utf8.encode('{"location": [37.7749, -122.4194]}'),
+        utf8.encode('{"location":[37.7749,-122.4194]}'),
       );
       final decoder = JsonCodableDecoder.fromBytes(json);
       final pair = CoordinatePair.decode(decoder);
@@ -132,6 +132,9 @@ void main() {
       check(pair.location).isNotNull();
       check(pair.location![0]).equals(37.7749);
       check(pair.location![1]).equals(-122.4194);
+
+      final encoded = utf8.decode(JsonCodableEncoder.toBytes(pair.encode));
+      check(encoded).equals('{"location":[37.7749,-122.4194]}');
     });
 
     test('PolymorphicExample: Vehicle hierarchy resolution', () {
@@ -147,7 +150,7 @@ void main() {
       final unkeyed = decoder.unkeyed();
 
       final vehicles = <Vehicle>[];
-      while (unkeyed.hasNext()) {
+      while (unkeyed.moveNext()) {
         vehicles.add(unkeyed.decodeElement(Vehicle.decode));
       }
 

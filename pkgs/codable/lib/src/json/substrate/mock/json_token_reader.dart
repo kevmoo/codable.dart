@@ -24,8 +24,9 @@ abstract interface class JsonTokenReader {
   /// Advances past the closing `]` of an array.
   void endArray();
 
-  /// Whether the current object or array has more elements.
-  bool hasNext();
+  /// Advances to the next element or property in the current array or object,
+  /// or returns `false` if the end of the container is reached.
+  bool moveNext();
 
   /// Reads the next object property name as a [String].
   String nextName();
@@ -459,7 +460,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
   }
 
   @override
-  bool hasNext() {
+  bool moveNext() {
     _skipWs();
     if (_offset >= _bytes.length) {
       if (_stackLength > 0 && _topState == 3) {
@@ -743,14 +744,14 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     final b = _bytes[_offset];
     if (b == 123) {
       beginObject();
-      while (hasNext()) {
+      while (moveNext()) {
         nextName();
         skipValue();
       }
       endObject();
     } else if (b == 91) {
       beginArray();
-      while (hasNext()) {
+      while (moveNext()) {
         skipValue();
       }
       endArray();

@@ -10,13 +10,15 @@ import 'package:codable/codable_json.dart';
 
 part 'basic_example.g.dart';
 
-final class DateTimeIsoDecoder {
+final class DateTimeIsoDecoder implements CustomCodable<DateTime> {
   const DateTimeIsoDecoder();
 
+  @override
   DateTime decode(Decoder decoder) =>
       DateTime.parse(decoder.singleValue().readString());
 
-  void encodeToEncoder(DateTime value, Encoder encoder) =>
+  @override
+  void encode(DateTime value, Encoder encoder) =>
       encoder.singleValue().encodeString(value.toIso8601String());
 }
 

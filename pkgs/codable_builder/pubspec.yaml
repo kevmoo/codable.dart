@@ -1,6 +1,6 @@
 name: codable_builder
 description: High-performance single-pass streaming serializer code builder for package:codable.
-version: 0.1.0-dev
+version: 0.1.0-wip
 publish_to: none
 
 environment:
@@ -11,7 +11,7 @@ resolution: workspace
 dependencies:
   analyzer: ^7.2.0
   build: ^2.4.1
-  codable: ^0.1.0-dev
+  codable: ^2.0.0-wip
   source_gen: ^2.0.0
 
 dev_dependencies:

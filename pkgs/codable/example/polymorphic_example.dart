@@ -23,7 +23,7 @@ sealed class Vehicle implements Encodable {
     int? doors;
     bool? hasBell;
 
-    while (keyed.hasNextKey()) {
+    while (keyed.moveNextKey()) {
       final key = keyed.nextKey();
       switch (key) {
         case 'type':
@@ -98,7 +98,7 @@ void main() {
   final unkeyed = decoder.unkeyed();
 
   final vehicles = <Vehicle>[];
-  while (unkeyed.hasNext()) {
+  while (unkeyed.moveNext()) {
     vehicles.add(unkeyed.decodeElement(Vehicle.decode));
   }
 

@@ -96,7 +96,7 @@ void main() {
         check(output).contains(
           'final keyed = decoder.keyed(options: _\$PointSchema.keyOptions);',
         );
-        check(output).contains('while (keyed.hasNextKey())');
+        check(output).contains('while (keyed.moveNextKey())');
         check(
           output,
         ).contains('switch (keyed.selectKeyIndex(_\$PointSchema.keyOptions))');
@@ -115,12 +115,10 @@ void main() {
           output,
         ).contains('void _\$PointToEncoder(Point instance, Encoder encoder)');
         check(output).contains('final keyed = encoder.keyed();');
-        check(output).contains(
-          'keyed.encodeDoubleKey(_\$PointSchema.staticKeyX, instance.x);',
-        );
-        check(output).contains(
-          'keyed.encodeDoubleKey(_\$PointSchema.staticKeyY, instance.y);',
-        );
+        check(output)
+            .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
+        check(output)
+            .contains('keyed.encodeDouble(_\$PointSchema.nameY, instance.y);');
       },
     );
 
@@ -151,8 +149,11 @@ void main() {
       check(output).contains(
         'final enumIndex = keyed.selectStringIndex(_\$UserAccountSchema.roleKeyOptions);',
       );
-      // Tuple decode
+      // Tuple decode & encode
       check(output).contains('location = keyed.decodeFloat64List();');
+      check(output).contains(
+        'keyed.encodeDoubleList(_\$UserAccountSchema.nameLocation, instance.location!);',
+      );
       // Ignored field internalId not in schema options
       check(output).not((s) => s.contains('nameInternalId'));
       // Named constructor invocation with defaults
@@ -186,7 +187,7 @@ void main() {
       check(output).contains('final k = keyed.nestedDecoder().keyed();');
       // Nested encoder call
       check(output).contains(
-        'keyed.encodeValueKey(_\$EnterpriseSchema.staticKeyHeadquarter, instance.headquarter, _\$AddressToEncoder);',
+        'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, _\$AddressToEncoder);',
       );
     });
 
@@ -196,24 +197,21 @@ void main() {
       check(output)
           .contains('zip = keyed.decodeValue(const ZipCodeDecoder().decode);');
       check(output).contains(
-        'keyed.encodeValueKey(_\$UserProfileCustomSchema.staticKeyZip, instance.zip, (v, e) => const ZipCodeDecoder().encodeToEncoder(v, e));',
+        'keyed.encodeValue(_\$UserProfileCustomSchema.nameZip, instance.zip, const ZipCodeDecoder().encode);',
       );
     });
 
-    test(
-      'generates code for enum collections and nullable collections in Team',
-      () {
-        final output = runGeneratorFor('Team');
+    test('generates code for enum collections and nullable collections in Team', () {
+      final output = runGeneratorFor('Team');
 
-        check(output)
-            .contains('UserRole.values.byName(d.singleValue().readString())');
-        check(output).contains('nullableTags = keyed.decodeList<String?>');
-        check(output).contains('final k = keyed.nestedDecoder().keyed();');
-        check(output).contains(
-          'keyed.encodeListKey(_\$TeamSchema.staticKeyRoles, instance.roles, (item, e) {',
-        );
-      },
-    );
+      check(output)
+          .contains('UserRole.values.byName(d.singleValue().readString())');
+      check(output).contains('nullableTags = keyed.decodeList<String?>');
+      check(output).contains('final k = keyed.nestedDecoder().keyed();');
+      check(output).contains(
+        'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, (item, e) {',
+      );
+    });
 
     test(
       'generates specialized list decoders for PrimitiveCollectionsModel',

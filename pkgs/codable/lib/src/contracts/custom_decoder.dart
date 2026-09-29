@@ -1,25 +1,20 @@
-/// Polymorphic and custom field decoding contracts.
+/// Polymorphic and custom field serialization contracts.
 library;
 
-import 'codable.dart';
 import 'decoder.dart';
+import 'encoder.dart';
 
-/// Format-agnostic custom field normalization contract.
+/// Format-agnostic custom field serialization and normalization contract.
 ///
-/// Normalizes multi-representation field tokens (e.g. integer `90210` vs
-/// string `"90210"`) into a consistent Dart type.
-abstract interface class CustomFieldDecoder<T> {
+/// Normalizes multi-representation field tokens (e.g. integer epoch timestamps
+/// vs ISO-8601 strings) into a consistent Dart type [T] and encodes [T] back to
+/// an [Encoder].
+abstract interface class CustomCodable<T> {
   /// Decodes and normalizes a custom field value from [decoder].
-  T decodeField(Decoder decoder);
-}
+  T decode(Decoder decoder);
 
-/// Untagged structural / shape-based polymorphism contract.
-///
-/// Resolves union types via token peeking (e.g. `String` user ID vs nested
-/// `User` object).
-abstract interface class UnionDecoder<T> {
-  /// Decodes an untagged union branch from [decoder].
-  T decodeUnion(Decoder decoder);
+  /// Encodes a custom field [value] into [encoder].
+  void encode(T value, Encoder encoder);
 }
 
 /// Tagged polymorphic subtype discriminator contract.
@@ -32,5 +27,5 @@ abstract interface class SuperDecodable<T> {
 
   /// The map of discriminator string values to concrete subtype decoder
   /// callbacks.
-  Map<String, DecoderCallback<T>> get subtypes;
+  Map<String, T Function(Decoder decoder)> get subtypes;
 }

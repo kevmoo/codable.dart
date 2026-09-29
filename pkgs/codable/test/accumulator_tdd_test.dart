@@ -24,9 +24,9 @@ void main() {
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
           final unkeyed = decoder.unkeyed();
-          expect(unkeyed.hasNext(), isTrue);
+          expect(unkeyed.moveNext(), isTrue);
           decodedElement = unkeyed.readInt();
-          expect(unkeyed.hasNext(), isFalse);
+          expect(unkeyed.moveNext(), isFalse);
         },
       );
       sink1.add(largeBytes);
@@ -50,7 +50,7 @@ void main() {
           keyed.skipValue();
           expect(keyed.nextKey(), equals('b'));
           keyed.skipValue();
-          expect(keyed.hasNextKey(), isFalse);
+          expect(keyed.moveNextKey(), isFalse);
 
           // Now inspect the backing buffer at the end of Stream 2:
           final bytes = _asNullable(
@@ -216,9 +216,9 @@ void main() {
         ChunkedConversionSink.withCallback((_) {}),
         (decoder) {
           final unkeyed = decoder.unkeyed();
-          expect(unkeyed.hasNext(), isTrue);
+          expect(unkeyed.moveNext(), isTrue);
           decodedValue = unkeyed.readInt();
-          expect(unkeyed.hasNext(), isFalse);
+          expect(unkeyed.moveNext(), isFalse);
         },
       );
 

@@ -13,8 +13,8 @@ import 'package:test/scaffolding.dart';
 ///
 /// Every method that reads from the underlying object must open the object
 /// itself if the caller has not already driven the decoder with
-/// `hasNextKey()` / `nextKey()`. Generated code always iterates via
-/// `hasNextKey()` first, so these paths are not exercised by the rest of the
+/// `moveNextKey()` / `nextKey()`. Generated code always iterates via
+/// `moveNextKey()` first, so these paths are not exercised by the rest of the
 /// suite -- which is precisely why they need pinning: an optimization that
 /// drops the internal `_ensureStarted()` guards passes all other tests while
 /// silently breaking direct callers.
@@ -55,23 +55,10 @@ void main() {
         check(keyed.readInt()).equals(1);
       });
 
-      test('selectKey as the first call opens the object', () {
-        final keyed = keyedOver('{"a":1,"b":2}', null);
-
-        check(keyed.selectKey(['a', 'b'])).equals(0);
-        check(keyed.readInt()).equals(1);
-      });
-
       test('skipValue as the first call does not throw', () {
         final keyed = keyedOver('{"a":1,"b":2}', null);
 
         keyed.skipValue();
-      });
-
-      test('skipField as the first call does not throw', () {
-        final keyed = keyedOver('{"a":1,"b":2}', null);
-
-        keyed.skipField();
       });
 
       test('peekKey as the first call leaves the cursor usable', () {
@@ -92,7 +79,7 @@ void main() {
         final keyed = keyedOver('{"a":1,"b":2}', options);
 
         final seen = <int>[];
-        while (keyed.hasNextKey()) {
+        while (keyed.moveNextKey()) {
           seen.add(keyed.selectKeyIndex(options));
           keyed.skipValue();
         }
@@ -109,7 +96,7 @@ void main() {
         final other = KeyOptions(['b', 'a']);
         final keyed = keyedOver('{"a":1,"b":2}', constructed);
 
-        check(keyed.hasNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue();
         check(keyed.selectKeyIndex(other)).equals(1);
         check(keyed.readInt()).equals(1);
       });
@@ -118,7 +105,7 @@ void main() {
         final options = KeyOptions(['a', 'b']);
         final keyed = keyedOver('{"a":1,"b":2}', null);
 
-        check(keyed.hasNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue();
         check(keyed.selectKeyIndex(options)).equals(0);
         check(keyed.readInt()).equals(1);
       });
