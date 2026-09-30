@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
+import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
 
 import '../data/embedded_datasets.dart';
@@ -62,12 +63,15 @@ Object _hydrateJsonSerializable(String name, Object? jsonAst) {
   }
 }
 
-Object _decodeCodable(String name, Decoder decoder) {
+Decodable<Object?> _decodableForDataset(String name) {
   switch (name) {
     case 'coordinates':
-      return codable_coord.Coordinate.decodeList(decoder);
+      return Decodable<List<codable_coord.Coordinate>>.fromFunction(
+        (decoder) =>
+            const codable_coord.CoordinateCodable().decodeList(decoder),
+      );
     case 'canada':
-      return codable_canada.CanadaFeatureCollection.decode(decoder);
+      return const codable_canada.CanadaFeatureCollectionCodable();
     default:
       throw ArgumentError.value(name, 'name', 'Unknown dataset');
   }
@@ -79,12 +83,14 @@ class StreamDecodeData {
   final String string;
   final List<Uint8List> chunks;
   final List<String> stringChunks;
+  final Decodable<Object?> decodable;
 
   StreamDecodeData(this.name)
     : bytes = getDatasetBytes(name),
       string = utf8.decode(getDatasetBytes(name)),
       chunks = sliceBytesIntoChunks(getDatasetBytes(name)),
-      stringChunks = sliceStringIntoChunks(utf8.decode(getDatasetBytes(name)));
+      stringChunks = sliceStringIntoChunks(utf8.decode(getDatasetBytes(name))),
+      decodable = _decodableForDataset(name);
 }
 
 BenchmarkGroup createDecodeStreamBenchmarkGroup(String dataset) {
@@ -125,7 +131,7 @@ BenchmarkGroup createDecodeStreamBenchmarkGroup(String dataset) {
     });
     final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
       resultSink,
-      (decoder) => _decodeCodable(d.name, decoder),
+      d.decodable,
     );
     for (final chunk in d.chunks) {
       sink.add(chunk);
@@ -141,7 +147,7 @@ BenchmarkGroup createDecodeStreamBenchmarkGroup(String dataset) {
     });
     final sink = JsonCodableDecoder.startChunkedConversion<Object?>(
       resultSink,
-      (decoder) => _decodeCodable(d.name, decoder),
+      d.decodable,
       userInfo: const {#forceJsDom: true},
     );
     for (final chunk in d.chunks) {

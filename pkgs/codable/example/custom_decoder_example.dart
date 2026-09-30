@@ -10,7 +10,7 @@ part 'custom_decoder_example.g.dart';
 
 /// Custom field decoder normalizing timestamp representations (integer epoch
 /// milliseconds or ISO 8601 strings) into a standard [DateTime].
-final class DateTimeEpochDecoder implements CustomCodable<DateTime> {
+final class DateTimeEpochDecoder implements Codable<DateTime> {
   const DateTimeEpochDecoder();
 
   @override
@@ -43,25 +43,28 @@ class DateTimeExample {
   final DateTime when;
 
   const DateTimeExample(this.when);
-
-  static DateTimeExample decode(Decoder decoder) =>
-      _$DateTimeExampleFromDecoder(decoder);
-  void encode(Encoder encoder) => _$DateTimeExampleToEncoder(this, encoder);
 }
 
 void main() {
   // Parsing integer epoch timestamp
   final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
-  final ex1 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json1));
+  final ex1 = const DateTimeExampleCodable().decode(
+    JsonCodableDecoder.fromBytes(json1),
+  );
   print('Epoch timestamp: ${ex1.when}');
 
   // Parsing ISO 8601 string timestamp
   final json2 = Uint8List.fromList(
     utf8.encode('{"when": "2026-08-17T12:00:00.000Z"}'),
   );
-  final ex2 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json2));
+  final ex2 = const DateTimeExampleCodable().decode(
+    JsonCodableDecoder.fromBytes(json2),
+  );
   print('ISO timestamp: ${ex2.when}');
 
-  final outBytes = JsonCodableEncoder.toBytes(ex1.encode);
+  final outBytes = JsonCodableEncoder.toBytes(
+    ex1,
+    const DateTimeExampleCodable(),
+  );
   print('Serialized: ${utf8.decode(outBytes)}');
 }

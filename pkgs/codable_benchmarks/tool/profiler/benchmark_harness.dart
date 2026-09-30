@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:bench_press/bench_press.dart';
+import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
 
 import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
@@ -33,36 +34,42 @@ final utf8JsonDecoder = utf8.decoder.fuse(json.decoder);
 final utf8JsonEncoder = json.encoder.fuse(utf8.encoder);
 
 // Pre-decoded models for encode benchmarks (evaluated lazily on first access)
-final _coordinatesCodable = codable_coord.Coordinate.decodeList(
+final _coordinatesCodable = const codable_coord.CoordinateCodable().decodeList(
   JsonCodableDecoder.fromBytes(coordinatesBytes),
 );
+final _coordinatesListEncodable =
+    Encodable<List<codable_coord.Coordinate>>.fromFunction((list, e) {
+      final unkeyed = e.unkeyed();
+      for (var i = 0; i < list.length; i++) {
+        unkeyed.encodeElement(list[i], const codable_coord.CoordinateCodable());
+      }
+    });
 final _coordinatesJs =
     (jsonDecode(utf8.decode(coordinatesBytes)) as List<dynamic>)
         .map((e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>))
         .toList();
 
-final _canadaCodable = codable_canada.CanadaFeatureCollection.decode(
-  JsonCodableDecoder.fromBytes(canadaBytes),
-);
+final _canadaCodable = const codable_canada.CanadaFeatureCollectionCodable()
+    .decode(JsonCodableDecoder.fromBytes(canadaBytes));
 final _canadaJs = js_canada.CanadaFeatureCollection.fromJson(
   jsonDecode(utf8.decode(canadaBytes)) as Map<String, dynamic>,
 );
 
-final _citmCodable = codable_citm.CitmCatalog.decode(
+final _citmCodable = const codable_citm.CitmCatalogCodable().decode(
   JsonCodableDecoder.fromBytes(citmBytes),
 );
 final _citmJs = js_citm.CitmCatalog.fromJson(
   jsonDecode(utf8.decode(citmBytes)) as Map<String, dynamic>,
 );
 
-final _smallCodable = codable_small.SmallDocument.decode(
+final _smallCodable = const codable_small.SmallDocumentCodable().decode(
   JsonCodableDecoder.fromBytes(smallBytes),
 );
 final _smallJs = js_small.SmallDocument.fromJson(
   jsonDecode(utf8.decode(smallBytes)) as Map<String, dynamic>,
 );
 
-final _twitterCodable = codable_twitter.TwitterResponse.decode(
+final _twitterCodable = const codable_twitter.TwitterResponseCodable().decode(
   JsonCodableDecoder.fromBytes(twitterBytes),
 );
 final _twitterJs = js_twitter.TwitterResponse.fromJson(
@@ -125,7 +132,8 @@ void Function() resolveBenchmarkAction(
             }
           : () {
               final decoder = _createDecoder(twitterBytes, impl);
-              final model = codable_twitter.TwitterResponse.decode(decoder);
+              final model = const codable_twitter.TwitterResponseCodable()
+                  .decode(decoder);
               Blackhole.consume(model);
             },
 
@@ -140,7 +148,9 @@ void Function() resolveBenchmarkAction(
             }
           : () {
               final decoder = _createDecoder(citmBytes, impl);
-              final model = codable_citm.CitmCatalog.decode(decoder);
+              final model = const codable_citm.CitmCatalogCodable().decode(
+                decoder,
+              );
               Blackhole.consume(model);
             },
 
@@ -155,9 +165,10 @@ void Function() resolveBenchmarkAction(
             }
           : () {
               final decoder = _createDecoder(canadaBytes, impl);
-              final model = codable_canada.CanadaFeatureCollection.decode(
-                decoder,
-              );
+              final model =
+                  const codable_canada.CanadaFeatureCollectionCodable().decode(
+                    decoder,
+                  );
               Blackhole.consume(model);
             },
 
@@ -174,7 +185,7 @@ void Function() resolveBenchmarkAction(
               Blackhole.consume(list);
             }
           : () {
-              final list = codable_coord.Coordinate.decodeList(
+              final list = const codable_coord.CoordinateCodable().decodeList(
                 _createDecoder(coordinatesBytes, impl),
               );
               Blackhole.consume(list);
@@ -191,7 +202,9 @@ void Function() resolveBenchmarkAction(
             }
           : () {
               final decoder = _createDecoder(smallBytes, impl);
-              final model = codable_small.SmallDocument.decode(decoder);
+              final model = const codable_small.SmallDocumentCodable().decode(
+                decoder,
+              );
               Blackhole.consume(model);
             },
 
@@ -199,7 +212,8 @@ void Function() resolveBenchmarkAction(
       isCodable
           ? () {
               final outBytes = JsonCodableEncoder.toBytes(
-                _twitterCodable.encode,
+                _twitterCodable,
+                const codable_twitter.TwitterResponseCodable(),
               );
               Blackhole.consume(outBytes);
             }
@@ -211,7 +225,10 @@ void Function() resolveBenchmarkAction(
     'citm_catalog_encode' || 'citm_encode' =>
       isCodable
           ? () {
-              final outBytes = JsonCodableEncoder.toBytes(_citmCodable.encode);
+              final outBytes = JsonCodableEncoder.toBytes(
+                _citmCodable,
+                const codable_citm.CitmCatalogCodable(),
+              );
               Blackhole.consume(outBytes);
             }
           : () {
@@ -223,7 +240,8 @@ void Function() resolveBenchmarkAction(
       isCodable
           ? () {
               final outBytes = JsonCodableEncoder.toBytes(
-                _canadaCodable.encode,
+                _canadaCodable,
+                const codable_canada.CanadaFeatureCollectionCodable(),
               );
               Blackhole.consume(outBytes);
             }
@@ -235,12 +253,10 @@ void Function() resolveBenchmarkAction(
     'coordinates_encode' || 'coord_encode' =>
       isCodable
           ? () {
-              final outBytes = JsonCodableEncoder.toBytes((e) {
-                final unkeyed = e.unkeyed();
-                for (var i = 0; i < _coordinatesCodable.length; i++) {
-                  unkeyed.encodeEncodable(_coordinatesCodable[i]);
-                }
-              });
+              final outBytes = JsonCodableEncoder.toBytes(
+                _coordinatesCodable,
+                _coordinatesListEncodable,
+              );
               Blackhole.consume(outBytes);
             }
           : () {
@@ -252,7 +268,10 @@ void Function() resolveBenchmarkAction(
     'small_encode' =>
       isCodable
           ? () {
-              final outBytes = JsonCodableEncoder.toBytes(_smallCodable.encode);
+              final outBytes = JsonCodableEncoder.toBytes(
+                _smallCodable,
+                const codable_small.SmallDocumentCodable(),
+              );
               Blackhole.consume(outBytes);
             }
           : () {

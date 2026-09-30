@@ -85,85 +85,76 @@ extension type const _$SmallLocationSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for SmallLocation
+// 2. Companion Codable for SmallLocation
 // =============================================================================
-SmallLocation _$SmallLocationFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$SmallLocationSchema.keyOptions);
+final class SmallLocationCodable implements Codable<SmallLocation> {
+  const SmallLocationCodable();
 
-  double? latitude;
-  double? longitude;
-  String? city;
-  String? country;
-  var seen = _$SmallLocationSchema.none;
+  @override
+  SmallLocation decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$SmallLocationSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$SmallLocationSchema.keyOptions)) {
-      case _$SmallLocationSchema.keyLatitude:
-        if ((seen._value & _$SmallLocationSchema.latitude._value) != 0) {
-          throw const CodableException('Duplicate field "latitude"');
-        }
-        latitude = keyed.readDouble();
-        seen |= _$SmallLocationSchema.latitude;
-        break;
-      case _$SmallLocationSchema.keyLongitude:
-        if ((seen._value & _$SmallLocationSchema.longitude._value) != 0) {
-          throw const CodableException('Duplicate field "longitude"');
-        }
-        longitude = keyed.readDouble();
-        seen |= _$SmallLocationSchema.longitude;
-        break;
-      case _$SmallLocationSchema.keyCity:
-        if ((seen._value & _$SmallLocationSchema.city._value) != 0) {
-          throw const CodableException('Duplicate field "city"');
-        }
-        city = keyed.readString();
-        seen |= _$SmallLocationSchema.city;
-        break;
-      case _$SmallLocationSchema.keyCountry:
-        if ((seen._value & _$SmallLocationSchema.country._value) != 0) {
-          throw const CodableException('Duplicate field "country"');
-        }
-        country = keyed.readString();
-        seen |= _$SmallLocationSchema.country;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    double? latitude;
+    double? longitude;
+    String? city;
+    String? country;
+    var seen = _$SmallLocationSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$SmallLocationSchema.keyOptions)) {
+        case _$SmallLocationSchema.keyLatitude:
+          if ((seen._value & _$SmallLocationSchema.latitude._value) != 0) {
+            throw const CodableException('Duplicate field "latitude"');
+          }
+          latitude = keyed.readDouble();
+          seen |= _$SmallLocationSchema.latitude;
+          break;
+        case _$SmallLocationSchema.keyLongitude:
+          if ((seen._value & _$SmallLocationSchema.longitude._value) != 0) {
+            throw const CodableException('Duplicate field "longitude"');
+          }
+          longitude = keyed.readDouble();
+          seen |= _$SmallLocationSchema.longitude;
+          break;
+        case _$SmallLocationSchema.keyCity:
+          if ((seen._value & _$SmallLocationSchema.city._value) != 0) {
+            throw const CodableException('Duplicate field "city"');
+          }
+          city = keyed.readString();
+          seen |= _$SmallLocationSchema.city;
+          break;
+        case _$SmallLocationSchema.keyCountry:
+          if ((seen._value & _$SmallLocationSchema.country._value) != 0) {
+            throw const CodableException('Duplicate field "country"');
+          }
+          country = keyed.readString();
+          seen |= _$SmallLocationSchema.country;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return SmallLocation(
+      latitude: latitude!,
+      longitude: longitude!,
+      city: city!,
+      country: country!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return SmallLocation(
-    latitude: latitude!,
-    longitude: longitude!,
-    city: city!,
-    country: country!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for SmallLocation
-// =============================================================================
-List<SmallLocation> _$SmallLocationListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <SmallLocation>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$SmallLocationFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(SmallLocation instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
+    keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
+    keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
+    keyed.encodeString(_$SmallLocationSchema.nameCountry, instance.country);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for SmallLocation
-// =============================================================================
-void _$SmallLocationToEncoder(SmallLocation instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
-  keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
-  keyed.encodeString(_$SmallLocationSchema.nameCountry, instance.country);
 }
 
 // =============================================================================
@@ -239,79 +230,70 @@ extension type const _$SmallMetadataSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for SmallMetadata
+// 2. Companion Codable for SmallMetadata
 // =============================================================================
-SmallMetadata _$SmallMetadataFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$SmallMetadataSchema.keyOptions);
+final class SmallMetadataCodable implements Codable<SmallMetadata> {
+  const SmallMetadataCodable();
 
-  int? loginCount;
-  String? lastLogin;
-  SmallLocation? location;
-  var seen = _$SmallMetadataSchema.none;
+  @override
+  SmallMetadata decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$SmallMetadataSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$SmallMetadataSchema.keyOptions)) {
-      case _$SmallMetadataSchema.keyLoginCount:
-        if ((seen._value & _$SmallMetadataSchema.loginCount._value) != 0) {
-          throw const CodableException('Duplicate field "loginCount"');
-        }
-        loginCount = keyed.readInt();
-        seen |= _$SmallMetadataSchema.loginCount;
-        break;
-      case _$SmallMetadataSchema.keyLastLogin:
-        if ((seen._value & _$SmallMetadataSchema.lastLogin._value) != 0) {
-          throw const CodableException('Duplicate field "lastLogin"');
-        }
-        lastLogin = keyed.readString();
-        seen |= _$SmallMetadataSchema.lastLogin;
-        break;
-      case _$SmallMetadataSchema.keyLocation:
-        if ((seen._value & _$SmallMetadataSchema.location._value) != 0) {
-          throw const CodableException('Duplicate field "location"');
-        }
-        location = _$SmallLocationFromDecoder(keyed.nestedDecoder());
-        seen |= _$SmallMetadataSchema.location;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? loginCount;
+    String? lastLogin;
+    SmallLocation? location;
+    var seen = _$SmallMetadataSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$SmallMetadataSchema.keyOptions)) {
+        case _$SmallMetadataSchema.keyLoginCount:
+          if ((seen._value & _$SmallMetadataSchema.loginCount._value) != 0) {
+            throw const CodableException('Duplicate field "loginCount"');
+          }
+          loginCount = keyed.readInt();
+          seen |= _$SmallMetadataSchema.loginCount;
+          break;
+        case _$SmallMetadataSchema.keyLastLogin:
+          if ((seen._value & _$SmallMetadataSchema.lastLogin._value) != 0) {
+            throw const CodableException('Duplicate field "lastLogin"');
+          }
+          lastLogin = keyed.readString();
+          seen |= _$SmallMetadataSchema.lastLogin;
+          break;
+        case _$SmallMetadataSchema.keyLocation:
+          if ((seen._value & _$SmallMetadataSchema.location._value) != 0) {
+            throw const CodableException('Duplicate field "location"');
+          }
+          location = const SmallLocationCodable().decode(keyed.nestedDecoder());
+          seen |= _$SmallMetadataSchema.location;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return SmallMetadata(
+      loginCount: loginCount!,
+      lastLogin: lastLogin!,
+      location: location!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return SmallMetadata(
-    loginCount: loginCount!,
-    lastLogin: lastLogin!,
-    location: location!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for SmallMetadata
-// =============================================================================
-List<SmallMetadata> _$SmallMetadataListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <SmallMetadata>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$SmallMetadataFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(SmallMetadata instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
+    keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
+    keyed.encodeValue(
+      _$SmallMetadataSchema.nameLocation,
+      instance.location,
+      const SmallLocationCodable(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for SmallMetadata
-// =============================================================================
-void _$SmallMetadataToEncoder(SmallMetadata instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
-  keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
-  keyed.encodeValue(
-    _$SmallMetadataSchema.nameLocation,
-    instance.location,
-    _$SmallLocationToEncoder,
-  );
 }
 
 // =============================================================================
@@ -452,147 +434,138 @@ extension type const _$SmallDocumentSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for SmallDocument
+// 2. Companion Codable for SmallDocument
 // =============================================================================
-SmallDocument _$SmallDocumentFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$SmallDocumentSchema.keyOptions);
+final class SmallDocumentCodable implements Codable<SmallDocument> {
+  const SmallDocumentCodable();
 
-  int? id;
-  String? uuid;
-  String? name;
-  String? email;
-  bool? isActive;
-  double? balance;
-  int? age;
-  List<String>? roles;
-  SmallMetadata? metadata;
-  List<String>? tags;
-  var seen = _$SmallDocumentSchema.none;
+  @override
+  SmallDocument decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$SmallDocumentSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$SmallDocumentSchema.keyOptions)) {
-      case _$SmallDocumentSchema.keyId:
-        if ((seen._value & _$SmallDocumentSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readInt();
-        seen |= _$SmallDocumentSchema.id;
-        break;
-      case _$SmallDocumentSchema.keyUuid:
-        if ((seen._value & _$SmallDocumentSchema.uuid._value) != 0) {
-          throw const CodableException('Duplicate field "uuid"');
-        }
-        uuid = keyed.readString();
-        seen |= _$SmallDocumentSchema.uuid;
-        break;
-      case _$SmallDocumentSchema.keyName:
-        if ((seen._value & _$SmallDocumentSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        name = keyed.readString();
-        seen |= _$SmallDocumentSchema.name;
-        break;
-      case _$SmallDocumentSchema.keyEmail:
-        if ((seen._value & _$SmallDocumentSchema.email._value) != 0) {
-          throw const CodableException('Duplicate field "email"');
-        }
-        email = keyed.readString();
-        seen |= _$SmallDocumentSchema.email;
-        break;
-      case _$SmallDocumentSchema.keyIsActive:
-        if ((seen._value & _$SmallDocumentSchema.isActive._value) != 0) {
-          throw const CodableException('Duplicate field "isActive"');
-        }
-        isActive = keyed.readBool();
-        seen |= _$SmallDocumentSchema.isActive;
-        break;
-      case _$SmallDocumentSchema.keyBalance:
-        if ((seen._value & _$SmallDocumentSchema.balance._value) != 0) {
-          throw const CodableException('Duplicate field "balance"');
-        }
-        balance = keyed.readDouble();
-        seen |= _$SmallDocumentSchema.balance;
-        break;
-      case _$SmallDocumentSchema.keyAge:
-        if ((seen._value & _$SmallDocumentSchema.age._value) != 0) {
-          throw const CodableException('Duplicate field "age"');
-        }
-        age = keyed.readInt();
-        seen |= _$SmallDocumentSchema.age;
-        break;
-      case _$SmallDocumentSchema.keyRoles:
-        if ((seen._value & _$SmallDocumentSchema.roles._value) != 0) {
-          throw const CodableException('Duplicate field "roles"');
-        }
-        roles = keyed.decodeStringList();
-        seen |= _$SmallDocumentSchema.roles;
-        break;
-      case _$SmallDocumentSchema.keyMetadata:
-        if ((seen._value & _$SmallDocumentSchema.metadata._value) != 0) {
-          throw const CodableException('Duplicate field "metadata"');
-        }
-        metadata = _$SmallMetadataFromDecoder(keyed.nestedDecoder());
-        seen |= _$SmallDocumentSchema.metadata;
-        break;
-      case _$SmallDocumentSchema.keyTags:
-        if ((seen._value & _$SmallDocumentSchema.tags._value) != 0) {
-          throw const CodableException('Duplicate field "tags"');
-        }
-        tags = keyed.decodeStringList();
-        seen |= _$SmallDocumentSchema.tags;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? id;
+    String? uuid;
+    String? name;
+    String? email;
+    bool? isActive;
+    double? balance;
+    int? age;
+    List<String>? roles;
+    SmallMetadata? metadata;
+    List<String>? tags;
+    var seen = _$SmallDocumentSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$SmallDocumentSchema.keyOptions)) {
+        case _$SmallDocumentSchema.keyId:
+          if ((seen._value & _$SmallDocumentSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readInt();
+          seen |= _$SmallDocumentSchema.id;
+          break;
+        case _$SmallDocumentSchema.keyUuid:
+          if ((seen._value & _$SmallDocumentSchema.uuid._value) != 0) {
+            throw const CodableException('Duplicate field "uuid"');
+          }
+          uuid = keyed.readString();
+          seen |= _$SmallDocumentSchema.uuid;
+          break;
+        case _$SmallDocumentSchema.keyName:
+          if ((seen._value & _$SmallDocumentSchema.name._value) != 0) {
+            throw const CodableException('Duplicate field "name"');
+          }
+          name = keyed.readString();
+          seen |= _$SmallDocumentSchema.name;
+          break;
+        case _$SmallDocumentSchema.keyEmail:
+          if ((seen._value & _$SmallDocumentSchema.email._value) != 0) {
+            throw const CodableException('Duplicate field "email"');
+          }
+          email = keyed.readString();
+          seen |= _$SmallDocumentSchema.email;
+          break;
+        case _$SmallDocumentSchema.keyIsActive:
+          if ((seen._value & _$SmallDocumentSchema.isActive._value) != 0) {
+            throw const CodableException('Duplicate field "isActive"');
+          }
+          isActive = keyed.readBool();
+          seen |= _$SmallDocumentSchema.isActive;
+          break;
+        case _$SmallDocumentSchema.keyBalance:
+          if ((seen._value & _$SmallDocumentSchema.balance._value) != 0) {
+            throw const CodableException('Duplicate field "balance"');
+          }
+          balance = keyed.readDouble();
+          seen |= _$SmallDocumentSchema.balance;
+          break;
+        case _$SmallDocumentSchema.keyAge:
+          if ((seen._value & _$SmallDocumentSchema.age._value) != 0) {
+            throw const CodableException('Duplicate field "age"');
+          }
+          age = keyed.readInt();
+          seen |= _$SmallDocumentSchema.age;
+          break;
+        case _$SmallDocumentSchema.keyRoles:
+          if ((seen._value & _$SmallDocumentSchema.roles._value) != 0) {
+            throw const CodableException('Duplicate field "roles"');
+          }
+          roles = keyed.decodeStringList();
+          seen |= _$SmallDocumentSchema.roles;
+          break;
+        case _$SmallDocumentSchema.keyMetadata:
+          if ((seen._value & _$SmallDocumentSchema.metadata._value) != 0) {
+            throw const CodableException('Duplicate field "metadata"');
+          }
+          metadata = const SmallMetadataCodable().decode(keyed.nestedDecoder());
+          seen |= _$SmallDocumentSchema.metadata;
+          break;
+        case _$SmallDocumentSchema.keyTags:
+          if ((seen._value & _$SmallDocumentSchema.tags._value) != 0) {
+            throw const CodableException('Duplicate field "tags"');
+          }
+          tags = keyed.decodeStringList();
+          seen |= _$SmallDocumentSchema.tags;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return SmallDocument(
+      id: id!,
+      uuid: uuid!,
+      name: name!,
+      email: email!,
+      isActive: isActive!,
+      balance: balance!,
+      age: age!,
+      roles: roles!,
+      metadata: metadata!,
+      tags: tags!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return SmallDocument(
-    id: id!,
-    uuid: uuid!,
-    name: name!,
-    email: email!,
-    isActive: isActive!,
-    balance: balance!,
-    age: age!,
-    roles: roles!,
-    metadata: metadata!,
-    tags: tags!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for SmallDocument
-// =============================================================================
-List<SmallDocument> _$SmallDocumentListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <SmallDocument>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$SmallDocumentFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(SmallDocument instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
+    keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
+    keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);
+    keyed.encodeString(_$SmallDocumentSchema.nameEmail, instance.email);
+    keyed.encodeBool(_$SmallDocumentSchema.nameIsActive, instance.isActive);
+    keyed.encodeDouble(_$SmallDocumentSchema.nameBalance, instance.balance);
+    keyed.encodeInt(_$SmallDocumentSchema.nameAge, instance.age);
+    keyed.encodeStringList(_$SmallDocumentSchema.nameRoles, instance.roles);
+    keyed.encodeValue(
+      _$SmallDocumentSchema.nameMetadata,
+      instance.metadata,
+      const SmallMetadataCodable(),
+    );
+    keyed.encodeStringList(_$SmallDocumentSchema.nameTags, instance.tags);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for SmallDocument
-// =============================================================================
-void _$SmallDocumentToEncoder(SmallDocument instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
-  keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
-  keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);
-  keyed.encodeString(_$SmallDocumentSchema.nameEmail, instance.email);
-  keyed.encodeBool(_$SmallDocumentSchema.nameIsActive, instance.isActive);
-  keyed.encodeDouble(_$SmallDocumentSchema.nameBalance, instance.balance);
-  keyed.encodeInt(_$SmallDocumentSchema.nameAge, instance.age);
-  keyed.encodeStringList(_$SmallDocumentSchema.nameRoles, instance.roles);
-  keyed.encodeValue(
-    _$SmallDocumentSchema.nameMetadata,
-    instance.metadata,
-    _$SmallMetadataToEncoder,
-  );
-  keyed.encodeStringList(_$SmallDocumentSchema.nameTags, instance.tags);
 }

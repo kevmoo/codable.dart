@@ -69,80 +69,80 @@ extension type const _$CoordinateSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Coordinate
+// 2. Companion Codable for Coordinate
 // =============================================================================
-Coordinate _$CoordinateFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CoordinateSchema.keyOptions);
+final class CoordinateCodable implements Codable<Coordinate> {
+  const CoordinateCodable();
 
-  double? latitude;
-  double? longitude;
-  var seen = _$CoordinateSchema.none;
+  @override
+  Coordinate decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CoordinateSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
-      case _$CoordinateSchema.keyLatitude:
-      case _$CoordinateSchema.aliasKeyLatitudeLat:
-        if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
-          throw const CodableException('Duplicate field "latitude"');
-        }
-        latitude = keyed.readDouble();
-        seen |= _$CoordinateSchema.latitude;
-        break;
-      case _$CoordinateSchema.keyLongitude:
-      case _$CoordinateSchema.aliasKeyLongitudeLon:
-        if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
-          throw const CodableException('Duplicate field "longitude"');
-        }
-        longitude = keyed.readDouble();
-        seen |= _$CoordinateSchema.longitude;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    double? latitude;
+    double? longitude;
+    var seen = _$CoordinateSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
+        case _$CoordinateSchema.keyLatitude:
+        case _$CoordinateSchema.aliasKeyLatitudeLat:
+          if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
+            throw const CodableException('Duplicate field "latitude"');
+          }
+          latitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.latitude;
+          break;
+        case _$CoordinateSchema.keyLongitude:
+        case _$CoordinateSchema.aliasKeyLongitudeLon:
+          if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
+            throw const CodableException('Duplicate field "longitude"');
+          }
+          longitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.longitude;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Coordinate(latitude: latitude!, longitude: longitude!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
+  List<Coordinate> decodeList(Decoder decoder) {
+    final flatDoubles = decoder.decodeUniformDoubleList(const [
+      ['latitude', 'lat'],
+      ['longitude', 'lon'],
+    ]);
+    if (flatDoubles != null) {
+      final count = flatDoubles.length ~/ 2;
+      return List<Coordinate>.generate(
+        count,
+        (i) => Coordinate(
+          latitude: flatDoubles[i * 2 + 0],
+          longitude: flatDoubles[i * 2 + 1],
+        ),
+        growable: true,
+      );
+    }
 
-  return Coordinate(latitude: latitude!, longitude: longitude!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Coordinate
-// =============================================================================
-List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
-  final flatDoubles = decoder.decodeUniformDoubleList(const [
-    ['latitude', 'lat'],
-    ['longitude', 'lon'],
-  ]);
-  if (flatDoubles != null) {
-    final count = flatDoubles.length ~/ 2;
-    return List<Coordinate>.generate(
-      count,
-      (i) => Coordinate(
-        latitude: flatDoubles[i * 2 + 0],
-        longitude: flatDoubles[i * 2 + 1],
-      ),
-      growable: true,
-    );
+    final unkeyed = decoder.unkeyed();
+    final list = <Coordinate>[];
+    while (unkeyed.moveNext()) {
+      list.add(decode(unkeyed.nestedDecoder()));
+    }
+    return list;
   }
 
-  final unkeyed = decoder.unkeyed();
-  final list = <Coordinate>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CoordinateFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Coordinate instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+    keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Coordinate
-// =============================================================================
-void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
 }
 
 // =============================================================================
@@ -231,102 +231,93 @@ extension type const _$UserProfileSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for UserProfile
+// 2. Companion Codable for UserProfile
 // =============================================================================
-UserProfile _$UserProfileFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$UserProfileSchema.keyOptions);
+final class UserProfileCodable implements Codable<UserProfile> {
+  const UserProfileCodable();
 
-  String? id;
-  String? email;
-  UserRole? role;
-  String? zip;
-  var tags = const <String>[];
-  var seen = _$UserProfileSchema.none;
+  @override
+  UserProfile decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$UserProfileSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$UserProfileSchema.keyOptions)) {
-      case _$UserProfileSchema.keyId:
-        if ((seen._value & _$UserProfileSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readString();
-        seen |= _$UserProfileSchema.id;
-        break;
-      case _$UserProfileSchema.keyEmail:
-        if ((seen._value & _$UserProfileSchema.email._value) != 0) {
-          throw const CodableException('Duplicate field "email"');
-        }
-        email = keyed.readString();
-        seen |= _$UserProfileSchema.email;
-        break;
-      case _$UserProfileSchema.keyRole:
-        if ((seen._value & _$UserProfileSchema.role._value) != 0) {
-          throw const CodableException('Duplicate field "role"');
-        }
-        final enumIndex = keyed.selectStringIndex(
-          _$UserProfileSchema.roleKeyOptions,
-        );
-        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-          role = UserRole.values[enumIndex];
-        } else {
-          throw const CodableException('Unknown UserRole value');
-        }
-        seen |= _$UserProfileSchema.role;
-        break;
-      case _$UserProfileSchema.keyZip:
-        if ((seen._value & _$UserProfileSchema.zip._value) != 0) {
-          throw const CodableException('Duplicate field "zip"');
-        }
-        zip = keyed.decodeValue(const ZipCodeDecoder().decode);
-        seen |= _$UserProfileSchema.zip;
-        break;
-      case _$UserProfileSchema.keyTags:
-        tags = keyed.decodeStringList();
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? id;
+    String? email;
+    UserRole? role;
+    String? zip;
+    var tags = const <String>[];
+    var seen = _$UserProfileSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$UserProfileSchema.keyOptions)) {
+        case _$UserProfileSchema.keyId:
+          if ((seen._value & _$UserProfileSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readString();
+          seen |= _$UserProfileSchema.id;
+          break;
+        case _$UserProfileSchema.keyEmail:
+          if ((seen._value & _$UserProfileSchema.email._value) != 0) {
+            throw const CodableException('Duplicate field "email"');
+          }
+          email = keyed.readString();
+          seen |= _$UserProfileSchema.email;
+          break;
+        case _$UserProfileSchema.keyRole:
+          if ((seen._value & _$UserProfileSchema.role._value) != 0) {
+            throw const CodableException('Duplicate field "role"');
+          }
+          final enumIndex = keyed.selectStringIndex(
+            _$UserProfileSchema.roleKeyOptions,
+          );
+          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+            role = UserRole.values[enumIndex];
+          } else {
+            throw const CodableException('Unknown UserRole value');
+          }
+          seen |= _$UserProfileSchema.role;
+          break;
+        case _$UserProfileSchema.keyZip:
+          if ((seen._value & _$UserProfileSchema.zip._value) != 0) {
+            throw const CodableException('Duplicate field "zip"');
+          }
+          zip = keyed.decodeValue(const ZipCodeDecoder());
+          seen |= _$UserProfileSchema.zip;
+          break;
+        case _$UserProfileSchema.keyTags:
+          tags = keyed.decodeStringList();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return UserProfile(
+      id: id!,
+      email: email!,
+      role: role!,
+      zip: zip!,
+      tags: tags,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return UserProfile(
-    id: id!,
-    email: email!,
-    role: role!,
-    zip: zip!,
-    tags: tags,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for UserProfile
-// =============================================================================
-List<UserProfile> _$UserProfileListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <UserProfile>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$UserProfileFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(UserProfile instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
+    keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
+    keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
+    keyed.encodeValue(
+      _$UserProfileSchema.nameZip,
+      instance.zip,
+      const ZipCodeDecoder(),
+    );
+    keyed.encodeStringList(_$UserProfileSchema.nameTags, instance.tags);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for UserProfile
-// =============================================================================
-void _$UserProfileToEncoder(UserProfile instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
-  keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
-  keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
-  keyed.encodeValue(
-    _$UserProfileSchema.nameZip,
-    instance.zip,
-    const ZipCodeDecoder().encode,
-  );
-  keyed.encodeStringList(_$UserProfileSchema.nameTags, instance.tags);
 }
 
 // =============================================================================
@@ -386,62 +377,53 @@ extension type const _$CarSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Car
+// 2. Companion Codable for Car
 // =============================================================================
-Car _$CarFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CarSchema.keyOptions);
+final class CarCodable implements Codable<Car> {
+  const CarCodable();
 
-  int? maxSpeed;
-  int? doors;
-  var seen = _$CarSchema.none;
+  @override
+  Car decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CarSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
-      case _$CarSchema.keyMaxSpeed:
-        if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
-          throw const CodableException('Duplicate field "maxSpeed"');
-        }
-        maxSpeed = keyed.readInt();
-        seen |= _$CarSchema.maxSpeed;
-        break;
-      case _$CarSchema.keyDoors:
-        if ((seen._value & _$CarSchema.doors._value) != 0) {
-          throw const CodableException('Duplicate field "doors"');
-        }
-        doors = keyed.readInt();
-        seen |= _$CarSchema.doors;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? maxSpeed;
+    int? doors;
+    var seen = _$CarSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
+        case _$CarSchema.keyMaxSpeed:
+          if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
+            throw const CodableException('Duplicate field "maxSpeed"');
+          }
+          maxSpeed = keyed.readInt();
+          seen |= _$CarSchema.maxSpeed;
+          break;
+        case _$CarSchema.keyDoors:
+          if ((seen._value & _$CarSchema.doors._value) != 0) {
+            throw const CodableException('Duplicate field "doors"');
+          }
+          doors = keyed.readInt();
+          seen |= _$CarSchema.doors;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Car(maxSpeed: maxSpeed!, doors: doors!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Car(maxSpeed: maxSpeed!, doors: doors!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Car
-// =============================================================================
-List<Car> _$CarListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Car>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CarFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Car instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Car
-// =============================================================================
-void _$CarToEncoder(Car instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
 }
 
 // =============================================================================
@@ -503,62 +485,53 @@ extension type const _$BicycleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Bicycle
+// 2. Companion Codable for Bicycle
 // =============================================================================
-Bicycle _$BicycleFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$BicycleSchema.keyOptions);
+final class BicycleCodable implements Codable<Bicycle> {
+  const BicycleCodable();
 
-  int? maxSpeed;
-  bool? hasBell;
-  var seen = _$BicycleSchema.none;
+  @override
+  Bicycle decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$BicycleSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
-      case _$BicycleSchema.keyMaxSpeed:
-        if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
-          throw const CodableException('Duplicate field "maxSpeed"');
-        }
-        maxSpeed = keyed.readInt();
-        seen |= _$BicycleSchema.maxSpeed;
-        break;
-      case _$BicycleSchema.keyHasBell:
-        if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
-          throw const CodableException('Duplicate field "hasBell"');
-        }
-        hasBell = keyed.readBool();
-        seen |= _$BicycleSchema.hasBell;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? maxSpeed;
+    bool? hasBell;
+    var seen = _$BicycleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
+        case _$BicycleSchema.keyMaxSpeed:
+          if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
+            throw const CodableException('Duplicate field "maxSpeed"');
+          }
+          maxSpeed = keyed.readInt();
+          seen |= _$BicycleSchema.maxSpeed;
+          break;
+        case _$BicycleSchema.keyHasBell:
+          if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
+            throw const CodableException('Duplicate field "hasBell"');
+          }
+          hasBell = keyed.readBool();
+          seen |= _$BicycleSchema.hasBell;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Bicycle
-// =============================================================================
-List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Bicycle>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$BicycleFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Bicycle instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Bicycle
-// =============================================================================
-void _$BicycleToEncoder(Bicycle instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
 }
 
 // =============================================================================
@@ -624,68 +597,59 @@ extension type const _$UserWithLocationSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for UserWithLocation
+// 2. Companion Codable for UserWithLocation
 // =============================================================================
-UserWithLocation _$UserWithLocationFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$UserWithLocationSchema.keyOptions);
+final class UserWithLocationCodable implements Codable<UserWithLocation> {
+  const UserWithLocationCodable();
 
-  UserProfile? profile;
-  Coordinate? location;
-  var seen = _$UserWithLocationSchema.none;
+  @override
+  UserWithLocation decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$UserWithLocationSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$UserWithLocationSchema.keyOptions)) {
-      case _$UserWithLocationSchema.keyProfile:
-        if ((seen._value & _$UserWithLocationSchema.profile._value) != 0) {
-          throw const CodableException('Duplicate field "profile"');
-        }
-        profile = _$UserProfileFromDecoder(keyed.nestedDecoder());
-        seen |= _$UserWithLocationSchema.profile;
-        break;
-      case _$UserWithLocationSchema.keyLocation:
-        if ((seen._value & _$UserWithLocationSchema.location._value) != 0) {
-          throw const CodableException('Duplicate field "location"');
-        }
-        location = _$CoordinateFromDecoder(keyed.nestedDecoder());
-        seen |= _$UserWithLocationSchema.location;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    UserProfile? profile;
+    Coordinate? location;
+    var seen = _$UserWithLocationSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$UserWithLocationSchema.keyOptions)) {
+        case _$UserWithLocationSchema.keyProfile:
+          if ((seen._value & _$UserWithLocationSchema.profile._value) != 0) {
+            throw const CodableException('Duplicate field "profile"');
+          }
+          profile = const UserProfileCodable().decode(keyed.nestedDecoder());
+          seen |= _$UserWithLocationSchema.profile;
+          break;
+        case _$UserWithLocationSchema.keyLocation:
+          if ((seen._value & _$UserWithLocationSchema.location._value) != 0) {
+            throw const CodableException('Duplicate field "location"');
+          }
+          location = const CoordinateCodable().decode(keyed.nestedDecoder());
+          seen |= _$UserWithLocationSchema.location;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return UserWithLocation(profile: profile!, location: location!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return UserWithLocation(profile: profile!, location: location!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for UserWithLocation
-// =============================================================================
-List<UserWithLocation> _$UserWithLocationListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <UserWithLocation>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$UserWithLocationFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(UserWithLocation instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeValue(
+      _$UserWithLocationSchema.nameProfile,
+      instance.profile,
+      const UserProfileCodable(),
+    );
+    keyed.encodeValue(
+      _$UserWithLocationSchema.nameLocation,
+      instance.location,
+      const CoordinateCodable(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for UserWithLocation
-// =============================================================================
-void _$UserWithLocationToEncoder(UserWithLocation instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeValue(
-    _$UserWithLocationSchema.nameProfile,
-    instance.profile,
-    _$UserProfileToEncoder,
-  );
-  keyed.encodeValue(
-    _$UserWithLocationSchema.nameLocation,
-    instance.location,
-    _$CoordinateToEncoder,
-  );
 }

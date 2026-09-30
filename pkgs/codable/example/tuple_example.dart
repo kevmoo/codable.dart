@@ -16,10 +16,6 @@ class CoordinatePair {
   final Float64List? location;
 
   const CoordinatePair({this.location});
-
-  static CoordinatePair decode(Decoder decoder) =>
-      _$CoordinatePairFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CoordinatePairToEncoder(this, encoder);
 }
 
 void main() {
@@ -27,10 +23,13 @@ void main() {
     utf8.encode('{"location": [37.7749, -122.4194]}'),
   );
   final decoder = JsonCodableDecoder.fromBytes(json);
-  final pair = CoordinatePair.decode(decoder);
+  final pair = const CoordinatePairCodable().decode(decoder);
 
   print('Location: ${pair.location?[0]}, ${pair.location?[1]}');
 
-  final outBytes = JsonCodableEncoder.toBytes(pair.encode);
+  final outBytes = JsonCodableEncoder.toBytes(
+    pair,
+    const CoordinatePairCodable(),
+  );
   print('Serialized tuple: ${utf8.decode(outBytes)}');
 }

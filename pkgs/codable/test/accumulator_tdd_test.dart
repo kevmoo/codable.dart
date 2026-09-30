@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
 import 'package:codable/src/json/driver/scratch_byte_accumulator.dart';
 import 'package:test/test.dart';
@@ -22,12 +23,12 @@ void main() {
       int? decodedElement;
       final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           final unkeyed = decoder.unkeyed();
           expect(unkeyed.moveNext(), isTrue);
           decodedElement = unkeyed.readInt();
           expect(unkeyed.moveNext(), isFalse);
-        },
+        }),
       );
       sink1.add(largeBytes);
       sink1.close();
@@ -44,7 +45,7 @@ void main() {
 
       final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           final keyed = decoder.keyed();
           expect(keyed.nextKey(), equals('a'));
           keyed.skipValue();
@@ -66,7 +67,7 @@ void main() {
             );
             secondPayload = Uint8List.fromList(bytes);
           }
-        },
+        }),
       );
       sink2.add(smallPayload);
       sink2.close();
@@ -91,13 +92,13 @@ void main() {
       Uint8List? escapedPayload;
       final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           escapedPayload = Uint8List.sublistView(
             decoder.payload!,
             0,
             decoder.payload!.length,
           );
-        },
+        }),
       );
       sink1.add(payload1);
       sink1.close();
@@ -111,7 +112,7 @@ void main() {
       );
       final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {},
+        Decodable.fromFunction((decoder) {}),
       );
       sink2.add(payload2);
       sink2.close();
@@ -127,11 +128,11 @@ void main() {
         Uint8List? retained;
         final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
           ChunkedConversionSink.withCallback((_) {}),
-          (decoder) {
+          Decodable.fromFunction((decoder) {
             retained = _asNullable(
               (decoder as JsonCodableDecoder).reader.bytes,
             );
-          },
+          }),
         );
         sink1
           ..add(first)
@@ -143,7 +144,7 @@ void main() {
         // Stream 2 decodes a different payload and must not overwrite retained.
         final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
           ChunkedConversionSink.withCallback((_) {}),
-          (decoder) {},
+          Decodable.fromFunction((decoder) {}),
         );
         sink2
           ..add(utf8.encode('[99999999,88888888,77777777]'))
@@ -162,22 +163,22 @@ void main() {
 
       final outerSink = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (outerDecoder) {
+        Decodable.fromFunction((outerDecoder) {
           outerDecodedBytes = Uint8List.fromList(outerDecoder.payload!);
 
           // Re-entrant decoding inside the decode callback
           final innerSink = JsonCodableDecoder.startChunkedConversion<void>(
             ChunkedConversionSink.withCallback((_) {}),
-            (innerDecoder) {
+            Decodable.fromFunction((innerDecoder) {
               innerDecodedBytes = Uint8List.fromList(innerDecoder.payload!);
-            },
+            }),
           );
           innerSink.add(innerPayload);
           innerSink.close();
 
           // Outer payload should still be unharmed after innerSink finishes
           expect(outerDecoder.payload, equals(outerPayload));
-        },
+        }),
       );
 
       outerSink.add(outerPayload);
@@ -193,9 +194,9 @@ void main() {
       Uint8List? finalPayload;
       final sink = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           finalPayload = Uint8List.fromList(decoder.payload!);
-        },
+        }),
       );
 
       sink.addSlice(rawData, 7, 9, false);
@@ -214,12 +215,12 @@ void main() {
       int? decodedValue;
       final sink = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           final unkeyed = decoder.unkeyed();
           expect(unkeyed.moveNext(), isTrue);
           decodedValue = unkeyed.readInt();
           expect(unkeyed.moveNext(), isFalse);
-        },
+        }),
       );
 
       sink.add(largeBytes);
@@ -232,10 +233,10 @@ void main() {
       int? smallBufferLength;
       final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
-        (decoder) {
+        Decodable.fromFunction((decoder) {
           smallPayload = decoder.payload;
           smallBufferLength = decoder.payload?.buffer.lengthInBytes;
-        },
+        }),
       );
       sink2.add(small);
       sink2.close();
@@ -273,12 +274,12 @@ void main() {
         Float64List? result;
         final sink = JsonCodableDecoder.startChunkedConversion<void>(
           ChunkedConversionSink.withCallback((_) {}),
-          (decoder) {
+          Decodable.fromFunction((decoder) {
             result = decoder.decodeUniformDoubleList(const [
               ['x'],
               ['y'],
             ]);
-          },
+          }),
         );
         sink.add(payload);
         sink.close();

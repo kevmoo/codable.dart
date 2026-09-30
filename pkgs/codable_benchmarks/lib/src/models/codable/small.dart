@@ -19,10 +19,6 @@ class SmallLocation {
     required this.city,
     required this.country,
   });
-
-  static SmallLocation decode(Decoder decoder) =>
-      _$SmallLocationFromDecoder(decoder);
-  void encode(Encoder encoder) => _$SmallLocationToEncoder(this, encoder);
 }
 
 @Codable()
@@ -36,10 +32,6 @@ class SmallMetadata {
     required this.lastLogin,
     required this.location,
   });
-
-  static SmallMetadata decode(Decoder decoder) =>
-      _$SmallMetadataFromDecoder(decoder);
-  void encode(Encoder encoder) => _$SmallMetadataToEncoder(this, encoder);
 }
 
 @Codable()
@@ -67,8 +59,4 @@ class SmallDocument {
     required this.metadata,
     required this.tags,
   });
-
-  static SmallDocument decode(Decoder decoder) =>
-      _$SmallDocumentFromDecoder(decoder);
-  void encode(Encoder encoder) => _$SmallDocumentToEncoder(this, encoder);
 }

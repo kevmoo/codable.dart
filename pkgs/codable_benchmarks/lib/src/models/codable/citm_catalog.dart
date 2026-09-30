@@ -33,10 +33,6 @@ class CitmCatalog {
     this.topicSynced = const {},
     this.venueNames = const {},
   });
-
-  static CitmCatalog decode(Decoder decoder) =>
-      _$CitmCatalogFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmCatalogToEncoder(this, encoder);
 }
 
 @Codable()
@@ -60,9 +56,6 @@ class CitmEvent {
     this.subtitle,
     this.topicIds = const [],
   });
-
-  static CitmEvent decode(Decoder decoder) => _$CitmEventFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmEventToEncoder(this, encoder);
 }
 
 @Codable()
@@ -86,10 +79,6 @@ class CitmPerformance {
     required this.start,
     required this.venueCode,
   });
-
-  static CitmPerformance decode(Decoder decoder) =>
-      _$CitmPerformanceFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmPerformanceToEncoder(this, encoder);
 }
 
 @Codable()
@@ -103,9 +92,6 @@ class CitmPrice {
     required this.audienceSubCategoryId,
     required this.seatCategoryId,
   });
-
-  static CitmPrice decode(Decoder decoder) => _$CitmPriceFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmPriceToEncoder(this, encoder);
 }
 
 @Codable()
@@ -114,10 +100,6 @@ class CitmSeatCategory {
   final int seatCategoryId;
 
   const CitmSeatCategory({this.areas = const [], required this.seatCategoryId});
-
-  static CitmSeatCategory decode(Decoder decoder) =>
-      _$CitmSeatCategoryFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmSeatCategoryToEncoder(this, encoder);
 }
 
 @Codable()
@@ -126,7 +108,4 @@ class CitmArea {
   final List<int> blockIds;
 
   const CitmArea({required this.areaId, this.blockIds = const []});
-
-  static CitmArea decode(Decoder decoder) => _$CitmAreaFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CitmAreaToEncoder(this, encoder);
 }

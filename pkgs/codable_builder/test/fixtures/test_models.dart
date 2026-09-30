@@ -12,11 +12,6 @@ final class Point {
   final double y;
 
   const Point(this.x, this.y);
-
-  static Point decode(Decoder decoder) => _$PointFromDecoder(decoder);
-  static List<Point> decodeList(Decoder decoder) =>
-      _$PointListFromDecoder(decoder);
-  void encode(Encoder encoder) => _$PointToEncoder(this, encoder);
 }
 
 enum UserRole { admin, member, guest }
@@ -38,10 +33,6 @@ final class UserAccount {
     @CodableTuple(2) this.location,
     @CodableKey(ignore: true) this.internalId = '',
   });
-
-  static UserAccount decode(Decoder decoder) =>
-      _$UserAccountFromDecoder(decoder);
-  void encode(Encoder encoder) => _$UserAccountToEncoder(this, encoder);
 }
 
 @Codable()
@@ -56,9 +47,6 @@ final class Address {
   final String city;
   final String street;
   const Address({required this.city, required this.street});
-
-  static Address decode(Decoder decoder) => _$AddressFromDecoder(decoder);
-  void encode(Encoder encoder) => _$AddressToEncoder(this, encoder);
 }
 
 @Codable()
@@ -76,12 +64,9 @@ final class Enterprise {
     this.categories = const {},
     this.headcountByDept = const {},
   });
-
-  static Enterprise decode(Decoder decoder) => _$EnterpriseFromDecoder(decoder);
-  void encode(Encoder encoder) => _$EnterpriseToEncoder(this, encoder);
 }
 
-final class ZipCodeDecoder implements CustomCodable<String> {
+final class ZipCodeDecoder implements Codable<String> {
   const ZipCodeDecoder();
 
   @override
@@ -111,10 +96,6 @@ final class UserProfileCustom {
   final String zip;
 
   const UserProfileCustom({required this.id, required this.zip});
-
-  static UserProfileCustom decode(Decoder decoder) =>
-      _$UserProfileCustomFromDecoder(decoder);
-  void encode(Encoder encoder) => _$UserProfileCustomToEncoder(this, encoder);
 }
 
 @Codable()
@@ -130,9 +111,6 @@ final class Team {
     this.nullableTags = const {},
     this.scores = const {},
   });
-
-  static Team decode(Decoder decoder) => _$TeamFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TeamToEncoder(this, encoder);
 }
 
 @Codable()
@@ -154,11 +132,6 @@ final class PrimitiveCollectionsModel {
     this.matrix = const [],
     this.nestedFloats = const [],
   });
-
-  static PrimitiveCollectionsModel decode(Decoder decoder) =>
-      _$PrimitiveCollectionsModelFromDecoder(decoder);
-  void encode(Encoder encoder) =>
-      _$PrimitiveCollectionsModelToEncoder(this, encoder);
 }
 
 @Codable()

@@ -55,9 +55,7 @@ void main() {
       element,
       ConstantReader(annotation),
     );
-    final decoderCode = DecoderGeneratorHelper(model).generate();
-    final encoderCode = EncoderGeneratorHelper(model).generate();
-    return '$decoderCode\n$encoderCode';
+    return const CodableGenerator().generateForModel(model);
   }
 
   group('CodableGenerator Code Synthesis & Validation Tests', () {
@@ -91,8 +89,11 @@ void main() {
         check(output).contains('void validate()');
         check(output).contains('_throwMissingFields()');
 
-        // Verify universal decoder
-        check(output).contains('Point _\$PointFromDecoder(Decoder decoder)');
+        // Verify companion class and universal decoder
+        check(output)
+            .contains('final class PointCodable implements Codable<Point>');
+        check(output).contains('const PointCodable();');
+        check(output).contains('Point decode(Decoder decoder)');
         check(output).contains(
           'final keyed = decoder.keyed(options: _\$PointSchema.keyOptions);',
         );
@@ -108,12 +109,10 @@ void main() {
         check(output).contains('seen |= _\$PointSchema.y;');
         check(output).contains('seen.validate();');
         // Positional constructor call
-        check(output).contains('return Point(\n    x!,\n    y!,\n  );');
+        check(output).contains('return Point(\n      x!,\n      y!,\n    );');
 
         // Verify universal encoder
-        check(
-          output,
-        ).contains('void _\$PointToEncoder(Point instance, Encoder encoder)');
+        check(output).contains('void encode(Point instance, Encoder encoder)');
         check(output).contains('final keyed = encoder.keyed();');
         check(output)
             .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
@@ -174,12 +173,12 @@ void main() {
       final output = runGeneratorFor('Enterprise');
 
       // Nested decoder call
-      check(
-        output,
-      ).contains('headquarter = _\$AddressFromDecoder(keyed.nestedDecoder());');
+      check(output).contains(
+        'headquarter = const AddressCodable().decode(keyed.nestedDecoder());',
+      );
       // List of nested codable
       check(output).contains(
-        'branches = _\$AddressListFromDecoder(keyed.nestedDecoder());',
+        'branches = const AddressCodable().decodeList(keyed.nestedDecoder());',
       );
       // Set of string
       check(output).contains('categories = keyed.decodeStringList().toSet();');
@@ -187,7 +186,7 @@ void main() {
       check(output).contains('final k = keyed.nestedDecoder().keyed();');
       // Nested encoder call
       check(output).contains(
-        'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, _\$AddressToEncoder);',
+        'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, const AddressCodable());',
       );
     });
 
@@ -195,23 +194,26 @@ void main() {
       final output = runGeneratorFor('UserProfileCustom');
 
       check(output)
-          .contains('zip = keyed.decodeValue(const ZipCodeDecoder().decode);');
+          .contains('zip = keyed.decodeValue(const ZipCodeDecoder());');
       check(output).contains(
-        'keyed.encodeValue(_\$UserProfileCustomSchema.nameZip, instance.zip, const ZipCodeDecoder().encode);',
+        'keyed.encodeValue(_\$UserProfileCustomSchema.nameZip, instance.zip, const ZipCodeDecoder());',
       );
     });
 
-    test('generates code for enum collections and nullable collections in Team', () {
-      final output = runGeneratorFor('Team');
+    test(
+      'generates code for enum collections and nullable collections in Team',
+      () {
+        final output = runGeneratorFor('Team');
 
-      check(output)
-          .contains('UserRole.values.byName(d.singleValue().readString())');
-      check(output).contains('nullableTags = keyed.decodeList<String?>');
-      check(output).contains('final k = keyed.nestedDecoder().keyed();');
-      check(output).contains(
-        'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, (item, e) {',
-      );
-    });
+        check(output)
+            .contains('UserRole.values.byName(d.singleValue().readString())');
+        check(output).contains('nullableTags = keyed.decodeList<String?>');
+        check(output).contains('final k = keyed.nestedDecoder().keyed();');
+        check(output).contains(
+          'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, Encodable.fromFunction((UserRole item, e) {',
+        );
+      },
+    );
 
     test(
       'generates specialized list decoders for PrimitiveCollectionsModel',

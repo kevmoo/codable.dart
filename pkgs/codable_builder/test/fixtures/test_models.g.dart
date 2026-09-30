@@ -61,75 +61,75 @@ extension type const _$PointSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Point
+// 2. Companion Codable for Point
 // =============================================================================
-Point _$PointFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$PointSchema.keyOptions);
+final class PointCodable implements Codable<Point> {
+  const PointCodable();
 
-  double? x;
-  double? y;
-  var seen = _$PointSchema.none;
+  @override
+  Point decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PointSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$PointSchema.keyOptions)) {
-      case _$PointSchema.keyX:
-        if ((seen._value & _$PointSchema.x._value) != 0) {
-          throw const CodableException('Duplicate field "x"');
-        }
-        x = keyed.readDouble();
-        seen |= _$PointSchema.x;
-        break;
-      case _$PointSchema.keyY:
-        if ((seen._value & _$PointSchema.y._value) != 0) {
-          throw const CodableException('Duplicate field "y"');
-        }
-        y = keyed.readDouble();
-        seen |= _$PointSchema.y;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    double? x;
+    double? y;
+    var seen = _$PointSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PointSchema.keyOptions)) {
+        case _$PointSchema.keyX:
+          if ((seen._value & _$PointSchema.x._value) != 0) {
+            throw const CodableException('Duplicate field "x"');
+          }
+          x = keyed.readDouble();
+          seen |= _$PointSchema.x;
+          break;
+        case _$PointSchema.keyY:
+          if ((seen._value & _$PointSchema.y._value) != 0) {
+            throw const CodableException('Duplicate field "y"');
+          }
+          y = keyed.readDouble();
+          seen |= _$PointSchema.y;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Point(x!, y!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
+  List<Point> decodeList(Decoder decoder) {
+    final flatDoubles = decoder.decodeUniformDoubleList(const [
+      ['x'],
+      ['y'],
+    ]);
+    if (flatDoubles != null) {
+      final count = flatDoubles.length ~/ 2;
+      return List<Point>.generate(
+        count,
+        (i) => Point(flatDoubles[i * 2 + 0], flatDoubles[i * 2 + 1]),
+        growable: true,
+      );
+    }
 
-  return Point(x!, y!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Point
-// =============================================================================
-List<Point> _$PointListFromDecoder(Decoder decoder) {
-  final flatDoubles = decoder.decodeUniformDoubleList(const [
-    ['x'],
-    ['y'],
-  ]);
-  if (flatDoubles != null) {
-    final count = flatDoubles.length ~/ 2;
-    return List<Point>.generate(
-      count,
-      (i) => Point(flatDoubles[i * 2 + 0], flatDoubles[i * 2 + 1]),
-      growable: true,
-    );
+    final unkeyed = decoder.unkeyed();
+    final list = <Point>[];
+    while (unkeyed.moveNext()) {
+      list.add(decode(unkeyed.nestedDecoder()));
+    }
+    return list;
   }
 
-  final unkeyed = decoder.unkeyed();
-  final list = <Point>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$PointFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Point instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeDouble(_$PointSchema.nameX, instance.x);
+    keyed.encodeDouble(_$PointSchema.nameY, instance.y);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Point
-// =============================================================================
-void _$PointToEncoder(Point instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeDouble(_$PointSchema.nameX, instance.x);
-  keyed.encodeDouble(_$PointSchema.nameY, instance.y);
 }
 
 // =============================================================================
@@ -221,110 +221,101 @@ extension type const _$UserAccountSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for UserAccount
+// 2. Companion Codable for UserAccount
 // =============================================================================
-UserAccount _$UserAccountFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$UserAccountSchema.keyOptions);
+final class UserAccountCodable implements Codable<UserAccount> {
+  const UserAccountCodable();
 
-  String? id;
-  String? emailAddress;
-  UserRole? role;
-  var tags = const <String>[];
-  Float64List? location;
-  var internalId = '';
-  var seen = _$UserAccountSchema.none;
+  @override
+  UserAccount decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$UserAccountSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$UserAccountSchema.keyOptions)) {
-      case _$UserAccountSchema.keyId:
-        if ((seen._value & _$UserAccountSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readString();
-        seen |= _$UserAccountSchema.id;
-        break;
-      case _$UserAccountSchema.keyEmailAddress:
-      case _$UserAccountSchema.aliasKeyEmailAddressEmail:
-      case _$UserAccountSchema.aliasKeyEmailAddressContactEmail:
-        if ((seen._value & _$UserAccountSchema.emailAddress._value) != 0) {
-          throw const CodableException('Duplicate field "email_address"');
-        }
-        emailAddress = keyed.readString();
-        seen |= _$UserAccountSchema.emailAddress;
-        break;
-      case _$UserAccountSchema.keyRole:
-        if ((seen._value & _$UserAccountSchema.role._value) != 0) {
-          throw const CodableException('Duplicate field "role"');
-        }
-        final enumIndex = keyed.selectStringIndex(
-          _$UserAccountSchema.roleKeyOptions,
-        );
-        if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
-          role = UserRole.values[enumIndex];
-        } else {
-          throw const CodableException('Unknown UserRole value');
-        }
-        seen |= _$UserAccountSchema.role;
-        break;
-      case _$UserAccountSchema.keyTags:
-        tags = keyed.decodeStringList();
-        break;
-      case _$UserAccountSchema.keyLocation:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          location = null;
-        } else {
-          location = keyed.decodeFloat64List();
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? id;
+    String? emailAddress;
+    UserRole? role;
+    var tags = const <String>[];
+    Float64List? location;
+    var internalId = '';
+    var seen = _$UserAccountSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$UserAccountSchema.keyOptions)) {
+        case _$UserAccountSchema.keyId:
+          if ((seen._value & _$UserAccountSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readString();
+          seen |= _$UserAccountSchema.id;
+          break;
+        case _$UserAccountSchema.keyEmailAddress:
+        case _$UserAccountSchema.aliasKeyEmailAddressEmail:
+        case _$UserAccountSchema.aliasKeyEmailAddressContactEmail:
+          if ((seen._value & _$UserAccountSchema.emailAddress._value) != 0) {
+            throw const CodableException('Duplicate field "email_address"');
+          }
+          emailAddress = keyed.readString();
+          seen |= _$UserAccountSchema.emailAddress;
+          break;
+        case _$UserAccountSchema.keyRole:
+          if ((seen._value & _$UserAccountSchema.role._value) != 0) {
+            throw const CodableException('Duplicate field "role"');
+          }
+          final enumIndex = keyed.selectStringIndex(
+            _$UserAccountSchema.roleKeyOptions,
+          );
+          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+            role = UserRole.values[enumIndex];
+          } else {
+            throw const CodableException('Unknown UserRole value');
+          }
+          seen |= _$UserAccountSchema.role;
+          break;
+        case _$UserAccountSchema.keyTags:
+          tags = keyed.decodeStringList();
+          break;
+        case _$UserAccountSchema.keyLocation:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            location = null;
+          } else {
+            location = keyed.decodeFloat64List();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
-  }
 
-  // Inlined fast-path check
-  seen.validate();
+    // Inlined fast-path check
+    seen.validate();
 
-  return UserAccount(
-    id: id!,
-    emailAddress: emailAddress!,
-    role: role!,
-    tags: tags,
-    location: location,
-    internalId: internalId,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for UserAccount
-// =============================================================================
-List<UserAccount> _$UserAccountListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <UserAccount>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$UserAccountFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for UserAccount
-// =============================================================================
-void _$UserAccountToEncoder(UserAccount instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
-  keyed.encodeString(
-    _$UserAccountSchema.nameEmailAddress,
-    instance.emailAddress,
-  );
-  keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
-  keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
-  if (instance.location != null) {
-    keyed.encodeDoubleList(
-      _$UserAccountSchema.nameLocation,
-      instance.location!,
+    return UserAccount(
+      id: id!,
+      emailAddress: emailAddress!,
+      role: role!,
+      tags: tags,
+      location: location,
+      internalId: internalId,
     );
+  }
+
+  @override
+  void encode(UserAccount instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
+    keyed.encodeString(
+      _$UserAccountSchema.nameEmailAddress,
+      instance.emailAddress,
+    );
+    keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
+    keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
+    if (instance.location != null) {
+      keyed.encodeDoubleList(
+        _$UserAccountSchema.nameLocation,
+        instance.location!,
+      );
+    }
   }
 }
 
@@ -385,62 +376,53 @@ extension type const _$AddressSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Address
+// 2. Companion Codable for Address
 // =============================================================================
-Address _$AddressFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$AddressSchema.keyOptions);
+final class AddressCodable implements Codable<Address> {
+  const AddressCodable();
 
-  String? city;
-  String? street;
-  var seen = _$AddressSchema.none;
+  @override
+  Address decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$AddressSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$AddressSchema.keyOptions)) {
-      case _$AddressSchema.keyCity:
-        if ((seen._value & _$AddressSchema.city._value) != 0) {
-          throw const CodableException('Duplicate field "city"');
-        }
-        city = keyed.readString();
-        seen |= _$AddressSchema.city;
-        break;
-      case _$AddressSchema.keyStreet:
-        if ((seen._value & _$AddressSchema.street._value) != 0) {
-          throw const CodableException('Duplicate field "street"');
-        }
-        street = keyed.readString();
-        seen |= _$AddressSchema.street;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? city;
+    String? street;
+    var seen = _$AddressSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$AddressSchema.keyOptions)) {
+        case _$AddressSchema.keyCity:
+          if ((seen._value & _$AddressSchema.city._value) != 0) {
+            throw const CodableException('Duplicate field "city"');
+          }
+          city = keyed.readString();
+          seen |= _$AddressSchema.city;
+          break;
+        case _$AddressSchema.keyStreet:
+          if ((seen._value & _$AddressSchema.street._value) != 0) {
+            throw const CodableException('Duplicate field "street"');
+          }
+          street = keyed.readString();
+          seen |= _$AddressSchema.street;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Address(city: city!, street: street!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Address(city: city!, street: street!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Address
-// =============================================================================
-List<Address> _$AddressListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Address>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$AddressFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Address instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$AddressSchema.nameCity, instance.city);
+    keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Address
-// =============================================================================
-void _$AddressToEncoder(Address instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$AddressSchema.nameCity, instance.city);
-  keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
 }
 
 // =============================================================================
@@ -513,111 +495,102 @@ extension type const _$EnterpriseSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Enterprise
+// 2. Companion Codable for Enterprise
 // =============================================================================
-Enterprise _$EnterpriseFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$EnterpriseSchema.keyOptions);
+final class EnterpriseCodable implements Codable<Enterprise> {
+  const EnterpriseCodable();
 
-  String? name;
-  Address? headquarter;
-  var branches = const <Address>[];
-  var categories = const <String>{};
-  var headcountByDept = const <String, int>{};
-  var seen = _$EnterpriseSchema.none;
+  @override
+  Enterprise decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$EnterpriseSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$EnterpriseSchema.keyOptions)) {
-      case _$EnterpriseSchema.keyName:
-        if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        name = keyed.readString();
-        seen |= _$EnterpriseSchema.name;
-        break;
-      case _$EnterpriseSchema.keyHeadquarter:
-        if ((seen._value & _$EnterpriseSchema.headquarter._value) != 0) {
-          throw const CodableException('Duplicate field "headquarter"');
-        }
-        headquarter = _$AddressFromDecoder(keyed.nestedDecoder());
-        seen |= _$EnterpriseSchema.headquarter;
-        break;
-      case _$EnterpriseSchema.keyBranches:
-        branches = _$AddressListFromDecoder(keyed.nestedDecoder());
-        break;
-      case _$EnterpriseSchema.keyCategories:
-        categories = keyed.decodeStringList().toSet();
-        break;
-      case _$EnterpriseSchema.keyHeadcountByDept:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, int>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readInt();
+    String? name;
+    Address? headquarter;
+    var branches = const <Address>[];
+    var categories = const <String>{};
+    var headcountByDept = const <String, int>{};
+    var seen = _$EnterpriseSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$EnterpriseSchema.keyOptions)) {
+        case _$EnterpriseSchema.keyName:
+          if ((seen._value & _$EnterpriseSchema.name._value) != 0) {
+            throw const CodableException('Duplicate field "name"');
           }
-          headcountByDept = m;
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
-    }
-  }
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Enterprise(
-    name: name!,
-    headquarter: headquarter!,
-    branches: branches,
-    categories: categories,
-    headcountByDept: headcountByDept,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Enterprise
-// =============================================================================
-List<Enterprise> _$EnterpriseListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Enterprise>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$EnterpriseFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Enterprise
-// =============================================================================
-void _$EnterpriseToEncoder(Enterprise instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
-  keyed.encodeValue(
-    _$EnterpriseSchema.nameHeadquarter,
-    instance.headquarter,
-    _$AddressToEncoder,
-  );
-  keyed.encodeList(
-    _$EnterpriseSchema.nameBranches,
-    instance.branches,
-    _$AddressToEncoder,
-  );
-  keyed.encodeStringList(
-    _$EnterpriseSchema.nameCategories,
-    instance.categories.toList(),
-  );
-  keyed.encodeValue(
-    _$EnterpriseSchema.nameHeadcountByDept,
-    instance.headcountByDept,
-    (map, e) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeInt(entry.key, entry.value);
+          name = keyed.readString();
+          seen |= _$EnterpriseSchema.name;
+          break;
+        case _$EnterpriseSchema.keyHeadquarter:
+          if ((seen._value & _$EnterpriseSchema.headquarter._value) != 0) {
+            throw const CodableException('Duplicate field "headquarter"');
+          }
+          headquarter = const AddressCodable().decode(keyed.nestedDecoder());
+          seen |= _$EnterpriseSchema.headquarter;
+          break;
+        case _$EnterpriseSchema.keyBranches:
+          branches = const AddressCodable().decodeList(keyed.nestedDecoder());
+          break;
+        case _$EnterpriseSchema.keyCategories:
+          categories = keyed.decodeStringList().toSet();
+          break;
+        case _$EnterpriseSchema.keyHeadcountByDept:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, int>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readInt();
+            }
+            headcountByDept = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
       }
-    },
-  );
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Enterprise(
+      name: name!,
+      headquarter: headquarter!,
+      branches: branches,
+      categories: categories,
+      headcountByDept: headcountByDept,
+    );
+  }
+
+  @override
+  void encode(Enterprise instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
+    keyed.encodeValue(
+      _$EnterpriseSchema.nameHeadquarter,
+      instance.headquarter,
+      const AddressCodable(),
+    );
+    keyed.encodeList(
+      _$EnterpriseSchema.nameBranches,
+      instance.branches,
+      const AddressCodable(),
+    );
+    keyed.encodeStringList(
+      _$EnterpriseSchema.nameCategories,
+      instance.categories.toList(),
+    );
+    keyed.encodeValue(
+      _$EnterpriseSchema.nameHeadcountByDept,
+      instance.headcountByDept,
+      Encodable.fromFunction((Map<String, int> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeInt(entry.key, entry.value);
+        }
+      }),
+    );
+  }
 }
 
 // =============================================================================
@@ -681,66 +654,57 @@ extension type const _$UserProfileCustomSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for UserProfileCustom
+// 2. Companion Codable for UserProfileCustom
 // =============================================================================
-UserProfileCustom _$UserProfileCustomFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$UserProfileCustomSchema.keyOptions);
+final class UserProfileCustomCodable implements Codable<UserProfileCustom> {
+  const UserProfileCustomCodable();
 
-  String? id;
-  String? zip;
-  var seen = _$UserProfileCustomSchema.none;
+  @override
+  UserProfileCustom decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$UserProfileCustomSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$UserProfileCustomSchema.keyOptions)) {
-      case _$UserProfileCustomSchema.keyId:
-        if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readString();
-        seen |= _$UserProfileCustomSchema.id;
-        break;
-      case _$UserProfileCustomSchema.keyZip:
-        if ((seen._value & _$UserProfileCustomSchema.zip._value) != 0) {
-          throw const CodableException('Duplicate field "zip"');
-        }
-        zip = keyed.decodeValue(const ZipCodeDecoder().decode);
-        seen |= _$UserProfileCustomSchema.zip;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? id;
+    String? zip;
+    var seen = _$UserProfileCustomSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$UserProfileCustomSchema.keyOptions)) {
+        case _$UserProfileCustomSchema.keyId:
+          if ((seen._value & _$UserProfileCustomSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readString();
+          seen |= _$UserProfileCustomSchema.id;
+          break;
+        case _$UserProfileCustomSchema.keyZip:
+          if ((seen._value & _$UserProfileCustomSchema.zip._value) != 0) {
+            throw const CodableException('Duplicate field "zip"');
+          }
+          zip = keyed.decodeValue(const ZipCodeDecoder());
+          seen |= _$UserProfileCustomSchema.zip;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return UserProfileCustom(id: id!, zip: zip!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return UserProfileCustom(id: id!, zip: zip!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for UserProfileCustom
-// =============================================================================
-List<UserProfileCustom> _$UserProfileCustomListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <UserProfileCustom>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$UserProfileCustomFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(UserProfileCustom instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
+    keyed.encodeValue(
+      _$UserProfileCustomSchema.nameZip,
+      instance.zip,
+      const ZipCodeDecoder(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for UserProfileCustom
-// =============================================================================
-void _$UserProfileCustomToEncoder(UserProfileCustom instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
-  keyed.encodeValue(
-    _$UserProfileCustomSchema.nameZip,
-    instance.zip,
-    const ZipCodeDecoder().encode,
-  );
 }
 
 // =============================================================================
@@ -801,106 +765,112 @@ extension type const _$TeamSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Team
+// 2. Companion Codable for Team
 // =============================================================================
-Team _$TeamFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$TeamSchema.keyOptions);
+final class TeamCodable implements Codable<Team> {
+  const TeamCodable();
 
-  String? name;
-  var roles = const <UserRole>[];
-  var nullableTags = const <String?>{};
-  var scores = const <String, int?>{};
-  var seen = _$TeamSchema.none;
+  @override
+  Team decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$TeamSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$TeamSchema.keyOptions)) {
-      case _$TeamSchema.keyName:
-        if ((seen._value & _$TeamSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        name = keyed.readString();
-        seen |= _$TeamSchema.name;
-        break;
-      case _$TeamSchema.keyRoles:
-        roles = keyed.decodeList(
-          (d) => UserRole.values.byName(d.singleValue().readString()),
-        );
-        break;
-      case _$TeamSchema.keyNullableTags:
-        nullableTags = keyed
-            .decodeList<String?>((d) => d.singleValue().readNullableString())
-            .toSet();
-        break;
-      case _$TeamSchema.keyScores:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, int?>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            if (k.isNextNull()) {
-              k.readNull();
-              m[key] = null as int?;
-            } else {
-              m[key] = k.readInt();
-            }
+    String? name;
+    var roles = const <UserRole>[];
+    var nullableTags = const <String?>{};
+    var scores = const <String, int?>{};
+    var seen = _$TeamSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TeamSchema.keyOptions)) {
+        case _$TeamSchema.keyName:
+          if ((seen._value & _$TeamSchema.name._value) != 0) {
+            throw const CodableException('Duplicate field "name"');
           }
-          scores = m;
+          name = keyed.readString();
+          seen |= _$TeamSchema.name;
+          break;
+        case _$TeamSchema.keyRoles:
+          roles = keyed.decodeList(
+            Decodable.fromFunction(
+              (d) => UserRole.values.byName(d.singleValue().readString()),
+            ),
+          );
+          break;
+        case _$TeamSchema.keyNullableTags:
+          nullableTags = keyed
+              .decodeList<String?>(
+                Decodable.fromFunction(
+                  (d) => d.singleValue().readNullableString(),
+                ),
+              )
+              .toSet();
+          break;
+        case _$TeamSchema.keyScores:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, int?>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              if (k.isNextNull()) {
+                k.readNull();
+                m[key] = null as int?;
+              } else {
+                m[key] = k.readInt();
+              }
+            }
+            scores = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Team(
+      name: name!,
+      roles: roles,
+      nullableTags: nullableTags,
+      scores: scores,
+    );
+  }
+
+  @override
+  void encode(Team instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$TeamSchema.nameName, instance.name);
+    keyed.encodeList(
+      _$TeamSchema.nameRoles,
+      instance.roles,
+      Encodable.fromFunction((UserRole item, e) {
+        e.singleValue().encodeString(item.name);
+      }),
+    );
+    keyed.encodeList(
+      _$TeamSchema.nameNullableTags,
+      instance.nullableTags,
+      Encodable.fromFunction((String? item, e) {
+        if (item == null) {
+          e.singleValue().encodeNull();
+        } else {
+          e.singleValue().encodeString(item);
         }
-        break;
-      default:
-        keyed.skipValue();
-        break;
-    }
+      }),
+    );
+    keyed.encodeValue(
+      _$TeamSchema.nameScores,
+      instance.scores,
+      Encodable.fromFunction((Map<String, int?> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeNullableInt(entry.key, entry.value);
+        }
+      }),
+    );
   }
-
-  // Inlined fast-path check
-  seen.validate();
-
-  return Team(
-    name: name!,
-    roles: roles,
-    nullableTags: nullableTags,
-    scores: scores,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Team
-// =============================================================================
-List<Team> _$TeamListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Team>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$TeamFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Team
-// =============================================================================
-void _$TeamToEncoder(Team instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$TeamSchema.nameName, instance.name);
-  keyed.encodeList(_$TeamSchema.nameRoles, instance.roles, (item, e) {
-    e.singleValue().encodeString(item.name);
-  });
-  keyed.encodeList(_$TeamSchema.nameNullableTags, instance.nullableTags, (
-    item,
-    e,
-  ) {
-    if (item == null) {
-      e.singleValue().encodeNull();
-    } else {
-      e.singleValue().encodeString(item);
-    }
-  });
-  keyed.encodeValue(_$TeamSchema.nameScores, instance.scores, (map, e) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeNullableInt(entry.key, entry.value);
-    }
-  });
 }
 
 // =============================================================================
@@ -974,147 +944,138 @@ extension type const _$PrimitiveCollectionsModelSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for PrimitiveCollectionsModel
+// 2. Companion Codable for PrimitiveCollectionsModel
 // =============================================================================
-PrimitiveCollectionsModel _$PrimitiveCollectionsModelFromDecoder(
-  Decoder decoder,
-) {
-  final keyed = decoder.keyed(
-    options: _$PrimitiveCollectionsModelSchema.keyOptions,
-  );
+final class PrimitiveCollectionsModelCodable
+    implements Codable<PrimitiveCollectionsModel> {
+  const PrimitiveCollectionsModelCodable();
 
-  var ints = const <int>[];
-  var doubles = const <double>[];
-  var strings = const <String>[];
-  var bools = const <bool>[];
-  Float64List? float64s;
-  var matrix = const <List<double>>[];
-  var nestedFloats = const <Float64List>[];
-  var seen = _$PrimitiveCollectionsModelSchema.none;
+  @override
+  PrimitiveCollectionsModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$PrimitiveCollectionsModelSchema.keyOptions,
+    );
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(
-      _$PrimitiveCollectionsModelSchema.keyOptions,
-    )) {
-      case _$PrimitiveCollectionsModelSchema.keyInts:
-        ints = keyed.decodeIntList();
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyDoubles:
-        doubles = keyed.decodeDoubleList();
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyStrings:
-        strings = keyed.decodeStringList();
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyBools:
-        bools = keyed.decodeBoolList();
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyFloat64s:
-        if ((seen._value & _$PrimitiveCollectionsModelSchema.float64s._value) !=
-            0) {
-          throw const CodableException('Duplicate field "float64s"');
-        }
-        float64s = keyed.decodeFloat64List();
-        seen |= _$PrimitiveCollectionsModelSchema.float64s;
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyMatrix:
-        {
-          final u = keyed.nestedDecoder().unkeyed();
-          final l = <List<double>>[];
-          while (u.moveNext()) {
-            l.add(u.decodeDoubleList());
+    var ints = const <int>[];
+    var doubles = const <double>[];
+    var strings = const <String>[];
+    var bools = const <bool>[];
+    Float64List? float64s;
+    var matrix = const <List<double>>[];
+    var nestedFloats = const <Float64List>[];
+    var seen = _$PrimitiveCollectionsModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$PrimitiveCollectionsModelSchema.keyOptions,
+      )) {
+        case _$PrimitiveCollectionsModelSchema.keyInts:
+          ints = keyed.decodeIntList();
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyDoubles:
+          doubles = keyed.decodeDoubleList();
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyStrings:
+          strings = keyed.decodeStringList();
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyBools:
+          bools = keyed.decodeBoolList();
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyFloat64s:
+          if ((seen._value &
+                  _$PrimitiveCollectionsModelSchema.float64s._value) !=
+              0) {
+            throw const CodableException('Duplicate field "float64s"');
           }
-          matrix = l;
-        }
-        break;
-      case _$PrimitiveCollectionsModelSchema.keyNestedFloats:
-        {
-          final u = keyed.nestedDecoder().unkeyed();
-          final l = <Float64List>[];
-          while (u.moveNext()) {
-            l.add(u.decodeFloat64List());
+          float64s = keyed.decodeFloat64List();
+          seen |= _$PrimitiveCollectionsModelSchema.float64s;
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyMatrix:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<double>>[];
+            while (u.moveNext()) {
+              l.add(u.decodeDoubleList());
+            }
+            matrix = l;
           }
-          nestedFloats = l;
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+          break;
+        case _$PrimitiveCollectionsModelSchema.keyNestedFloats:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Float64List>[];
+            while (u.moveNext()) {
+              l.add(u.decodeFloat64List());
+            }
+            nestedFloats = l;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return PrimitiveCollectionsModel(
+      ints: ints,
+      doubles: doubles,
+      strings: strings,
+      bools: bools,
+      float64s: float64s!,
+      matrix: matrix,
+      nestedFloats: nestedFloats,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return PrimitiveCollectionsModel(
-    ints: ints,
-    doubles: doubles,
-    strings: strings,
-    bools: bools,
-    float64s: float64s!,
-    matrix: matrix,
-    nestedFloats: nestedFloats,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for PrimitiveCollectionsModel
-// =============================================================================
-List<PrimitiveCollectionsModel> _$PrimitiveCollectionsModelListFromDecoder(
-  Decoder decoder,
-) {
-  final unkeyed = decoder.unkeyed();
-  final list = <PrimitiveCollectionsModel>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$PrimitiveCollectionsModelFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(PrimitiveCollectionsModel instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeIntList(
+      _$PrimitiveCollectionsModelSchema.nameInts,
+      instance.ints,
+    );
+    keyed.encodeDoubleList(
+      _$PrimitiveCollectionsModelSchema.nameDoubles,
+      instance.doubles,
+    );
+    keyed.encodeStringList(
+      _$PrimitiveCollectionsModelSchema.nameStrings,
+      instance.strings,
+    );
+    keyed.encodeBoolList(
+      _$PrimitiveCollectionsModelSchema.nameBools,
+      instance.bools,
+    );
+    keyed.encodeDoubleList(
+      _$PrimitiveCollectionsModelSchema.nameFloat64s,
+      instance.float64s,
+    );
+    keyed.encodeList(
+      _$PrimitiveCollectionsModelSchema.nameMatrix,
+      instance.matrix,
+      Encodable.fromFunction((List<double> item, e) {
+        e.unkeyed().encodeList(
+          item,
+          Encodable.fromFunction((double item, e) {
+            e.singleValue().encodeDouble(item);
+          }),
+        );
+      }),
+    );
+    keyed.encodeList(
+      _$PrimitiveCollectionsModelSchema.nameNestedFloats,
+      instance.nestedFloats,
+      Encodable.fromFunction((Float64List item, e) {
+        e.unkeyed().encodeList(
+          item,
+          Encodable.fromFunction(
+            (double item, e) => e.singleValue().encodeDouble(item),
+          ),
+        );
+      }),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for PrimitiveCollectionsModel
-// =============================================================================
-void _$PrimitiveCollectionsModelToEncoder(
-  PrimitiveCollectionsModel instance,
-  Encoder encoder,
-) {
-  final keyed = encoder.keyed();
-  keyed.encodeIntList(
-    _$PrimitiveCollectionsModelSchema.nameInts,
-    instance.ints,
-  );
-  keyed.encodeDoubleList(
-    _$PrimitiveCollectionsModelSchema.nameDoubles,
-    instance.doubles,
-  );
-  keyed.encodeStringList(
-    _$PrimitiveCollectionsModelSchema.nameStrings,
-    instance.strings,
-  );
-  keyed.encodeBoolList(
-    _$PrimitiveCollectionsModelSchema.nameBools,
-    instance.bools,
-  );
-  keyed.encodeDoubleList(
-    _$PrimitiveCollectionsModelSchema.nameFloat64s,
-    instance.float64s,
-  );
-  keyed.encodeList(
-    _$PrimitiveCollectionsModelSchema.nameMatrix,
-    instance.matrix,
-    (item, e) {
-      e.unkeyed().encodeList(item, (item, e2) {
-        e.singleValue().encodeDouble(item);
-      });
-    },
-  );
-  keyed.encodeList(
-    _$PrimitiveCollectionsModelSchema.nameNestedFloats,
-    instance.nestedFloats,
-    (item, e) {
-      e.unkeyed().encodeList(
-        item,
-        (item, e2) => e2.singleValue().encodeDouble(item),
-      );
-    },
-  );
 }

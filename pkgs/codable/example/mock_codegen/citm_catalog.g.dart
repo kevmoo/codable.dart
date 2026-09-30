@@ -63,276 +63,278 @@ extension type const _$CitmCatalogSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmCatalog
+// 2. Companion Codable for CitmCatalog
 // =============================================================================
-CitmCatalog _$CitmCatalogFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmCatalogSchema.keyOptions);
+final class CitmCatalogCodable implements Codable<CitmCatalog> {
+  const CitmCatalogCodable();
 
-  var areaNames = const <String, String>{};
-  var audienceSubCategoryNames = const <String, String>{};
-  var blockNames = const <String, String>{};
-  var events = const <String, CitmEvent>{};
-  var performances = const <CitmPerformance>[];
-  var seatCategoryNames = const <String, String>{};
-  var subTopicNames = const <String, String>{};
-  var subjectNames = const <String, String>{};
-  var topicNames = const <String, String>{};
-  var topicSynced = const <String, bool>{};
-  var venueNames = const <String, String>{};
-  var seen = _$CitmCatalogSchema.none;
+  @override
+  CitmCatalog decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmCatalogSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmCatalogSchema.keyOptions)) {
-      case _$CitmCatalogSchema.keyAreaNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+    var areaNames = const <String, String>{};
+    var audienceSubCategoryNames = const <String, String>{};
+    var blockNames = const <String, String>{};
+    var events = const <String, CitmEvent>{};
+    var performances = const <CitmPerformance>[];
+    var seatCategoryNames = const <String, String>{};
+    var subTopicNames = const <String, String>{};
+    var subjectNames = const <String, String>{};
+    var topicNames = const <String, String>{};
+    var topicSynced = const <String, bool>{};
+    var venueNames = const <String, String>{};
+    var seen = _$CitmCatalogSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmCatalogSchema.keyOptions)) {
+        case _$CitmCatalogSchema.keyAreaNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            areaNames = m;
           }
-          areaNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyAudienceSubCategoryNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keyAudienceSubCategoryNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            audienceSubCategoryNames = m;
           }
-          audienceSubCategoryNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyBlockNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keyBlockNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            blockNames = m;
           }
-          blockNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyEvents:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, CitmEvent>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = _$CitmEventFromDecoder(k.nestedDecoder());
+          break;
+        case _$CitmCatalogSchema.keyEvents:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, CitmEvent>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = const CitmEventCodable().decode(k.nestedDecoder());
+            }
+            events = m;
           }
-          events = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyPerformances:
-        performances = _$CitmPerformanceListFromDecoder(keyed.nestedDecoder());
-        break;
-      case _$CitmCatalogSchema.keySeatCategoryNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keyPerformances:
+          performances = const CitmPerformanceCodable().decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        case _$CitmCatalogSchema.keySeatCategoryNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            seatCategoryNames = m;
           }
-          seatCategoryNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keySubTopicNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keySubTopicNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            subTopicNames = m;
           }
-          subTopicNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keySubjectNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keySubjectNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            subjectNames = m;
           }
-          subjectNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyTopicNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keyTopicNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            topicNames = m;
           }
-          topicNames = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyTopicSynced:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, bool>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readBool();
+          break;
+        case _$CitmCatalogSchema.keyTopicSynced:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, bool>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readBool();
+            }
+            topicSynced = m;
           }
-          topicSynced = m;
-        }
-        break;
-      case _$CitmCatalogSchema.keyVenueNames:
-        {
-          final k = keyed.nestedDecoder().keyed();
-          final m = <String, String>{};
-          while (k.moveNextKey()) {
-            final key = k.nextKey();
-            m[key] = k.readString();
+          break;
+        case _$CitmCatalogSchema.keyVenueNames:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, String>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readString();
+            }
+            venueNames = m;
           }
-          venueNames = m;
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CitmCatalog(
+      areaNames: areaNames,
+      audienceSubCategoryNames: audienceSubCategoryNames,
+      blockNames: blockNames,
+      events: events,
+      performances: performances,
+      seatCategoryNames: seatCategoryNames,
+      subTopicNames: subTopicNames,
+      subjectNames: subjectNames,
+      topicNames: topicNames,
+      topicSynced: topicSynced,
+      venueNames: venueNames,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CitmCatalog(
-    areaNames: areaNames,
-    audienceSubCategoryNames: audienceSubCategoryNames,
-    blockNames: blockNames,
-    events: events,
-    performances: performances,
-    seatCategoryNames: seatCategoryNames,
-    subTopicNames: subTopicNames,
-    subjectNames: subjectNames,
-    topicNames: topicNames,
-    topicSynced: topicSynced,
-    venueNames: venueNames,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmCatalog
-// =============================================================================
-List<CitmCatalog> _$CitmCatalogListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmCatalog>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmCatalogFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CitmCatalog instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameAreaNames,
+      instance.areaNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameAudienceSubCategoryNames,
+      instance.audienceSubCategoryNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameBlockNames,
+      instance.blockNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameEvents,
+      instance.events,
+      Encodable.fromFunction((Map<String, CitmEvent> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeValue(entry.key, entry.value, const CitmEventCodable());
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$CitmCatalogSchema.namePerformances,
+      instance.performances,
+      const CitmPerformanceCodable(),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameSeatCategoryNames,
+      instance.seatCategoryNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameSubTopicNames,
+      instance.subTopicNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameSubjectNames,
+      instance.subjectNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameTopicNames,
+      instance.topicNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameTopicSynced,
+      instance.topicSynced,
+      Encodable.fromFunction((Map<String, bool> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeBool(entry.key, entry.value);
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$CitmCatalogSchema.nameVenueNames,
+      instance.venueNames,
+      Encodable.fromFunction((Map<String, String> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          k.encodeString(entry.key, entry.value);
+        }
+      }),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmCatalog
-// =============================================================================
-void _$CitmCatalogToEncoder(CitmCatalog instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeValue(_$CitmCatalogSchema.nameAreaNames, instance.areaNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameAudienceSubCategoryNames,
-    instance.audienceSubCategoryNames,
-    (map, e) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    },
-  );
-  keyed.encodeValue(_$CitmCatalogSchema.nameBlockNames, instance.blockNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameEvents, instance.events, (map, e) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeValue(entry.key, entry.value, _$CitmEventToEncoder);
-    }
-  });
-  keyed.encodeList(
-    _$CitmCatalogSchema.namePerformances,
-    instance.performances,
-    _$CitmPerformanceToEncoder,
-  );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSeatCategoryNames,
-    instance.seatCategoryNames,
-    (map, e) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    },
-  );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSubTopicNames,
-    instance.subTopicNames,
-    (map, e) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    },
-  );
-  keyed.encodeValue(
-    _$CitmCatalogSchema.nameSubjectNames,
-    instance.subjectNames,
-    (map, e) {
-      final k = e.keyed();
-      for (final entry in map.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    },
-  );
-  keyed.encodeValue(_$CitmCatalogSchema.nameTopicNames, instance.topicNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameTopicSynced, instance.topicSynced, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeBool(entry.key, entry.value);
-    }
-  });
-  keyed.encodeValue(_$CitmCatalogSchema.nameVenueNames, instance.venueNames, (
-    map,
-    e,
-  ) {
-    final k = e.keyed();
-    for (final entry in map.entries) {
-      k.encodeString(entry.key, entry.value);
-    }
-  });
 }
 
 // =============================================================================
@@ -410,132 +412,126 @@ extension type const _$CitmEventSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmEvent
+// 2. Companion Codable for CitmEvent
 // =============================================================================
-CitmEvent _$CitmEventFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmEventSchema.keyOptions);
+final class CitmEventCodable implements Codable<CitmEvent> {
+  const CitmEventCodable();
 
-  String? description;
-  int? id;
-  String? logo;
-  String? name;
-  var subTopicIds = const <int>[];
-  int? subjectCode;
-  String? subtitle;
-  var topicIds = const <int>[];
-  var seen = _$CitmEventSchema.none;
+  @override
+  CitmEvent decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmEventSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmEventSchema.keyOptions)) {
-      case _$CitmEventSchema.keyDescription:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          description = null;
-        } else {
-          description = keyed.readString();
-        }
-        break;
-      case _$CitmEventSchema.keyId:
-        if ((seen._value & _$CitmEventSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readInt();
-        seen |= _$CitmEventSchema.id;
-        break;
-      case _$CitmEventSchema.keyLogo:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          logo = null;
-        } else {
-          logo = keyed.readString();
-        }
-        break;
-      case _$CitmEventSchema.keyName:
-        if ((seen._value & _$CitmEventSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        name = keyed.readString();
-        seen |= _$CitmEventSchema.name;
-        break;
-      case _$CitmEventSchema.keySubTopicIds:
-        subTopicIds = keyed.decodeIntList();
-        break;
-      case _$CitmEventSchema.keySubjectCode:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          subjectCode = null;
-        } else {
-          subjectCode = keyed.readInt();
-        }
-        break;
-      case _$CitmEventSchema.keySubtitle:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          subtitle = null;
-        } else {
-          subtitle = keyed.readString();
-        }
-        break;
-      case _$CitmEventSchema.keyTopicIds:
-        topicIds = keyed.decodeIntList();
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? description;
+    int? id;
+    String? logo;
+    String? name;
+    var subTopicIds = const <int>[];
+    int? subjectCode;
+    String? subtitle;
+    var topicIds = const <int>[];
+    var seen = _$CitmEventSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmEventSchema.keyOptions)) {
+        case _$CitmEventSchema.keyDescription:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            description = null;
+          } else {
+            description = keyed.readString();
+          }
+          break;
+        case _$CitmEventSchema.keyId:
+          if ((seen._value & _$CitmEventSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readInt();
+          seen |= _$CitmEventSchema.id;
+          break;
+        case _$CitmEventSchema.keyLogo:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            logo = null;
+          } else {
+            logo = keyed.readString();
+          }
+          break;
+        case _$CitmEventSchema.keyName:
+          if ((seen._value & _$CitmEventSchema.name._value) != 0) {
+            throw const CodableException('Duplicate field "name"');
+          }
+          name = keyed.readString();
+          seen |= _$CitmEventSchema.name;
+          break;
+        case _$CitmEventSchema.keySubTopicIds:
+          subTopicIds = keyed.decodeIntList();
+          break;
+        case _$CitmEventSchema.keySubjectCode:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            subjectCode = null;
+          } else {
+            subjectCode = keyed.readInt();
+          }
+          break;
+        case _$CitmEventSchema.keySubtitle:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            subtitle = null;
+          } else {
+            subtitle = keyed.readString();
+          }
+          break;
+        case _$CitmEventSchema.keyTopicIds:
+          topicIds = keyed.decodeIntList();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
-  }
 
-  // Inlined fast-path check
-  seen.validate();
+    // Inlined fast-path check
+    seen.validate();
 
-  return CitmEvent(
-    description: description,
-    id: id!,
-    logo: logo,
-    name: name!,
-    subTopicIds: subTopicIds,
-    subjectCode: subjectCode,
-    subtitle: subtitle,
-    topicIds: topicIds,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmEvent
-// =============================================================================
-List<CitmEvent> _$CitmEventListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmEvent>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmEventFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmEvent
-// =============================================================================
-void _$CitmEventToEncoder(CitmEvent instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  if (instance.description != null) {
-    keyed.encodeString(
-      _$CitmEventSchema.nameDescription,
-      instance.description!,
+    return CitmEvent(
+      description: description,
+      id: id!,
+      logo: logo,
+      name: name!,
+      subTopicIds: subTopicIds,
+      subjectCode: subjectCode,
+      subtitle: subtitle,
+      topicIds: topicIds,
     );
   }
-  keyed.encodeInt(_$CitmEventSchema.nameId, instance.id);
-  if (instance.logo != null) {
-    keyed.encodeString(_$CitmEventSchema.nameLogo, instance.logo!);
+
+  @override
+  void encode(CitmEvent instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    if (instance.description != null) {
+      keyed.encodeString(
+        _$CitmEventSchema.nameDescription,
+        instance.description!,
+      );
+    }
+    keyed.encodeInt(_$CitmEventSchema.nameId, instance.id);
+    if (instance.logo != null) {
+      keyed.encodeString(_$CitmEventSchema.nameLogo, instance.logo!);
+    }
+    keyed.encodeString(_$CitmEventSchema.nameName, instance.name);
+    keyed.encodeIntList(
+      _$CitmEventSchema.nameSubTopicIds,
+      instance.subTopicIds,
+    );
+    if (instance.subjectCode != null) {
+      keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, instance.subjectCode!);
+    }
+    if (instance.subtitle != null) {
+      keyed.encodeString(_$CitmEventSchema.nameSubtitle, instance.subtitle!);
+    }
+    keyed.encodeIntList(_$CitmEventSchema.nameTopicIds, instance.topicIds);
   }
-  keyed.encodeString(_$CitmEventSchema.nameName, instance.name);
-  keyed.encodeIntList(_$CitmEventSchema.nameSubTopicIds, instance.subTopicIds);
-  if (instance.subjectCode != null) {
-    keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, instance.subjectCode!);
-  }
-  if (instance.subtitle != null) {
-    keyed.encodeString(_$CitmEventSchema.nameSubtitle, instance.subtitle!);
-  }
-  keyed.encodeIntList(_$CitmEventSchema.nameTopicIds, instance.topicIds);
 }
 
 // =============================================================================
@@ -631,133 +627,127 @@ extension type const _$CitmPerformanceSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmPerformance
+// 2. Companion Codable for CitmPerformance
 // =============================================================================
-CitmPerformance _$CitmPerformanceFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmPerformanceSchema.keyOptions);
+final class CitmPerformanceCodable implements Codable<CitmPerformance> {
+  const CitmPerformanceCodable();
 
-  int? eventId;
-  int? id;
-  String? logo;
-  String? name;
-  var prices = const <CitmPrice>[];
-  var seatCategories = const <CitmSeatCategory>[];
-  int? start;
-  String? venueCode;
-  var seen = _$CitmPerformanceSchema.none;
+  @override
+  CitmPerformance decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmPerformanceSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmPerformanceSchema.keyOptions)) {
-      case _$CitmPerformanceSchema.keyEventId:
-        if ((seen._value & _$CitmPerformanceSchema.eventId._value) != 0) {
-          throw const CodableException('Duplicate field "eventId"');
-        }
-        eventId = keyed.readInt();
-        seen |= _$CitmPerformanceSchema.eventId;
-        break;
-      case _$CitmPerformanceSchema.keyId:
-        if ((seen._value & _$CitmPerformanceSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readInt();
-        seen |= _$CitmPerformanceSchema.id;
-        break;
-      case _$CitmPerformanceSchema.keyLogo:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          logo = null;
-        } else {
-          logo = keyed.readString();
-        }
-        break;
-      case _$CitmPerformanceSchema.keyName:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          name = null;
-        } else {
-          name = keyed.readString();
-        }
-        break;
-      case _$CitmPerformanceSchema.keyPrices:
-        prices = _$CitmPriceListFromDecoder(keyed.nestedDecoder());
-        break;
-      case _$CitmPerformanceSchema.keySeatCategories:
-        seatCategories = _$CitmSeatCategoryListFromDecoder(
-          keyed.nestedDecoder(),
-        );
-        break;
-      case _$CitmPerformanceSchema.keyStart:
-        if ((seen._value & _$CitmPerformanceSchema.start._value) != 0) {
-          throw const CodableException('Duplicate field "start"');
-        }
-        start = keyed.readInt();
-        seen |= _$CitmPerformanceSchema.start;
-        break;
-      case _$CitmPerformanceSchema.keyVenueCode:
-        if ((seen._value & _$CitmPerformanceSchema.venueCode._value) != 0) {
-          throw const CodableException('Duplicate field "venueCode"');
-        }
-        venueCode = keyed.readString();
-        seen |= _$CitmPerformanceSchema.venueCode;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? eventId;
+    int? id;
+    String? logo;
+    String? name;
+    var prices = const <CitmPrice>[];
+    var seatCategories = const <CitmSeatCategory>[];
+    int? start;
+    String? venueCode;
+    var seen = _$CitmPerformanceSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmPerformanceSchema.keyOptions)) {
+        case _$CitmPerformanceSchema.keyEventId:
+          if ((seen._value & _$CitmPerformanceSchema.eventId._value) != 0) {
+            throw const CodableException('Duplicate field "eventId"');
+          }
+          eventId = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.eventId;
+          break;
+        case _$CitmPerformanceSchema.keyId:
+          if ((seen._value & _$CitmPerformanceSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.id;
+          break;
+        case _$CitmPerformanceSchema.keyLogo:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            logo = null;
+          } else {
+            logo = keyed.readString();
+          }
+          break;
+        case _$CitmPerformanceSchema.keyName:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            name = null;
+          } else {
+            name = keyed.readString();
+          }
+          break;
+        case _$CitmPerformanceSchema.keyPrices:
+          prices = const CitmPriceCodable().decodeList(keyed.nestedDecoder());
+          break;
+        case _$CitmPerformanceSchema.keySeatCategories:
+          seatCategories = const CitmSeatCategoryCodable().decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        case _$CitmPerformanceSchema.keyStart:
+          if ((seen._value & _$CitmPerformanceSchema.start._value) != 0) {
+            throw const CodableException('Duplicate field "start"');
+          }
+          start = keyed.readInt();
+          seen |= _$CitmPerformanceSchema.start;
+          break;
+        case _$CitmPerformanceSchema.keyVenueCode:
+          if ((seen._value & _$CitmPerformanceSchema.venueCode._value) != 0) {
+            throw const CodableException('Duplicate field "venueCode"');
+          }
+          venueCode = keyed.readString();
+          seen |= _$CitmPerformanceSchema.venueCode;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CitmPerformance(
+      eventId: eventId!,
+      id: id!,
+      logo: logo,
+      name: name,
+      prices: prices,
+      seatCategories: seatCategories,
+      start: start!,
+      venueCode: venueCode!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CitmPerformance(
-    eventId: eventId!,
-    id: id!,
-    logo: logo,
-    name: name,
-    prices: prices,
-    seatCategories: seatCategories,
-    start: start!,
-    venueCode: venueCode!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmPerformance
-// =============================================================================
-List<CitmPerformance> _$CitmPerformanceListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmPerformance>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmPerformanceFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CitmPerformance instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$CitmPerformanceSchema.nameEventId, instance.eventId);
+    keyed.encodeInt(_$CitmPerformanceSchema.nameId, instance.id);
+    if (instance.logo != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameLogo, instance.logo!);
+    }
+    if (instance.name != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameName, instance.name!);
+    }
+    keyed.encodeList(
+      _$CitmPerformanceSchema.namePrices,
+      instance.prices,
+      const CitmPriceCodable(),
+    );
+    keyed.encodeList(
+      _$CitmPerformanceSchema.nameSeatCategories,
+      instance.seatCategories,
+      const CitmSeatCategoryCodable(),
+    );
+    keyed.encodeInt(_$CitmPerformanceSchema.nameStart, instance.start);
+    keyed.encodeString(
+      _$CitmPerformanceSchema.nameVenueCode,
+      instance.venueCode,
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmPerformance
-// =============================================================================
-void _$CitmPerformanceToEncoder(CitmPerformance instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmPerformanceSchema.nameEventId, instance.eventId);
-  keyed.encodeInt(_$CitmPerformanceSchema.nameId, instance.id);
-  if (instance.logo != null) {
-    keyed.encodeString(_$CitmPerformanceSchema.nameLogo, instance.logo!);
-  }
-  if (instance.name != null) {
-    keyed.encodeString(_$CitmPerformanceSchema.nameName, instance.name!);
-  }
-  keyed.encodeList(
-    _$CitmPerformanceSchema.namePrices,
-    instance.prices,
-    _$CitmPriceToEncoder,
-  );
-  keyed.encodeList(
-    _$CitmPerformanceSchema.nameSeatCategories,
-    instance.seatCategories,
-    _$CitmSeatCategoryToEncoder,
-  );
-  keyed.encodeInt(_$CitmPerformanceSchema.nameStart, instance.start);
-  keyed.encodeString(_$CitmPerformanceSchema.nameVenueCode, instance.venueCode);
 }
 
 // =============================================================================
@@ -831,84 +821,75 @@ extension type const _$CitmPriceSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmPrice
+// 2. Companion Codable for CitmPrice
 // =============================================================================
-CitmPrice _$CitmPriceFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmPriceSchema.keyOptions);
+final class CitmPriceCodable implements Codable<CitmPrice> {
+  const CitmPriceCodable();
 
-  int? amount;
-  int? audienceSubCategoryId;
-  int? seatCategoryId;
-  var seen = _$CitmPriceSchema.none;
+  @override
+  CitmPrice decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmPriceSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmPriceSchema.keyOptions)) {
-      case _$CitmPriceSchema.keyAmount:
-        if ((seen._value & _$CitmPriceSchema.amount._value) != 0) {
-          throw const CodableException('Duplicate field "amount"');
-        }
-        amount = keyed.readInt();
-        seen |= _$CitmPriceSchema.amount;
-        break;
-      case _$CitmPriceSchema.keyAudienceSubCategoryId:
-        if ((seen._value & _$CitmPriceSchema.audienceSubCategoryId._value) !=
-            0) {
-          throw const CodableException(
-            'Duplicate field "audienceSubCategoryId"',
-          );
-        }
-        audienceSubCategoryId = keyed.readInt();
-        seen |= _$CitmPriceSchema.audienceSubCategoryId;
-        break;
-      case _$CitmPriceSchema.keySeatCategoryId:
-        if ((seen._value & _$CitmPriceSchema.seatCategoryId._value) != 0) {
-          throw const CodableException('Duplicate field "seatCategoryId"');
-        }
-        seatCategoryId = keyed.readInt();
-        seen |= _$CitmPriceSchema.seatCategoryId;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? amount;
+    int? audienceSubCategoryId;
+    int? seatCategoryId;
+    var seen = _$CitmPriceSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmPriceSchema.keyOptions)) {
+        case _$CitmPriceSchema.keyAmount:
+          if ((seen._value & _$CitmPriceSchema.amount._value) != 0) {
+            throw const CodableException('Duplicate field "amount"');
+          }
+          amount = keyed.readInt();
+          seen |= _$CitmPriceSchema.amount;
+          break;
+        case _$CitmPriceSchema.keyAudienceSubCategoryId:
+          if ((seen._value & _$CitmPriceSchema.audienceSubCategoryId._value) !=
+              0) {
+            throw const CodableException(
+              'Duplicate field "audienceSubCategoryId"',
+            );
+          }
+          audienceSubCategoryId = keyed.readInt();
+          seen |= _$CitmPriceSchema.audienceSubCategoryId;
+          break;
+        case _$CitmPriceSchema.keySeatCategoryId:
+          if ((seen._value & _$CitmPriceSchema.seatCategoryId._value) != 0) {
+            throw const CodableException('Duplicate field "seatCategoryId"');
+          }
+          seatCategoryId = keyed.readInt();
+          seen |= _$CitmPriceSchema.seatCategoryId;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CitmPrice(
+      amount: amount!,
+      audienceSubCategoryId: audienceSubCategoryId!,
+      seatCategoryId: seatCategoryId!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CitmPrice(
-    amount: amount!,
-    audienceSubCategoryId: audienceSubCategoryId!,
-    seatCategoryId: seatCategoryId!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmPrice
-// =============================================================================
-List<CitmPrice> _$CitmPriceListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmPrice>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmPriceFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CitmPrice instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
+    keyed.encodeInt(
+      _$CitmPriceSchema.nameAudienceSubCategoryId,
+      instance.audienceSubCategoryId,
+    );
+    keyed.encodeInt(
+      _$CitmPriceSchema.nameSeatCategoryId,
+      instance.seatCategoryId,
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmPrice
-// =============================================================================
-void _$CitmPriceToEncoder(CitmPrice instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
-  keyed.encodeInt(
-    _$CitmPriceSchema.nameAudienceSubCategoryId,
-    instance.audienceSubCategoryId,
-  );
-  keyed.encodeInt(
-    _$CitmPriceSchema.nameSeatCategoryId,
-    instance.seatCategoryId,
-  );
 }
 
 // =============================================================================
@@ -966,66 +947,57 @@ extension type const _$CitmSeatCategorySchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmSeatCategory
+// 2. Companion Codable for CitmSeatCategory
 // =============================================================================
-CitmSeatCategory _$CitmSeatCategoryFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmSeatCategorySchema.keyOptions);
+final class CitmSeatCategoryCodable implements Codable<CitmSeatCategory> {
+  const CitmSeatCategoryCodable();
 
-  var areas = const <CitmArea>[];
-  int? seatCategoryId;
-  var seen = _$CitmSeatCategorySchema.none;
+  @override
+  CitmSeatCategory decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmSeatCategorySchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmSeatCategorySchema.keyOptions)) {
-      case _$CitmSeatCategorySchema.keyAreas:
-        areas = _$CitmAreaListFromDecoder(keyed.nestedDecoder());
-        break;
-      case _$CitmSeatCategorySchema.keySeatCategoryId:
-        if ((seen._value & _$CitmSeatCategorySchema.seatCategoryId._value) !=
-            0) {
-          throw const CodableException('Duplicate field "seatCategoryId"');
-        }
-        seatCategoryId = keyed.readInt();
-        seen |= _$CitmSeatCategorySchema.seatCategoryId;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    var areas = const <CitmArea>[];
+    int? seatCategoryId;
+    var seen = _$CitmSeatCategorySchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmSeatCategorySchema.keyOptions)) {
+        case _$CitmSeatCategorySchema.keyAreas:
+          areas = const CitmAreaCodable().decodeList(keyed.nestedDecoder());
+          break;
+        case _$CitmSeatCategorySchema.keySeatCategoryId:
+          if ((seen._value & _$CitmSeatCategorySchema.seatCategoryId._value) !=
+              0) {
+            throw const CodableException('Duplicate field "seatCategoryId"');
+          }
+          seatCategoryId = keyed.readInt();
+          seen |= _$CitmSeatCategorySchema.seatCategoryId;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CitmSeatCategory(areas: areas, seatCategoryId: seatCategoryId!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CitmSeatCategory(areas: areas, seatCategoryId: seatCategoryId!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmSeatCategory
-// =============================================================================
-List<CitmSeatCategory> _$CitmSeatCategoryListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmSeatCategory>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmSeatCategoryFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CitmSeatCategory instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeList(
+      _$CitmSeatCategorySchema.nameAreas,
+      instance.areas,
+      const CitmAreaCodable(),
+    );
+    keyed.encodeInt(
+      _$CitmSeatCategorySchema.nameSeatCategoryId,
+      instance.seatCategoryId,
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmSeatCategory
-// =============================================================================
-void _$CitmSeatCategoryToEncoder(CitmSeatCategory instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeList(
-    _$CitmSeatCategorySchema.nameAreas,
-    instance.areas,
-    _$CitmAreaToEncoder,
-  );
-  keyed.encodeInt(
-    _$CitmSeatCategorySchema.nameSeatCategoryId,
-    instance.seatCategoryId,
-  );
 }
 
 // =============================================================================
@@ -1080,56 +1052,47 @@ extension type const _$CitmAreaSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CitmArea
+// 2. Companion Codable for CitmArea
 // =============================================================================
-CitmArea _$CitmAreaFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CitmAreaSchema.keyOptions);
+final class CitmAreaCodable implements Codable<CitmArea> {
+  const CitmAreaCodable();
 
-  int? areaId;
-  var blockIds = const <int>[];
-  var seen = _$CitmAreaSchema.none;
+  @override
+  CitmArea decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CitmAreaSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CitmAreaSchema.keyOptions)) {
-      case _$CitmAreaSchema.keyAreaId:
-        if ((seen._value & _$CitmAreaSchema.areaId._value) != 0) {
-          throw const CodableException('Duplicate field "areaId"');
-        }
-        areaId = keyed.readInt();
-        seen |= _$CitmAreaSchema.areaId;
-        break;
-      case _$CitmAreaSchema.keyBlockIds:
-        blockIds = keyed.decodeIntList();
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? areaId;
+    var blockIds = const <int>[];
+    var seen = _$CitmAreaSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CitmAreaSchema.keyOptions)) {
+        case _$CitmAreaSchema.keyAreaId:
+          if ((seen._value & _$CitmAreaSchema.areaId._value) != 0) {
+            throw const CodableException('Duplicate field "areaId"');
+          }
+          areaId = keyed.readInt();
+          seen |= _$CitmAreaSchema.areaId;
+          break;
+        case _$CitmAreaSchema.keyBlockIds:
+          blockIds = keyed.decodeIntList();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CitmArea(areaId: areaId!, blockIds: blockIds);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CitmArea(areaId: areaId!, blockIds: blockIds);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CitmArea
-// =============================================================================
-List<CitmArea> _$CitmAreaListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CitmArea>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CitmAreaFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CitmArea instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
+    keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CitmArea
-// =============================================================================
-void _$CitmAreaToEncoder(CitmArea instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
-  keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
 }
