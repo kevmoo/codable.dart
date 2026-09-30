@@ -466,29 +466,17 @@ bool _isValidSdkRoot(String dirPath) =>
   required List<String> extraArgs,
   String? configPath,
 }) {
-  final prefix = <String>[];
-  if (pinCpu != null) {
-    if (Platform.isLinux) {
-      prefix.addAll(['taskset', '-c', pinCpu]);
-    } else {
-      stderr.writeln(
-        'Warning: --pin-cpu is only supported on Linux. Ignoring.',
-      );
-    }
-  }
-
-  final executable = prefix.isEmpty ? dartBin : prefix.first;
   final arguments = <String>[
-    if (prefix.isNotEmpty) ...[...prefix.skip(1), dartBin],
     'run',
     'bench_press',
     'run',
     if (configPath != null) ...['-c', configPath],
     if (nodePath != null) ...['--node-path', nodePath],
     if (d8Path != null) ...['--d8-path', d8Path],
+    if (pinCpu != null) ...['--pin-cpu', pinCpu],
     ...extraArgs,
   ];
-  return (executable: executable, arguments: arguments);
+  return (executable: dartBin, arguments: arguments);
 }
 
 void _printDryRun({
