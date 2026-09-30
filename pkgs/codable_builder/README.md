@@ -1,5 +1,3 @@
-# package:codable_builder
-
 Source generator (`build_runner`) for [`package:codable`](../codable/README.md).
 
 Generates single-pass streaming decoders and encoders for classes annotated with
@@ -16,7 +14,7 @@ dependencies:
 
 dev_dependencies:
   build_runner: ^2.4.0
-  codable_builder: ^2.0.0-wip
+  codable_builder: ^0.1.0-wip
 ```
 
 ## Usage

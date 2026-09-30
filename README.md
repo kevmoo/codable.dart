@@ -1,5 +1,3 @@
-# codable.dart
-
 High-performance, zero-intermediate-tree serialization framework and JSON
 streaming drivers for Dart.
 

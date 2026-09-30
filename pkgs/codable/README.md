@@ -1,5 +1,3 @@
-# package:codable
-
 High-performance, zero-intermediate-tree serialization contracts and JSON
 streaming drivers for Dart.
 
@@ -86,10 +84,8 @@ for the current compilation target:
   allocations.
 - **Web JS (`dart2js` / `ddc` via `driver_js.dart`)**: Delegates parsing to the
   browser's native C++ `JSON.parse()` and traverses `JSObject` / `JSArray`
-  properties directly via ` package:web` / `dart:js_interop` without wrapping
+  properties directly via `package:web` / `dart:js_interop` without wrapping
   objects in Dart `LinkedHashMap` instances.
-
----
 
 ## 2. Using `JsonCodableDecoder` and `JsonCodableEncoder`
 
@@ -215,8 +211,6 @@ final user = User.decode(
 );
 ```
 
----
-
 ## 3. Implementing Your Own `Codable`
 
 You can implement `package:codable` interfaces directly—with zero code
@@ -225,7 +219,7 @@ hierarchies.
 
 ### A. Manual `Decodable<T>` and `Encodable` Implementation
 
-Pre-compile your expected field names once into a ` static final KeyOptions`
+Pre-compile your expected field names once into a `static final KeyOptions`
 table and iterate with `keyed.moveNextKey()` and `keyed.selectKeyIndex`:
 
 ```dart
