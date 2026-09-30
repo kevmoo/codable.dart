@@ -50,32 +50,14 @@ abstract interface class KeyedEncoder {
   /// Encodes an explicit null value for [key].
   void encodeNull(String key);
 
-  /// Encodes a custom value [value] for [key] using [encode].
-  void encodeValue<T>(
-    String key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes a nested value [value] for [key] using [encodable].
+  void encodeValue<T>(String key, T value, Encodable<T> encodable);
 
-  /// Encodes a nullable custom value [value] for [key] using [encode].
-  void encodeNullableValue<T>(
-    String key,
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes a nullable nested value [value] for [key] using [encodable].
+  void encodeNullableValue<T>(String key, T? value, Encodable<T> encodable);
 
-  /// Encodes an [Encodable] object for [key].
-  void encodeEncodable(String key, Encodable value);
-
-  /// Encodes a nullable [Encodable] object for [key].
-  void encodeNullableEncodable(String key, Encodable? value);
-
-  /// Encodes an iterable of [elements] for [key] using [encode].
-  void encodeList<T>(
-    String key,
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes an iterable of [elements] for [key] using [encodable].
+  void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable);
 
   /// Encodes an integer list for [key].
   void encodeIntList(String key, List<int> values);
@@ -119,29 +101,14 @@ abstract interface class UnkeyedEncoder {
   /// Encodes an explicit null element.
   void encodeNull();
 
-  /// Encodes a custom element [value] using [encode].
-  void encodeElement<T>(
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes a custom element [value] using [encodable].
+  void encodeElement<T>(T value, Encodable<T> encodable);
 
-  /// Encodes a nullable custom element [value] using [encode].
-  void encodeNullableElement<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes a nullable custom element [value] using [encodable].
+  void encodeNullableElement<T>(T? value, Encodable<T> encodable);
 
-  /// Encodes an [Encodable] element.
-  void encodeEncodable(Encodable value);
-
-  /// Encodes a nullable [Encodable] element.
-  void encodeNullableEncodable(Encodable? value);
-
-  /// Encodes a nested list of [elements] using [encode].
-  void encodeList<T>(
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  );
+  /// Encodes a nested list of [elements] using [encodable].
+  void encodeList<T>(Iterable<T> elements, Encodable<T> encodable);
 }
 
 /// Single-value encoder for writing a standalone scalar value.
@@ -173,18 +140,9 @@ abstract interface class SingleValueEncoder {
   /// Encodes an explicit null scalar value.
   void encodeNull();
 
-  /// Encodes a custom scalar value [value] using [encode].
-  void encode<T>(T value, void Function(T value, Encoder encoder) encode);
+  /// Encodes a custom scalar value [value] using [encodable].
+  void encode<T>(T value, Encodable<T> encodable);
 
-  /// Encodes a nullable custom scalar value [value] using [encode].
-  void encodeNullable<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  );
-
-  /// Encodes an [Encodable] scalar value.
-  void encodeEncodable(Encodable value);
-
-  /// Encodes a nullable [Encodable] scalar value.
-  void encodeNullableEncodable(Encodable? value);
+  /// Encodes a nullable custom scalar value [value] using [encodable].
+  void encodeNullable<T>(T? value, Encodable<T> encodable);
 }

@@ -45,15 +45,20 @@ class StreamEncData {
   final String name;
   final Uint8List bytes;
   final Object jsModel;
-  final void Function(Encoder) codableEncode;
+  final void Function(ByteConversionSink) codableStreamEncode;
 
-  StreamEncData._(this.name, this.bytes, this.jsModel, this.codableEncode);
+  StreamEncData._(
+    this.name,
+    this.bytes,
+    this.jsModel,
+    this.codableStreamEncode,
+  );
 
   factory StreamEncData(String name) {
     final bytes = getDatasetBytes(name);
     final jsonAst = utf8.decoder.fuse(json.decoder).convert(bytes);
     Object jsModel;
-    void Function(Encoder) codableEncode;
+    void Function(ByteConversionSink) codableStreamEncode;
     final decoder = JsonCodableDecoder.fromBytes(bytes);
 
     switch (name) {
@@ -61,29 +66,52 @@ class StreamEncData {
         jsModel = (jsonAst as List)
             .map((e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>))
             .toList();
-        final list = codable_coord.Coordinate.decodeList(
-          JsonCodableDecoder.fromBytes(bytes),
+        final list = const codable_coord.CoordinateCodable().decodeList(
+          decoder,
         );
-        codableEncode = (encoder) {
-          var eList = encoder.unkeyed();
-          for (final model in list) {
-            eList.encodeEncodable(model);
-          }
+        final listEncodable =
+            Encodable<List<codable_coord.Coordinate>>.fromFunction((
+              list,
+              encoder,
+            ) {
+              final eList = encoder.unkeyed();
+              for (final model in list) {
+                eList.encodeElement(
+                  model,
+                  const codable_coord.CoordinateCodable(),
+                );
+              }
+            });
+        codableStreamEncode = (byteSink) {
+          final sink = JsonCodableEncoder.startChunkedConversion(
+            byteSink,
+            listEncodable,
+          );
+          sink.add(list);
+          sink.close();
         };
         break;
       case 'canada':
         jsModel = js_canada.CanadaFeatureCollection.fromJson(
           jsonAst as Map<String, dynamic>,
         );
-        final model = codable_canada.CanadaFeatureCollection.decode(decoder);
-        codableEncode = model.encode;
+        final model = const codable_canada.CanadaFeatureCollectionCodable()
+            .decode(decoder);
+        codableStreamEncode = (byteSink) {
+          final sink = JsonCodableEncoder.startChunkedConversion(
+            byteSink,
+            const codable_canada.CanadaFeatureCollectionCodable(),
+          );
+          sink.add(model);
+          sink.close();
+        };
         break;
 
       default:
         throw ArgumentError.value(name, 'name', 'Unknown dataset');
     }
 
-    return StreamEncData._(name, bytes, jsModel, codableEncode);
+    return StreamEncData._(name, bytes, jsModel, codableStreamEncode);
   }
 }
 
@@ -117,9 +145,7 @@ BenchmarkGroup createEncodeStreamBenchmarkGroup(String dataset) {
   void runCodable() {
     final byteBuilder = BytesBuilder(copy: false);
     final byteSink = _BytesBuilderSink(byteBuilder);
-    final sink = JsonCodableEncoder.startChunkedConversion(byteSink);
-    sink.add(d.codableEncode);
-    sink.close();
+    d.codableStreamEncode(byteSink);
     Blackhole.consume(byteBuilder.length);
   }
 

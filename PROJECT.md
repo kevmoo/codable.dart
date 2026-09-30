@@ -4,7 +4,7 @@ For user-facing documentation, see:
 
 - [`pkgs/codable/README.md`](pkgs/codable/README.md) — General `Codable` model,
   `JsonCodableDecoder` / `JsonCodableEncoder` usage, and implementing custom
-  `Decodable<T>`, `Encodable`, and `CustomCodable<T>` types.
+  `Codable<T>`, `Decodable<T>`, and `Encodable<T>` companions.
 - [`pkgs/codable_builder/README.md`](pkgs/codable_builder/README.md) —
   `@Codable()` code generation setup and annotation options.
 
@@ -21,11 +21,12 @@ Three-Layer Architecture:
      codecs (`JsonUtf8Codec`, `jsonUtf8`).
    - Enforces a 1,024-level nesting depth limit for Anti-DoS protection.
 2. **Layer 2: Pure Abstract Ecosystem Contracts (`pkgs/codable/lib/codable.dart` & `pkgs/codable/lib/src/contracts/`)**:
-   - Format-agnostic contracts decoupled from in-memory payload representation:
-     `Encodable`, `Decodable<T>`, `CustomCodable<T>`, `SuperDecodable<T>`,
-     `Decoder`, `Encoder`, `KeyedDecoder`, `MappedDecoder`, `UnkeyedDecoder`,
-     `SingleValueDecoder`, `KeyedEncoder`, `UnkeyedEncoder`,
-     `SingleValueEncoder`, `KeyOptions`, and `CodableException`.
+   - Format-agnostic companion contracts decoupled from domain classes and
+     in-memory payload representation: `Codable<T>`, `Decodable<T>`,
+     `Encodable<T>`, `SuperDecodable<T>`, `Decoder`, `Encoder`, `KeyedDecoder`,
+     `MappedDecoder`, `UnkeyedDecoder`, `SingleValueDecoder`, `KeyedEncoder`,
+     `UnkeyedEncoder`, `SingleValueEncoder`, `KeyOptions`, and
+     `CodableException`.
    - Direct primitive reader/writer methods and typed collection helpers
      (`decodeList<T>`, `decodeIntList`, `decodeDoubleList`, `decodeFloat64List`,
      `decodeStringList`, `decodeBoolList`).
@@ -54,18 +55,38 @@ Three-Layer Architecture:
 
 ## Interface Contracts Summary
 
-### 1. Top-Level Contracts
+### 1. Top-Level Companion Contracts
 
 ```dart
-abstract interface class Encodable {
-  void encode(Encoder encoder);
+abstract interface class Decodable<T> {
+  const factory Decodable.fromFunction(T Function(Decoder decoder) decode) =
+      _FunctionDecodable<T>;
+
+  T decode(Decoder decoder);
 }
 
-abstract interface class Decodable<T> {}
+abstract interface class Encodable<T> {
+  const factory Encodable.fromFunction(
+    void Function(T value, Encoder encoder) encode,
+  ) = _FunctionEncodable<T>;
 
-abstract interface class CustomCodable<T> {
-  T decode(Decoder decoder);
   void encode(T value, Encoder encoder);
+}
+
+@Target({TargetKind.classType})
+@optionalTypeArgs
+abstract interface class Codable<T> implements Decodable<T>, Encodable<T> {
+  const factory Codable({
+    bool createEncoder,
+    bool createDecoder,
+    bool useGoldenMask,
+    FieldRename fieldRename,
+  }) = CodableAnnotation;
+
+  const factory Codable.fromFunctions({
+    required T Function(Decoder decoder) decode,
+    required void Function(T value, Encoder encoder) encode,
+  }) = _FunctionCodable<T>;
 }
 
 abstract interface class Decoder {
@@ -109,11 +130,11 @@ abstract interface class KeyedDecoder {
   bool? readNullableBool();
 
   Decoder nestedDecoder();
-  T decodeValue<T>(T Function(Decoder decoder) decoder);
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder);
+  T decodeValue<T>(Decodable<T> decodable);
+  T? decodeNullableValue<T>(Decodable<T> decodable);
 
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder);
-  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder);
+  List<T> decodeList<T>(Decodable<T> decodable);
+  List<T>? decodeNullableList<T>(Decodable<T> decodable);
   List<int> decodeIntList();
   List<double> decodeDoubleList();
   List<String> decodeStringList();
@@ -131,28 +152,32 @@ final class JsonCodableDecoder implements Decoder {
   factory JsonCodableDecoder.fromString(String source, {Map<Object, Object?> userInfo});
   static ByteConversionSink startChunkedConversion<T>(
     Sink<T> sink,
-    T Function(Decoder decoder) decode, {
+    Decodable<T> decodable, {
     Map<Object, Object?> userInfo,
   });
 }
 
 final class JsonCodableEncoder implements Encoder {
-  static Uint8List toBytes(
-    void Function(Encoder encoder) encode, {
+  static Uint8List toBytes<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo,
     int? capacityHint,
   });
-  static String encode(
-    void Function(Encoder encoder) encode, {
+  static String encode<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo,
   });
-  static void toSink(
+  static void toSink<T>(
     BytesBuilder sink,
-    void Function(Encoder encoder) encode, {
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo,
   });
-  static ChunkedConversionSink<void Function(Encoder encoder)> startChunkedConversion(
-    Sink<List<int>> sink, {
+  static ChunkedConversionSink<T> startChunkedConversion<T>(
+    Sink<List<int>> sink,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo,
   });
 }

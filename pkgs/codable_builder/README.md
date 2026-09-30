@@ -1,7 +1,7 @@
 Source generator (`build_runner`) for [`package:codable`](../codable/README.md).
 
-Generates single-pass streaming decoders and encoders for classes annotated with
-`@Codable()`.
+Generates single-pass streaming `*Codable` companion classes and pre-compiled
+`KeyOptions` schemas for classes annotated with `@Codable()`.
 
 ## Setup
 
@@ -19,8 +19,8 @@ dev_dependencies:
 
 ## Usage
 
-Annotate your model class with `@Codable()` and include a `part '<file>.g.dart';`
-directive:
+Annotate your domain class with `@Codable()` and include a `part '<file>.g.dart';`
+directive. Your domain class stays completely free of serialization boilerplate:
 
 ```dart
 import 'package:codable/codable_json.dart';
@@ -28,7 +28,7 @@ import 'package:codable/codable_json.dart';
 part 'person.g.dart';
 
 @Codable(fieldRename: FieldRename.snake)
-class Person implements Decodable<Person>, Encodable {
+class Person {
   final String firstName;
   final String lastName;
 
@@ -48,11 +48,6 @@ class Person implements Decodable<Person>, Encodable {
     this.orderCount = 0,
     this.isTransient = false,
   });
-
-  static Person decode(Decoder decoder) => _$PersonFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) => _$PersonToEncoder(this, encoder);
 }
 ```
 
@@ -62,29 +57,41 @@ Run `build_runner` to generate `person.g.dart`:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-## Generated Entrypoints
+Then decode and encode using the generated `const PersonCodable()` companion:
+
+```dart
+final person = const PersonCodable().decode(
+  JsonCodableDecoder.fromBytes(utf8Bytes),
+);
+final outBytes = JsonCodableEncoder.toBytes(person, const PersonCodable());
+```
+
+## Generated Output
 
 For each `@Codable()` class `Model`, `codable_builder` emits:
 
-- `_$ModelFromDecoder(Decoder decoder)` — Universal `Decoder` entrypoint
-  (automatically routes to streaming `JsonTokenReader` on VM/AOT/Wasm and
-  `MappedDecoder` on Web JS).
-- `_$ModelToEncoder(Model instance, Encoder encoder)` — Universal `Encoder`
-  entrypoint.
-- `_$ModelFromReader(JsonTokenReader reader)` — Direct streaming pull-reader
-  fast path with pre-compiled `JsonKeyOptions` and 62-bit Golden Mask
-  required-field validation.
-- `_$ModelToWriter(Model instance, JsonTokenWriter writer)` — Direct streaming
-  push-writer fast path with pre-encoded ASCII property keys.
+- `_$ModelSchema` (`extension type const _$ModelSchema(int _value)`) — Unified
+  schema descriptor containing wire name constants, key index constants, a
+  pre-compiled `KeyOptions` lookup table, enum option tables, and a 62-bit
+  Golden Mask (`validate()`) for single-instruction required-field verification.
+- `final class ModelCodable` (`const ModelCodable()`) — Stateless companion
+  class implementing `Codable<Model>` (or `Decodable<Model>` /
+  `Encodable<Model>` when `createEncoder: false` or `createDecoder: false`):
+  - `Model decode(Decoder decoder)` — Universal streaming `Decoder` method.
+  - `List<Model> decodeList(Decoder decoder)` — Specialized SIMD/flat-buffer
+    array decoder for uniform `double` models (all other models inherit
+    `decodeList` via `DecodableListExtension`).
+  - `void encode(Model instance, Encoder encoder)` — Universal streaming
+    `Encoder` method.
 
 ## Annotations Reference
 
 | Annotation              | Target                     | Options                                                                                                                                                        |
 | :---------------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@Codable()`            | Class                      | `createDecoder` (`true`), `createEncoder` (`true`), `useGoldenMask` (`true`), `fieldRename` (`FieldRename.none`, `snake`, `kebab`, `pascal`, `screamingSnake`) |
-| `@CodableKey()`         | Field / Parameter / Getter | `name`, `aliases`, `ignore` (`false`), `customDecoder` (`CustomCodable<T>` instance or type), `defaultValue`                                                   |
+| `@CodableKey()`         | Field / Parameter / Getter | `name`, `aliases`, `ignore` (`false`), `customDecoder` (`Codable<T>` / `Decodable<T>` / `Encodable<T>` instance or type), `defaultValue`                       |
 | `@CodableTuple(length)` | Field / Parameter          | Fixed-length numeric tuple hint for `Float64List` / `List<double>` / `List<int>`                                                                               |
 
 See the [`package:codable` README](../codable/README.md) for full documentation
 on `JsonCodableDecoder`, `JsonCodableEncoder`, and implementing custom
-`Decodable` / `Encodable` / `CustomCodable<T>` types.
+`Codable<T>` / `Decodable<T>` / `Encodable<T>` companions.

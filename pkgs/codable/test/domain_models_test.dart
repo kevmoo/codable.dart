@@ -217,30 +217,35 @@ final class _TestKeyedDecoder implements KeyedDecoder {
       _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo);
 
   @override
-  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo));
+  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(
+    _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo),
+  );
 
   @override
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableValue<T>(Decodable<T> decodable) {
     if (_currentValue == null) return null;
-    return decodeValue(decoder);
+    return decodeValue(decodable);
   }
 
   @override
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
+  List<T> decodeList<T>(Decodable<T> decodable) {
     final v = _currentValue;
     if (v is List<dynamic>) {
       return v
-          .map((e) => decoder(_TestDecoder(e, userInfo: _rootDecoder.userInfo)))
+          .map(
+            (e) => decodable.decode(
+              _TestDecoder(e, userInfo: _rootDecoder.userInfo),
+            ),
+          )
           .toList();
     }
     throw CodableException('Expected List, found ${v.runtimeType}: $v');
   }
 
   @override
-  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
     if (_currentValue == null) return null;
-    return decodeList(decoder);
+    return decodeList(decodable);
   }
 
   @override
@@ -405,28 +410,34 @@ final class _TestMappedDecoder implements MappedDecoder {
       _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo);
 
   @override
-  T decodeKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T decodeKey<T>(String key, Decodable<T> decodable) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
-    return decoder(_TestDecoder(_map[key], userInfo: _rootDecoder.userInfo));
+    return decodable.decode(
+      _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo),
+    );
   }
 
   @override
-  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T? decodeNullableKey<T>(String key, Decodable<T> decodable) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
-    return decodeKey(key, decoder);
+    return decodeKey(key, decodable);
   }
 
   @override
-  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder) {
+  List<T> decodeListKey<T>(String key, Decodable<T> decodable) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
     }
     final v = _map[key];
     if (v is List<dynamic>) {
       return v
-          .map((e) => decoder(_TestDecoder(e, userInfo: _rootDecoder.userInfo)))
+          .map(
+            (e) => decodable.decode(
+              _TestDecoder(e, userInfo: _rootDecoder.userInfo),
+            ),
+          )
           .toList();
     }
     throw CodableException(
@@ -669,22 +680,22 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  T decodeElement<T>(T Function(Decoder decoder) decoder) {
+  T decodeElement<T>(Decodable<T> decodable) {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
     final v = _list[_index++];
-    return decoder(_TestDecoder(v, userInfo: _rootDecoder.userInfo));
+    return decodable.decode(_TestDecoder(v, userInfo: _rootDecoder.userInfo));
   }
 
   @override
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableElement<T>(Decodable<T> decodable) {
     if (!moveNext()) return null;
     if (_list[_index] == null) {
       _index++;
       return null;
     }
-    return decodeElement(decoder);
+    return decodeElement(decodable);
   }
 
   @override
@@ -848,13 +859,13 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
-  T decode<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_TestDecoder(_value, userInfo: _rootDecoder.userInfo));
+  T decode<T>(Decodable<T> decodable) =>
+      decodable.decode(_TestDecoder(_value, userInfo: _rootDecoder.userInfo));
 
   @override
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullable<T>(Decodable<T> decodable) {
     if (_value == null) return null;
-    return decode(decoder);
+    return decode(decodable);
   }
 }
 
@@ -917,55 +928,27 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeNull(String key) => _map[key] = null;
 
   @override
-  void encodeValue<T>(
-    String key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeValue<T>(String key, T value, Encodable<T> encodable) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     _map[key] = child.output;
   }
 
   @override
-  void encodeNullableValue<T>(
-    String key,
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullableValue<T>(String key, T? value, Encodable<T> encodable) {
     if (value == null) {
       encodeNull(key);
     } else {
-      encodeValue(key, value, encode);
+      encodeValue(key, value, encodable);
     }
   }
 
   @override
-  void encodeEncodable(String key, Encodable value) {
-    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    _map[key] = child.output;
-  }
-
-  @override
-  void encodeNullableEncodable(String key, Encodable? value) {
-    if (value == null) {
-      encodeNull(key);
-    } else {
-      encodeEncodable(key, value);
-    }
-  }
-
-  @override
-  void encodeList<T>(
-    String key,
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable) {
     final list = <dynamic>[];
     for (final el in elements) {
       final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-      encode(el, child);
+      encodable.encode(el, child);
       list.add(child.output);
     }
     _map[key] = list;
@@ -1022,50 +1005,25 @@ final class _TestUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNull() => _list.add(null);
 
   @override
-  void encodeElement<T>(
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeElement<T>(T value, Encodable<T> encodable) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     _list.add(child.output);
   }
 
   @override
-  void encodeNullableElement<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullableElement<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
       encodeNull();
     } else {
-      encodeElement(value, encode);
+      encodeElement(value, encodable);
     }
   }
 
   @override
-  void encodeEncodable(Encodable value) {
-    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    _list.add(child.output);
-  }
-
-  @override
-  void encodeNullableEncodable(Encodable? value) {
-    if (value == null) {
-      encodeNull();
-    } else {
-      encodeEncodable(value);
-    }
-  }
-
-  @override
-  void encodeList<T>(
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeList<T>(Iterable<T> elements, Encodable<T> encodable) {
     for (final el in elements) {
-      encodeElement(el, encode);
+      encodeElement(el, encodable);
     }
   }
 }
@@ -1103,37 +1061,18 @@ final class _TestSingleValueEncoder implements SingleValueEncoder {
   void encodeNull() => _rootEncoder.output = null;
 
   @override
-  void encode<T>(T value, void Function(T value, Encoder encoder) encode) {
+  void encode<T>(T value, Encodable<T> encodable) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     _rootEncoder.output = child.output;
   }
 
   @override
-  void encodeNullable<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
       encodeNull();
     } else {
-      this.encode(value, encode);
-    }
-  }
-
-  @override
-  void encodeEncodable(Encodable value) {
-    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    _rootEncoder.output = child.output;
-  }
-
-  @override
-  void encodeNullableEncodable(Encodable? value) {
-    if (value == null) {
-      encodeNull();
-    } else {
-      encodeEncodable(value);
+      encode(value, encodable);
     }
   }
 }
@@ -1142,36 +1081,40 @@ final class _TestSingleValueEncoder implements SingleValueEncoder {
 abstract final class TestJsonDriver {
   static T decodeString<T>(
     String jsonString,
-    T Function(Decoder decoder) decode, {
+    Decodable<T> decodable, {
     Map<Object, Object?>? userInfo,
   }) {
     final Object? parsed = jsonDecode(jsonString);
-    return decode(_TestDecoder(parsed, userInfo: userInfo ?? const {}));
+    return decodable.decode(
+      _TestDecoder(parsed, userInfo: userInfo ?? const {}),
+    );
   }
 
   static T decodeBytes<T>(
     Uint8List bytes,
-    T Function(Decoder decoder) decode, {
+    Decodable<T> decodable, {
     Map<Object, Object?>? userInfo,
   }) {
     final jsonString = utf8.decode(bytes);
-    return decodeString(jsonString, decode, userInfo: userInfo);
+    return decodeString(jsonString, decodable, userInfo: userInfo);
   }
 
-  static String encodeToString(
-    Encodable encodable, {
+  static String encodeToString<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?>? userInfo,
   }) {
     final encoder = _TestEncoder(userInfo: userInfo ?? const {});
-    encodable.encode(encoder);
+    encodable.encode(value, encoder);
     return jsonEncode(encoder.output);
   }
 
-  static Uint8List encodeToBytes(
-    Encodable encodable, {
+  static Uint8List encodeToBytes<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?>? userInfo,
   }) {
-    final str = encodeToString(encodable, userInfo: userInfo);
+    final str = encodeToString(value, encodable, userInfo: userInfo);
     return Uint8List.fromList(utf8.encode(str));
   }
 
@@ -1201,7 +1144,7 @@ abstract final class TestJsonDriver {
 
 /// Model 1: High-Throughput Primitive Model with Float Streaming and Key Aliasing.
 @Codable()
-class Coordinate implements Encodable {
+class Coordinate {
   @CodableKey(aliases: ['lat'])
   final double latitude;
 
@@ -1209,11 +1152,6 @@ class Coordinate implements Encodable {
   final double longitude;
 
   const Coordinate({required this.latitude, required this.longitude});
-
-  static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
 
   @override
   bool operator ==(Object other) =>
@@ -1244,7 +1182,7 @@ enum UserRole {
 }
 
 /// Custom field decoder normalizing zip codes from int (90210) or string ("90210").
-class ZipCodeDecoder implements CustomCodable<String> {
+class ZipCodeDecoder implements Codable<String> {
   const ZipCodeDecoder();
 
   @override
@@ -1263,9 +1201,9 @@ class ZipCodeDecoder implements CustomCodable<String> {
   }
 }
 
-/// Model 2: Complex Domain Model with Enum, CustomCodable & Golden Mask validation.
+/// Model 2: Complex Domain Model with Enum, Codable & Golden Mask validation.
 @Codable()
-class UserProfile implements Encodable {
+class UserProfile {
   final String id;
   final String email;
   final UserRole role;
@@ -1280,21 +1218,6 @@ class UserProfile implements Encodable {
     required this.zip,
     this.tags = const [],
   });
-
-  static UserProfile decode(Decoder decoder) =>
-      _$UserProfileFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeString('id', id);
-    keyed.encodeString('email', email);
-    keyed.encodeString('role', role.name);
-    keyed.encodeString('zip', zip);
-    if (tags.isNotEmpty) {
-      keyed.encodeStringList('tags', tags);
-    }
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -1314,13 +1237,19 @@ class UserProfile implements Encodable {
 }
 
 /// Model 3: Tagged Polymorphic Hierarchy Base Class.
-abstract class Vehicle implements Encodable {
+sealed class Vehicle {
   final String type;
   final int maxSpeed;
 
   const Vehicle({required this.type, required this.maxSpeed});
+}
 
-  static Vehicle decode(Decoder decoder) {
+/// Companion [Codable] for polymorphic [Vehicle] hierarchy.
+final class VehicleCodable implements Codable<Vehicle> {
+  const VehicleCodable();
+
+  @override
+  Vehicle decode(Decoder decoder) {
     final mapped = decoder.mapped();
     if (!mapped.containsKey('type')) {
       throw const CodableException(
@@ -1329,10 +1258,24 @@ abstract class Vehicle implements Encodable {
     }
     final type = mapped.readString('type');
     return switch (type) {
-      'car' => Car.decode(decoder),
-      'bicycle' => Bicycle.decode(decoder),
+      'car' => const CarCodable().decode(decoder),
+      'bicycle' => const BicycleCodable().decode(decoder),
       _ => throw CodableException('Unknown vehicle type: $type'),
     };
+  }
+
+  @override
+  void encode(Vehicle value, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString('type', value.type);
+    switch (value) {
+      case Car():
+        keyed.encodeInt(_$CarSchema.nameMaxSpeed, value.maxSpeed);
+        keyed.encodeInt(_$CarSchema.nameDoors, value.doors);
+      case Bicycle():
+        keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, value.maxSpeed);
+        keyed.encodeBool(_$BicycleSchema.nameHasBell, value.hasBell);
+    }
   }
 }
 
@@ -1343,16 +1286,6 @@ class Car extends Vehicle {
 
   const Car({required super.maxSpeed, required this.doors})
     : super(type: 'car');
-
-  static Car decode(Decoder decoder) => _$CarFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeString('type', type);
-    keyed.encodeInt(_$CarSchema.nameMaxSpeed, maxSpeed);
-    keyed.encodeInt(_$CarSchema.nameDoors, doors);
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -1373,16 +1306,6 @@ class Bicycle extends Vehicle {
 
   const Bicycle({required super.maxSpeed, required this.hasBell})
     : super(type: 'bicycle');
-
-  static Bicycle decode(Decoder decoder) => _$BicycleFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeString('type', type);
-    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, maxSpeed);
-    keyed.encodeBool(_$BicycleSchema.nameHasBell, hasBell);
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -1406,25 +1329,19 @@ class VehicleSuperDecodable implements SuperDecodable<Vehicle> {
   String get discriminatorKey => 'type';
 
   @override
-  Map<String, Vehicle Function(Decoder decoder)> get subtypes => {
-    'car': Car.decode,
-    'bicycle': Bicycle.decode,
+  Map<String, Decodable<Vehicle>> get subtypes => const {
+    'car': CarCodable(),
+    'bicycle': BicycleCodable(),
   };
 }
 
 /// Nested location model for pairwise testing.
 @Codable()
-class UserWithLocation implements Encodable {
+class UserWithLocation {
   final UserProfile profile;
   final Coordinate location;
 
   const UserWithLocation({required this.profile, required this.location});
-
-  static UserWithLocation decode(Decoder decoder) =>
-      _$UserWithLocationFromDecoder(decoder);
-
-  @override
-  void encode(Encoder encoder) => _$UserWithLocationToEncoder(this, encoder);
 
   @override
   bool operator ==(Object other) =>
@@ -1446,7 +1363,10 @@ void main() {
     group('Tier 1: Happy Path & Feature Coverage', () {
       test('decodes Coordinate with standard latitude and longitude keys', () {
         const jsonStr = '{"latitude": 37.7749, "longitude": -122.4194}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(37.7749);
         check(coord.longitude).equals(-122.4194);
@@ -1454,7 +1374,10 @@ void main() {
 
       test('decodes Coordinate with aliased lat and lon keys', () {
         const jsonStr = '{"lat": 51.5074, "lon": -0.1278}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(51.5074);
         check(coord.longitude).equals(-0.1278);
@@ -1462,7 +1385,10 @@ void main() {
 
       test('decodes Coordinate with mixed keys: latitude and lon', () {
         const jsonStr = '{"latitude": 40.7128, "lon": -74.0060}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(40.7128);
         check(coord.longitude).equals(-74.0060);
@@ -1470,7 +1396,10 @@ void main() {
 
       test('decodes Coordinate with mixed keys: lat and longitude', () {
         const jsonStr = '{"lat": 35.6762, "longitude": 139.6503}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(35.6762);
         check(coord.longitude).equals(139.6503);
@@ -1480,7 +1409,10 @@ void main() {
         'encodes Coordinate to standard latitude and longitude keys in JSON',
         () {
           const coord = Coordinate(latitude: 48.8566, longitude: 2.3522);
-          final jsonStr = TestJsonDriver.encodeToString(coord);
+          final jsonStr = TestJsonDriver.encodeToString(
+            coord,
+            const CoordinateCodable(),
+          );
           final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
           check(decodedMap['latitude']).equals(48.8566);
@@ -1503,25 +1435,31 @@ void main() {
     group('Tier 2: Boundary, Edge Cases & Error Handling', () {
       test('throws CodableException when latitude / lat is missing', () {
         const jsonStr = '{"longitude": -122.4194}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
 
       test('throws CodableException when longitude / lon is missing', () {
         const jsonStr = '{"latitude": 37.7749}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
 
       test('throws CodableException when empty object is provided', () {
         const jsonStr = '{}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
 
       test('decodes Coordinate when lon key appears before lat key', () {
         const jsonStr = '{"lon": -122.4194, "lat": 37.7749}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(37.7749);
         check(coord.longitude).equals(-122.4194);
@@ -1530,7 +1468,10 @@ void main() {
       test('skips unknown extra fields (altitude, accuracy, timestamp) cleanly', () {
         const jsonStr =
             '{"altitude": 150.5, "accuracy": 5, "lat": 37.7749, "timestamp": 1690000000, "lon": -122.4194}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(37.7749);
         check(coord.longitude).equals(-122.4194);
@@ -1538,7 +1479,10 @@ void main() {
 
       test('decodes Coordinate with zero values (0.0, 0.0)', () {
         const jsonStr = '{"lat": 0.0, "lon": 0.0}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(0.0);
         check(coord.longitude).equals(0.0);
@@ -1546,7 +1490,10 @@ void main() {
 
       test('decodes Coordinate with negative zero (-0.0, -0.0)', () {
         const jsonStr = '{"latitude": -0.0, "longitude": -0.0}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(-0.0);
         check(coord.longitude).equals(-0.0);
@@ -1556,7 +1503,10 @@ void main() {
         'decodes Coordinate with boundary values (-90.0, 90.0, -180.0, 180.0)',
         () {
           const jsonStr = '{"lat": -90.0, "lon": 180.0}';
-          final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+          final coord = TestJsonDriver.decodeString(
+            jsonStr,
+            const CoordinateCodable(),
+          );
 
           check(coord.latitude).equals(-90.0);
           check(coord.longitude).equals(180.0);
@@ -1566,7 +1516,10 @@ void main() {
       test('decodes Coordinate with high precision float values', () {
         const jsonStr =
             '{"lat": 37.77492928374619, "lon": -122.41941558273618}';
-        final coord = TestJsonDriver.decodeString(jsonStr, Coordinate.decode);
+        final coord = TestJsonDriver.decodeString(
+          jsonStr,
+          const CoordinateCodable(),
+        );
 
         check(coord.latitude).equals(37.77492928374619);
         check(coord.longitude).equals(-122.41941558273618);
@@ -1574,20 +1527,23 @@ void main() {
 
       test('throws CodableException when latitude value is string', () {
         const jsonStr = '{"lat": "37.7749", "lon": -122.4194}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
 
       test('throws CodableException when latitude value is null', () {
         const jsonStr = '{"lat": null, "lon": -122.4194}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
 
       test('throws CodableException when longitude value is boolean', () {
         const jsonStr = '{"lat": 37.7749, "lon": true}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Coordinate.decode))
-            .throws<CodableException>();
+        check(
+          () => TestJsonDriver.decodeString(jsonStr, const CoordinateCodable()),
+        ).throws<CodableException>();
       });
     });
   });
@@ -1599,7 +1555,7 @@ void main() {
             '{"id": "usr_101", "email": "alice@example.com", "role": "admin", "zip": "90210", "tags": ["lead", "eng"]}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.id).equals('usr_101');
@@ -1614,7 +1570,7 @@ void main() {
             '{"id": "usr_102", "email": "bob@example.com", "role": "member", "zip": "10001", "tags": []}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.tags).isEmpty();
@@ -1625,7 +1581,7 @@ void main() {
             '{"id": "usr_103", "email": "carol@example.com", "role": "guest", "zip": "SW1A 1AA"}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.tags).isEmpty();
@@ -1644,7 +1600,7 @@ void main() {
             '{"id": "usr_104", "email": "dan@example.com", "role": "member", "zip": 90210}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.zip).equals('90210');
@@ -1655,7 +1611,7 @@ void main() {
             '{"id": "usr_105", "email": "eve@example.com", "role": "member", "zip": "90210"}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.zip).equals('90210');
@@ -1666,7 +1622,7 @@ void main() {
             '{"id": "usr_106", "email": "frank@example.co.uk", "role": "guest", "zip": "EC1A 1BB"}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.zip).equals('EC1A 1BB');
@@ -1680,7 +1636,10 @@ void main() {
           zip: '94105',
           tags: ['security', 'core'],
         );
-        final jsonStr = TestJsonDriver.encodeToString(profile);
+        final jsonStr = TestJsonDriver.encodeToString(
+          profile,
+          const UserProfileCodable(),
+        );
         final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
         check(decodedMap['id']).equals('usr_201');
@@ -1691,7 +1650,7 @@ void main() {
             .deepEquals(['security', 'core']);
       });
 
-      test('encodes UserProfile with empty tags omitting tags key', () {
+      test('encodes UserProfile with empty tags as empty list', () {
         const profile = UserProfile(
           id: 'usr_202',
           email: 'heidi@example.com',
@@ -1699,10 +1658,13 @@ void main() {
           zip: '94105',
           tags: [],
         );
-        final jsonStr = TestJsonDriver.encodeToString(profile);
+        final jsonStr = TestJsonDriver.encodeToString(
+          profile,
+          const UserProfileCodable(),
+        );
         final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-        check(decodedMap.containsKey('tags')).isFalse();
+        check(decodedMap['tags']).isA<List<dynamic>>().isEmpty();
       });
 
       test('UserProfile equality and hashCode consistency', () {
@@ -1735,73 +1697,95 @@ void main() {
     group('Tier 2: Golden Mask Bitmask Validation & Error Handling', () {
       test('Golden Mask throws CodableException when id is missing', () {
         const jsonStr = '{"email": "a@b.com", "role": "admin", "zip": "90210"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when email is missing', () {
         const jsonStr = '{"id": "usr_1", "role": "admin", "zip": "90210"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when role is missing', () {
         const jsonStr = '{"id": "usr_1", "email": "a@b.com", "zip": "90210"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when zip is missing', () {
         const jsonStr = '{"id": "usr_1", "email": "a@b.com", "role": "admin"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException when multiple required fields are missing', () {
         const jsonStr = '{"id": "usr_1"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('Golden Mask throws CodableException on empty payload', () {
         const jsonStr = '{}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('throws CodableException for unknown UserRole string', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "superuser", "zip": "90210"}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for boolean zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": true}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for null zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": null}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for array zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": [90210]}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('ZipCodeDecoder throws CodableException for object zip code', () {
         const jsonStr =
             '{"id": "usr_1", "email": "a@b.com", "role": "admin", "zip": {"code": 90210}}';
-        check(() => TestJsonDriver.decodeString(jsonStr, UserProfile.decode))
-            .throws<CodableException>();
+        check(
+          () =>
+              TestJsonDriver.decodeString(jsonStr, const UserProfileCodable()),
+        ).throws<CodableException>();
       });
 
       test('skips unknown extra keys (age, bio, preferences) while satisfying Golden Mask', () {
@@ -1809,7 +1793,7 @@ void main() {
             '{"age": 30, "id": "usr_1", "bio": "engineer", "email": "a@b.com", "preferences": {"dark_mode": true}, "role": "member", "zip": 90210}';
         final profile = TestJsonDriver.decodeString(
           jsonStr,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.id).equals('usr_1');
@@ -1830,7 +1814,10 @@ void main() {
             'tags': tagsList,
           });
           final bytes = Uint8List.fromList(utf8.encode(jsonStr));
-          final profile = TestJsonDriver.decodeBytes(bytes, UserProfile.decode);
+          final profile = TestJsonDriver.decodeBytes(
+            bytes,
+            const UserProfileCodable(),
+          );
 
           check(profile.tags).deepEquals(tagsList);
         },
@@ -1840,9 +1827,12 @@ void main() {
 
   group('Domain Model: Vehicle Polymorphic Hierarchy', () {
     group('Tier 1: Happy Path & Polymorphic Dispatch', () {
-      test('decodes Car subtype via Vehicle.decode with type="car"', () {
+      test('decodes Car subtype via VehicleCodable with type="car"', () {
         const jsonStr = '{"type": "car", "maxSpeed": 220, "doors": 4}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Car>();
         final car = vehicle as Car;
@@ -1852,11 +1842,14 @@ void main() {
       });
 
       test(
-        'decodes Bicycle subtype via Vehicle.decode with type="bicycle"',
+        'decodes Bicycle subtype via VehicleCodable with type="bicycle"',
         () {
           const jsonStr =
               '{"type": "bicycle", "maxSpeed": 45, "hasBell": true}';
-          final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+          final vehicle = TestJsonDriver.decodeString(
+            jsonStr,
+            const VehicleCodable(),
+          );
 
           check(vehicle).isA<Bicycle>();
           final bike = vehicle as Bicycle;
@@ -1866,17 +1859,20 @@ void main() {
         },
       );
 
-      test('direct Car.decode decodes doors and maxSpeed', () {
+      test('direct CarCodable decodes doors and maxSpeed', () {
         const jsonStr = '{"type": "car", "maxSpeed": 180, "doors": 2}';
-        final car = TestJsonDriver.decodeString(jsonStr, Car.decode);
+        final car = TestJsonDriver.decodeString(jsonStr, const CarCodable());
 
         check(car.maxSpeed).equals(180);
         check(car.doors).equals(2);
       });
 
-      test('direct Bicycle.decode decodes hasBell and maxSpeed', () {
+      test('direct BicycleCodable decodes hasBell and maxSpeed', () {
         const jsonStr = '{"type": "bicycle", "maxSpeed": 30, "hasBell": false}';
-        final bike = TestJsonDriver.decodeString(jsonStr, Bicycle.decode);
+        final bike = TestJsonDriver.decodeString(
+          jsonStr,
+          const BicycleCodable(),
+        );
 
         check(bike.maxSpeed).equals(30);
         check(bike.hasBell).isFalse();
@@ -1884,7 +1880,10 @@ void main() {
 
       test('encodes Car to JSON with type="car", maxSpeed, and doors', () {
         const car = Car(maxSpeed: 200, doors: 4);
-        final jsonStr = TestJsonDriver.encodeToString(car);
+        final jsonStr = TestJsonDriver.encodeToString(
+          car,
+          const VehicleCodable(),
+        );
         final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
         check(decodedMap['type']).equals('car');
@@ -1896,7 +1895,10 @@ void main() {
         'encodes Bicycle to JSON with type="bicycle", maxSpeed, and hasBell',
         () {
           const bike = Bicycle(maxSpeed: 35, hasBell: true);
-          final jsonStr = TestJsonDriver.encodeToString(bike);
+          final jsonStr = TestJsonDriver.encodeToString(
+            bike,
+            const VehicleCodable(),
+          );
           final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
           check(decodedMap['type']).equals('bicycle');
@@ -1933,56 +1935,63 @@ void main() {
 
     group('Tier 2: Boundary, Discriminator Position & Error Handling', () {
       test(
-        'Vehicle.decode throws CodableException for unknown type discriminator',
+        'VehicleCodable throws CodableException for unknown type discriminator',
         () {
           const jsonStr = '{"type": "airplane", "maxSpeed": 900}';
-          check(() => TestJsonDriver.decodeString(jsonStr, Vehicle.decode))
-              .throws<CodableException>();
+          check(
+            () => TestJsonDriver.decodeString(jsonStr, const VehicleCodable()),
+          ).throws<CodableException>();
         },
       );
 
       test(
-        'Vehicle.decode throws CodableException when discriminator is missing',
+        'VehicleCodable throws CodableException when discriminator is missing',
         () {
           const jsonStr = '{"maxSpeed": 100, "doors": 4}';
-          check(() => TestJsonDriver.decodeString(jsonStr, Vehicle.decode))
-              .throws<CodableException>();
+          check(
+            () => TestJsonDriver.decodeString(jsonStr, const VehicleCodable()),
+          ).throws<CodableException>();
         },
       );
 
-      test('Car.decode throws CodableException when doors is missing', () {
+      test('CarCodable throws CodableException when doors is missing', () {
         const jsonStr = '{"type": "car", "maxSpeed": 150}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Car.decode))
+        check(() => TestJsonDriver.decodeString(jsonStr, const CarCodable()))
             .throws<CodableException>();
       });
 
-      test('Car.decode throws CodableException when maxSpeed is missing', () {
+      test('CarCodable throws CodableException when maxSpeed is missing', () {
         const jsonStr = '{"type": "car", "doors": 4}';
-        check(() => TestJsonDriver.decodeString(jsonStr, Car.decode))
+        check(() => TestJsonDriver.decodeString(jsonStr, const CarCodable()))
             .throws<CodableException>();
       });
 
       test(
-        'Bicycle.decode throws CodableException when hasBell is missing',
+        'BicycleCodable throws CodableException when hasBell is missing',
         () {
           const jsonStr = '{"type": "bicycle", "maxSpeed": 25}';
-          check(() => TestJsonDriver.decodeString(jsonStr, Bicycle.decode))
-              .throws<CodableException>();
+          check(
+            () => TestJsonDriver.decodeString(jsonStr, const BicycleCodable()),
+          ).throws<CodableException>();
         },
       );
 
       test(
-        'Bicycle.decode throws CodableException when maxSpeed is missing',
+        'BicycleCodable throws CodableException when maxSpeed is missing',
         () {
           const jsonStr = '{"type": "bicycle", "hasBell": true}';
-          check(() => TestJsonDriver.decodeString(jsonStr, Bicycle.decode))
-              .throws<CodableException>();
+          check(
+            () => TestJsonDriver.decodeString(jsonStr, const BicycleCodable()),
+          ).throws<CodableException>();
         },
       );
 
       test('decodes Car when type discriminator is first key (leading)', () {
         const jsonStr = '{"type": "car", "maxSpeed": 210, "doors": 4}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Car>();
         check((vehicle as Car).doors).equals(4);
@@ -1990,7 +1999,10 @@ void main() {
 
       test('decodes Car when type discriminator is middle key', () {
         const jsonStr = '{"maxSpeed": 210, "type": "car", "doors": 4}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Car>();
         check((vehicle as Car).doors).equals(4);
@@ -1998,7 +2010,10 @@ void main() {
 
       test('decodes Car when type discriminator is last key (trailing discriminator)', () {
         const jsonStr = '{"maxSpeed": 210, "doors": 4, "type": "car"}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Car>();
         check((vehicle as Car).doors).equals(4);
@@ -2007,7 +2022,10 @@ void main() {
 
       test('decodes Bicycle when type discriminator is last key (trailing discriminator)', () {
         const jsonStr = '{"maxSpeed": 32, "hasBell": true, "type": "bicycle"}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Bicycle>();
         check((vehicle as Bicycle).hasBell).isTrue();
@@ -2017,7 +2035,10 @@ void main() {
       test('skips unknown properties in Car payload cleanly', () {
         const jsonStr =
             '{"type": "car", "color": "red", "maxSpeed": 200, "sunroof": true, "doors": 4}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Car>();
         check((vehicle as Car).doors).equals(4);
@@ -2026,7 +2047,10 @@ void main() {
       test('skips unknown properties in Bicycle payload cleanly', () {
         const jsonStr =
             '{"gears": 21, "type": "bicycle", "maxSpeed": 40, "hasBell": false}';
-        final vehicle = TestJsonDriver.decodeString(jsonStr, Vehicle.decode);
+        final vehicle = TestJsonDriver.decodeString(
+          jsonStr,
+          const VehicleCodable(),
+        );
 
         check(vehicle).isA<Bicycle>();
         check((vehicle as Bicycle).hasBell).isFalse();
@@ -2041,10 +2065,13 @@ void main() {
           latitude: 37.774929,
           longitude: -122.419416,
         );
-        final jsonBytes = TestJsonDriver.encodeToBytes(original);
+        final jsonBytes = TestJsonDriver.encodeToBytes(
+          original,
+          const CoordinateCodable(),
+        );
         final roundtripped = TestJsonDriver.decodeBytes(
           jsonBytes,
-          Coordinate.decode,
+          const CoordinateCodable(),
         );
 
         check(roundtripped).equals(original);
@@ -2062,10 +2089,13 @@ void main() {
 
       test('Coordinate bit-exact roundtrip with zero coordinates', () {
         const original = Coordinate(latitude: 0.0, longitude: 0.0);
-        final jsonBytes = TestJsonDriver.encodeToBytes(original);
+        final jsonBytes = TestJsonDriver.encodeToBytes(
+          original,
+          const CoordinateCodable(),
+        );
         final roundtripped = TestJsonDriver.decodeBytes(
           jsonBytes,
-          Coordinate.decode,
+          const CoordinateCodable(),
         );
 
         check(roundtripped).equals(original);
@@ -2075,10 +2105,13 @@ void main() {
         'Coordinate bit-exact roundtrip with negative and extreme coordinates',
         () {
           const original = Coordinate(latitude: -89.9999, longitude: 179.9999);
-          final jsonBytes = TestJsonDriver.encodeToBytes(original);
+          final jsonBytes = TestJsonDriver.encodeToBytes(
+            original,
+            const CoordinateCodable(),
+          );
           final roundtripped = TestJsonDriver.decodeBytes(
             jsonBytes,
-            Coordinate.decode,
+            const CoordinateCodable(),
           );
 
           check(roundtripped).equals(original);
@@ -2092,15 +2125,18 @@ void main() {
             '{"id": "usr_roundtrip_1", "email": "rt1@example.com", "role": "admin", "zip": 90210, "tags": ["a", "b"]}';
         final profile = TestJsonDriver.decodeString(
           rawJson,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(profile.zip).equals('90210');
 
-        final encodedBytes = TestJsonDriver.encodeToBytes(profile);
+        final encodedBytes = TestJsonDriver.encodeToBytes(
+          profile,
+          const UserProfileCodable(),
+        );
         final reDecoded = TestJsonDriver.decodeBytes(
           encodedBytes,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(reDecoded).equals(profile);
@@ -2117,10 +2153,13 @@ void main() {
             zip: 'SW1A 1AA',
             tags: [],
           );
-          final encodedBytes = TestJsonDriver.encodeToBytes(original);
+          final encodedBytes = TestJsonDriver.encodeToBytes(
+            original,
+            const UserProfileCodable(),
+          );
           final reDecoded = TestJsonDriver.decodeBytes(
             encodedBytes,
-            UserProfile.decode,
+            const UserProfileCodable(),
           );
 
           check(reDecoded).equals(original);
@@ -2136,10 +2175,13 @@ void main() {
           zip: '94043',
           tags: ['flutter', 'dart', 'codable', 'serialization'],
         );
-        final encodedBytes = TestJsonDriver.encodeToBytes(original);
+        final encodedBytes = TestJsonDriver.encodeToBytes(
+          original,
+          const UserProfileCodable(),
+        );
         final reDecoded = TestJsonDriver.decodeBytes(
           encodedBytes,
-          UserProfile.decode,
+          const UserProfileCodable(),
         );
 
         check(reDecoded).equals(original);
@@ -2150,10 +2192,13 @@ void main() {
     group('Vehicle Hierarchy Roundtrips', () {
       test('Car bit-exact roundtrip through polymorphic decode and encode', () {
         const originalCar = Car(maxSpeed: 240, doors: 4);
-        final encodedBytes = TestJsonDriver.encodeToBytes(originalCar);
+        final encodedBytes = TestJsonDriver.encodeToBytes(
+          originalCar,
+          const VehicleCodable(),
+        );
         final reDecoded = TestJsonDriver.decodeBytes(
           encodedBytes,
-          Vehicle.decode,
+          const VehicleCodable(),
         );
 
         check(reDecoded).isA<Car>();
@@ -2164,10 +2209,13 @@ void main() {
         'Bicycle bit-exact roundtrip through polymorphic decode and encode',
         () {
           const originalBike = Bicycle(maxSpeed: 40, hasBell: true);
-          final encodedBytes = TestJsonDriver.encodeToBytes(originalBike);
+          final encodedBytes = TestJsonDriver.encodeToBytes(
+            originalBike,
+            const VehicleCodable(),
+          );
           final reDecoded = TestJsonDriver.decodeBytes(
             encodedBytes,
-            Vehicle.decode,
+            const VehicleCodable(),
           );
 
           check(reDecoded).isA<Bicycle>();
@@ -2177,10 +2225,13 @@ void main() {
 
       test('Bicycle with hasBell=false bit-exact roundtrip', () {
         const originalBike = Bicycle(maxSpeed: 25, hasBell: false);
-        final encodedBytes = TestJsonDriver.encodeToBytes(originalBike);
+        final encodedBytes = TestJsonDriver.encodeToBytes(
+          originalBike,
+          const VehicleCodable(),
+        );
         final reDecoded = TestJsonDriver.decodeBytes(
           encodedBytes,
-          Vehicle.decode,
+          const VehicleCodable(),
         );
 
         check(reDecoded).isA<Bicycle>();
@@ -2202,18 +2253,21 @@ void main() {
         ) {
           final unkeyed = encoder.unkeyed();
           for (final c in list) {
-            unkeyed.encodeElement(c, (item, e) => item.encode(e));
+            unkeyed.encodeElement(c, const CoordinateCodable());
           }
         });
 
-        final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
-          final unkeyed = decoder.unkeyed();
-          final result = <Coordinate>[];
-          while (unkeyed.moveNext()) {
-            result.add(unkeyed.decodeElement(Coordinate.decode));
-          }
-          return result;
-        });
+        final decodedList = TestJsonDriver.decodeBytes(
+          jsonBytes,
+          Decodable.fromFunction((decoder) {
+            final unkeyed = decoder.unkeyed();
+            final result = <Coordinate>[];
+            while (unkeyed.moveNext()) {
+              result.add(unkeyed.decodeElement(const CoordinateCodable()));
+            }
+            return result;
+          }),
+        );
 
         check(decodedList).deepEquals(coordinates);
       });
@@ -2242,18 +2296,21 @@ void main() {
         ) {
           final unkeyed = encoder.unkeyed();
           for (final p in list) {
-            unkeyed.encodeElement(p, (item, e) => item.encode(e));
+            unkeyed.encodeElement(p, const UserProfileCodable());
           }
         });
 
-        final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
-          final unkeyed = decoder.unkeyed();
-          final result = <UserProfile>[];
-          while (unkeyed.moveNext()) {
-            result.add(unkeyed.decodeElement(UserProfile.decode));
-          }
-          return result;
-        });
+        final decodedList = TestJsonDriver.decodeBytes(
+          jsonBytes,
+          Decodable.fromFunction((decoder) {
+            final unkeyed = decoder.unkeyed();
+            final result = <UserProfile>[];
+            while (unkeyed.moveNext()) {
+              result.add(unkeyed.decodeElement(const UserProfileCodable()));
+            }
+            return result;
+          }),
+        );
 
         check(decodedList).deepEquals(profiles);
       });
@@ -2274,18 +2331,21 @@ void main() {
           ) {
             final unkeyed = encoder.unkeyed();
             for (final v in list) {
-              unkeyed.encodeElement(v, (item, e) => item.encode(e));
+              unkeyed.encodeElement(v, const VehicleCodable());
             }
           });
 
-          final decodedFleet = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
-            final unkeyed = decoder.unkeyed();
-            final result = <Vehicle>[];
-            while (unkeyed.moveNext()) {
-              result.add(unkeyed.decodeElement(Vehicle.decode));
-            }
-            return result;
-          });
+          final decodedFleet = TestJsonDriver.decodeBytes(
+            jsonBytes,
+            Decodable.fromFunction((decoder) {
+              final unkeyed = decoder.unkeyed();
+              final result = <Vehicle>[];
+              while (unkeyed.moveNext()) {
+                result.add(unkeyed.decodeElement(const VehicleCodable()));
+              }
+              return result;
+            }),
+          );
 
           check(decodedFleet).deepEquals(fleet);
         },
@@ -2298,14 +2358,17 @@ void main() {
           (list, encoder) => encoder.unkeyed(),
         );
 
-        final decodedList = TestJsonDriver.decodeBytes(jsonBytes, (decoder) {
-          final unkeyed = decoder.unkeyed();
-          final result = <Coordinate>[];
-          while (unkeyed.moveNext()) {
-            result.add(unkeyed.decodeElement(Coordinate.decode));
-          }
-          return result;
-        });
+        final decodedList = TestJsonDriver.decodeBytes(
+          jsonBytes,
+          Decodable.fromFunction((decoder) {
+            final unkeyed = decoder.unkeyed();
+            final result = <Coordinate>[];
+            while (unkeyed.moveNext()) {
+              result.add(unkeyed.decodeElement(const CoordinateCodable()));
+            }
+            return result;
+          }),
+        );
 
         check(decodedList).isEmpty();
       });
@@ -2316,14 +2379,17 @@ void main() {
     test('Aliased keys inside list of Coordinates in unkeyed array', () {
       const jsonStr =
           '[{"lat": 1.0, "lon": 2.0}, {"latitude": 3.0, "longitude": 4.0}, {"lat": 5.0, "longitude": 6.0}]';
-      final list = TestJsonDriver.decodeString(jsonStr, (decoder) {
-        final unkeyed = decoder.unkeyed();
-        final result = <Coordinate>[];
-        while (unkeyed.moveNext()) {
-          result.add(unkeyed.decodeElement(Coordinate.decode));
-        }
-        return result;
-      });
+      final list = TestJsonDriver.decodeString(
+        jsonStr,
+        Decodable.fromFunction((decoder) {
+          final unkeyed = decoder.unkeyed();
+          final result = <Coordinate>[];
+          while (unkeyed.moveNext()) {
+            result.add(unkeyed.decodeElement(const CoordinateCodable()));
+          }
+          return result;
+        }),
+      );
 
       check(list).deepEquals(const [
         Coordinate(latitude: 1.0, longitude: 2.0),
@@ -2341,14 +2407,17 @@ void main() {
   {"hasBell": false, "maxSpeed": 25, "type": "bicycle"}
 ]
 ''';
-      final fleet = TestJsonDriver.decodeString(jsonStr, (decoder) {
-        final unkeyed = decoder.unkeyed();
-        final result = <Vehicle>[];
-        while (unkeyed.moveNext()) {
-          result.add(unkeyed.decodeElement(Vehicle.decode));
-        }
-        return result;
-      });
+      final fleet = TestJsonDriver.decodeString(
+        jsonStr,
+        Decodable.fromFunction((decoder) {
+          final unkeyed = decoder.unkeyed();
+          final result = <Vehicle>[];
+          while (unkeyed.moveNext()) {
+            result.add(unkeyed.decodeElement(const VehicleCodable()));
+          }
+          return result;
+        }),
+      );
 
       check(fleet.length).equals(4);
       check(fleet[0]).isA<Car>();
@@ -2367,15 +2436,20 @@ void main() {
 
       const jsonStr =
           '{"id": "usr_ctx", "email": "ctx@example.com", "role": "admin", "zip": "90210"}';
-      final profile = TestJsonDriver.decodeString(jsonStr, (decoder) {
-        check(decoder.userInfo[tenantSymbol]).equals('tenant_enterprise_1');
-        return UserProfile.decode(decoder);
-      }, userInfo: userInfo);
+      final profile = TestJsonDriver.decodeString(
+        jsonStr,
+        Decodable.fromFunction((decoder) {
+          check(decoder.userInfo[tenantSymbol]).equals('tenant_enterprise_1');
+          return const UserProfileCodable().decode(decoder);
+        }),
+        userInfo: userInfo,
+      );
 
       check(profile.id).equals('usr_ctx');
 
       final encodedStr = TestJsonDriver.encodeToString(
         profile,
+        const UserProfileCodable(),
         userInfo: userInfo,
       );
       check(encodedStr).contains('usr_ctx');
@@ -2410,10 +2484,13 @@ void main() {
         location: Coordinate(latitude: 37.4220, longitude: -122.0841),
       );
 
-      final bytes = TestJsonDriver.encodeToBytes(original);
+      final bytes = TestJsonDriver.encodeToBytes(
+        original,
+        const UserWithLocationCodable(),
+      );
       final reDecoded = TestJsonDriver.decodeBytes(
         bytes,
-        UserWithLocation.decode,
+        const UserWithLocationCodable(),
       );
 
       check(reDecoded).equals(original);
@@ -2425,85 +2502,116 @@ void main() {
       test('decodeIntList throws CodableException on malformed non-array', () {
         const jsonStr = '{"nums": "not_an_array"}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeIntList('nums');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeIntList('nums');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('decodeIntList throws CodableException on missing key', () {
         const jsonStr = '{"other": [1, 2, 3]}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeIntList('missing');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeIntList('missing');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('decodeIntList throws CodableException on invalid element type', () {
         const jsonStr = '{"nums": [1, "two", 3]}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeIntList('nums');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeIntList('nums');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('decodeDoubleList throws CodableException on malformed type', () {
         const jsonStr = '{"doubles": false}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeDoubleList('doubles');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeDoubleList('doubles');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('decodeStringList throws CodableException on malformed type', () {
         const jsonStr = '{"tags": 123}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeStringList('tags');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeStringList('tags');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('decodeBoolList throws CodableException on malformed type', () {
         const jsonStr = '{"flags": "true"}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeBoolList('flags');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeBoolList('flags');
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('readNull throws CodableException on non-null field value', () {
         const jsonStr = '{"count": 42}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final keyed = decoder.keyed();
-            keyed.nextKey();
-            keyed.readNull();
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final keyed = decoder.keyed();
+              keyed.nextKey();
+              keyed.readNull();
+            }),
+          );
         }).throws<CodableException>();
       });
 
       test('uniform double list decoding throws on missing required field', () {
         const jsonStr = '[{"x": 1.0, "y": 2.0}]';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable<List<Coordinate>>.fromFunction(
+              const CoordinateCodable().decodeList,
+            ),
+          );
         }).throws<CodableException>();
       });
 
       test('uniform double list decoding throws on explicit null field', () {
         const jsonStr = '[{"x": 1.0, "y": 2.0, "z": null}]';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable<List<Coordinate>>.fromFunction(
+              const CoordinateCodable().decodeList,
+            ),
+          );
         }).throws<CodableException>();
       });
 
@@ -2512,7 +2620,12 @@ void main() {
         () {
           const jsonStr = '[{"x": "not_a_number", "y": 2.0, "z": 3.0}]';
           check(() {
-            TestJsonDriver.decodeString(jsonStr, _$CoordinateListFromDecoder);
+            TestJsonDriver.decodeString(
+              jsonStr,
+              Decodable<List<Coordinate>>.fromFunction(
+                const CoordinateCodable().decodeList,
+              ),
+            );
           }).throws<CodableException>();
         },
       );
@@ -2520,10 +2633,13 @@ void main() {
       test('Float64List decoding throws on non-numeric element', () {
         const jsonStr = '{"coordinates": [1.0, "invalid", 3.0]}';
         check(() {
-          TestJsonDriver.decodeString(jsonStr, (decoder) {
-            final mapped = decoder.mapped();
-            return mapped.decodeFloat64List('coordinates');
-          });
+          TestJsonDriver.decodeString(
+            jsonStr,
+            Decodable.fromFunction((decoder) {
+              final mapped = decoder.mapped();
+              return mapped.decodeFloat64List('coordinates');
+            }),
+          );
         }).throws<CodableException>();
       });
 

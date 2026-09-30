@@ -40,7 +40,7 @@ void main() {
 
       final bytes = Uint8List.fromList(utf8.encode(json));
       final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final person = Person.decode(decoder);
+      final person = const PersonCodable().decode(decoder);
 
       check(person.firstName).equals('Alice');
       check(person.lastName).equals('Smith');
@@ -49,9 +49,12 @@ void main() {
       check(person.orders.first.isRushed).equals(true);
       check(person.orders.first.item?.itemNumber).equals(101);
 
-      final outputBytes = JsonCodableEncoder.toBytes(person.encode);
+      final outputBytes = JsonCodableEncoder.toBytes(
+        person,
+        const PersonCodable(),
+      );
 
-      final roundtripped = Person.decode(
+      final roundtripped = const PersonCodable().decode(
         JsonCodableDecoder.fromBytes(outputBytes),
       );
       check(roundtripped.firstName).equals('Alice');
@@ -77,7 +80,8 @@ void main() {
 
       final bytes = Uint8List.fromList(utf8.encode(json));
       final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final response = BaseResponse.decode(decoder, Article.decode);
+      final response = const BaseResponseCodable<Article>(ArticleCodable())
+          .decode(decoder);
 
       check(response.status).equals(200);
       check(response.message).equals('OK');
@@ -88,14 +92,18 @@ void main() {
 
     test('CustomDecoderExample: DateTimeEpochDecoder', () {
       final json1 = Uint8List.fromList(utf8.encode('{"when": 1700000000000}'));
-      final ex1 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json1));
+      final ex1 = const DateTimeExampleCodable().decode(
+        JsonCodableDecoder.fromBytes(json1),
+      );
       check(ex1.when)
           .equals(DateTime.fromMillisecondsSinceEpoch(1700000000000));
 
       final json2 = Uint8List.fromList(
         utf8.encode('{"when": "2026-08-17T12:00:00.000Z"}'),
       );
-      final ex2 = DateTimeExample.decode(JsonCodableDecoder.fromBytes(json2));
+      final ex2 = const DateTimeExampleCodable().decode(
+        JsonCodableDecoder.fromBytes(json2),
+      );
       check(ex2.when).equals(DateTime.parse('2026-08-17T12:00:00.000Z'));
     });
 
@@ -127,13 +135,15 @@ void main() {
         utf8.encode('{"location":[37.7749,-122.4194]}'),
       );
       final decoder = JsonCodableDecoder.fromBytes(json);
-      final pair = CoordinatePair.decode(decoder);
+      final pair = const CoordinatePairCodable().decode(decoder);
 
       check(pair.location).isNotNull();
       check(pair.location![0]).equals(37.7749);
       check(pair.location![1]).equals(-122.4194);
 
-      final encoded = utf8.decode(JsonCodableEncoder.toBytes(pair.encode));
+      final encoded = utf8.decode(
+        JsonCodableEncoder.toBytes(pair, const CoordinatePairCodable()),
+      );
       check(encoded).equals('{"location":[37.7749,-122.4194]}');
     });
 
@@ -151,7 +161,7 @@ void main() {
 
       final vehicles = <Vehicle>[];
       while (unkeyed.moveNext()) {
-        vehicles.add(unkeyed.decodeElement(Vehicle.decode));
+        vehicles.add(unkeyed.decodeElement(const VehicleCodable()));
       }
 
       check(vehicles.length).equals(2);

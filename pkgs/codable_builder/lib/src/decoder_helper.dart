@@ -12,22 +12,55 @@ import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
-/// Emits the unified `_$ModelSchema` extension type and universal
-/// `_$ModelFromDecoder` deserializer.
+/// Emits the unified `_$ModelSchema` extension type and companion
+/// `decode` / `decodeList` methods.
 final class DecoderGeneratorHelper {
   final ModelDescriptor model;
 
   DecoderGeneratorHelper(this.model);
 
-  /// Generates the complete decoder code for [model].
+  /// Generates the schema extension type and decoder methods for [model].
   String generate() {
     final buffer = StringBuffer();
-    _writeSchema(buffer);
-    buffer.writeln();
+    buffer.write(generateSchema());
     if (model.createDecoder) {
-      _writeDecoder(buffer);
       buffer.writeln();
-      _writeListDecoder(buffer);
+      buffer.write(generateMethods());
+    }
+    return buffer.toString();
+  }
+
+  /// Generates the `extension type const _$ModelSchema` declaration.
+  String generateSchema() {
+    final buffer = StringBuffer();
+    _writeSchema(buffer);
+    return buffer.toString();
+  }
+
+  /// Generates the `decode` and (for uniform double models) `decodeList`
+  /// methods for the companion `*Codable` class.
+  String generateMethods() {
+    if (!model.createDecoder) return '';
+    final raw = StringBuffer();
+    _writeDecoder(raw);
+    if (model.isUniformDoubleModel) {
+      raw.writeln();
+      _writeListDecoder(raw);
+    }
+    return _indentLines(raw.toString(), '  ');
+  }
+
+  static String _indentLines(String text, String indent) {
+    final lines = text.split('\n');
+    final buffer = StringBuffer();
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (i == lines.length - 1 && line.isEmpty) break;
+      if (line.isEmpty) {
+        buffer.writeln();
+      } else {
+        buffer.writeln('$indent$line');
+      }
     }
     return buffer.toString();
   }
@@ -187,16 +220,9 @@ final class DecoderGeneratorHelper {
 
   void _writeDecoder(StringBuffer buffer) {
     final schemaName = '_\$${model.className}Schema';
-    final decoderFuncName = '_\$${model.className}FromDecoder';
 
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln('// 2. Universal Keyed Deserializer for ${model.className}');
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln('${model.className} $decoderFuncName(Decoder decoder) {');
+    buffer.writeln('@override');
+    buffer.writeln('${model.className} decode(Decoder decoder) {');
     buffer.writeln(
       '  final keyed = decoder.keyed(options: $schemaName.keyOptions);',
     );
@@ -339,7 +365,7 @@ final class DecoderGeneratorHelper {
       case TypeCategory.custom:
         buffer.writeln(
           '$indent${field.name} = '
-          'keyed.decodeValue(${field.customDecoderCode}.decode);',
+          'keyed.decodeValue(${field.customDecoderCode});',
         );
       case TypeCategory.tuple:
         buffer.writeln('$indent${field.name} = keyed.decodeFloat64List();');
@@ -353,7 +379,7 @@ final class DecoderGeneratorHelper {
         final nestedName = field.type.element!.name;
         buffer.writeln(
           '$indent${field.name} = '
-          '_\$${nestedName}FromDecoder(keyed.nestedDecoder());',
+          'const ${nestedName}Codable().decode(keyed.nestedDecoder());',
         );
       case TypeCategory.unknown:
         buffer.writeln('$indent// Unknown type, reading string as fallback');
@@ -421,7 +447,7 @@ final class DecoderGeneratorHelper {
     if (elemType == null) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList('
-        '(d) => d.singleValue().readString() as dynamic);',
+        'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic));',
       );
     } else if (elemType.isDartCoreInt && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
@@ -530,14 +556,14 @@ final class DecoderGeneratorHelper {
       final enumName = elemType.element!.name;
       if (isNullable) {
         buffer.writeln(
-          '$indent${field.name} = keyed.decodeList((d) { '
+          '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
           'final v = d.singleValue().readNullableString(); '
-          'return v == null ? null : $enumName.values.byName(v); });',
+          'return v == null ? null : $enumName.values.byName(v); }));',
         );
       } else {
         buffer.writeln(
           '$indent${field.name} = keyed.decodeList('
-          '(d) => $enumName.values.byName(d.singleValue().readString()));',
+          'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString())));',
         );
       }
     } else if (elemType.element != null &&
@@ -553,7 +579,7 @@ final class DecoderGeneratorHelper {
           '$indent      u.readNull();\n'
           '$indent      l.add(null);\n'
           '$indent    } else {\n'
-          '$indent      l.add(_\$${nestedName}FromDecoder(u.nestedDecoder()));\n'
+          '$indent      l.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
           '$indent    }\n'
           '$indent  }\n'
           '$indent  ${field.name} = l;\n'
@@ -562,35 +588,35 @@ final class DecoderGeneratorHelper {
       } else {
         buffer.writeln(
           '$indent${field.name} = '
-          '_\$${nestedName}ListFromDecoder(keyed.nestedDecoder());',
+          'const ${nestedName}Codable().decodeList(keyed.nestedDecoder());',
         );
       }
     } else if (elemType.isDartCoreString && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<String?>('
-        '(d) => d.singleValue().readNullableString());',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableString()));',
       );
     } else if (elemType.isDartCoreInt && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<int?>('
-        '(d) => d.singleValue().readNullableInt());',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableInt()));',
       );
     } else if ((elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
         isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<double?>('
-        '(d) => d.singleValue().readNullableDouble());',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableDouble()));',
       );
     } else if (elemType.isDartCoreBool && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<bool?>('
-        '(d) => d.singleValue().readNullableBool());',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableBool()));',
       );
     } else {
       final elemTypeStr = elemType.getDisplayString();
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
-        '(d) => d.singleValue().readString() as dynamic);',
+        'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic));',
       );
     }
   }
@@ -602,81 +628,81 @@ final class DecoderGeneratorHelper {
           : null;
       if (type.isNullableType) {
         if (inner == null) {
-          return '(d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList((d) => d.singleValue().readString() as dynamic); }';
+          return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)); })';
         }
-        return '(d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}); }';
+        return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}); })';
       }
       if (inner == null) {
-        return '(d) => d.unkeyed().decodeList((d) => d.singleValue().readString() as dynamic)';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)))';
       }
       if (inner.isDartCoreDouble && !inner.isNullableType) {
-        return '(d) => d.unkeyed().decodeDoubleList()';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeDoubleList())';
       }
       if (inner.element?.name == 'Float64List') {
-        return '(d) => d.unkeyed().decodeFloat64List()';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
       }
       if (inner.isDartCoreInt && !inner.isNullableType) {
-        return '(d) => d.unkeyed().decodeIntList()';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeIntList())';
       }
       if (inner.isDartCoreString && !inner.isNullableType) {
-        return '(d) => d.unkeyed().decodeStringList()';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeStringList())';
       }
       if (inner.isDartCoreBool && !inner.isNullableType) {
-        return '(d) => d.unkeyed().decodeBoolList()';
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeBoolList())';
       }
-      return '(d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)})';
+      return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}))';
     }
     if (type.element?.name == 'Float64List') {
-      return '(d) => d.unkeyed().decodeFloat64List()';
+      return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
     }
     if (type.element?.name == 'Int64List') {
-      return '(d) => Int64List.fromList(d.unkeyed().decodeIntList())';
+      return 'Decodable.fromFunction((d) => Int64List.fromList(d.unkeyed().decodeIntList()))';
     }
     if (type.element?.name == 'Int32List') {
-      return '(d) => Int32List.fromList(d.unkeyed().decodeIntList())';
+      return 'Decodable.fromFunction((d) => Int32List.fromList(d.unkeyed().decodeIntList()))';
     }
     if (type.element?.name == 'Uint8List') {
-      return '(d) => Uint8List.fromList(d.unkeyed().decodeIntList())';
+      return 'Decodable.fromFunction((d) => Uint8List.fromList(d.unkeyed().decodeIntList()))';
     }
     if (type.element?.name == 'Float32List') {
-      return '(d) => Float32List.fromList(d.unkeyed().decodeDoubleList())';
+      return 'Decodable.fromFunction((d) => Float32List.fromList(d.unkeyed().decodeDoubleList()))';
     }
     if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       final nestedName = type.element!.name;
       if (type.isNullableType) {
-        return '(d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return _\$${nestedName}FromDecoder(d); }';
+        return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return const ${nestedName}Codable().decode(d); })';
       }
-      return '_\$${nestedName}FromDecoder';
+      return 'const ${nestedName}Codable()';
     }
     if (type.element is EnumElement) {
       final enumName = type.element!.name;
       if (type.isNullableType) {
-        return '(d) { final v = d.singleValue().readNullableString(); return v == null ? null : $enumName.values.byName(v); }';
+        return 'Decodable.fromFunction((d) { final v = d.singleValue().readNullableString(); return v == null ? null : $enumName.values.byName(v); })';
       }
-      return '(d) => $enumName.values.byName(d.singleValue().readString())';
+      return 'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))';
     }
     if (type.isDartCoreInt) {
       return type.isNullableType
-          ? '(d) => d.singleValue().readNullableInt()'
-          : '(d) => d.singleValue().readInt()';
+          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableInt())'
+          : 'Decodable.fromFunction((d) => d.singleValue().readInt())';
     }
     if (type.isDartCoreDouble || type.isDartCoreNum) {
       return type.isNullableType
-          ? '(d) => d.singleValue().readNullableDouble()'
-          : '(d) => d.singleValue().readDouble()';
+          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableDouble())'
+          : 'Decodable.fromFunction((d) => d.singleValue().readDouble())';
     }
     if (type.isDartCoreString) {
       return type.isNullableType
-          ? '(d) => d.singleValue().readNullableString()'
-          : '(d) => d.singleValue().readString()';
+          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableString())'
+          : 'Decodable.fromFunction((d) => d.singleValue().readString())';
     }
     if (type.isDartCoreBool) {
       return type.isNullableType
-          ? '(d) => d.singleValue().readNullableBool()'
-          : '(d) => d.singleValue().readBool()';
+          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableBool())'
+          : 'Decodable.fromFunction((d) => d.singleValue().readBool())';
     }
-    return '(d) => d.singleValue().readString() as dynamic';
+    return 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)';
   }
 
   void _writeKeyedSetRead(
@@ -696,12 +722,12 @@ final class DecoderGeneratorHelper {
     } else if (elemType != null && elemType.isDartCoreString && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<String?>('
-        '(d) => d.singleValue().readNullableString()).toSet();',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableString())).toSet();',
       );
     } else if (elemType != null && elemType.isDartCoreInt && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<int?>('
-        '(d) => d.singleValue().readNullableInt()).toSet();',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableInt())).toSet();',
       );
     } else if (elemType != null &&
         (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
@@ -714,27 +740,27 @@ final class DecoderGeneratorHelper {
         isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<double?>('
-        '(d) => d.singleValue().readNullableDouble()).toSet();',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableDouble())).toSet();',
       );
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeBoolList().toSet();');
     } else if (elemType != null && elemType.isDartCoreBool && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<bool?>('
-        '(d) => d.singleValue().readNullableBool()).toSet();',
+        'Decodable.fromFunction((d) => d.singleValue().readNullableBool())).toSet();',
       );
     } else if (elemType != null && elemType.element is EnumElement) {
       final enumName = elemType.element!.name;
       if (isNullable) {
         buffer.writeln(
-          '$indent${field.name} = keyed.decodeList((d) { '
+          '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
           'final v = d.singleValue().readNullableString(); '
-          'return v == null ? null : $enumName.values.byName(v); }).toSet();',
+          'return v == null ? null : $enumName.values.byName(v); })).toSet();',
         );
       } else {
         buffer.writeln(
           '$indent${field.name} = keyed.decodeList('
-          '(d) => $enumName.values.byName(d.singleValue().readString())).toSet();',
+          'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))).toSet();',
         );
       }
     } else if (elemType != null &&
@@ -751,7 +777,7 @@ final class DecoderGeneratorHelper {
           '$indent      u.readNull();\n'
           '$indent      s.add(null);\n'
           '$indent    } else {\n'
-          '$indent      s.add(_\$${nestedName}FromDecoder(u.nestedDecoder()));\n'
+          '$indent      s.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
           '$indent    }\n'
           '$indent  }\n'
           '$indent  ${field.name} = s;\n'
@@ -760,13 +786,13 @@ final class DecoderGeneratorHelper {
       } else {
         buffer.writeln(
           '$indent${field.name} = '
-          '_\$${nestedName}ListFromDecoder(keyed.nestedDecoder()).toSet();',
+          'const ${nestedName}Codable().decodeList(keyed.nestedDecoder()).toSet();',
         );
       }
     } else {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
-        '(d) => d.singleValue().readString() as dynamic).toSet();',
+        'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)).toSet();',
       );
     }
   }
@@ -793,7 +819,7 @@ final class DecoderGeneratorHelper {
         valType.element != null &&
         const TypeClassifier().isCodableElement(valType.element!)) {
       final nestedName = valType.element!.name;
-      readExpr = '_\$${nestedName}FromDecoder(k.nestedDecoder())';
+      readExpr = 'const ${nestedName}Codable().decode(k.nestedDecoder())';
     } else {
       readExpr = 'k.readString() as dynamic';
     }
@@ -839,20 +865,10 @@ final class DecoderGeneratorHelper {
   }
 
   void _writeListDecoder(StringBuffer buffer) {
-    final listDecoderFuncName = '_\$${model.className}ListFromDecoder';
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
     final isUniformDouble = model.isUniformDoubleModel;
 
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln('// 2b. Universal List Deserializer for ${model.className}');
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln(
-      'List<${model.className}> $listDecoderFuncName(Decoder decoder) {',
-    );
+    buffer.writeln('List<${model.className}> decodeList(Decoder decoder) {');
 
     if (isUniformDouble) {
       final kCount = nonIgnoredFields.length;
@@ -889,9 +905,7 @@ final class DecoderGeneratorHelper {
     buffer.writeln('  final unkeyed = decoder.unkeyed();');
     buffer.writeln('  final list = <${model.className}>[];');
     buffer.writeln('  while (unkeyed.moveNext()) {');
-    buffer.writeln(
-      '    list.add(_\$${model.className}FromDecoder(unkeyed.nestedDecoder()));',
-    );
+    buffer.writeln('    list.add(decode(unkeyed.nestedDecoder()));');
     buffer.writeln('  }');
     buffer.writeln('  return list;');
     buffer.writeln('}');

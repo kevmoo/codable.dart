@@ -38,7 +38,7 @@ void main() {
       final cDecoder = JsonCodableDecoder.fromBytes(
         Uint8List.fromList(jsonBytes),
       );
-      final cObj = c_coord.Coordinate.decode(cDecoder);
+      final cObj = const c_coord.CoordinateCodable().decode(cDecoder);
 
       check(cObj.latitude).equals(jsObj.latitude);
       check(cObj.longitude).equals(jsObj.longitude);
@@ -52,7 +52,9 @@ void main() {
       final jsObj = js_can.CanadaFeatureCollection.fromJson(jsMap);
 
       final cDecoder = JsonCodableDecoder.fromBytes(bytes);
-      final cObj = c_can.CanadaFeatureCollection.decode(cDecoder);
+      final cObj = const c_can.CanadaFeatureCollectionCodable().decode(
+        cDecoder,
+      );
 
       check(cObj.type).equals(jsObj.type);
       check(cObj.features.length).equals(jsObj.features.length);
@@ -68,7 +70,7 @@ void main() {
       final jsObj = js_citm.CitmCatalog.fromJson(jsMap);
 
       final cDecoder = JsonCodableDecoder.fromBytes(bytes);
-      final cObj = c_citm.CitmCatalog.decode(cDecoder);
+      final cObj = const c_citm.CitmCatalogCodable().decode(cDecoder);
 
       check(cObj.areaNames.length).equals(jsObj.areaNames.length);
       check(cObj.events.length).equals(jsObj.events.length);
@@ -84,7 +86,7 @@ void main() {
       final jsObj = js_small.SmallDocument.fromJson(jsMap);
 
       final cDecoder = JsonCodableDecoder.fromBytes(bytes);
-      final cObj = c_small.SmallDocument.decode(cDecoder);
+      final cObj = const c_small.SmallDocumentCodable().decode(cDecoder);
 
       check(cObj.name).equals(jsObj.name);
       check(cObj.email).equals(jsObj.email);
@@ -100,7 +102,7 @@ void main() {
       final jsObj = js_twit.TwitterResponse.fromJson(jsMap);
 
       final cDecoder = JsonCodableDecoder.fromBytes(bytes);
-      final cObj = c_twit.TwitterResponse.decode(cDecoder);
+      final cObj = const c_twit.TwitterResponseCodable().decode(cDecoder);
 
       check(cObj.statuses.length).equals(jsObj.statuses.length);
       check(cObj.searchMetadata.count).equals(jsObj.searchMetadata.count);

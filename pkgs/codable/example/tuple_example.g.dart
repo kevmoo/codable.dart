@@ -33,57 +33,48 @@ extension type const _$CoordinatePairSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CoordinatePair
+// 2. Companion Codable for CoordinatePair
 // =============================================================================
-CoordinatePair _$CoordinatePairFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CoordinatePairSchema.keyOptions);
+final class CoordinatePairCodable implements Codable<CoordinatePair> {
+  const CoordinatePairCodable();
 
-  Float64List? location;
-  var seen = _$CoordinatePairSchema.none;
+  @override
+  CoordinatePair decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CoordinatePairSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CoordinatePairSchema.keyOptions)) {
-      case _$CoordinatePairSchema.keyLocation:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          location = null;
-        } else {
-          location = keyed.decodeFloat64List();
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    Float64List? location;
+    var seen = _$CoordinatePairSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CoordinatePairSchema.keyOptions)) {
+        case _$CoordinatePairSchema.keyLocation:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            location = null;
+          } else {
+            location = keyed.decodeFloat64List();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CoordinatePair(location: location);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CoordinatePair(location: location);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CoordinatePair
-// =============================================================================
-List<CoordinatePair> _$CoordinatePairListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CoordinatePair>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CoordinatePairFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CoordinatePair
-// =============================================================================
-void _$CoordinatePairToEncoder(CoordinatePair instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  if (instance.location != null) {
-    keyed.encodeDoubleList(
-      _$CoordinatePairSchema.nameLocation,
-      instance.location!,
-    );
+  @override
+  void encode(CoordinatePair instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    if (instance.location != null) {
+      keyed.encodeDoubleList(
+        _$CoordinatePairSchema.nameLocation,
+        instance.location!,
+      );
+    }
   }
 }

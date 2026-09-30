@@ -55,55 +55,46 @@ extension type const _$DateTimeExampleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for DateTimeExample
+// 2. Companion Codable for DateTimeExample
 // =============================================================================
-DateTimeExample _$DateTimeExampleFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$DateTimeExampleSchema.keyOptions);
+final class DateTimeExampleCodable implements Codable<DateTimeExample> {
+  const DateTimeExampleCodable();
 
-  DateTime? when;
-  var seen = _$DateTimeExampleSchema.none;
+  @override
+  DateTimeExample decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DateTimeExampleSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$DateTimeExampleSchema.keyOptions)) {
-      case _$DateTimeExampleSchema.keyWhen:
-        if ((seen._value & _$DateTimeExampleSchema.when._value) != 0) {
-          throw const CodableException('Duplicate field "when"');
-        }
-        when = keyed.decodeValue(const DateTimeEpochDecoder().decode);
-        seen |= _$DateTimeExampleSchema.when;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    DateTime? when;
+    var seen = _$DateTimeExampleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DateTimeExampleSchema.keyOptions)) {
+        case _$DateTimeExampleSchema.keyWhen:
+          if ((seen._value & _$DateTimeExampleSchema.when._value) != 0) {
+            throw const CodableException('Duplicate field "when"');
+          }
+          when = keyed.decodeValue(const DateTimeEpochDecoder());
+          seen |= _$DateTimeExampleSchema.when;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return DateTimeExample(when!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return DateTimeExample(when!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for DateTimeExample
-// =============================================================================
-List<DateTimeExample> _$DateTimeExampleListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <DateTimeExample>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$DateTimeExampleFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(DateTimeExample instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeValue(
+      _$DateTimeExampleSchema.nameWhen,
+      instance.when,
+      const DateTimeEpochDecoder(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for DateTimeExample
-// =============================================================================
-void _$DateTimeExampleToEncoder(DateTimeExample instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeValue(
-    _$DateTimeExampleSchema.nameWhen,
-    instance.when,
-    const DateTimeEpochDecoder().encode,
-  );
 }

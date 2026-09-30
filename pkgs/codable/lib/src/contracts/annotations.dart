@@ -3,13 +3,17 @@ library;
 
 import 'package:meta/meta_meta.dart';
 
-/// Annotation designating a class as Codable for streaming generation.
+import 'codable.dart';
+import 'decoder.dart';
+import 'encoder.dart';
+
+/// Backing metadata class for the [@Codable] annotation.
 @Target({TargetKind.classType})
-final class Codable {
-  /// Whether to generate an encoder function `_$<Model>ToWriter`.
+final class CodableAnnotation implements Codable<Never> {
+  /// Whether to generate an `encode` implementation on `<Model>Codable`.
   final bool createEncoder;
 
-  /// Whether to generate a decoder function `_$<Model>FromReader`.
+  /// Whether to generate a `decode` implementation on `<Model>Codable`.
   final bool createDecoder;
 
   /// Whether to use golden mask bitmask validation for required fields.
@@ -18,17 +22,27 @@ final class Codable {
   /// Field naming convention for JSON wire formats.
   final FieldRename fieldRename;
 
-  /// Creates a [Codable] annotation instance.
-  const Codable({
+  /// Creates a [CodableAnnotation] instance.
+  const CodableAnnotation({
     this.createEncoder = true,
     this.createDecoder = true,
     this.useGoldenMask = true,
     this.fieldRename = FieldRename.none,
   });
+
+  @override
+  Never decode(Decoder decoder) => throw UnsupportedError(
+    '@Codable() annotation instance cannot be used as a runtime Decodable.',
+  );
+
+  @override
+  void encode(Never value, Encoder encoder) => throw UnsupportedError(
+    '@Codable() annotation instance cannot be used as a runtime Encodable.',
+  );
 }
 
 /// Global const instance for `@Codable()`.
-const codable = Codable();
+const codable = Codable<Never>();
 
 /// Custom configuration for an individual class field or constructor parameter.
 @Target({TargetKind.field, TargetKind.parameter, TargetKind.getter})

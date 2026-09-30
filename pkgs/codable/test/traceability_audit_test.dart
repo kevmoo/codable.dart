@@ -249,10 +249,14 @@ void main() {
     });
 
     test('JsonCodableEncoder.toBytes with capacityHint', () {
-      final bytes = JsonCodableEncoder.toBytes((Encoder encoder) {
-        final k = encoder.keyed();
-        k.encodeInt('count', 42);
-      }, capacityHint: 0);
+      final bytes = JsonCodableEncoder.toBytes(
+        42,
+        Encodable<int>.fromFunction((value, encoder) {
+          final k = encoder.keyed();
+          k.encodeInt('count', value);
+        }),
+        capacityHint: 0,
+      );
       check(utf8.decode(bytes)).equals('{"count":42}');
     });
 

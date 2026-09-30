@@ -35,14 +35,9 @@ Future<void> _generateModelPart(File file) async {
       element,
       ConstantReader(annotation),
     );
-    final decoderCode = DecoderGeneratorHelper(model).generate();
-    final encoderCode = EncoderGeneratorHelper(model).generate();
-    buffer.writeln(decoderCode);
+    final code = const CodableGenerator().generateForModel(model);
+    buffer.writeln(code);
     buffer.writeln();
-    if (encoderCode.isNotEmpty) {
-      buffer.writeln(encoderCode);
-      buffer.writeln();
-    }
   }
 
   final outPath = '${filePath.substring(0, filePath.length - 5)}.g.dart';

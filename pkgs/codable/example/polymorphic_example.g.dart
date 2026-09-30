@@ -61,62 +61,53 @@ extension type const _$CarSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Car
+// 2. Companion Codable for Car
 // =============================================================================
-Car _$CarFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CarSchema.keyOptions);
+final class CarCodable implements Codable<Car> {
+  const CarCodable();
 
-  int? maxSpeed;
-  int? doors;
-  var seen = _$CarSchema.none;
+  @override
+  Car decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CarSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
-      case _$CarSchema.keyMaxSpeed:
-        if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
-          throw const CodableException('Duplicate field "maxSpeed"');
-        }
-        maxSpeed = keyed.readInt();
-        seen |= _$CarSchema.maxSpeed;
-        break;
-      case _$CarSchema.keyDoors:
-        if ((seen._value & _$CarSchema.doors._value) != 0) {
-          throw const CodableException('Duplicate field "doors"');
-        }
-        doors = keyed.readInt();
-        seen |= _$CarSchema.doors;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? maxSpeed;
+    int? doors;
+    var seen = _$CarSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CarSchema.keyOptions)) {
+        case _$CarSchema.keyMaxSpeed:
+          if ((seen._value & _$CarSchema.maxSpeed._value) != 0) {
+            throw const CodableException('Duplicate field "maxSpeed"');
+          }
+          maxSpeed = keyed.readInt();
+          seen |= _$CarSchema.maxSpeed;
+          break;
+        case _$CarSchema.keyDoors:
+          if ((seen._value & _$CarSchema.doors._value) != 0) {
+            throw const CodableException('Duplicate field "doors"');
+          }
+          doors = keyed.readInt();
+          seen |= _$CarSchema.doors;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Car(maxSpeed: maxSpeed!, doors: doors!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Car(maxSpeed: maxSpeed!, doors: doors!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Car
-// =============================================================================
-List<Car> _$CarListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Car>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CarFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Car instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Car
-// =============================================================================
-void _$CarToEncoder(Car instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
 }
 
 // =============================================================================
@@ -178,60 +169,51 @@ extension type const _$BicycleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Bicycle
+// 2. Companion Codable for Bicycle
 // =============================================================================
-Bicycle _$BicycleFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$BicycleSchema.keyOptions);
+final class BicycleCodable implements Codable<Bicycle> {
+  const BicycleCodable();
 
-  int? maxSpeed;
-  bool? hasBell;
-  var seen = _$BicycleSchema.none;
+  @override
+  Bicycle decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$BicycleSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
-      case _$BicycleSchema.keyMaxSpeed:
-        if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
-          throw const CodableException('Duplicate field "maxSpeed"');
-        }
-        maxSpeed = keyed.readInt();
-        seen |= _$BicycleSchema.maxSpeed;
-        break;
-      case _$BicycleSchema.keyHasBell:
-        if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
-          throw const CodableException('Duplicate field "hasBell"');
-        }
-        hasBell = keyed.readBool();
-        seen |= _$BicycleSchema.hasBell;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? maxSpeed;
+    bool? hasBell;
+    var seen = _$BicycleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$BicycleSchema.keyOptions)) {
+        case _$BicycleSchema.keyMaxSpeed:
+          if ((seen._value & _$BicycleSchema.maxSpeed._value) != 0) {
+            throw const CodableException('Duplicate field "maxSpeed"');
+          }
+          maxSpeed = keyed.readInt();
+          seen |= _$BicycleSchema.maxSpeed;
+          break;
+        case _$BicycleSchema.keyHasBell:
+          if ((seen._value & _$BicycleSchema.hasBell._value) != 0) {
+            throw const CodableException('Duplicate field "hasBell"');
+          }
+          hasBell = keyed.readBool();
+          seen |= _$BicycleSchema.hasBell;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Bicycle
-// =============================================================================
-List<Bicycle> _$BicycleListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Bicycle>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$BicycleFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Bicycle instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Bicycle
-// =============================================================================
-void _$BicycleToEncoder(Bicycle instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
-  keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
 }

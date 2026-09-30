@@ -64,77 +64,68 @@ extension type const _$ArticleSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Article
+// 2. Companion Codable for Article
 // =============================================================================
-Article _$ArticleFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$ArticleSchema.keyOptions);
+final class ArticleCodable implements Codable<Article> {
+  const ArticleCodable();
 
-  int? id;
-  String? title;
-  User? author;
-  var seen = _$ArticleSchema.none;
+  @override
+  Article decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ArticleSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$ArticleSchema.keyOptions)) {
-      case _$ArticleSchema.keyId:
-        if ((seen._value & _$ArticleSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readInt();
-        seen |= _$ArticleSchema.id;
-        break;
-      case _$ArticleSchema.keyTitle:
-        if ((seen._value & _$ArticleSchema.title._value) != 0) {
-          throw const CodableException('Duplicate field "title"');
-        }
-        title = keyed.readString();
-        seen |= _$ArticleSchema.title;
-        break;
-      case _$ArticleSchema.keyAuthor:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          author = null;
-        } else {
-          author = _$UserFromDecoder(keyed.nestedDecoder());
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? id;
+    String? title;
+    User? author;
+    var seen = _$ArticleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ArticleSchema.keyOptions)) {
+        case _$ArticleSchema.keyId:
+          if ((seen._value & _$ArticleSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readInt();
+          seen |= _$ArticleSchema.id;
+          break;
+        case _$ArticleSchema.keyTitle:
+          if ((seen._value & _$ArticleSchema.title._value) != 0) {
+            throw const CodableException('Duplicate field "title"');
+          }
+          title = keyed.readString();
+          seen |= _$ArticleSchema.title;
+          break;
+        case _$ArticleSchema.keyAuthor:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            author = null;
+          } else {
+            author = const UserCodable().decode(keyed.nestedDecoder());
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Article(id: id!, title: title!, author: author);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Article(id: id!, title: title!, author: author);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Article
-// =============================================================================
-List<Article> _$ArticleListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Article>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$ArticleFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Article
-// =============================================================================
-void _$ArticleToEncoder(Article instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
-  keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
-  if (instance.author != null) {
-    keyed.encodeValue(
-      _$ArticleSchema.nameAuthor,
-      instance.author!,
-      _$UserToEncoder,
-    );
+  @override
+  void encode(Article instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
+    keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
+    if (instance.author != null) {
+      keyed.encodeValue(
+        _$ArticleSchema.nameAuthor,
+        instance.author!,
+        const UserCodable(),
+      );
+    }
   }
 }
 
@@ -195,60 +186,51 @@ extension type const _$UserSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for User
+// 2. Companion Codable for User
 // =============================================================================
-User _$UserFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$UserSchema.keyOptions);
+final class UserCodable implements Codable<User> {
+  const UserCodable();
 
-  int? id;
-  String? email;
-  var seen = _$UserSchema.none;
+  @override
+  User decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$UserSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$UserSchema.keyOptions)) {
-      case _$UserSchema.keyId:
-        if ((seen._value & _$UserSchema.id._value) != 0) {
-          throw const CodableException('Duplicate field "id"');
-        }
-        id = keyed.readInt();
-        seen |= _$UserSchema.id;
-        break;
-      case _$UserSchema.keyEmail:
-        if ((seen._value & _$UserSchema.email._value) != 0) {
-          throw const CodableException('Duplicate field "email"');
-        }
-        email = keyed.readString();
-        seen |= _$UserSchema.email;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? id;
+    String? email;
+    var seen = _$UserSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$UserSchema.keyOptions)) {
+        case _$UserSchema.keyId:
+          if ((seen._value & _$UserSchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readInt();
+          seen |= _$UserSchema.id;
+          break;
+        case _$UserSchema.keyEmail:
+          if ((seen._value & _$UserSchema.email._value) != 0) {
+            throw const CodableException('Duplicate field "email"');
+          }
+          email = keyed.readString();
+          seen |= _$UserSchema.email;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return User(id: id!, email: email!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return User(id: id!, email: email!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for User
-// =============================================================================
-List<User> _$UserListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <User>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$UserFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(User instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$UserSchema.nameId, instance.id);
+    keyed.encodeString(_$UserSchema.nameEmail, instance.email);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for User
-// =============================================================================
-void _$UserToEncoder(User instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$UserSchema.nameId, instance.id);
-  keyed.encodeString(_$UserSchema.nameEmail, instance.email);
 }

@@ -8,7 +8,7 @@ part 'coordinate.g.dart';
 
 /// Generated Coordinate benchmark model with @Codable and key aliasing.
 @Codable()
-class Coordinate implements Encodable {
+class Coordinate {
   @CodableKey(aliases: ['lat'])
   final double latitude;
 
@@ -16,12 +16,6 @@ class Coordinate implements Encodable {
   final double longitude;
 
   const Coordinate({required this.latitude, required this.longitude});
-
-  static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
-  static List<Coordinate> decodeList(Decoder decoder) =>
-      _$CoordinateListFromDecoder(decoder);
-  @override
-  void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
 
   @override
   int get hashCode => Object.hash(latitude, longitude);
