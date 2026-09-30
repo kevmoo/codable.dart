@@ -12,31 +12,25 @@ import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
-/// Emits the format-agnostic `_$ModelToEncoder` serializer.
+/// Emits the format-agnostic `encode` method on the companion `*Codable` class.
 final class EncoderGeneratorHelper {
   final ModelDescriptor model;
 
   EncoderGeneratorHelper(this.model);
 
   /// Generates the serializer code for [model].
-  String generate() {
+  String generate() => generateMethod();
+
+  /// Generates the `encode` method for the companion `*Codable` class.
+  String generateMethod() {
     if (!model.createEncoder) return '';
 
-    final buffer = StringBuffer();
+    final raw = StringBuffer();
     final schemaName = '_\$${model.className}Schema';
-    final funcName = '_\$${model.className}ToEncoder';
 
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln('// 3. Universal Serializer for ${model.className}');
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln(
-      'void $funcName(${model.className} instance, Encoder encoder) {',
-    );
-    buffer.writeln('  final keyed = encoder.keyed();');
+    raw.writeln('@override');
+    raw.writeln('void encode(${model.className} instance, Encoder encoder) {');
+    raw.writeln('  final keyed = encoder.keyed();');
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
 
@@ -46,21 +40,30 @@ final class EncoderGeneratorHelper {
       final keyExpr = '$schemaName.name$suffix';
 
       if (field.isNullable) {
-        buffer.writeln('  if ($fieldAccess != null) {');
-        _writeFieldEncode(
-          buffer,
-          field,
-          keyExpr,
-          '$fieldAccess!',
-          indent: '    ',
-        );
-        buffer.writeln('  }');
+        raw.writeln('  if ($fieldAccess != null) {');
+        _writeFieldEncode(raw, field, keyExpr, '$fieldAccess!', indent: '    ');
+        raw.writeln('  }');
       } else {
-        _writeFieldEncode(buffer, field, keyExpr, fieldAccess, indent: '  ');
+        _writeFieldEncode(raw, field, keyExpr, fieldAccess, indent: '  ');
       }
     }
 
-    buffer.writeln('}');
+    raw.writeln('}');
+    return _indentLines(raw.toString(), '  ');
+  }
+
+  static String _indentLines(String text, String indent) {
+    final lines = text.split('\n');
+    final buffer = StringBuffer();
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      if (i == lines.length - 1 && line.isEmpty) break;
+      if (line.isEmpty) {
+        buffer.writeln();
+      } else {
+        buffer.writeln('$indent$line');
+      }
+    }
     return buffer.toString();
   }
 
@@ -93,7 +96,7 @@ final class EncoderGeneratorHelper {
       case TypeCategory.custom:
         final decoder = field.customDecoderCode;
         buffer.writeln(
-          '${indent}keyed.encodeValue($keyExpr, $access, $decoder.encode);',
+          '${indent}keyed.encodeValue($keyExpr, $access, $decoder);',
         );
       case TypeCategory.tuple:
         buffer.writeln('${indent}keyed.encodeDoubleList($keyExpr, $access);');
@@ -107,7 +110,7 @@ final class EncoderGeneratorHelper {
         final nestedName = field.type.element!.name;
         buffer.writeln(
           '${indent}keyed.encodeValue('
-          '$keyExpr, $access, _\$${nestedName}ToEncoder);',
+          '$keyExpr, $access, const ${nestedName}Codable());',
         );
       case TypeCategory.unknown:
         buffer.writeln(
@@ -150,19 +153,21 @@ final class EncoderGeneratorHelper {
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
       buffer.writeln('${indent}keyed.encodeBoolList($keyExpr, $access);');
     } else if (elemType != null &&
+        !isNullable &&
         elemType.element != null &&
         const TypeClassifier().isCodableElement(elemType.element!)) {
       final nestedName = elemType.element!.name;
       buffer.writeln(
         '${indent}keyed.encodeList('
-        '$keyExpr, $access, _\$${nestedName}ToEncoder);',
+        '$keyExpr, $access, const ${nestedName}Codable());',
       );
     } else {
+      final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
       buffer.writeln(
-        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+        '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
       );
       _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
-      buffer.writeln('$indent});');
+      buffer.writeln('$indent}));');
     }
   }
 
@@ -195,11 +200,12 @@ final class EncoderGeneratorHelper {
         '${indent}keyed.encodeBoolList($keyExpr, $access.toList());',
       );
     } else {
+      final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
       buffer.writeln(
-        '${indent}keyed.encodeList($keyExpr, $access, (item, e) {',
+        '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
       );
       _writeElementEncode(buffer, elemType, 'item', indent: '$indent  ');
-      buffer.writeln('$indent});');
+      buffer.writeln('$indent}));');
     }
   }
 
@@ -210,7 +216,10 @@ final class EncoderGeneratorHelper {
     String access, {
     required String indent,
   }) {
-    buffer.writeln('${indent}keyed.encodeValue($keyExpr, $access, (map, e) {');
+    final valTypeStr = field.mapValueType?.getDisplayString() ?? 'dynamic';
+    buffer.writeln(
+      '${indent}keyed.encodeValue($keyExpr, $access, Encodable.fromFunction((Map<String, $valTypeStr> map, e) {',
+    );
     buffer.writeln('$indent  final k = e.keyed();');
     buffer.writeln('$indent  for (final entry in map.entries) {');
     _writeMapValueEncode(
@@ -221,7 +230,7 @@ final class EncoderGeneratorHelper {
       indent: '$indent    ',
     );
     buffer.writeln('$indent  }');
-    buffer.writeln('$indent});');
+    buffer.writeln('$indent}));');
   }
 
   void _writeMapValueEncode(
@@ -279,12 +288,12 @@ final class EncoderGeneratorHelper {
       if (isNullable) {
         buffer.writeln(
           '${indent}k.encodeNullableValue('
-          '$keyAccess, $itemAccess, _\$${nestedName}ToEncoder);',
+          '$keyAccess, $itemAccess, const ${nestedName}Codable());',
         );
       } else {
         buffer.writeln(
           '${indent}k.encodeValue('
-          '$keyAccess, $itemAccess, _\$${nestedName}ToEncoder);',
+          '$keyAccess, $itemAccess, const ${nestedName}Codable());',
         );
       }
     } else {
@@ -348,26 +357,27 @@ final class EncoderGeneratorHelper {
       final inner = type is InterfaceType && type.typeArguments.isNotEmpty
           ? type.typeArguments.first
           : null;
+      final innerTypeStr = inner?.getDisplayString() ?? 'dynamic';
       buffer.writeln(
-        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) {',
+        '${indent}e.unkeyed().encodeList($itemAccess, Encodable.fromFunction(($innerTypeStr item, e) {',
       );
       _writeElementEncode(buffer, inner, 'item', indent: '$indent  ');
-      buffer.writeln('$indent});');
+      buffer.writeln('$indent}));');
     } else if (type.element?.name == 'Float64List' ||
         type.element?.name == 'Float32List') {
       buffer.writeln(
-        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) => e2.singleValue().encodeDouble(item));',
+        '${indent}e.unkeyed().encodeList($itemAccess, Encodable.fromFunction((double item, e) => e.singleValue().encodeDouble(item)));',
       );
     } else if (type.element?.name == 'Int64List' ||
         type.element?.name == 'Int32List' ||
         type.element?.name == 'Uint8List') {
       buffer.writeln(
-        '${indent}e.unkeyed().encodeList($itemAccess, (item, e2) => e2.singleValue().encodeInt(item));',
+        '${indent}e.unkeyed().encodeList($itemAccess, Encodable.fromFunction((int item, e) => e.singleValue().encodeInt(item)));',
       );
     } else if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       buffer.writeln(
-        '${indent}_\$${type.element!.name}ToEncoder($itemAccess, e);',
+        '${indent}const ${type.element!.name}Codable().encode($itemAccess, e);',
       );
     } else {
       buffer.writeln(

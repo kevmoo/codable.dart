@@ -11,12 +11,18 @@ import 'package:codable/codable_json.dart';
 part 'polymorphic_example.g.dart';
 
 /// Base abstract class for polymorphic vehicle hierarchy.
-sealed class Vehicle implements Encodable {
+sealed class Vehicle {
   final int maxSpeed;
 
   const Vehicle({required this.maxSpeed});
+}
 
-  static Vehicle decode(Decoder decoder) {
+/// Companion [Codable] for polymorphic [Vehicle] hierarchy.
+final class VehicleCodable implements Codable<Vehicle> {
+  const VehicleCodable();
+
+  @override
+  Vehicle decode(Decoder decoder) {
     final keyed = decoder.keyed();
     String? type;
     int? maxSpeed;
@@ -61,6 +67,25 @@ sealed class Vehicle implements Encodable {
     }
     throw CodableException('Unknown vehicle type: $type');
   }
+
+  List<Vehicle> decodeList(Decoder decoder) {
+    final unkeyed = decoder.unkeyed();
+    final list = <Vehicle>[];
+    while (unkeyed.moveNext()) {
+      list.add(unkeyed.decodeElement(this));
+    }
+    return list;
+  }
+
+  @override
+  void encode(Vehicle value, Encoder encoder) {
+    switch (value) {
+      case Car():
+        const CarCodable().encode(value, encoder);
+      case Bicycle():
+        const BicycleCodable().encode(value, encoder);
+    }
+  }
 }
 
 @Codable()
@@ -68,10 +93,6 @@ class Car extends Vehicle {
   final int doors;
 
   const Car({required super.maxSpeed, required this.doors});
-
-  static Car decode(Decoder decoder) => _$CarFromDecoder(decoder);
-  @override
-  void encode(Encoder encoder) => _$CarToEncoder(this, encoder);
 }
 
 @Codable()
@@ -79,10 +100,6 @@ class Bicycle extends Vehicle {
   final bool hasBell;
 
   const Bicycle({required super.maxSpeed, required this.hasBell});
-
-  static Bicycle decode(Decoder decoder) => _$BicycleFromDecoder(decoder);
-  @override
-  void encode(Encoder encoder) => _$BicycleToEncoder(this, encoder);
 }
 
 void main() {
@@ -95,16 +112,11 @@ void main() {
 
   final bytes = Uint8List.fromList(utf8.encode(jsonArray));
   final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final unkeyed = decoder.unkeyed();
-
-  final vehicles = <Vehicle>[];
-  while (unkeyed.moveNext()) {
-    vehicles.add(unkeyed.decodeElement(Vehicle.decode));
-  }
+  final vehicles = const VehicleCodable().decodeList(decoder);
 
   for (final v in vehicles) {
     print('Vehicle: ${v.runtimeType} (maxSpeed: ${v.maxSpeed})');
-    final outBytes = JsonCodableEncoder.toBytes(v.encode);
+    final outBytes = JsonCodableEncoder.toBytes(v, const VehicleCodable());
     print('Serialized: ${utf8.decode(outBytes)}');
   }
 }

@@ -17,9 +17,6 @@ class Coordinate {
 
   const Coordinate({required this.latitude, required this.longitude});
 
-  static Coordinate decode(Decoder decoder) => _$CoordinateFromDecoder(decoder);
-  void encode(Encoder encoder) => _$CoordinateToEncoder(this, encoder);
-
   @override
   int get hashCode => Object.hash(latitude, longitude);
 

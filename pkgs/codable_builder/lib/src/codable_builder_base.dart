@@ -11,6 +11,7 @@ import 'package:source_gen/source_gen.dart';
 
 import 'decoder_helper.dart';
 import 'encoder_helper.dart';
+import 'field_descriptor.dart';
 import 'model_visitor.dart';
 
 /// Generator for classes annotated with [@Codable].
@@ -33,15 +34,51 @@ class CodableGenerator extends GeneratorForAnnotation<Codable> {
     }
 
     final model = _visitor.visitClass(element, annotation);
-    final decoderCode = DecoderGeneratorHelper(model).generate();
-    final encoderCode = EncoderGeneratorHelper(model).generate();
+    return generateForModel(model);
+  }
+
+  /// Generates the schema extension type and companion `*Codable` class for
+  /// [model].
+  String generateForModel(ModelDescriptor model) {
+    final decoderHelper = DecoderGeneratorHelper(model);
+    final encoderHelper = EncoderGeneratorHelper(model);
 
     final buffer = StringBuffer();
-    buffer.write(decoderCode);
-    if (encoderCode.isNotEmpty) {
+    buffer.write(decoderHelper.generateSchema());
+
+    final interfaceName = switch ((model.createDecoder, model.createEncoder)) {
+      (true, true) => 'Codable<${model.className}>',
+      (true, false) => 'Decodable<${model.className}>',
+      (false, true) => 'Encodable<${model.className}>',
+      (false, false) => null,
+    };
+
+    if (interfaceName != null) {
       buffer.writeln();
-      buffer.write(encoderCode);
+      buffer.writeln(
+        '// =============================================================================',
+      );
+      buffer.writeln('// 2. Companion Codable for ${model.className}');
+      buffer.writeln(
+        '// =============================================================================',
+      );
+      buffer.writeln(
+        'final class ${model.className}Codable implements $interfaceName {',
+      );
+      buffer.writeln('  const ${model.className}Codable();');
+
+      if (model.createDecoder) {
+        buffer.writeln();
+        buffer.write(decoderHelper.generateMethods());
+      }
+      if (model.createEncoder) {
+        buffer.writeln();
+        buffer.write(encoderHelper.generateMethod());
+      }
+
+      buffer.writeln('}');
     }
+
     return buffer.toString();
   }
 }

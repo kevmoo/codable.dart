@@ -22,11 +22,16 @@ class BaseResponse<T> {
     required this.message,
     required this.data,
   });
+}
 
-  static BaseResponse<T> decode<T>(
-    Decoder decoder,
-    T Function(Decoder decoder) decodeData,
-  ) {
+/// Companion [Decodable] for [BaseResponse].
+final class BaseResponseCodable<T> implements Decodable<BaseResponse<T>> {
+  final Decodable<T> dataDecodable;
+
+  const BaseResponseCodable(this.dataDecodable);
+
+  @override
+  BaseResponse<T> decode(Decoder decoder) {
     final keyed = decoder.keyed();
     int? status;
     String? message;
@@ -42,7 +47,7 @@ class BaseResponse<T> {
           message = keyed.readString();
           break;
         case 'data':
-          data = keyed.decodeValue(decodeData);
+          data = keyed.decodeValue(dataDecodable);
           break;
         default:
           keyed.skipValue();
@@ -64,9 +69,6 @@ class Article {
   final User? author;
 
   const Article({required this.id, required this.title, this.author});
-
-  static Article decode(Decoder decoder) => _$ArticleFromDecoder(decoder);
-  void encode(Encoder encoder) => _$ArticleToEncoder(this, encoder);
 }
 
 @Codable()
@@ -75,9 +77,6 @@ class User {
   final String email;
 
   const User({required this.id, required this.email});
-
-  static User decode(Decoder decoder) => _$UserFromDecoder(decoder);
-  void encode(Encoder encoder) => _$UserToEncoder(this, encoder);
 }
 
 void main() {
@@ -98,11 +97,14 @@ void main() {
 
   final bytes = Uint8List.fromList(utf8.encode(json));
   final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final response = BaseResponse.decode(decoder, Article.decode);
+  final response = const BaseResponseCodable(ArticleCodable()).decode(decoder);
 
   print('Response: ${response.status} - ${response.message}');
   print('Article: ${response.data.title} by ${response.data.author?.email}');
 
-  final outBytes = JsonCodableEncoder.toBytes(response.data.encode);
+  final outBytes = JsonCodableEncoder.toBytes(
+    response.data,
+    const ArticleCodable(),
+  );
   print('Serialized article: ${utf8.decode(outBytes)}');
 }

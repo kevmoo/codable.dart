@@ -31,6 +31,7 @@ void main() async {
     'Enterprise',
     'UserProfileCustom',
     'Team',
+    'PrimitiveCollectionsModel',
   ];
 
   final buffer = StringBuffer();
@@ -52,14 +53,9 @@ void main() async {
       element,
       ConstantReader(annotation),
     );
-    final decoderCode = DecoderGeneratorHelper(model).generate();
-    final encoderCode = EncoderGeneratorHelper(model).generate();
-    buffer.writeln(decoderCode);
+    final code = const CodableGenerator().generateForModel(model);
+    buffer.writeln(code);
     buffer.writeln();
-    if (encoderCode.isNotEmpty) {
-      buffer.writeln(encoderCode);
-      buffer.writeln();
-    }
   }
 
   final outCandidate1 = File('test/fixtures/test_models.g.dart');

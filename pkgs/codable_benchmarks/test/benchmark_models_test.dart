@@ -27,7 +27,7 @@ void main() {
         final unkeyed = decoder.unkeyed();
         final coordinates = <Coordinate>[];
         while (unkeyed.moveNext()) {
-          coordinates.add(Coordinate.decode(decoder));
+          coordinates.add(const CoordinateCodable().decode(decoder));
         }
 
         check(coordinates.length).equals(100);
@@ -36,7 +36,7 @@ void main() {
         check(coordinates.last.latitude).equals(39.9);
       });
 
-      test('decodes coordinates array using Coordinate.decodeList', () {
+      test('decodes coordinates array using CoordinateCodable.decodeList', () {
         final list = List.generate(
           100,
           (i) =>
@@ -47,7 +47,7 @@ void main() {
         final bytes = Uint8List.fromList(utf8.encode(jsonStr));
 
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final coordinates = Coordinate.decodeList(decoder);
+        final coordinates = const CoordinateCodable().decodeList(decoder);
 
         check(coordinates.length).equals(100);
         check(coordinates.first.latitude).equals(40.0);
@@ -60,7 +60,7 @@ void main() {
       test('deserializes entire canada.json and validates polygons', () {
         final bytes = getDatasetBytes('canada');
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final fc = CanadaFeatureCollection.decode(decoder);
+        final fc = const CanadaFeatureCollectionCodable().decode(decoder);
 
         check(fc.type).equals('FeatureCollection');
         check(fc.features).isNotEmpty();
@@ -78,7 +78,7 @@ void main() {
         () {
           final bytes = getDatasetBytes('citm_catalog');
           final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final catalog = CitmCatalog.decode(decoder);
+          final catalog = const CitmCatalogCodable().decode(decoder);
 
           check(catalog.events).isNotEmpty();
           check(catalog.performances).isNotEmpty();

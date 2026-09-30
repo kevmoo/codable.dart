@@ -28,21 +28,21 @@ class EncData {
   final Uint8List bytes;
   final String string;
   final Object jsModel;
-  final void Function(Encoder) codableEncode;
+  final Uint8List Function() codableToBytes;
 
   EncData._(
     this.name,
     this.bytes,
     this.string,
     this.jsModel,
-    this.codableEncode,
+    this.codableToBytes,
   );
 
   factory EncData(String name) {
     final bytes = getDatasetBytes(name);
     final jsonAst = utf8.decoder.fuse(json.decoder).convert(bytes);
     Object jsModel;
-    void Function(Encoder) codableEncode;
+    Uint8List Function() codableToBytes;
     final decoder = JsonCodableDecoder.fromBytes(bytes);
 
     switch (name) {
@@ -50,41 +50,66 @@ class EncData {
         jsModel = (jsonAst as List)
             .map((e) => js_coord.Coordinate.fromJson(e as Map<String, dynamic>))
             .toList();
-        final list = codable_coord.Coordinate.decodeList(
-          JsonCodableDecoder.fromBytes(bytes),
+        final list = const codable_coord.CoordinateCodable().decodeList(
+          decoder,
         );
-        codableEncode = (encoder) {
-          var eList = encoder.unkeyed();
-          for (final model in list) {
-            eList.encodeEncodable(model);
-          }
-        };
+        final listEncodable =
+            Encodable<List<codable_coord.Coordinate>>.fromFunction((
+              list,
+              encoder,
+            ) {
+              final eList = encoder.unkeyed();
+              for (final model in list) {
+                eList.encodeElement(
+                  model,
+                  const codable_coord.CoordinateCodable(),
+                );
+              }
+            });
+        codableToBytes = () => JsonCodableEncoder.toBytes(list, listEncodable);
         break;
       case 'canada':
         jsModel = js_canada.CanadaFeatureCollection.fromJson(
           jsonAst as Map<String, dynamic>,
         );
-        final model = codable_canada.CanadaFeatureCollection.decode(decoder);
-        codableEncode = model.encode;
+        final model = const codable_canada.CanadaFeatureCollectionCodable()
+            .decode(decoder);
+        codableToBytes = () => JsonCodableEncoder.toBytes(
+          model,
+          const codable_canada.CanadaFeatureCollectionCodable(),
+        );
         break;
       case 'citm_catalog':
         jsModel = js_citm.CitmCatalog.fromJson(jsonAst as Map<String, dynamic>);
-        final model = codable_citm.CitmCatalog.decode(decoder);
-        codableEncode = model.encode;
+        final model = const codable_citm.CitmCatalogCodable().decode(decoder);
+        codableToBytes = () => JsonCodableEncoder.toBytes(
+          model,
+          const codable_citm.CitmCatalogCodable(),
+        );
         break;
       case 'small':
         jsModel = js_small.SmallDocument.fromJson(
           jsonAst as Map<String, dynamic>,
         );
-        final model = codable_small.SmallDocument.decode(decoder);
-        codableEncode = model.encode;
+        final model = const codable_small.SmallDocumentCodable().decode(
+          decoder,
+        );
+        codableToBytes = () => JsonCodableEncoder.toBytes(
+          model,
+          const codable_small.SmallDocumentCodable(),
+        );
         break;
       case 'twitter':
         jsModel = js_twitter.TwitterResponse.fromJson(
           jsonAst as Map<String, dynamic>,
         );
-        final model = codable_twitter.TwitterResponse.decode(decoder);
-        codableEncode = model.encode;
+        final model = const codable_twitter.TwitterResponseCodable().decode(
+          decoder,
+        );
+        codableToBytes = () => JsonCodableEncoder.toBytes(
+          model,
+          const codable_twitter.TwitterResponseCodable(),
+        );
         break;
 
       default:
@@ -92,7 +117,7 @@ class EncData {
     }
 
     final str = utf8.decode(bytes);
-    return EncData._(name, bytes, str, jsModel, codableEncode);
+    return EncData._(name, bytes, str, jsModel, codableToBytes);
   }
 }
 
@@ -126,7 +151,7 @@ BenchmarkGroup createEncodeBenchmarkGroup(String dataset) {
   }
 
   void runCodable() {
-    final outBytes = JsonCodableEncoder.toBytes(d.codableEncode);
+    final outBytes = d.codableToBytes();
     Blackhole.consume(outBytes);
   }
 

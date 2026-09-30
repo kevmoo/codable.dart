@@ -13,8 +13,14 @@ class CoordinateTelemetry {
   final double lon;
 
   const CoordinateTelemetry(this.lat, this.lon);
+}
 
-  static CoordinateTelemetry decode(Decoder decoder) {
+final class CoordinateTelemetryCodable
+    implements Decodable<CoordinateTelemetry> {
+  const CoordinateTelemetryCodable();
+
+  @override
+  CoordinateTelemetry decode(Decoder decoder) {
     final keyed = decoder.keyed();
     double? lat;
     double? lon;
@@ -50,7 +56,7 @@ void main() {
 
   final points = <CoordinateTelemetry>[];
   while (unkeyed.moveNext()) {
-    points.add(unkeyed.decodeElement(CoordinateTelemetry.decode));
+    points.add(unkeyed.decodeElement(const CoordinateTelemetryCodable()));
   }
 
   for (final p in points) {

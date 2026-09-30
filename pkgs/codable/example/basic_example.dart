@@ -10,7 +10,7 @@ import 'package:codable/codable_json.dart';
 
 part 'basic_example.g.dart';
 
-final class DateTimeIsoDecoder implements CustomCodable<DateTime> {
+final class DateTimeIsoDecoder implements Codable<DateTime> {
   const DateTimeIsoDecoder();
 
   @override
@@ -50,9 +50,6 @@ class Person {
     this.lastOrder,
     this.orders = const [],
   });
-
-  static Person decode(Decoder decoder) => _$PersonFromDecoder(decoder);
-  void encode(Encoder encoder) => _$PersonToEncoder(this, encoder);
 }
 
 @Codable()
@@ -72,9 +69,6 @@ class Order {
     this.item,
     this.prepTimeMs,
   });
-
-  static Order decode(Decoder decoder) => _$OrderFromDecoder(decoder);
-  void encode(Encoder encoder) => _$OrderToEncoder(this, encoder);
 }
 
 @Codable()
@@ -84,9 +78,6 @@ class Item {
   final bool? isRushed;
 
   const Item({this.count, this.itemNumber, this.isRushed});
-
-  static Item decode(Decoder decoder) => _$ItemFromDecoder(decoder);
-  void encode(Encoder encoder) => _$ItemToEncoder(this, encoder);
 }
 
 void main() {
@@ -110,13 +101,13 @@ void main() {
 
   final bytes = Uint8List.fromList(utf8.encode(json));
   final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final person = Person.decode(decoder);
+  final person = const PersonCodable().decode(decoder);
 
   print(
     'Decoded Person: ${person.firstName} ${person.lastName}, '
     'orders: ${person.orders.length}',
   );
 
-  final outBytes = JsonCodableEncoder.toBytes(person.encode);
+  final outBytes = JsonCodableEncoder.toBytes(person, const PersonCodable());
   print('Encoded JSON: ${utf8.decode(outBytes)}');
 }

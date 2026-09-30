@@ -11,14 +11,19 @@ import 'package:codable/src/json/substrate/mock/substrate_mock.dart'
     as mock_sub;
 import 'package:test/scaffolding.dart';
 
-final class _Point implements Encodable {
+final class _Point {
   final double x;
   final double y;
   final String label;
 
   const _Point(this.x, this.y, this.label);
+}
 
-  static _Point decode(Decoder decoder) {
+final class _PointCodable implements Codable<_Point> {
+  const _PointCodable();
+
+  @override
+  _Point decode(Decoder decoder) {
     final c = decoder.keyed();
     double? x;
     double? y;
@@ -41,21 +46,33 @@ final class _Point implements Encodable {
     return _Point(x!, y!, label!);
   }
 
-  static List<_Point> decodeList(Decoder decoder) {
+  static final Decodable<List<_Point>> listDecodable = Decodable.fromFunction((
+    decoder,
+  ) {
     final u = decoder.unkeyed();
     final out = <_Point>[];
     while (u.moveNext()) {
-      out.add(u.decodeElement(_Point.decode));
+      out.add(u.decodeElement(const _PointCodable()));
     }
     return out;
-  }
+  });
+
+  static final Encodable<List<_Point>> listEncodable = Encodable.fromFunction((
+    List<_Point> list,
+    encoder,
+  ) {
+    final listEnc = encoder.unkeyed();
+    for (final p in list) {
+      listEnc.encodeElement(p, const _PointCodable());
+    }
+  });
 
   @override
-  void encode(Encoder encoder) {
+  void encode(_Point value, Encoder encoder) {
     final c = encoder.keyed();
-    c.encodeDouble('x', x);
-    c.encodeDouble('y', y);
-    c.encodeString('label', label);
+    c.encodeDouble('x', value.x);
+    c.encodeDouble('y', value.y);
+    c.encodeString('label', value.label);
   }
 }
 
@@ -154,13 +171,11 @@ void main() {
 
       final byteBuilder = BytesBuilder(copy: false);
       final byteSink = ByteConversionSink.withCallback(byteBuilder.add);
-      final encSink = JsonCodableEncoder.startChunkedConversion(byteSink);
-      encSink.add((encoder) {
-        final listEnc = encoder.unkeyed();
-        for (final p in points) {
-          listEnc.encodeEncodable(p);
-        }
-      });
+      final encSink = JsonCodableEncoder.startChunkedConversion<List<_Point>>(
+        byteSink,
+        _PointCodable.listEncodable,
+      );
+      encSink.add(points);
       encSink.close();
 
       final encodedBytes = byteBuilder.takeBytes();
@@ -168,12 +183,11 @@ void main() {
 
       // Verify JsonCodableEncoder.toSink produces identical bytes
       final directSinkBuilder = BytesBuilder(copy: false);
-      JsonCodableEncoder.toSink(directSinkBuilder, (encoder) {
-        final listEnc = encoder.unkeyed();
-        for (final p in points) {
-          listEnc.encodeEncodable(p);
-        }
-      });
+      JsonCodableEncoder.toSink(
+        directSinkBuilder,
+        points,
+        _PointCodable.listEncodable,
+      );
       check(directSinkBuilder.takeBytes()).deepEquals(encodedBytes);
 
       // Slice into 4 KB chunks and decode via
@@ -186,7 +200,7 @@ void main() {
       });
       final decSink = JsonCodableDecoder.startChunkedConversion<List<_Point>>(
         resultSink,
-        _Point.decodeList,
+        _PointCodable.listDecodable,
       );
       for (var offset = 0; offset < encodedBytes.length; offset += 4096) {
         final end = (offset + 4096 < encodedBytes.length)
@@ -236,7 +250,7 @@ void main() {
       final codableSink =
           JsonCodableDecoder.startChunkedConversion<List<_Point>>(
             codableOut,
-            _Point.decodeList,
+            _PointCodable.listDecodable,
           );
       for (var i = 0; i < rawBytes.length; i += 8) {
         final end = (i + 8 < rawBytes.length) ? i + 8 : rawBytes.length;

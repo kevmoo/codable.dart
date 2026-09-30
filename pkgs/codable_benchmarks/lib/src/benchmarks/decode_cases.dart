@@ -115,21 +115,29 @@ BenchmarkGroup createDecodeBenchmarkGroup(String dataset) {
     final decoder = JsonCodableDecoder.fromBytes(d.bytes);
     switch (d.name) {
       case 'coordinates':
-        Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+        Blackhole.consume(
+          const codable_coord.CoordinateCodable().decodeList(decoder),
+        );
         break;
       case 'canada':
         Blackhole.consume(
-          codable_canada.CanadaFeatureCollection.decode(decoder),
+          const codable_canada.CanadaFeatureCollectionCodable().decode(decoder),
         );
         break;
       case 'citm_catalog':
-        Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+        Blackhole.consume(
+          const codable_citm.CitmCatalogCodable().decode(decoder),
+        );
         break;
       case 'small':
-        Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+        Blackhole.consume(
+          const codable_small.SmallDocumentCodable().decode(decoder),
+        );
         break;
       case 'twitter':
-        Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+        Blackhole.consume(
+          const codable_twitter.TwitterResponseCodable().decode(decoder),
+        );
         break;
     }
   }
@@ -141,21 +149,29 @@ BenchmarkGroup createDecodeBenchmarkGroup(String dataset) {
     );
     switch (d.name) {
       case 'coordinates':
-        Blackhole.consume(codable_coord.Coordinate.decodeList(decoder));
+        Blackhole.consume(
+          const codable_coord.CoordinateCodable().decodeList(decoder),
+        );
         break;
       case 'canada':
         Blackhole.consume(
-          codable_canada.CanadaFeatureCollection.decode(decoder),
+          const codable_canada.CanadaFeatureCollectionCodable().decode(decoder),
         );
         break;
       case 'citm_catalog':
-        Blackhole.consume(codable_citm.CitmCatalog.decode(decoder));
+        Blackhole.consume(
+          const codable_citm.CitmCatalogCodable().decode(decoder),
+        );
         break;
       case 'small':
-        Blackhole.consume(codable_small.SmallDocument.decode(decoder));
+        Blackhole.consume(
+          const codable_small.SmallDocumentCodable().decode(decoder),
+        );
         break;
       case 'twitter':
-        Blackhole.consume(codable_twitter.TwitterResponse.decode(decoder));
+        Blackhole.consume(
+          const codable_twitter.TwitterResponseCodable().decode(decoder),
+        );
         break;
     }
   }

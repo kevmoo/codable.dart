@@ -57,53 +57,44 @@ extension type const _$CanadaPropertiesSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CanadaProperties
+// 2. Companion Codable for CanadaProperties
 // =============================================================================
-CanadaProperties _$CanadaPropertiesFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CanadaPropertiesSchema.keyOptions);
+final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
+  const CanadaPropertiesCodable();
 
-  String? name;
-  var seen = _$CanadaPropertiesSchema.none;
+  @override
+  CanadaProperties decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CanadaPropertiesSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CanadaPropertiesSchema.keyOptions)) {
-      case _$CanadaPropertiesSchema.keyName:
-        if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
-          throw const CodableException('Duplicate field "name"');
-        }
-        name = keyed.readString();
-        seen |= _$CanadaPropertiesSchema.name;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? name;
+    var seen = _$CanadaPropertiesSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CanadaPropertiesSchema.keyOptions)) {
+        case _$CanadaPropertiesSchema.keyName:
+          if ((seen._value & _$CanadaPropertiesSchema.name._value) != 0) {
+            throw const CodableException('Duplicate field "name"');
+          }
+          name = keyed.readString();
+          seen |= _$CanadaPropertiesSchema.name;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CanadaProperties(name: name!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CanadaProperties(name: name!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CanadaProperties
-// =============================================================================
-List<CanadaProperties> _$CanadaPropertiesListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CanadaProperties>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CanadaPropertiesFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CanadaProperties instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CanadaProperties
-// =============================================================================
-void _$CanadaPropertiesToEncoder(CanadaProperties instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
 }
 
 // =============================================================================
@@ -158,64 +149,53 @@ extension type const _$CanadaGeometrySchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CanadaGeometry
+// 2. Companion Codable for CanadaGeometry
 // =============================================================================
-CanadaGeometry _$CanadaGeometryFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CanadaGeometrySchema.keyOptions);
+final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
+  const CanadaGeometryCodable();
 
-  String? type;
-  var coordinates = const <List<Float64List>>[];
-  var seen = _$CanadaGeometrySchema.none;
+  @override
+  CanadaGeometry decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CanadaGeometrySchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CanadaGeometrySchema.keyOptions)) {
-      case _$CanadaGeometrySchema.keyType:
-        if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
-          throw const CodableException('Duplicate field "type"');
-        }
-        type = keyed.readString();
-        seen |= _$CanadaGeometrySchema.type;
-        break;
-      case _$CanadaGeometrySchema.keyCoordinates:
-        coordinates = keyed.decodeValue(
-          const CanadaCoordinatesDecoder().decode,
-        );
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? type;
+    var coordinates = const <List<Float64List>>[];
+    var seen = _$CanadaGeometrySchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CanadaGeometrySchema.keyOptions)) {
+        case _$CanadaGeometrySchema.keyType:
+          if ((seen._value & _$CanadaGeometrySchema.type._value) != 0) {
+            throw const CodableException('Duplicate field "type"');
+          }
+          type = keyed.readString();
+          seen |= _$CanadaGeometrySchema.type;
+          break;
+        case _$CanadaGeometrySchema.keyCoordinates:
+          coordinates = keyed.decodeValue(const CanadaCoordinatesDecoder());
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CanadaGeometry(type: type!, coordinates: coordinates);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CanadaGeometry(type: type!, coordinates: coordinates);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CanadaGeometry
-// =============================================================================
-List<CanadaGeometry> _$CanadaGeometryListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CanadaGeometry>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CanadaGeometryFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CanadaGeometry instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
+    keyed.encodeValue(
+      _$CanadaGeometrySchema.nameCoordinates,
+      instance.coordinates,
+      const CanadaCoordinatesDecoder(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CanadaGeometry
-// =============================================================================
-void _$CanadaGeometryToEncoder(CanadaGeometry instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
-  keyed.encodeValue(
-    _$CanadaGeometrySchema.nameCoordinates,
-    instance.coordinates,
-    const CanadaCoordinatesDecoder().encode,
-  );
 }
 
 // =============================================================================
@@ -289,83 +269,78 @@ extension type const _$CanadaFeatureSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CanadaFeature
+// 2. Companion Codable for CanadaFeature
 // =============================================================================
-CanadaFeature _$CanadaFeatureFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CanadaFeatureSchema.keyOptions);
+final class CanadaFeatureCodable implements Codable<CanadaFeature> {
+  const CanadaFeatureCodable();
 
-  String? type;
-  CanadaProperties? properties;
-  CanadaGeometry? geometry;
-  var seen = _$CanadaFeatureSchema.none;
+  @override
+  CanadaFeature decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CanadaFeatureSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CanadaFeatureSchema.keyOptions)) {
-      case _$CanadaFeatureSchema.keyType:
-        if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
-          throw const CodableException('Duplicate field "type"');
-        }
-        type = keyed.readString();
-        seen |= _$CanadaFeatureSchema.type;
-        break;
-      case _$CanadaFeatureSchema.keyProperties:
-        if ((seen._value & _$CanadaFeatureSchema.properties._value) != 0) {
-          throw const CodableException('Duplicate field "properties"');
-        }
-        properties = _$CanadaPropertiesFromDecoder(keyed.nestedDecoder());
-        seen |= _$CanadaFeatureSchema.properties;
-        break;
-      case _$CanadaFeatureSchema.keyGeometry:
-        if ((seen._value & _$CanadaFeatureSchema.geometry._value) != 0) {
-          throw const CodableException('Duplicate field "geometry"');
-        }
-        geometry = _$CanadaGeometryFromDecoder(keyed.nestedDecoder());
-        seen |= _$CanadaFeatureSchema.geometry;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? type;
+    CanadaProperties? properties;
+    CanadaGeometry? geometry;
+    var seen = _$CanadaFeatureSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CanadaFeatureSchema.keyOptions)) {
+        case _$CanadaFeatureSchema.keyType:
+          if ((seen._value & _$CanadaFeatureSchema.type._value) != 0) {
+            throw const CodableException('Duplicate field "type"');
+          }
+          type = keyed.readString();
+          seen |= _$CanadaFeatureSchema.type;
+          break;
+        case _$CanadaFeatureSchema.keyProperties:
+          if ((seen._value & _$CanadaFeatureSchema.properties._value) != 0) {
+            throw const CodableException('Duplicate field "properties"');
+          }
+          properties = const CanadaPropertiesCodable().decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$CanadaFeatureSchema.properties;
+          break;
+        case _$CanadaFeatureSchema.keyGeometry:
+          if ((seen._value & _$CanadaFeatureSchema.geometry._value) != 0) {
+            throw const CodableException('Duplicate field "geometry"');
+          }
+          geometry = const CanadaGeometryCodable().decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$CanadaFeatureSchema.geometry;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CanadaFeature(
+      type: type!,
+      properties: properties!,
+      geometry: geometry!,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CanadaFeature(
-    type: type!,
-    properties: properties!,
-    geometry: geometry!,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CanadaFeature
-// =============================================================================
-List<CanadaFeature> _$CanadaFeatureListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CanadaFeature>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CanadaFeatureFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CanadaFeature instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
+    keyed.encodeValue(
+      _$CanadaFeatureSchema.nameProperties,
+      instance.properties,
+      const CanadaPropertiesCodable(),
+    );
+    keyed.encodeValue(
+      _$CanadaFeatureSchema.nameGeometry,
+      instance.geometry,
+      const CanadaGeometryCodable(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CanadaFeature
-// =============================================================================
-void _$CanadaFeatureToEncoder(CanadaFeature instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
-  keyed.encodeValue(
-    _$CanadaFeatureSchema.nameProperties,
-    instance.properties,
-    _$CanadaPropertiesToEncoder,
-  );
-  keyed.encodeValue(
-    _$CanadaFeatureSchema.nameGeometry,
-    instance.geometry,
-    _$CanadaGeometryToEncoder,
-  );
 }
 
 // =============================================================================
@@ -424,67 +399,59 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for CanadaFeatureCollection
+// 2. Companion Codable for CanadaFeatureCollection
 // =============================================================================
-CanadaFeatureCollection _$CanadaFeatureCollectionFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(
-    options: _$CanadaFeatureCollectionSchema.keyOptions,
-  );
+final class CanadaFeatureCollectionCodable
+    implements Codable<CanadaFeatureCollection> {
+  const CanadaFeatureCollectionCodable();
 
-  String? type;
-  var features = const <CanadaFeature>[];
-  var seen = _$CanadaFeatureCollectionSchema.none;
+  @override
+  CanadaFeatureCollection decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$CanadaFeatureCollectionSchema.keyOptions,
+    );
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CanadaFeatureCollectionSchema.keyOptions)) {
-      case _$CanadaFeatureCollectionSchema.keyType:
-        if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) != 0) {
-          throw const CodableException('Duplicate field "type"');
-        }
-        type = keyed.readString();
-        seen |= _$CanadaFeatureCollectionSchema.type;
-        break;
-      case _$CanadaFeatureCollectionSchema.keyFeatures:
-        features = _$CanadaFeatureListFromDecoder(keyed.nestedDecoder());
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? type;
+    var features = const <CanadaFeature>[];
+    var seen = _$CanadaFeatureCollectionSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$CanadaFeatureCollectionSchema.keyOptions,
+      )) {
+        case _$CanadaFeatureCollectionSchema.keyType:
+          if ((seen._value & _$CanadaFeatureCollectionSchema.type._value) !=
+              0) {
+            throw const CodableException('Duplicate field "type"');
+          }
+          type = keyed.readString();
+          seen |= _$CanadaFeatureCollectionSchema.type;
+          break;
+        case _$CanadaFeatureCollectionSchema.keyFeatures:
+          features = const CanadaFeatureCodable().decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CanadaFeatureCollection(type: type!, features: features);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return CanadaFeatureCollection(type: type!, features: features);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for CanadaFeatureCollection
-// =============================================================================
-List<CanadaFeatureCollection> _$CanadaFeatureCollectionListFromDecoder(
-  Decoder decoder,
-) {
-  final unkeyed = decoder.unkeyed();
-  final list = <CanadaFeatureCollection>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CanadaFeatureCollectionFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(CanadaFeatureCollection instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
+    keyed.encodeList(
+      _$CanadaFeatureCollectionSchema.nameFeatures,
+      instance.features,
+      const CanadaFeatureCodable(),
+    );
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for CanadaFeatureCollection
-// =============================================================================
-void _$CanadaFeatureCollectionToEncoder(
-  CanadaFeatureCollection instance,
-  Encoder encoder,
-) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
-  keyed.encodeList(
-    _$CanadaFeatureCollectionSchema.nameFeatures,
-    instance.features,
-    _$CanadaFeatureToEncoder,
-  );
 }

@@ -69,78 +69,78 @@ extension type const _$CoordinateSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Coordinate
+// 2. Companion Codable for Coordinate
 // =============================================================================
-Coordinate _$CoordinateFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$CoordinateSchema.keyOptions);
+final class CoordinateCodable implements Codable<Coordinate> {
+  const CoordinateCodable();
 
-  double? latitude;
-  double? longitude;
-  var seen = _$CoordinateSchema.none;
+  @override
+  Coordinate decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CoordinateSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
-      case _$CoordinateSchema.keyLatitude:
-      case _$CoordinateSchema.aliasKeyLatitudeLat:
-        if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
-          throw const CodableException('Duplicate field "latitude"');
-        }
-        latitude = keyed.readDouble();
-        seen |= _$CoordinateSchema.latitude;
-        break;
-      case _$CoordinateSchema.keyLongitude:
-      case _$CoordinateSchema.aliasKeyLongitudeLon:
-        if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
-          throw const CodableException('Duplicate field "longitude"');
-        }
-        longitude = keyed.readDouble();
-        seen |= _$CoordinateSchema.longitude;
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    double? latitude;
+    double? longitude;
+    var seen = _$CoordinateSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CoordinateSchema.keyOptions)) {
+        case _$CoordinateSchema.keyLatitude:
+        case _$CoordinateSchema.aliasKeyLatitudeLat:
+          if ((seen._value & _$CoordinateSchema.latitude._value) != 0) {
+            throw const CodableException('Duplicate field "latitude"');
+          }
+          latitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.latitude;
+          break;
+        case _$CoordinateSchema.keyLongitude:
+        case _$CoordinateSchema.aliasKeyLongitudeLon:
+          if ((seen._value & _$CoordinateSchema.longitude._value) != 0) {
+            throw const CodableException('Duplicate field "longitude"');
+          }
+          longitude = keyed.readDouble();
+          seen |= _$CoordinateSchema.longitude;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Coordinate(latitude: latitude!, longitude: longitude!);
   }
 
-  // Inlined fast-path check
-  seen.validate();
+  List<Coordinate> decodeList(Decoder decoder) {
+    final flatDoubles = decoder.decodeUniformDoubleList(const [
+      ['latitude', 'lat'],
+      ['longitude', 'lon'],
+    ]);
+    if (flatDoubles != null) {
+      final count = flatDoubles.length ~/ 2;
+      return List<Coordinate>.generate(
+        count,
+        (i) => Coordinate(
+          latitude: flatDoubles[i * 2 + 0],
+          longitude: flatDoubles[i * 2 + 1],
+        ),
+        growable: true,
+      );
+    }
 
-  return Coordinate(latitude: latitude!, longitude: longitude!);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Coordinate
-// =============================================================================
-List<Coordinate> _$CoordinateListFromDecoder(Decoder decoder) {
-  final flatDoubles = decoder.decodeUniformDoubleList(const [
-    ['latitude', 'lat'],
-    ['longitude', 'lon'],
-  ]);
-  if (flatDoubles != null) {
-    final count = flatDoubles.length ~/ 2;
-    return List<Coordinate>.generate(
-      count,
-      (i) => Coordinate(
-        latitude: flatDoubles[i * 2 + 0],
-        longitude: flatDoubles[i * 2 + 1],
-      ),
-      growable: true,
-    );
+    final unkeyed = decoder.unkeyed();
+    final list = <Coordinate>[];
+    while (unkeyed.moveNext()) {
+      list.add(decode(unkeyed.nestedDecoder()));
+    }
+    return list;
   }
 
-  final unkeyed = decoder.unkeyed();
-  final list = <Coordinate>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$CoordinateFromDecoder(unkeyed.nestedDecoder()));
+  @override
+  void encode(Coordinate instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+    keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Coordinate
-// =============================================================================
-void _$CoordinateToEncoder(Coordinate instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
-  keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
 }

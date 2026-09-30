@@ -83,120 +83,111 @@ extension type const _$PersonSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Person
+// 2. Companion Codable for Person
 // =============================================================================
-Person _$PersonFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$PersonSchema.keyOptions);
+final class PersonCodable implements Codable<Person> {
+  const PersonCodable();
 
-  String? firstName;
-  String? lastName;
-  DateTime? dateOfBirth;
-  String? middleName;
-  DateTime? lastOrder;
-  var orders = const <Order>[];
-  var seen = _$PersonSchema.none;
+  @override
+  Person decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PersonSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$PersonSchema.keyOptions)) {
-      case _$PersonSchema.keyFirstName:
-        if ((seen._value & _$PersonSchema.firstName._value) != 0) {
-          throw const CodableException('Duplicate field "firstName"');
-        }
-        firstName = keyed.readString();
-        seen |= _$PersonSchema.firstName;
-        break;
-      case _$PersonSchema.keyLastName:
-        if ((seen._value & _$PersonSchema.lastName._value) != 0) {
-          throw const CodableException('Duplicate field "lastName"');
-        }
-        lastName = keyed.readString();
-        seen |= _$PersonSchema.lastName;
-        break;
-      case _$PersonSchema.keyDateOfBirth:
-      case _$PersonSchema.aliasKeyDateOfBirthDob:
-        if ((seen._value & _$PersonSchema.dateOfBirth._value) != 0) {
-          throw const CodableException('Duplicate field "date-of-birth"');
-        }
-        dateOfBirth = keyed.decodeValue(const DateTimeIsoDecoder().decode);
-        seen |= _$PersonSchema.dateOfBirth;
-        break;
-      case _$PersonSchema.keyMiddleName:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          middleName = null;
-        } else {
-          middleName = keyed.readString();
-        }
-        break;
-      case _$PersonSchema.keyLastOrder:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          lastOrder = null;
-        } else {
-          lastOrder = keyed.decodeValue(const DateTimeIsoDecoder().decode);
-        }
-        break;
-      case _$PersonSchema.keyOrders:
-        orders = _$OrderListFromDecoder(keyed.nestedDecoder());
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    String? firstName;
+    String? lastName;
+    DateTime? dateOfBirth;
+    String? middleName;
+    DateTime? lastOrder;
+    var orders = const <Order>[];
+    var seen = _$PersonSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PersonSchema.keyOptions)) {
+        case _$PersonSchema.keyFirstName:
+          if ((seen._value & _$PersonSchema.firstName._value) != 0) {
+            throw const CodableException('Duplicate field "firstName"');
+          }
+          firstName = keyed.readString();
+          seen |= _$PersonSchema.firstName;
+          break;
+        case _$PersonSchema.keyLastName:
+          if ((seen._value & _$PersonSchema.lastName._value) != 0) {
+            throw const CodableException('Duplicate field "lastName"');
+          }
+          lastName = keyed.readString();
+          seen |= _$PersonSchema.lastName;
+          break;
+        case _$PersonSchema.keyDateOfBirth:
+        case _$PersonSchema.aliasKeyDateOfBirthDob:
+          if ((seen._value & _$PersonSchema.dateOfBirth._value) != 0) {
+            throw const CodableException('Duplicate field "date-of-birth"');
+          }
+          dateOfBirth = keyed.decodeValue(const DateTimeIsoDecoder());
+          seen |= _$PersonSchema.dateOfBirth;
+          break;
+        case _$PersonSchema.keyMiddleName:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            middleName = null;
+          } else {
+            middleName = keyed.readString();
+          }
+          break;
+        case _$PersonSchema.keyLastOrder:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            lastOrder = null;
+          } else {
+            lastOrder = keyed.decodeValue(const DateTimeIsoDecoder());
+          }
+          break;
+        case _$PersonSchema.keyOrders:
+          orders = const OrderCodable().decodeList(keyed.nestedDecoder());
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
-  }
 
-  // Inlined fast-path check
-  seen.validate();
+    // Inlined fast-path check
+    seen.validate();
 
-  return Person(
-    firstName: firstName!,
-    lastName: lastName!,
-    dateOfBirth: dateOfBirth!,
-    middleName: middleName,
-    lastOrder: lastOrder,
-    orders: orders,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Person
-// =============================================================================
-List<Person> _$PersonListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Person>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$PersonFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Person
-// =============================================================================
-void _$PersonToEncoder(Person instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
-  keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
-  keyed.encodeValue(
-    _$PersonSchema.nameDateOfBirth,
-    instance.dateOfBirth,
-    const DateTimeIsoDecoder().encode,
-  );
-  if (instance.middleName != null) {
-    keyed.encodeString(_$PersonSchema.nameMiddleName, instance.middleName!);
-  }
-  if (instance.lastOrder != null) {
-    keyed.encodeValue(
-      _$PersonSchema.nameLastOrder,
-      instance.lastOrder!,
-      const DateTimeIsoDecoder().encode,
+    return Person(
+      firstName: firstName!,
+      lastName: lastName!,
+      dateOfBirth: dateOfBirth!,
+      middleName: middleName,
+      lastOrder: lastOrder,
+      orders: orders,
     );
   }
-  keyed.encodeList(
-    _$PersonSchema.nameOrders,
-    instance.orders,
-    _$OrderToEncoder,
-  );
+
+  @override
+  void encode(Person instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
+    keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
+    keyed.encodeValue(
+      _$PersonSchema.nameDateOfBirth,
+      instance.dateOfBirth,
+      const DateTimeIsoDecoder(),
+    );
+    if (instance.middleName != null) {
+      keyed.encodeString(_$PersonSchema.nameMiddleName, instance.middleName!);
+    }
+    if (instance.lastOrder != null) {
+      keyed.encodeValue(
+        _$PersonSchema.nameLastOrder,
+        instance.lastOrder!,
+        const DateTimeIsoDecoder(),
+      );
+    }
+    keyed.encodeList(
+      _$PersonSchema.nameOrders,
+      instance.orders,
+      const OrderCodable(),
+    );
+  }
 }
 
 // =============================================================================
@@ -263,119 +254,114 @@ extension type const _$OrderSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Order
+// 2. Companion Codable for Order
 // =============================================================================
-Order _$OrderFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$OrderSchema.keyOptions);
+final class OrderCodable implements Codable<Order> {
+  const OrderCodable();
 
-  int? dateUs;
-  int? count;
-  int? itemNumber;
-  bool? isRushed;
-  Item? item;
-  int? prepTimeMs;
-  var seen = _$OrderSchema.none;
+  @override
+  Order decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$OrderSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$OrderSchema.keyOptions)) {
-      case _$OrderSchema.keyDateUs:
-        if ((seen._value & _$OrderSchema.dateUs._value) != 0) {
-          throw const CodableException('Duplicate field "dateUs"');
-        }
-        dateUs = keyed.readInt();
-        seen |= _$OrderSchema.dateUs;
-        break;
-      case _$OrderSchema.keyCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          count = null;
-        } else {
-          count = keyed.readInt();
-        }
-        break;
-      case _$OrderSchema.keyItemNumber:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          itemNumber = null;
-        } else {
-          itemNumber = keyed.readInt();
-        }
-        break;
-      case _$OrderSchema.keyIsRushed:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          isRushed = null;
-        } else {
-          isRushed = keyed.readBool();
-        }
-        break;
-      case _$OrderSchema.keyItem:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          item = null;
-        } else {
-          item = _$ItemFromDecoder(keyed.nestedDecoder());
-        }
-        break;
-      case _$OrderSchema.keyPrepTimeMs:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          prepTimeMs = null;
-        } else {
-          prepTimeMs = keyed.readInt();
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? dateUs;
+    int? count;
+    int? itemNumber;
+    bool? isRushed;
+    Item? item;
+    int? prepTimeMs;
+    var seen = _$OrderSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$OrderSchema.keyOptions)) {
+        case _$OrderSchema.keyDateUs:
+          if ((seen._value & _$OrderSchema.dateUs._value) != 0) {
+            throw const CodableException('Duplicate field "dateUs"');
+          }
+          dateUs = keyed.readInt();
+          seen |= _$OrderSchema.dateUs;
+          break;
+        case _$OrderSchema.keyCount:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            count = null;
+          } else {
+            count = keyed.readInt();
+          }
+          break;
+        case _$OrderSchema.keyItemNumber:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            itemNumber = null;
+          } else {
+            itemNumber = keyed.readInt();
+          }
+          break;
+        case _$OrderSchema.keyIsRushed:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            isRushed = null;
+          } else {
+            isRushed = keyed.readBool();
+          }
+          break;
+        case _$OrderSchema.keyItem:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            item = null;
+          } else {
+            item = const ItemCodable().decode(keyed.nestedDecoder());
+          }
+          break;
+        case _$OrderSchema.keyPrepTimeMs:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            prepTimeMs = null;
+          } else {
+            prepTimeMs = keyed.readInt();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Order(
+      dateUs: dateUs!,
+      count: count,
+      itemNumber: itemNumber,
+      isRushed: isRushed,
+      item: item,
+      prepTimeMs: prepTimeMs,
+    );
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Order(
-    dateUs: dateUs!,
-    count: count,
-    itemNumber: itemNumber,
-    isRushed: isRushed,
-    item: item,
-    prepTimeMs: prepTimeMs,
-  );
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Order
-// =============================================================================
-List<Order> _$OrderListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Order>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$OrderFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Order
-// =============================================================================
-void _$OrderToEncoder(Order instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
-  if (instance.count != null) {
-    keyed.encodeInt(_$OrderSchema.nameCount, instance.count!);
-  }
-  if (instance.itemNumber != null) {
-    keyed.encodeInt(_$OrderSchema.nameItemNumber, instance.itemNumber!);
-  }
-  if (instance.isRushed != null) {
-    keyed.encodeBool(_$OrderSchema.nameIsRushed, instance.isRushed!);
-  }
-  if (instance.item != null) {
-    keyed.encodeValue(_$OrderSchema.nameItem, instance.item!, _$ItemToEncoder);
-  }
-  if (instance.prepTimeMs != null) {
-    keyed.encodeInt(_$OrderSchema.namePrepTimeMs, instance.prepTimeMs!);
+  @override
+  void encode(Order instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
+    if (instance.count != null) {
+      keyed.encodeInt(_$OrderSchema.nameCount, instance.count!);
+    }
+    if (instance.itemNumber != null) {
+      keyed.encodeInt(_$OrderSchema.nameItemNumber, instance.itemNumber!);
+    }
+    if (instance.isRushed != null) {
+      keyed.encodeBool(_$OrderSchema.nameIsRushed, instance.isRushed!);
+    }
+    if (instance.item != null) {
+      keyed.encodeValue(
+        _$OrderSchema.nameItem,
+        instance.item!,
+        const ItemCodable(),
+      );
+    }
+    if (instance.prepTimeMs != null) {
+      keyed.encodeInt(_$OrderSchema.namePrepTimeMs, instance.prepTimeMs!);
+    }
   }
 }
 
@@ -414,78 +400,69 @@ extension type const _$ItemSchema(int _value) {
 }
 
 // =============================================================================
-// 2. Universal Keyed Deserializer for Item
+// 2. Companion Codable for Item
 // =============================================================================
-Item _$ItemFromDecoder(Decoder decoder) {
-  final keyed = decoder.keyed(options: _$ItemSchema.keyOptions);
+final class ItemCodable implements Codable<Item> {
+  const ItemCodable();
 
-  int? count;
-  int? itemNumber;
-  bool? isRushed;
-  var seen = _$ItemSchema.none;
+  @override
+  Item decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ItemSchema.keyOptions);
 
-  while (keyed.moveNextKey()) {
-    switch (keyed.selectKeyIndex(_$ItemSchema.keyOptions)) {
-      case _$ItemSchema.keyCount:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          count = null;
-        } else {
-          count = keyed.readInt();
-        }
-        break;
-      case _$ItemSchema.keyItemNumber:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          itemNumber = null;
-        } else {
-          itemNumber = keyed.readInt();
-        }
-        break;
-      case _$ItemSchema.keyIsRushed:
-        if (keyed.isNextNull()) {
-          keyed.readNull();
-          isRushed = null;
-        } else {
-          isRushed = keyed.readBool();
-        }
-        break;
-      default:
-        keyed.skipValue();
-        break;
+    int? count;
+    int? itemNumber;
+    bool? isRushed;
+    var seen = _$ItemSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ItemSchema.keyOptions)) {
+        case _$ItemSchema.keyCount:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            count = null;
+          } else {
+            count = keyed.readInt();
+          }
+          break;
+        case _$ItemSchema.keyItemNumber:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            itemNumber = null;
+          } else {
+            itemNumber = keyed.readInt();
+          }
+          break;
+        case _$ItemSchema.keyIsRushed:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            isRushed = null;
+          } else {
+            isRushed = keyed.readBool();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
     }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Item(count: count, itemNumber: itemNumber, isRushed: isRushed);
   }
 
-  // Inlined fast-path check
-  seen.validate();
-
-  return Item(count: count, itemNumber: itemNumber, isRushed: isRushed);
-}
-
-// =============================================================================
-// 2b. Universal List Deserializer for Item
-// =============================================================================
-List<Item> _$ItemListFromDecoder(Decoder decoder) {
-  final unkeyed = decoder.unkeyed();
-  final list = <Item>[];
-  while (unkeyed.moveNext()) {
-    list.add(_$ItemFromDecoder(unkeyed.nestedDecoder()));
-  }
-  return list;
-}
-
-// =============================================================================
-// 3. Universal Serializer for Item
-// =============================================================================
-void _$ItemToEncoder(Item instance, Encoder encoder) {
-  final keyed = encoder.keyed();
-  if (instance.count != null) {
-    keyed.encodeInt(_$ItemSchema.nameCount, instance.count!);
-  }
-  if (instance.itemNumber != null) {
-    keyed.encodeInt(_$ItemSchema.nameItemNumber, instance.itemNumber!);
-  }
-  if (instance.isRushed != null) {
-    keyed.encodeBool(_$ItemSchema.nameIsRushed, instance.isRushed!);
+  @override
+  void encode(Item instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    if (instance.count != null) {
+      keyed.encodeInt(_$ItemSchema.nameCount, instance.count!);
+    }
+    if (instance.itemNumber != null) {
+      keyed.encodeInt(_$ItemSchema.nameItemNumber, instance.itemNumber!);
+    }
+    if (instance.isRushed != null) {
+      keyed.encodeBool(_$ItemSchema.nameIsRushed, instance.isRushed!);
+    }
   }
 }

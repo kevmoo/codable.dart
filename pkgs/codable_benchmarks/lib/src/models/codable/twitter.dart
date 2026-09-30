@@ -12,10 +12,6 @@ class TwitterMetadata {
   final String isoLanguageCode;
 
   const TwitterMetadata({this.resultType = '', this.isoLanguageCode = ''});
-
-  static TwitterMetadata decode(Decoder decoder) =>
-      _$TwitterMetadataFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterMetadataToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -33,10 +29,6 @@ class TwitterUserMention {
     required this.idStr,
     this.indices = const [],
   });
-
-  static TwitterUserMention decode(Decoder decoder) =>
-      _$TwitterUserMentionFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterUserMentionToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -52,9 +44,6 @@ class TwitterUrl {
     required this.displayUrl,
     this.indices = const [],
   });
-
-  static TwitterUrl decode(Decoder decoder) => _$TwitterUrlFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterUrlToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -62,10 +51,6 @@ class TwitterEntitiesUrls {
   final List<TwitterUrl> urls;
 
   const TwitterEntitiesUrls({this.urls = const []});
-
-  static TwitterEntitiesUrls decode(Decoder decoder) =>
-      _$TwitterEntitiesUrlsFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterEntitiesUrlsToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -74,10 +59,6 @@ class TwitterUserEntities {
   final TwitterEntitiesUrls? description;
 
   const TwitterUserEntities({this.url, this.description});
-
-  static TwitterUserEntities decode(Decoder decoder) =>
-      _$TwitterUserEntitiesFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterUserEntitiesToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -86,10 +67,6 @@ class TwitterEntities {
   final List<TwitterUserMention> userMentions;
 
   const TwitterEntities({this.urls = const [], this.userMentions = const []});
-
-  static TwitterEntities decode(Decoder decoder) =>
-      _$TwitterEntitiesFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterEntitiesToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -177,10 +154,6 @@ class TwitterUser {
     this.followRequestSent = false,
     this.notifications = false,
   });
-
-  static TwitterUser decode(Decoder decoder) =>
-      _$TwitterUserFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterUserToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -230,10 +203,6 @@ class TwitterStatus {
     this.lang = 'en',
     this.retweetedStatus,
   });
-
-  static TwitterStatus decode(Decoder decoder) =>
-      _$TwitterStatusFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterStatusToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -259,11 +228,6 @@ class TwitterSearchMetadata {
     this.sinceId = 0,
     this.sinceIdStr = '0',
   });
-
-  static TwitterSearchMetadata decode(Decoder decoder) =>
-      _$TwitterSearchMetadataFromDecoder(decoder);
-  void encode(Encoder encoder) =>
-      _$TwitterSearchMetadataToEncoder(this, encoder);
 }
 
 @Codable(fieldRename: FieldRename.snake)
@@ -275,8 +239,4 @@ class TwitterResponse {
     this.statuses = const [],
     required this.searchMetadata,
   });
-
-  static TwitterResponse decode(Decoder decoder) =>
-      _$TwitterResponseFromDecoder(decoder);
-  void encode(Encoder encoder) => _$TwitterResponseToEncoder(this, encoder);
 }

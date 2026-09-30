@@ -41,14 +41,9 @@ Future<void> generateForFile(String sourceRelPath, String targetRelPath) async {
         element,
         ConstantReader(annotation),
       );
-      final decoderCode = DecoderGeneratorHelper(model).generate();
-      final encoderCode = EncoderGeneratorHelper(model).generate();
-      buffer.writeln(decoderCode);
+      final code = const CodableGenerator().generateForModel(model);
+      buffer.writeln(code);
       buffer.writeln();
-      if (encoderCode.isNotEmpty) {
-        buffer.writeln(encoderCode);
-        buffer.writeln();
-      }
     } catch (e, st) {
       print('Skipping ${element.name}: $e\n$st');
     }

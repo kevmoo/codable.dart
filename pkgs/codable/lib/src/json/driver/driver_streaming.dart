@@ -61,14 +61,14 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
-  /// and invokes [decode] on the resulting [JsonCodableDecoder] when closed,
+  /// and invokes [decodable] on the resulting [JsonCodableDecoder] when closed,
   /// emitting the decoded value to [sink].
   static ByteConversionSink startChunkedConversion<T>(
     Sink<T> sink,
-    T Function(Decoder decoder) decode, {
+    Decodable<T> decodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    return _JsonCodableChunkedDecoderSink<T>(sink, decode, userInfo);
+    return _JsonCodableChunkedDecoderSink<T>(sink, decodable, userInfo);
   }
 
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
@@ -383,38 +383,37 @@ final class _JsonCodableKeyedDecoder
 
   @override
   @pragma('vm:prefer-inline')
-  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_rootDecoder);
+  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(_rootDecoder);
 
   @override
   @pragma('vm:prefer-inline')
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableValue<T>(Decodable<T> decodable) {
     if (isNextNull()) {
       readNull();
       return null;
     }
-    return decodeValue(decoder);
+    return decodeValue(decodable);
   }
 
   @override
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
+  List<T> decodeList<T>(Decodable<T> decodable) {
     _ensureStarted();
     final list = <T>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
-      list.add(decoder(_rootDecoder));
+      list.add(decodable.decode(_rootDecoder));
     }
     _reader.endArray();
     return list;
   }
 
   @override
-  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
     if (isNextNull()) {
       readNull();
       return null;
     }
-    return decodeList(decoder);
+    return decodeList(decodable);
   }
 
   @override
@@ -638,27 +637,28 @@ final class _DartObjectMappedDecoder implements MappedDecoder {
   }
 
   @override
-  T decodeKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T decodeKey<T>(String key, Decodable<T> decodable) {
     final v = _map[key];
     if (v == null) {
       throw CodableException('Missing required key $key in mapped decoder');
     }
-    return decoder(_DartObjectDecoder(v, userInfo: _userInfo));
+    return decodable.decode(_DartObjectDecoder(v, userInfo: _userInfo));
   }
 
   @override
-  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder) {
+  T? decodeNullableKey<T>(String key, Decodable<T> decodable) {
     final v = _map[key];
     if (v == null) return null;
-    return decoder(_DartObjectDecoder(v, userInfo: _userInfo));
+    return decodable.decode(_DartObjectDecoder(v, userInfo: _userInfo));
   }
 
   @override
-  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder) {
+  List<T> decodeListKey<T>(String key, Decodable<T> decodable) {
     final v = _map[key];
     if (v is List<Object?>) {
       return [
-        for (final e in v) decoder(_DartObjectDecoder(e, userInfo: _userInfo)),
+        for (final e in v)
+          decodable.decode(_DartObjectDecoder(e, userInfo: _userInfo)),
       ];
     }
     throw CodableException('Expected list for $key, found $v');
@@ -883,34 +883,36 @@ final class _DartObjectKeyedDecoder implements KeyedDecoder {
       _DartObjectDecoder(_consumeValue(), userInfo: _userInfo);
 
   @override
-  T decodeValue<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_DartObjectDecoder(_consumeValue(), userInfo: _userInfo));
+  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(
+    _DartObjectDecoder(_consumeValue(), userInfo: _userInfo),
+  );
 
   @override
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableValue<T>(Decodable<T> decodable) {
     final v = _consumeValue();
     if (v == null) return null;
-    return decoder(_DartObjectDecoder(v, userInfo: _userInfo));
+    return decodable.decode(_DartObjectDecoder(v, userInfo: _userInfo));
   }
 
   @override
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder) {
+  List<T> decodeList<T>(Decodable<T> decodable) {
     final v = _consumeValue();
     if (v is List<Object?>) {
       return [
-        for (final e in v) decoder(_DartObjectDecoder(e, userInfo: _userInfo)),
+        for (final e in v)
+          decodable.decode(_DartObjectDecoder(e, userInfo: _userInfo)),
       ];
     }
     throw CodableException('Expected List, found $v');
   }
 
   @override
-  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder) {
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
     if (isNextNull()) {
       readNull();
       return null;
     }
-    return decodeList(decoder);
+    return decodeList(decodable);
   }
 
   @override
@@ -1086,14 +1088,15 @@ final class _DartObjectUnkeyedDecoder implements UnkeyedDecoder {
       _DartObjectDecoder(_consumeElement(), userInfo: _userInfo);
 
   @override
-  T decodeElement<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_DartObjectDecoder(_consumeElement(), userInfo: _userInfo));
+  T decodeElement<T>(Decodable<T> decodable) => decodable.decode(
+    _DartObjectDecoder(_consumeElement(), userInfo: _userInfo),
+  );
 
   @override
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableElement<T>(Decodable<T> decodable) {
     final v = _consumeElement();
     if (v == null) return null;
-    return decoder(_DartObjectDecoder(v, userInfo: _userInfo));
+    return decodable.decode(_DartObjectDecoder(v, userInfo: _userInfo));
   }
 
   @override
@@ -1227,12 +1230,12 @@ final class _DartObjectSingleValueDecoder implements SingleValueDecoder {
   Decoder nestedDecoder() => _DartObjectDecoder(_value, userInfo: _userInfo);
 
   @override
-  T decode<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_DartObjectDecoder(_value, userInfo: _userInfo));
+  T decode<T>(Decodable<T> decodable) =>
+      decodable.decode(_DartObjectDecoder(_value, userInfo: _userInfo));
 
   @override
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder) =>
-      isNull() ? null : decode(decoder);
+  T? decodeNullable<T>(Decodable<T> decodable) =>
+      isNull() ? null : decode(decodable);
 }
 
 final class _JsonCodableUnkeyedDecoder
@@ -1273,16 +1276,15 @@ final class _JsonCodableUnkeyedDecoder
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
-  T decodeElement<T>(T Function(Decoder decoder) decoder) =>
-      decoder(_rootDecoder);
+  T decodeElement<T>(Decodable<T> decodable) => decodable.decode(_rootDecoder);
 
   @override
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder) {
+  T? decodeNullableElement<T>(Decodable<T> decodable) {
     if (isNextNull()) {
       readNull();
       return null;
     }
-    return decodeElement(decoder);
+    return decodeElement(decodable);
   }
 
   @override
@@ -1365,11 +1367,11 @@ final class _JsonCodableSingleValueDecoder
   Decoder nestedDecoder() => _rootDecoder;
 
   @override
-  T decode<T>(T Function(Decoder decoder) decoder) => decoder(_rootDecoder);
+  T decode<T>(Decodable<T> decodable) => decodable.decode(_rootDecoder);
 
   @override
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder) =>
-      isNull() ? null : decode(decoder);
+  T? decodeNullable<T>(Decodable<T> decodable) =>
+      isNull() ? null : decode(decodable);
 }
 
 /// Concrete high-performance streaming JSON encoder connecting
@@ -1385,52 +1387,55 @@ final class JsonCodableEncoder implements Encoder {
 
   JsonCodableEncoder(this._writer, {this.userInfo = const {}});
 
-  /// Encodes a value to a newly allocated UTF-8 byte buffer.
-  static Uint8List toBytes(
-    void Function(Encoder encoder) encode, {
+  /// Encodes [value] to a newly allocated UTF-8 byte buffer using [encodable].
+  static Uint8List toBytes<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
     final writer = AdaptiveJsonTokenWriter(capacityHint ?? 1024);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
-    encode(encoder);
+    encodable.encode(value, encoder);
     encoder._finish();
     return writer.takeBytes();
   }
 
-  /// Encodes a value to a JSON String.
-  static String encode(
-    void Function(Encoder encoder) encode, {
+  /// Encodes [value] to a JSON String using [encodable].
+  static String encode<T>(
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    final bytes = toBytes(encode, userInfo: userInfo);
+    final bytes = toBytes(value, encodable, userInfo: userInfo);
     return utf8.decode(bytes);
   }
 
-  /// Encodes a value directly into [sink] using a chunked [JsonTokenWriter].
-  static void toSink(
+  /// Encodes [value] directly into [sink] using a chunked [JsonTokenWriter].
+  static void toSink<T>(
     BytesBuilder sink,
-    void Function(Encoder encoder) encode, {
+    T value,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
     final writer = AdaptiveJsonTokenWriter.toSink(sink);
     final encoder = JsonCodableEncoder(writer, userInfo: userInfo);
-    encode(encoder);
+    encodable.encode(value, encoder);
     encoder._finish();
     writer.flush();
   }
 
   /// Starts a chunked conversion that streams encoded UTF-8 byte chunks
   /// directly to [sink] via [JsonTokenWriter.toSink].
-  static ChunkedConversionSink<void Function(Encoder encoder)>
-  startChunkedConversion(
-    Sink<List<int>> sink, {
+  static ChunkedConversionSink<T> startChunkedConversion<T>(
+    Sink<List<int>> sink,
+    Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
     final byteSink = sink is ByteConversionSink
         ? sink
         : ByteConversionSink.from(sink);
-    return _JsonCodableChunkedEncoderSink(byteSink, userInfo);
+    return _JsonCodableChunkedEncoderSink<T>(byteSink, encodable, userInfo);
   }
 
   void _finish() {
@@ -1532,49 +1537,22 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeValue<T>(
-    String key,
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeValue<T>(String key, T value, Encodable<T> encodable) {
     _writer.writeName(key);
     final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     child._finish();
   }
 
   @override
-  void encodeNullableValue<T>(
-    String key,
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullableValue<T>(String key, T? value, Encodable<T> encodable) {
     if (value != null) {
-      encodeValue(key, value, encode);
+      encodeValue(key, value, encodable);
     }
   }
 
   @override
-  void encodeEncodable(String key, Encodable value) {
-    _writer.writeName(key);
-    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    child._finish();
-  }
-
-  @override
-  void encodeNullableEncodable(String key, Encodable? value) {
-    if (value != null) {
-      encodeEncodable(key, value);
-    }
-  }
-
-  @override
-  void encodeList<T>(
-    String key,
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable) {
     _writer.writeName(key);
     _writer.beginArray();
     for (final e in elements) {
@@ -1582,7 +1560,7 @@ final class _JsonCodableKeyedEncoder implements KeyedEncoder {
         _writer,
         userInfo: _rootEncoder.userInfo,
       );
-      encode(e, child);
+      encodable.encode(e, child);
       child._finish();
     }
     _writer.endArray();
@@ -1697,50 +1675,25 @@ final class _JsonCodableUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNull() => _writer.writeNull();
 
   @override
-  void encodeElement<T>(
-    T value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeElement<T>(T value, Encodable<T> encodable) {
     final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     child._finish();
   }
 
   @override
-  void encodeNullableElement<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullableElement<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
       _writer.writeNull();
     } else {
-      encodeElement(value, encode);
+      encodeElement(value, encodable);
     }
   }
 
   @override
-  void encodeList<T>(
-    Iterable<T> elements,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeList<T>(Iterable<T> elements, Encodable<T> encodable) {
     for (final e in elements) {
-      encodeElement(e, encode);
-    }
-  }
-
-  @override
-  void encodeEncodable(Encodable value) {
-    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    child._finish();
-  }
-
-  @override
-  void encodeNullableEncodable(Encodable? value) {
-    if (value == null) {
-      _writer.writeNull();
-    } else {
-      encodeEncodable(value);
+      encodeElement(e, encodable);
     }
   }
 }
@@ -1803,17 +1756,14 @@ final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
   void encodeNull() => _writer.writeNull();
 
   @override
-  void encode<T>(T value, void Function(T value, Encoder encoder) encode) {
+  void encode<T>(T value, Encodable<T> encodable) {
     final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    encode(value, child);
+    encodable.encode(value, child);
     child._finish();
   }
 
   @override
-  void encodeNullable<T>(
-    T? value,
-    void Function(T value, Encoder encoder) encode,
-  ) {
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
       _writer.writeNull();
     } else {
@@ -1821,36 +1771,20 @@ final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
         _writer,
         userInfo: _rootEncoder.userInfo,
       );
-      encode(value, child);
+      encodable.encode(value, child);
       child._finish();
-    }
-  }
-
-  @override
-  void encodeEncodable(Encodable value) {
-    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
-    value.encode(child);
-    child._finish();
-  }
-
-  @override
-  void encodeNullableEncodable(Encodable? value) {
-    if (value == null) {
-      _writer.writeNull();
-    } else {
-      encodeEncodable(value);
     }
   }
 }
 
 final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
   final Sink<T> _sink;
-  final T Function(Decoder decoder) _decode;
+  final Decodable<T> _decodable;
   final Map<Object, Object?> _userInfo;
   final ScratchByteAccumulator _accumulator = ScratchByteAccumulator();
   bool _isClosed = false;
 
-  _JsonCodableChunkedDecoderSink(this._sink, this._decode, this._userInfo);
+  _JsonCodableChunkedDecoderSink(this._sink, this._decodable, this._userInfo);
 
   @override
   void add(List<int> chunk) {
@@ -1881,7 +1815,7 @@ final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
     final bytes = _accumulator.takeBytes();
     final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
     try {
-      _sink.add(_decode(decoder));
+      _sink.add(_decodable.decode(decoder));
     } finally {
       _accumulator.release(canPool: !decoder._payloadEscaped);
     }
@@ -1928,22 +1862,27 @@ final class _ByteSinkAdapter implements BytesBuilder {
   Uint8List toBytes() => throw UnsupportedError('Not supported on adapter');
 }
 
-final class _JsonCodableChunkedEncoderSink
-    implements ChunkedConversionSink<void Function(Encoder encoder)> {
+final class _JsonCodableChunkedEncoderSink<T>
+    implements ChunkedConversionSink<T> {
   final ByteConversionSink _byteSink;
+  final Encodable<T> _encodable;
   final Map<Object, Object?> _userInfo;
   bool _isClosed = false;
 
-  _JsonCodableChunkedEncoderSink(this._byteSink, this._userInfo);
+  _JsonCodableChunkedEncoderSink(
+    this._byteSink,
+    this._encodable,
+    this._userInfo,
+  );
 
   @override
-  void add(void Function(Encoder encoder) encode) {
+  void add(T value) {
     if (_isClosed) {
       throw StateError('Cannot add to a closed sink');
     }
     final writer = AdaptiveJsonTokenWriter.toSink(_ByteSinkAdapter(_byteSink));
     final encoder = JsonCodableEncoder(writer, userInfo: _userInfo);
-    encode(encoder);
+    _encodable.encode(value, encoder);
     encoder._finish();
     writer.flush();
   }

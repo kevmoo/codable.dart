@@ -66,12 +66,14 @@ void main() {
       final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
       final single = decoder.singleValue();
 
-      final result = single.decode((d) {
-        final keyed = d.keyed();
-        check(keyed.moveNextKey()).isTrue();
-        check(keyed.nextKey()).equals('inner');
-        return keyed.readString();
-      });
+      final result = single.decode(
+        Decodable.fromFunction((d) {
+          final keyed = d.keyed();
+          check(keyed.moveNextKey()).isTrue();
+          check(keyed.nextKey()).equals('inner');
+          return keyed.readString();
+        }),
+      );
 
       check(result).equals('hello');
     });
@@ -96,25 +98,28 @@ void main() {
       check(mapped.decodeStringList('items')).deepEquals(['a', 'b']);
       check(mapped.decodeIntList('ints')).deepEquals([10, 20, 30]);
 
-      final nestedSummary = mapped.decodeKey('nested', (d) {
-        final k = d.keyed();
-        var id = 0;
-        var flag = false;
-        var tags = <String>[];
-        while (k.moveNextKey()) {
-          switch (k.nextKey()) {
-            case 'id':
-              id = k.readInt();
-            case 'flag':
-              flag = k.readBool();
-            case 'tags':
-              tags = k.decodeStringList();
-            default:
-              k.skipValue();
+      final nestedSummary = mapped.decodeKey(
+        'nested',
+        Decodable.fromFunction((d) {
+          final k = d.keyed();
+          var id = 0;
+          var flag = false;
+          var tags = <String>[];
+          while (k.moveNextKey()) {
+            switch (k.nextKey()) {
+              case 'id':
+                id = k.readInt();
+              case 'flag':
+                flag = k.readBool();
+              case 'tags':
+                tags = k.decodeStringList();
+              default:
+                k.skipValue();
+            }
           }
-        }
-        return '$id:$flag:${tags.join(",")}';
-      });
+          return '$id:$flag:${tags.join(",")}';
+        }),
+      );
       check(nestedSummary).equals('99:true:x,y');
     });
   });

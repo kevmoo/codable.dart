@@ -12,10 +12,6 @@ import 'package:test/test.dart';
 
 import 'fixtures/test_models.dart';
 
-Uint8List _encodeObject(void Function(Encoder encoder) encode) {
-  return JsonCodableEncoder.toBytes(encode);
-}
-
 void main() {
   group('Generated Code Roundtrip & Runtime Validation Suite', () {
     group('Point (Positional Primary Constructor)', () {
@@ -24,7 +20,7 @@ void main() {
           utf8.encode('{"x": 10.5, "y": -20.25}'),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final point = Point.decode(decoder);
+        final point = const PointCodable().decode(decoder);
 
         check(point.x).equals(10.5);
         check(point.y).equals(-20.25);
@@ -32,7 +28,7 @@ void main() {
 
       test('serializes to JSON writer', () {
         const point = Point(1.25, 3.75);
-        final bytes = _encodeObject((e) => point.encode(e));
+        final bytes = JsonCodableEncoder.toBytes(point, const PointCodable());
         final jsonStr = utf8.decode(bytes);
 
         check(jsonStr).equals('{"x":1.25,"y":3.75}');
@@ -45,7 +41,7 @@ void main() {
           ),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final point = Point.decode(decoder);
+        final point = const PointCodable().decode(decoder);
 
         check(point.x).equals(1.0);
         check(point.y).equals(2.0);
@@ -55,7 +51,7 @@ void main() {
         final bytes = Uint8List.fromList(utf8.encode('{"x": 1.0}'));
         final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-        check(() => Point.decode(decoder))
+        check(() => const PointCodable().decode(decoder))
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Missing required fields for Point: y');
@@ -67,7 +63,7 @@ void main() {
           final bytes = Uint8List.fromList(utf8.encode('{}'));
           final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-          check(() => Point.decode(decoder))
+          check(() => const PointCodable().decode(decoder))
               .throws<CodableException>()
               .has((e) => e.message, 'message')
               .contains('Missing required fields for Point: x, y');
@@ -80,18 +76,18 @@ void main() {
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
 
-        check(() => Point.decode(decoder))
+        check(() => const PointCodable().decode(decoder))
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Duplicate field "x"');
       });
 
-      test('deserializes list of points via Point.decodeList', () {
+      test('deserializes list of points via PointCodable().decodeList', () {
         final bytes = Uint8List.fromList(
           utf8.encode('[{"x": 1.0, "y": 2.0}, {"x": 3.5, "y": 4.5}]'),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final points = Point.decodeList(decoder);
+        final points = const PointCodable().decodeList(decoder);
 
         check(points.length).equals(2);
         check(points[0].x).equals(1.0);
@@ -109,7 +105,7 @@ void main() {
           ),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final user = UserAccount.decode(decoder);
+        final user = const UserAccountCodable().decode(decoder);
 
         check(user.id).equals('usr_1');
         check(user.emailAddress).equals('alice@example.com');
@@ -125,7 +121,9 @@ void main() {
             '{"id": "usr_2", "email": "bob@example.com", "role": "member"}',
           ),
         );
-        final user1 = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes1));
+        final user1 = const UserAccountCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes1),
+        );
         check(user1.emailAddress).equals('bob@example.com');
         check(user1.role).equals(UserRole.member);
 
@@ -134,7 +132,9 @@ void main() {
             '{"id": "usr_3", "contact_email": "carol@example.com", "role": "guest"}',
           ),
         );
-        final user2 = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes2));
+        final user2 = const UserAccountCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes2),
+        );
         check(user2.emailAddress).equals('carol@example.com');
         check(user2.role).equals(UserRole.guest);
       });
@@ -145,7 +145,9 @@ void main() {
             '{"id": "usr_4", "email_address": "d@e.com", "role": "admin", "location": [37.7749, -122.4194]}',
           ),
         );
-        final user = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes));
+        final user = const UserAccountCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
 
         check(user.location).isNotNull();
         check(user.location![0]).equals(37.7749);
@@ -158,7 +160,9 @@ void main() {
             '{"id": "usr_5", "email_address": "e@e.com", "role": "admin", "internalId": "hacked"}',
           ),
         );
-        final user = UserAccount.decode(JsonCodableDecoder.fromBytes(bytes));
+        final user = const UserAccountCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
 
         // internalId should retain default value ''
         check(user.internalId).equals('');
@@ -170,7 +174,11 @@ void main() {
             '{"id": "usr_6", "email_address": "f@e.com", "role": "superadmin"}',
           ),
         );
-        check(() => UserAccount.decode(JsonCodableDecoder.fromBytes(bytes)))
+        check(
+              () => const UserAccountCodable().decode(
+                JsonCodableDecoder.fromBytes(bytes),
+              ),
+            )
             .throws<CodableException>()
             .has((e) => e.message, 'message')
             .contains('Unknown UserRole value');
@@ -188,8 +196,11 @@ void main() {
           location: loc,
         );
 
-        final bytes = _encodeObject(user.encode);
-        final roundtripped = UserAccount.decode(
+        final bytes = JsonCodableEncoder.toBytes(
+          user,
+          const UserAccountCodable(),
+        );
+        final roundtripped = const UserAccountCodable().decode(
           JsonCodableDecoder.fromBytes(bytes),
         );
 
@@ -210,7 +221,7 @@ void main() {
         final bytes1 = Uint8List.fromList(
           utf8.encode('{"id": "u1", "zip": 90210}'),
         );
-        final profile1 = UserProfileCustom.decode(
+        final profile1 = const UserProfileCustomCodable().decode(
           JsonCodableDecoder.fromBytes(bytes1),
         );
         check(profile1.id).equals('u1');
@@ -219,7 +230,7 @@ void main() {
         final bytes2 = Uint8List.fromList(
           utf8.encode('{"id": "u2", "zip": "94107"}'),
         );
-        final profile2 = UserProfileCustom.decode(
+        final profile2 = const UserProfileCustomCodable().decode(
           JsonCodableDecoder.fromBytes(bytes2),
         );
         check(profile2.id).equals('u2');
@@ -228,8 +239,11 @@ void main() {
 
       test('roundtrips UserProfileCustom through encoder and decoder', () {
         const profile = UserProfileCustom(id: 'u3', zip: '10001');
-        final bytes = _encodeObject((e) => profile.encode(e));
-        final roundtripped = UserProfileCustom.decode(
+        final bytes = JsonCodableEncoder.toBytes(
+          profile,
+          const UserProfileCustomCodable(),
+        );
+        final roundtripped = const UserProfileCustomCodable().decode(
           JsonCodableDecoder.fromBytes(bytes),
         );
 
@@ -247,8 +261,10 @@ void main() {
           scores: {'latency': 10, 'errors': null, 'qps': 50000},
         );
 
-        final bytes = _encodeObject((e) => team.encode(e));
-        final roundtripped = Team.decode(JsonCodableDecoder.fromBytes(bytes));
+        final bytes = JsonCodableEncoder.toBytes(team, const TeamCodable());
+        final roundtripped = const TeamCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
 
         check(roundtripped.name).equals('Core Infra');
         check(roundtripped.roles.length).equals(2);
@@ -281,8 +297,11 @@ void main() {
           headcountByDept: {'engineering': 50000, 'sales': 20000},
         );
 
-        final bytes = _encodeObject((e) => enterprise.encode(e));
-        final roundtripped = Enterprise.decode(
+        final bytes = JsonCodableEncoder.toBytes(
+          enterprise,
+          const EnterpriseCodable(),
+        );
+        final roundtripped = const EnterpriseCodable().decode(
           JsonCodableDecoder.fromBytes(bytes),
         );
 
@@ -304,7 +323,7 @@ void main() {
       test('Point deserializes via Decoder.decode', () {
         final bytes = Uint8List.fromList(utf8.encode('{"x": 42.0, "y": 84.0}'));
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final point = Point.decode(decoder);
+        final point = const PointCodable().decode(decoder);
 
         check(point.x).equals(42.0);
         check(point.y).equals(84.0);
@@ -317,7 +336,7 @@ void main() {
           ),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final user = UserAccount.decode(decoder);
+        final user = const UserAccountCodable().decode(decoder);
 
         check(user.id).equals('usr_99');
         check(user.emailAddress).equals('user@example.com');
@@ -331,7 +350,7 @@ void main() {
           ),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final enterprise = Enterprise.decode(decoder);
+        final enterprise = const EnterpriseCodable().decode(decoder);
 
         check(enterprise.name).equals('Corp');
         check(enterprise.headquarter.city).equals('Zurich');
@@ -347,7 +366,7 @@ void main() {
             utf8.encode('{"id": "p1", "zip": "90210"}'),
           );
           final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final profile = UserProfileCustom.decode(decoder);
+          final profile = const UserProfileCustomCodable().decode(decoder);
 
           check(profile.id).equals('p1');
           check(profile.zip).equals('90210');
@@ -361,7 +380,7 @@ void main() {
           ),
         );
         final decoder = JsonCodableDecoder.fromBytes(bytes);
-        final user = UserAccount.decode(decoder);
+        final user = const UserAccountCodable().decode(decoder);
 
         check(user.id).equals('usr_100');
         check(user.emailAddress).equals('alias@example.com');
@@ -379,7 +398,7 @@ void main() {
             ),
           );
           final decoder = JsonCodableDecoder.fromBytes(bytes);
-          final team = Team.decode(decoder);
+          final team = const TeamCodable().decode(decoder);
 
           check(team.name).equals('Core');
           check(team.roles.length).equals(1);
@@ -411,8 +430,11 @@ void main() {
           nestedFloats: nestedFloats,
         );
 
-        final bytes = _encodeObject(model.encode);
-        final decoded = PrimitiveCollectionsModel.decode(
+        final bytes = JsonCodableEncoder.toBytes(
+          model,
+          const PrimitiveCollectionsModelCodable(),
+        );
+        final decoded = const PrimitiveCollectionsModelCodable().decode(
           JsonCodableDecoder.fromBytes(bytes),
         );
 

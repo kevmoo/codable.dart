@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'codable.dart';
 import 'static_key.dart';
 
 /// Top-level decoding context providing access to specialized decoding
@@ -96,17 +97,17 @@ abstract interface class KeyedDecoder {
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
 
-  /// Decodes a nested value using [decoder].
-  T decodeValue<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a nested value using [decodable].
+  T decodeValue<T>(Decodable<T> decodable);
 
-  /// Decodes a nullable nested value using [decoder].
-  T? decodeNullableValue<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a nullable nested value using [decodable].
+  T? decodeNullableValue<T>(Decodable<T> decodable);
 
-  /// Decodes a generic list of items using the element [decoder].
-  List<T> decodeList<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a generic list of items using the element [decodable].
+  List<T> decodeList<T>(Decodable<T> decodable);
 
-  /// Decodes a nullable generic list of items using the element [decoder].
-  List<T>? decodeNullableList<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a nullable generic list of items using the element [decodable].
+  List<T>? decodeNullableList<T>(Decodable<T> decodable);
 
   /// Specialized zero-allocation fast primitive integer list decoder.
   List<int> decodeIntList();
@@ -160,14 +161,14 @@ abstract interface class MappedDecoder {
   /// of nested models without closure allocation.
   Decoder nestedDecoder(String key);
 
-  /// Decodes a value associated with [key] using [decoder].
-  T decodeKey<T>(String key, T Function(Decoder decoder) decoder);
+  /// Decodes a value associated with [key] using [decodable].
+  T decodeKey<T>(String key, Decodable<T> decodable);
 
-  /// Decodes a nullable value associated with [key] using [decoder].
-  T? decodeNullableKey<T>(String key, T Function(Decoder decoder) decoder);
+  /// Decodes a nullable value associated with [key] using [decodable].
+  T? decodeNullableKey<T>(String key, Decodable<T> decodable);
 
-  /// Decodes a list of values associated with [key] using [decoder].
-  List<T> decodeListKey<T>(String key, T Function(Decoder decoder) decoder);
+  /// Decodes a list of values associated with [key] using [decodable].
+  List<T> decodeListKey<T>(String key, Decodable<T> decodable);
 
   /// Decodes an integer list associated with [key].
   List<int> decodeIntList(String key);
@@ -236,11 +237,11 @@ abstract interface class UnkeyedDecoder {
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
 
-  /// Decodes an element using [decoder].
-  T decodeElement<T>(T Function(Decoder decoder) decoder);
+  /// Decodes an element using [decodable].
+  T decodeElement<T>(Decodable<T> decodable);
 
-  /// Decodes a nullable element using [decoder].
-  T? decodeNullableElement<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a nullable element using [decodable].
+  T? decodeNullableElement<T>(Decodable<T> decodable);
 
   /// Decodes a nested contiguous list of integers.
   List<int> decodeIntList();
@@ -302,9 +303,9 @@ abstract interface class SingleValueDecoder {
   /// without closure allocation.
   Decoder nestedDecoder();
 
-  /// Decodes a single value using [decoder].
-  T decode<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a single value using [decodable].
+  T decode<T>(Decodable<T> decodable);
 
-  /// Decodes a single nullable value using [decoder].
-  T? decodeNullable<T>(T Function(Decoder decoder) decoder);
+  /// Decodes a single nullable value using [decodable].
+  T? decodeNullable<T>(Decodable<T> decodable);
 }
