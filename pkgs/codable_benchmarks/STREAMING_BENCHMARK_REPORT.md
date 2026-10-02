@@ -18,7 +18,6 @@
 
 ### 📊 3-Runtime Summary (4-Tier Relative Efficiency & GeoMean Speedups)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Tier / Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📥 Decode GeoMean<br/>(vs Tier 0 / vs Tier 1) | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode GeoMean<br/>(vs Tier 0 / vs Tier 1) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | **AOT (`dart compile exe`)** | **Tier 0: `Stock + json_serial`** | 🔴 `[ 23 / 35 / 54 ]` | **1.00x** / **0.89x** | 🔴 `[ 21 / 28 / 36 ]` | **1.00x** / **0.39x** |
@@ -33,7 +32,6 @@
 | **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 1: `New + json_serial`** | 🔴 `[ 41 / 50 / 61 ]` | **1.20x** / **1.00x** | 🟡 `[ 64 / 80 / 100 ]` | **2.05x** / **1.00x** |
 | **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🔴 `[ 55 / 61 / 68 ]` | **1.47x** / **1.23x** | 🟡 `[ 77 / 88 / 100 ]` | **2.25x** / **1.10x** |
 | **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 100 / 100 / 100 ]` | **2.39x** / **2.00x** | 🟡 `[ 78 / 88 / 99 ]` | **2.26x** / **1.10x** |
-<!-- mdformat on -->
 
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed across all measured tiers). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
 > - **`[ Worst / GeoMean / Best ]`**: Range from lowest score (worst workload) to the geometric mean and peak dataset score
@@ -46,21 +44,17 @@
 
 These diagnostics bound how much of the tables above is signal. Read them before crediting any ratio.
 
-<!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Decode Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |
 | :--- | :---: | :--- |
 | **AOT** | **0.988x** | `[0.996, 0.981]` |
 | **JS** | **0.945x** | `[0.970, 0.921]` |
 | **WASM** | **0.794x** | `[0.581, 1.086]` |
-<!-- mdformat on -->
 
-<!-- mdformat off(prevent table wrapping) -->
 | Target Runtime | Encode Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |
 | :--- | :---: | :--- |
 | **AOT** | N/A | N/A |
 | **JS** | N/A | N/A |
 | **WASM** | N/A | N/A |
-<!-- mdformat on -->
 
 > **Decode control**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. On AOT and JS the fork alters only the UTF-8 *byte* parser (`_JsonUtf8Parser`), leaving this String path source-identical.
 >
@@ -78,26 +72,22 @@ These diagnostics bound how much of the tables above is signal. Read them before
 
 #### Detailed Breakdown: AOT Decode Stream (32 KB Chunks)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 2.21 ms | 2.16 ms | 1.70 ms | **1.20 ms** | **1.02x** | **1.30x** | **1.84x** | **1.80x** |
 | **canada.json (2.25 MB)** | 27.22 ms | 21.89 ms | 10.67 ms | **6.29 ms** | **1.24x** ⚠️ | **2.55x** | **4.33x** | **3.48x** ⚠️ |
 | **Geometric Mean** | — | — | — | — | **1.13x** | **1.82x** | **2.82x** | **2.51x** |
-<!-- mdformat on -->
 
 > ⚠️ 1 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: AOT Encode Stream (BytesBuilder / ByteConversionSink)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 4.88 ms | 2.02 ms | 1.04 ms | **1.05 ms** | **2.42x** | **4.68x** | **4.67x** | **1.93x** |
 | **canada.json (2.25 MB)** | 23.70 ms | 8.51 ms | 10.94 ms | **11.70 ms** | **2.78x** | **2.17x** | **2.03x** | **0.73x** |
 | **Geometric Mean** | — | — | — | — | **2.59x** | **3.19x** | **3.08x** | **1.19x** |
-<!-- mdformat on -->
 
 
 ------------------------------------------------------------------------
@@ -106,24 +96,20 @@ These diagnostics bound how much of the tables above is signal. Read them before
 
 #### Detailed Breakdown: JS Decode Stream (32 KB Chunks)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 3.88 ms | 3.92 ms | 1.50 ms | **1.49 ms** | **0.99x** | **2.59x** | **2.60x** | **2.63x** |
 | **canada.json (2.25 MB)** | 32.67 ms | 31.00 ms | 8.58 ms | **8.64 ms** | **1.05x** | **3.81x** | **3.78x** | **3.59x** |
 | **Geometric Mean** | — | — | — | — | **1.02x** | **3.14x** | **3.14x** | **3.07x** |
-<!-- mdformat on -->
 
 
 #### Detailed Breakdown: JS Encode Stream (BytesBuilder / ByteConversionSink)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 4.86 ms | 3.67 ms | 2.68 ms | **2.69 ms** | **1.32x** | **1.81x** | **1.80x** | **1.36x** |
 | **canada.json (2.25 MB)** | 17.50 ms | 12.00 ms | 20.40 ms | **20.60 ms** | **1.46x** | **0.86x** | **0.85x** | **0.58x** |
 | **Geometric Mean** | — | — | — | — | **1.39x** | **1.25x** | **1.24x** | **0.89x** |
-<!-- mdformat on -->
 
 
 ------------------------------------------------------------------------
@@ -132,26 +118,22 @@ These diagnostics bound how much of the tables above is signal. Read them before
 
 #### Detailed Breakdown: WASM Decode Stream (32 KB Chunks)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 2.39 ms | 2.91 ms | 2.58 ms | **1.76 ms** | **0.82x** | **0.93x** | **1.35x** | **1.65x** |
 | **canada.json (2.25 MB)** | 41.00 ms | 23.53 ms | 17.62 ms | **9.72 ms** | **1.74x** ⚠️ | **2.33x** ⚠️ | **4.22x** ⚠️ | **2.42x** ⚠️ |
 | **Geometric Mean** | — | — | — | — | **1.20x** | **1.47x** | **2.39x** | **2.00x** |
-<!-- mdformat on -->
 
 > ⚠️ 1 of 2 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: WASM Encode Stream (BytesBuilder / ByteConversionSink)
 
-<!-- mdformat off(prevent table wrapping) -->
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **10k Coordinates (0.39 MB)** | 4.95 ms | 2.58 ms | 1.65 ms | **1.67 ms** | **1.92x** | **3.00x** | **2.96x** | **1.55x** |
 | **canada.json (2.25 MB)** | 23.62 ms | 10.74 ms | 13.93 ms | **13.75 ms** | **2.20x** | **1.70x** | **1.72x** | **0.78x** |
 | **Geometric Mean** | — | — | — | — | **2.05x** | **2.25x** | **2.26x** | **1.10x** |
-<!-- mdformat on -->
 
 
 ------------------------------------------------------------------------
@@ -160,7 +142,6 @@ These diagnostics bound how much of the tables above is signal. Read them before
 
 Compares the chunked conversion sink latency (`32 KB` slices) against the in-memory single-buffer latency (`Stream Latency / Monolithic Latency`; `1.00x` = zero streaming overhead, `< 1.00x` = streaming is faster than monolithic allocation).
 
-<!-- mdformat off(prevent table wrapping) -->
 | Target | Mode & Dataset | Tier 0 Ratio (Stream / Mono) | Tier 1 Ratio (Stream / Mono) | Tier 2 Ratio (Stream / Mono) | Tier 3 Ratio (Stream / Mono) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | **AOT** | 📥 Decode `10k Coordinates (0.39 MB)` | `1.02x` (2.21 ms vs 2.16 ms) | `1.00x` (2.16 ms vs 2.15 ms) | `1.00x` (1.70 ms vs 1.69 ms) | **`1.02x` (1.20 ms vs 1.18 ms)** |
@@ -175,7 +156,6 @@ Compares the chunked conversion sink latency (`32 KB` slices) against the in-mem
 | **WASM** | 📥 Decode `canada.json (2.25 MB)` | `1.04x` (41.00 ms vs 39.46 ms) | `0.75x` (23.53 ms vs 31.27 ms) | `1.01x` (17.62 ms vs 17.43 ms) | **`1.03x` (9.72 ms vs 9.40 ms)** |
 | **WASM** | 📤 Encode `10k Coordinates (0.39 MB)` | `0.92x` (4.95 ms vs 5.36 ms) | `0.91x` (2.58 ms vs 2.84 ms) | `0.85x` (1.65 ms vs 1.94 ms) | **`0.87x` (1.67 ms vs 1.92 ms)** |
 | **WASM** | 📤 Encode `canada.json (2.25 MB)` | `0.87x` (23.62 ms vs 27.04 ms) | `0.88x` (10.74 ms vs 12.18 ms) | `0.79x` (13.93 ms vs 17.70 ms) | **`0.81x` (13.75 ms vs 16.93 ms)** |
-<!-- mdformat on -->
 
 ------------------------------------------------------------------------
 

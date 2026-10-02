@@ -592,7 +592,6 @@ void _writeControlTable(
   String label,
   Map<String, List<double>> ratios,
 ) {
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Target Runtime | $label Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |',
   );
@@ -609,7 +608,7 @@ void _writeControlTable(
       '**${_geomean(targetRatios).toStringAsFixed(3)}x** | `[$per]` |',
     );
   }
-  buf.writeln('<!-- mdformat on -->\n');
+  buf.writeln();
 }
 
 void _writeProvenanceSection(
@@ -713,7 +712,6 @@ void _writeFourTierRuntimeSummary(
     '### 📊 3-Runtime Summary '
     '(4-Tier Relative Efficiency & GeoMean Speedups)\n',
   );
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Target Runtime | Tier / Configuration | '
     '📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | '
@@ -749,7 +747,7 @@ void _writeFourTierRuntimeSummary(
   }
 
   buf
-    ..writeln('<!-- mdformat on -->\n')
+    ..writeln()
     ..writeln(_efficiencyIndexCallout())
     ..writeln('${'-' * 72}\n');
 }
@@ -878,7 +876,6 @@ void _writeTwoTierRuntimeSummary(
   List<String> datasets = canonicalDatasets,
 }) {
   buf.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)\n');
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] |',
   );
@@ -907,7 +904,7 @@ void _writeTwoTierRuntimeSummary(
   }
 
   buf
-    ..writeln('<!-- mdformat on -->\n')
+    ..writeln()
     ..writeln(_efficiencyIndexCallout())
     ..writeln('${'-' * 72}\n');
 }
@@ -990,7 +987,6 @@ void _writeFourTierModeTable(
   Set<String> unstable, {
   List<String> datasets = canonicalDatasets,
 }) {
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Workload / Dataset | '
     'Tier 0: Stock + json_serial | '
@@ -1055,7 +1051,7 @@ void _writeFourTierModeTable(
     '${_formatRatioGeoMean(t3VsT0Ratios)} | '
     '${_formatRatioGeoMean(t3VsT1Ratios)} |',
   );
-  buf.writeln('<!-- mdformat on -->\n');
+  buf.writeln();
   if (flagged > 0) {
     buf.writeln(
       '> ⚠️ $flagged of ${datasets.length} workloads in this table '
@@ -1073,7 +1069,6 @@ void _writeTwoTierModeTable(
   Map<String, Map<String, Map<String, double>>> results, {
   List<String> datasets = canonicalDatasets,
 }) {
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Workload / Dataset | json_serializable | package:codable | '
     'Speedup vs json_serializable |',
@@ -1096,7 +1091,7 @@ void _writeTwoTierModeTable(
       buf.writeln('| **$dsName** | N/A | N/A | N/A |');
     }
   }
-  buf.writeln('<!-- mdformat on -->\n\n');
+  buf.writeln();
 }
 
 void _writeStreamingVsMonolithicSection(
@@ -1125,7 +1120,6 @@ void _writeStreamingVsMonolithicSection(
     '`1.00x` = zero streaming overhead, `< 1.00x` = streaming is faster than '
     'monolithic allocation).\n',
   );
-  buf.writeln('<!-- mdformat off(prevent table wrapping) -->');
   buf.writeln(
     '| Target | Mode & Dataset | '
     'Tier 0 Ratio (Stream / Mono) | '
@@ -1162,7 +1156,7 @@ void _writeStreamingVsMonolithicSection(
       }
     }
   }
-  buf.writeln('<!-- mdformat on -->\n');
+  buf.writeln();
   buf.writeln('${'-' * 72}\n');
 }
 
