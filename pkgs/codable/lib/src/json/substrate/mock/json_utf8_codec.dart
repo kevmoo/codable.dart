@@ -125,14 +125,7 @@ final class JsonUtf8Decoder extends Converter<List<int>, Object?> {
       while (i < bytes.length && depth > 0) {
         final c = bytes[i++];
         if (c == 34) {
-          while (i < bytes.length) {
-            final sc = bytes[i++];
-            if (sc == 92) {
-              i++;
-            } else if (sc == 34) {
-              break;
-            }
-          }
+          i = skipString(bytes, i - 1);
         } else if (c == open) {
           depth++;
         } else if (c == close) {
@@ -142,16 +135,7 @@ final class JsonUtf8Decoder extends Converter<List<int>, Object?> {
       return i;
     }
     if (b == 34) {
-      i++;
-      while (i < bytes.length) {
-        final c = bytes[i++];
-        if (c == 92) {
-          i++;
-        } else if (c == 34) {
-          break;
-        }
-      }
-      return i;
+      return skipString(bytes, i);
     }
     while (i < bytes.length &&
         bytes[i] != 44 &&
@@ -177,7 +161,7 @@ final class JsonUtf8Decoder extends Converter<List<int>, Object?> {
     while (i < bytes.length) {
       final b = bytes[i++];
       if (b == 92) {
-        i++;
+        if (i < bytes.length) i++;
       } else if (b == 34) {
         break;
       }

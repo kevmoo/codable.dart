@@ -101,6 +101,36 @@ void main() {
       check(skippedStr).equals(strBytes.length);
     });
 
+    test(
+      'JsonUtf8Decoder.skipValue and skipString guard trailing backslash',
+      () {
+        final trailingEscapeString = Uint8List.fromList([
+          0x13,
+          0x22,
+          0x7b,
+          0x7b,
+          0x7b,
+          0x5c,
+        ]);
+        check(JsonUtf8Decoder.skipValue(trailingEscapeString, 0))
+            .equals(trailingEscapeString.length);
+        check(JsonUtf8Decoder.skipString(trailingEscapeString, 1))
+            .equals(trailingEscapeString.length);
+
+        final shortTrailingEscape = Uint8List.fromList([0x22, 0x5c]);
+        check(JsonUtf8Decoder.skipValue(shortTrailingEscape, 0))
+            .equals(shortTrailingEscape.length);
+        check(JsonUtf8Decoder.skipString(shortTrailingEscape, 0))
+            .equals(shortTrailingEscape.length);
+
+        final nestedTrailingEscape = Uint8List.fromList(
+          utf8.encode('{"a":"\\'),
+        );
+        check(JsonUtf8Decoder.skipValue(nestedTrailingEscape, 0))
+            .equals(nestedTrailingEscape.length);
+      },
+    );
+
     // -------------------------------------------------------------------------
     // 3. Static Members on JsonUtf8Encoder (Items 24-38)
     // -------------------------------------------------------------------------
