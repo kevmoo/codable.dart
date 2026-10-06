@@ -21,7 +21,7 @@ jobs:
   fuzz:
     uses: kevmoo/fuzz.dart/.github/workflows/fuzz.yaml@main
     with:
-      working_directory: pkgs/codable
-      targets: test/fuzz/json_utf8_fuzz.dart
+      package-root: pkgs/codable
+      target: test/fuzz/json_utf8_fuzz.dart
       mode: cgf
-      max_total_time: ${{ inputs.max_total_time || (github.event_name == 'schedule' && 300 || 30) }}
+      max-total-time: ${{ inputs.max_total_time && fromJSON(inputs.max_total_time) || (github.event_name == 'schedule' && 300 || 30) }}
