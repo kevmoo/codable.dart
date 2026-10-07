@@ -702,19 +702,19 @@ void _writeSentinelTable(
   required List<String> alignments,
   required List<List<String>> rows,
 }) {
-  final table = renderGuardedMarkdownTable(
-    headers: headers,
-    alignments: alignments,
-    rows: rows,
-  );
   buf
-    ..writeln('<!-- $namespace:$sentinelId:start src="$src" -->\n')
-    ..writeln(table)
-    ..writeln('\n<!-- $namespace:$sentinelId:end -->\n');
+    ..writeln(
+      renderSentinelTableBlock(
+        namespace: namespace,
+        sentinelId: sentinelId,
+        src: src,
+        headers: headers,
+        alignments: alignments,
+        rows: rows,
+      ),
+    )
+    ..writeln();
 }
-
-String _liveSpan(String key, Object value) =>
-    '<span data-live="$key">$value</span>';
 
 const List<String> _controlTableAlignments = [':---', ':---:', ':---'];
 
@@ -808,12 +808,15 @@ void _writeControlAndStabilitySection(
 
   final unstableCount = inlineValues['${inlinePrefix}unstable_cells'] as int;
   if (unstableCount > 0) {
-    final uSpan = _liveSpan('${inlinePrefix}unstable_cells', unstableCount);
-    final tSpan = _liveSpan(
+    final uSpan = renderLiveSpan(
+      '${inlinePrefix}unstable_cells',
+      unstableCount,
+    );
+    final tSpan = renderLiveSpan(
       '${inlinePrefix}total_cells',
       inlineValues['${inlinePrefix}total_cells']!,
     );
-    final pSpan = _liveSpan(
+    final pSpan = renderLiveSpan(
       '${inlinePrefix}unstable_pct',
       inlineValues['${inlinePrefix}unstable_pct']!,
     );
@@ -863,27 +866,29 @@ void _writeProvenanceSection(
 
   buf.writeln(
     '- **Run Timestamp**: '
-    '${_liveSpan('timestamp', inlineValues['timestamp']!)}',
+    '${renderLiveSpan('timestamp', inlineValues['timestamp']!)}',
   );
   if (hasFourTiers && stockDartVersion != null) {
     buf.writeln(
       '- **Stock Dart SDK (Tier 0 & Tier 2)**: '
-      '${_liveSpan('stock_dart_version', stockDartVersion)}',
+      '${renderLiveSpan('stock_dart_version', stockDartVersion)}',
     );
     buf.writeln(
       '- **New Dart SDK (Tier 1 & Tier 3)**: '
-      '${_liveSpan('dart_version', dartVersion)}',
+      '${renderLiveSpan('dart_version', dartVersion)}',
     );
   } else {
-    buf.writeln('- **SDK Version**: ${_liveSpan('dart_version', dartVersion)}');
+    buf.writeln(
+      '- **SDK Version**: ${renderLiveSpan('dart_version', dartVersion)}',
+    );
   }
-  buf.writeln('- **Repo Commit**: ${_liveSpan('commit', commit)}');
+  buf.writeln('- **Repo Commit**: ${renderLiveSpan('commit', commit)}');
   buf.writeln(
-    '- **Host OS**: ${_liveSpan('os', inlineValues['os']!)}, '
-    'Hostname: ${_liveSpan('host', inlineValues['host']!)}',
+    '- **Host OS**: ${renderLiveSpan('os', inlineValues['os']!)}, '
+    'Hostname: ${renderLiveSpan('host', inlineValues['host']!)}',
   );
   buf.writeln(
-    '- **Trials**: ${_liveSpan('trial_count', inlineValues['trial_count']!)} '
+    '- **Trials**: ${renderLiveSpan('trial_count', inlineValues['trial_count']!)} '
     '(reporting `$metric` latency)\n',
   );
 }
@@ -1235,8 +1240,8 @@ void _writeTargetSection(
     if (hasFourTiers) {
       final flagged = inlineValues['$tableId-unstable'] as int? ?? 0;
       if (flagged > 0) {
-        final fSpan = _liveSpan('$tableId-unstable', flagged);
-        final dSpan = _liveSpan(
+        final fSpan = renderLiveSpan('$tableId-unstable', flagged);
+        final dSpan = renderLiveSpan(
           '$tableId-datasets',
           inlineValues['$tableId-datasets']!,
         );
@@ -1283,10 +1288,10 @@ _evaluateFourTierDatasetRow(
       _formatNullableTime(t1),
       _formatNullableTime(t2),
       '**${_formatNullableTime(t3)}**',
-      _formatGatedSpeedup(t0, t1, u0 || u1),
-      _formatGatedSpeedup(t0, t2, u0 || u2),
-      _formatGatedSpeedup(t0, t3, u0 || u3),
-      _formatGatedSpeedup(t1, t3, u1 || u3),
+      formatSpeedupRatio(t0, t1, unstable: u0 || u1),
+      formatSpeedupRatio(t0, t2, unstable: u0 || u2),
+      formatSpeedupRatio(t0, t3, unstable: u0 || u3),
+      formatSpeedupRatio(t1, t3, unstable: u1 || u3),
     ],
     isFlagged: u0 || u1 || u2 || u3,
     t1VsT0: (t0 != null && t1 != null) ? t0 / t1 : null,
@@ -1357,7 +1362,7 @@ List<List<String>> _buildTwoTierModeRows(
         '**${datasetNames[ds]}**',
         _formatTime(jsVal),
         '**${_formatTime(codableVal)}**',
-        _formatSpeedup(jsVal, codableVal),
+        formatSpeedupRatio(jsVal, codableVal),
       ]
     else
       ['**${datasetNames[ds]}**', 'N/A', 'N/A', 'N/A'],
@@ -1485,24 +1490,8 @@ String _formatTime(double us) {
   return '${(us / 1000).toStringAsFixed(2)} ms';
 }
 
-String _formatNullableSpeedup(double? baseUs, double? candUs) =>
-    (baseUs == null || candUs == null) ? 'N/A' : _formatSpeedup(baseUs, candUs);
-
-/// Like [_formatNullableSpeedup], but appends a warning glyph when either
-/// operand came from samples the harness flagged as not robustly stable.
-String _formatGatedSpeedup(double? baseUs, double? candUs, bool unstable) {
-  final formatted = _formatNullableSpeedup(baseUs, candUs);
-  if (formatted == 'N/A' || !unstable) return formatted;
-  return '$formatted ⚠️';
-}
-
-String _formatSpeedup(double baseUs, double candUs) {
-  final ratio = baseUs / candUs;
-  return '**${ratio.toStringAsFixed(2)}x**';
-}
-
 String _formatRatioGeoMean(List<double> ratios) =>
-    ratios.isEmpty ? 'N/A' : '**${_geomean(ratios).toStringAsFixed(2)}x**';
+    ratios.isEmpty ? 'N/A' : formatSpeedupRatio(_geomean(ratios), 1);
 
 /// Refuses to emit a report when the SDK that produced the measurements
 /// disagrees with the SDK stamped into the results.
