@@ -1,0 +1,27 @@
+name: Fuzz
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Run daily at 06:00 UTC for continuous regression fuzzing
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      max_total_time:
+        description: 'Fuzzing duration per target in seconds'
+        required: false
+        default: '60'
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    uses: kevmoo/fuzz.dart/.github/workflows/fuzz.yaml@main
+    with:
+      package-root: pkgs/codable
+      target: test/fuzz/json_utf8_fuzz.dart
+      mode: cgf
+      max-total-time: ${{ inputs.max_total_time && fromJSON(inputs.max_total_time) || (github.event_name == 'schedule' && 300 || 30) }}
