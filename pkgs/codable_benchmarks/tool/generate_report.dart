@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:args/args.dart';
+import 'package:md_live/md_live.dart';
 import 'package:path/path.dart' as p;
 
 const List<String> canonicalTargets = ['aot', 'js', 'wasm'];
@@ -119,19 +120,21 @@ void main(List<String> args) {
         : null,
   );
 
-  final report = generateMarkdownReport(
-    results,
-    jsonRoot,
-    metricFlag,
+  final reportPath = argResults.wasParsed('output-report')
+      ? argResults.option('output-report')!
+      : (streaming ? 'STREAMING_BENCHMARK_REPORT.md' : 'BENCHMARK_REPORT.md');
+  final reportFile = File(reportPath);
+  final report = _renderOrProjectReportFile(
+    reportFile: reportFile,
+    inputFile: inputFile,
+    results: results,
+    jsonRoot: jsonRoot,
+    metric: metricFlag,
     benchmarksList: benchmarksList,
     streaming: streaming,
   );
   print(report);
 
-  final reportPath = argResults.wasParsed('output-report')
-      ? argResults.option('output-report')!
-      : (streaming ? 'STREAMING_BENCHMARK_REPORT.md' : 'BENCHMARK_REPORT.md');
-  final reportFile = File(reportPath);
   reportFile.writeAsStringSync(report);
   print('💾 Markdown report saved to ${reportFile.path}');
 
@@ -418,36 +421,199 @@ List<String> _resolveActiveDatasets(
   return found.isEmpty ? const ['coordinates', 'canada'] : found;
 }
 
-String generateMarkdownReport(
+String _renderOrProjectReportFile({
+  required File reportFile,
+  required File inputFile,
+  required Map<String, Map<String, Map<String, double>>> results,
+  required dynamic jsonRoot,
+  required String metric,
+  required List<dynamic> benchmarksList,
+  required bool streaming,
+}) {
+  final srcFilePath = p.relative(inputFile.path, from: reportFile.parent.path);
+  if (reportFile.existsSync()) {
+    final existingMd = reportFile.readAsStringSync();
+    final namespaces = extractSentinelNamespaces(existingMd);
+    if (namespaces.isNotEmpty) {
+      final (:customTableRows, :inlineValues) = buildReportMdLiveProjection(
+        results,
+        jsonRoot,
+        metric,
+        benchmarksList: benchmarksList,
+        streaming: streaming,
+      );
+      final jsonByPath = jsonRoot is Map<String, dynamic>
+          ? <String, Map<String, dynamic>>{srcFilePath: jsonRoot}
+          : const <String, Map<String, dynamic>>{};
+      return projectSentinelMarkdown(
+        existingMd,
+        namespace: namespaces.first,
+        jsonByPath: jsonByPath,
+        customTableRows: customTableRows,
+        inlineValues: inlineValues,
+      );
+    }
+  }
+  return generateMarkdownReport(
+    results,
+    jsonRoot,
+    metric,
+    benchmarksList: benchmarksList,
+    streaming: streaming,
+    srcFilePath: srcFilePath,
+  );
+}
+
+List<Map<String, dynamic>> _filterActiveBenchmarks(
+  List<dynamic> benchmarksList, {
+  required bool streaming,
+}) => [
+  for (final raw in benchmarksList)
+    if (raw is Map<String, dynamic> &&
+        ((raw['coordinates'] as Map<String, dynamic>?)?['group'] as String? ??
+                    '')
+                .endsWith('_stream') ==
+            streaming)
+      raw,
+];
+
+/// Computes `customTableRows` and `inlineValues` for either
+/// `BENCHMARK_REPORT.md` (`streaming: false`) or
+/// `STREAMING_BENCHMARK_REPORT.md` (`streaming: true`).
+({
+  Map<String, List<List<String>>> customTableRows,
+  Map<String, Object> inlineValues,
+})
+buildReportMdLiveProjection(
   Map<String, Map<String, Map<String, double>>> results,
   dynamic jsonRoot,
   String metric, {
   List<dynamic> benchmarksList = const [],
   bool streaming = false,
 }) {
-  final buf = StringBuffer();
   final hasFourTiers = _hasFourTierData(results, streaming: streaming);
   final activeDatasets = _resolveActiveDatasets(results, streaming: streaming);
+  final (decodeMode, encodeMode, prefix, inlinePrefix) = streaming
+      ? ('decode_stream', 'encode_stream', 'stream-', 'stream_')
+      : ('decode', 'encode', '', '');
+  final activeBenchmarks = _filterActiveBenchmarks(
+    benchmarksList,
+    streaming: streaming,
+  );
+  final unstable = collectUnstableCells(activeBenchmarks);
+
+  final customTableRows = <String, List<List<String>>>{
+    '${prefix}runtime-summary': hasFourTiers
+        ? _buildFourTierSummaryRows(
+            results,
+            decodeMode: decodeMode,
+            encodeMode: encodeMode,
+            datasets: activeDatasets,
+          )
+        : _buildTwoTierSummaryRows(
+            results,
+            decodeMode: decodeMode,
+            encodeMode: encodeMode,
+            datasets: activeDatasets,
+          ),
+    '${prefix}decode-control': _buildControlRows(
+      extractControlRatios(benchmarksList, metric, mode: decodeMode),
+    ),
+    '${prefix}encode-control': _buildControlRows(
+      extractControlRatios(
+        benchmarksList,
+        metric,
+        mode: encodeMode,
+        candidate: _encodeControlCandidate,
+      ),
+    ),
+  };
+
+  final inlineValues = _extractProvenanceInlineValues(jsonRoot);
+  final totalCells = activeBenchmarks.length;
+  final pct = (unstable.length / max(1, totalCells) * 100).toStringAsFixed(0);
+  inlineValues['${inlinePrefix}unstable_cells'] = unstable.length;
+  inlineValues['${inlinePrefix}total_cells'] = totalCells;
+  inlineValues['${inlinePrefix}unstable_pct'] = '$pct%';
+
+  for (final target in canonicalTargets) {
+    for (final mode in [decodeMode, encodeMode]) {
+      final tableId = '$target-${mode.replaceAll('_', '-')}';
+      if (hasFourTiers) {
+        final (:rows, :flagged) = _buildFourTierModeTableData(
+          target,
+          mode,
+          results,
+          unstable,
+          datasets: activeDatasets,
+        );
+        customTableRows[tableId] = rows;
+        inlineValues['$tableId-unstable'] = flagged;
+        inlineValues['$tableId-datasets'] = activeDatasets.length;
+      } else {
+        customTableRows[tableId] = _buildTwoTierModeRows(
+          target,
+          mode,
+          results,
+          datasets: activeDatasets,
+        );
+      }
+    }
+  }
+
+  if (streaming) {
+    final streamVsMono = _buildStreamingVsMonolithicRows(
+      results,
+      activeDatasets,
+    );
+    if (streamVsMono.isNotEmpty) {
+      customTableRows['stream-vs-mono'] = streamVsMono;
+    }
+  }
+
+  return (customTableRows: customTableRows, inlineValues: inlineValues);
+}
+
+Map<String, Object> _extractProvenanceInlineValues(dynamic jsonRoot) {
+  if (jsonRoot is! Map<String, dynamic>) return <String, Object>{};
+  final env = jsonRoot['environment'] as Map<String, dynamic>?;
+  return <String, Object>{
+    'timestamp': jsonRoot['timestamp'] as String? ?? 'unknown',
+    'dart_version': env?['dart_version'] as String? ?? 'unknown',
+    'stock_dart_version': env?['stock_dart_version'] as String? ?? 'unknown',
+    'commit': env?['commit'] as String? ?? 'unknown',
+    'host': env?['host'] as String? ?? 'unknown',
+    'os': env?['os'] as String? ?? 'unknown',
+    'trial_count': _extractTrialCount(jsonRoot['benchmarks']),
+  };
+}
+
+String generateMarkdownReport(
+  Map<String, Map<String, Map<String, double>>> results,
+  dynamic jsonRoot,
+  String metric, {
+  List<dynamic> benchmarksList = const [],
+  bool streaming = false,
+  String srcFilePath = 'benchmark_results.json',
+}) {
+  final buf = StringBuffer();
+  final namespace = streaming ? 'bench-stream' : 'bench';
+  final src = '$srcFilePath#benchmarks';
+  final hasFourTiers = _hasFourTierData(results, streaming: streaming);
   final decodeMode = streaming ? 'decode_stream' : 'decode';
   final encodeMode = streaming ? 'encode_stream' : 'encode';
-  final activeBenchmarksList = benchmarksList.where((raw) {
-    if (raw is! Map<String, dynamic>) return false;
-    final coords = raw['coordinates'] as Map<String, dynamic>?;
-    final group = coords?['group'] as String? ?? '';
-    return group.endsWith('_stream') == streaming;
-  }).toList();
-  final unstable = collectUnstableCells(activeBenchmarksList);
-  final controlRatios = extractControlRatios(
+  final activeBenchmarks = _filterActiveBenchmarks(
     benchmarksList,
-    metric,
-    mode: decodeMode,
+    streaming: streaming,
   );
-  final encodeControlRatios = extractControlRatios(
-    benchmarksList,
+  final (:customTableRows, :inlineValues) = buildReportMdLiveProjection(
+    results,
+    jsonRoot,
     metric,
-    mode: encodeMode,
-    candidate: _encodeControlCandidate,
+    benchmarksList: benchmarksList,
+    streaming: streaming,
   );
+  final prefix = streaming ? 'stream-' : '';
 
   if (streaming) {
     buf.writeln(
@@ -456,33 +622,47 @@ String generateMarkdownReport(
     );
   }
 
-  _writeProvenanceSection(buf, jsonRoot, metric, hasFourTiers);
+  _writeProvenanceSection(buf, jsonRoot, metric, hasFourTiers, inlineValues);
   if (hasFourTiers) {
     _writeFourTierLegendSection(buf, streaming: streaming);
-    _writeFourTierRuntimeSummary(
+    buf.writeln(
+      '### 📊 3-Runtime Summary '
+      '(4-Tier Relative Efficiency & GeoMean Speedups)\n',
+    );
+    _writeSentinelTable(
       buf,
-      results,
-      decodeMode: decodeMode,
-      encodeMode: encodeMode,
-      datasets: activeDatasets,
+      namespace: namespace,
+      sentinelId: '${prefix}runtime-summary',
+      src: src,
+      headers: _fourTierSummaryHeaders,
+      alignments: _fourTierSummaryAlignments,
+      rows: customTableRows['${prefix}runtime-summary']!,
     );
   } else {
-    _writeTwoTierRuntimeSummary(
+    buf.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)\n');
+    _writeSentinelTable(
       buf,
-      results,
-      decodeMode: decodeMode,
-      encodeMode: encodeMode,
-      datasets: activeDatasets,
+      namespace: namespace,
+      sentinelId: '${prefix}runtime-summary',
+      src: src,
+      headers: _twoTierSummaryHeaders,
+      alignments: _twoTierSummaryAlignments,
+      rows: customTableRows['${prefix}runtime-summary']!,
     );
   }
+  buf
+    ..writeln(_efficiencyIndexCallout())
+    ..writeln('${'-' * 72}\n');
 
-  if (activeBenchmarksList.isNotEmpty) {
+  if (activeBenchmarks.isNotEmpty) {
     _writeControlAndStabilitySection(
       buf,
-      controlRatios,
-      encodeControlRatios,
-      unstable,
-      activeBenchmarksList.length,
+      namespace: namespace,
+      src: src,
+      prefix: prefix,
+      inlinePrefix: streaming ? 'stream_' : '',
+      customTableRows: customTableRows,
+      inlineValues: inlineValues,
     );
   }
 
@@ -490,38 +670,95 @@ String generateMarkdownReport(
     _writeTargetSection(
       buf,
       target,
-      results,
+      namespace: namespace,
+      src: src,
       hasFourTiers: hasFourTiers,
-      unstable: unstable,
       decodeMode: decodeMode,
       encodeMode: encodeMode,
-      datasets: activeDatasets,
+      customTableRows: customTableRows,
+      inlineValues: inlineValues,
     );
   }
 
-  if (streaming) {
-    _writeStreamingVsMonolithicSection(buf, results, activeDatasets);
+  if (streaming && customTableRows.containsKey('stream-vs-mono')) {
+    _writeStreamingVsMonolithicSection(
+      buf,
+      namespace: namespace,
+      src: src,
+      rows: customTableRows['stream-vs-mono']!,
+    );
   }
 
   buf.writeln(_methodologyFooter(metric));
   return buf.toString();
 }
 
+void _writeSentinelTable(
+  StringBuffer buf, {
+  required String namespace,
+  required String sentinelId,
+  required String src,
+  required List<String> headers,
+  required List<String> alignments,
+  required List<List<String>> rows,
+}) {
+  final table = renderGuardedMarkdownTable(
+    headers: headers,
+    alignments: alignments,
+    rows: rows,
+  );
+  buf
+    ..writeln('<!-- $namespace:$sentinelId:start src="$src" -->\n')
+    ..writeln(table)
+    ..writeln('\n<!-- $namespace:$sentinelId:end -->\n');
+}
+
+String _liveSpan(String key, Object value) =>
+    '<span data-live="$key">$value</span>';
+
+const List<String> _controlTableAlignments = [':---', ':---:', ':---'];
+
 void _writeControlAndStabilitySection(
-  StringBuffer buf,
-  Map<String, List<double>> controlRatios,
-  Map<String, List<double>> encodeControlRatios,
-  Set<String> unstable,
-  int totalCells,
-) {
+  StringBuffer buf, {
+  required String namespace,
+  required String src,
+  required String prefix,
+  required String inlinePrefix,
+  required Map<String, List<List<String>>> customTableRows,
+  required Map<String, Object> inlineValues,
+}) {
   buf.writeln('### 🎛️ Measurement Controls & Resolution Floor\n');
   buf.writeln(
     'These diagnostics bound how much of the tables above is signal. '
     'Read them before crediting any ratio.\n',
   );
 
-  _writeControlTable(buf, 'Decode', controlRatios);
-  _writeControlTable(buf, 'Encode', encodeControlRatios);
+  _writeSentinelTable(
+    buf,
+    namespace: namespace,
+    sentinelId: '${prefix}decode-control',
+    src: src,
+    headers: const [
+      'Target Runtime',
+      'Decode Control Drift (Tier 1 / Tier 0)',
+      'Per-Dataset Control Ratios',
+    ],
+    alignments: _controlTableAlignments,
+    rows: customTableRows['${prefix}decode-control']!,
+  );
+  _writeSentinelTable(
+    buf,
+    namespace: namespace,
+    sentinelId: '${prefix}encode-control',
+    src: src,
+    headers: const [
+      'Target Runtime',
+      'Encode Control Drift (Tier 1 / Tier 0)',
+      'Per-Dataset Control Ratios',
+    ],
+    alignments: _controlTableAlignments,
+    rows: customTableRows['${prefix}encode-control']!,
+  );
 
   buf.writeln(
     '> **Decode control**: `$_controlCandidate` calls `jsonDecode(String)` '
@@ -569,11 +806,20 @@ void _writeControlAndStabilitySection(
     'Do not discount same-pass figures on control-drift grounds.',
   );
 
-  if (unstable.isNotEmpty) {
-    final pct = (unstable.length / totalCells * 100).toStringAsFixed(0);
+  final unstableCount = inlineValues['${inlinePrefix}unstable_cells'] as int;
+  if (unstableCount > 0) {
+    final uSpan = _liveSpan('${inlinePrefix}unstable_cells', unstableCount);
+    final tSpan = _liveSpan(
+      '${inlinePrefix}total_cells',
+      inlineValues['${inlinePrefix}total_cells']!,
+    );
+    final pSpan = _liveSpan(
+      '${inlinePrefix}unstable_pct',
+      inlineValues['${inlinePrefix}unstable_pct']!,
+    );
     buf.writeln(
-      '>\n> **Sample stability**: ${unstable.length} of $totalCells measured '
-      'cells ($pct%) are flagged `is_robust_stable: false` by the harness. '
+      '>\n> **Sample stability**: $uSpan of $tSpan measured '
+      'cells ($pSpan) are flagged `is_robust_stable: false` by the harness. '
       'Ratios involving them are marked ⚠️ in the breakdowns below and must '
       'not be quoted as measurements.',
     );
@@ -581,52 +827,32 @@ void _writeControlAndStabilitySection(
   buf.writeln();
 }
 
-/// Emits one control table: a row per canonical target, with the geomean
-/// control drift and the per-dataset ratios behind it.
-///
-/// [label] is `Decode` or `Encode`. Targets with no control data render as
-/// `N/A` rather than being dropped, so a missing control is visible in the
-/// report instead of silently absent.
-void _writeControlTable(
-  StringBuffer buf,
-  String label,
-  Map<String, List<double>> ratios,
-) {
-  buf.writeln(
-    '| Target Runtime | $label Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |',
-  );
-  buf.writeln('| :--- | :---: | :--- |');
-  for (final target in canonicalTargets) {
-    final targetRatios = ratios[target];
-    if (targetRatios == null || targetRatios.isEmpty) {
-      buf.writeln('| **${target.toUpperCase()}** | N/A | N/A |');
-      continue;
-    }
-    final per = targetRatios.map((r) => r.toStringAsFixed(3)).join(', ');
-    buf.writeln(
-      '| **${target.toUpperCase()}** | '
-      '**${_geomean(targetRatios).toStringAsFixed(3)}x** | `[$per]` |',
-    );
-  }
-  buf.writeln();
-}
+List<List<String>> _buildControlRows(Map<String, List<double>> ratios) => [
+  for (final target in canonicalTargets)
+    if (ratios[target] case final targetRatios? when targetRatios.isNotEmpty)
+      [
+        '**${target.toUpperCase()}**',
+        '**${_geomean(targetRatios).toStringAsFixed(3)}x**',
+        '`[${targetRatios.map((r) => r.toStringAsFixed(3)).join(', ')}]`',
+      ]
+    else
+      ['**${target.toUpperCase()}**', 'N/A', 'N/A'],
+];
 
 void _writeProvenanceSection(
   StringBuffer buf,
   dynamic jsonRoot,
   String metric,
   bool hasFourTiers,
+  Map<String, Object> inlineValues,
 ) {
   buf.writeln('### 📝 Provenance\n');
   if (jsonRoot is! Map<String, dynamic>) return;
 
+  final dartVersion = inlineValues['dart_version'] as String;
+  final commit = inlineValues['commit'] as String;
   final env = jsonRoot['environment'] as Map<String, dynamic>?;
-  final timestamp = jsonRoot['timestamp'] as String? ?? 'unknown';
-  final dartVersion = env?['dart_version'] as String? ?? 'unknown';
   final stockDartVersion = env?['stock_dart_version'] as String?;
-  final commit = env?['commit'] as String? ?? 'unknown';
-  final host = env?['host'] as String? ?? 'unknown';
-  final os = env?['os'] as String? ?? 'unknown';
 
   if (dartVersion == 'unknown' || commit == 'unknown') {
     stderr.writeln(
@@ -635,18 +861,31 @@ void _writeProvenanceSection(
     );
   }
 
-  final trialCount = _extractTrialCount(jsonRoot['benchmarks']);
-
-  buf.writeln('- **Run Timestamp**: $timestamp');
+  buf.writeln(
+    '- **Run Timestamp**: '
+    '${_liveSpan('timestamp', inlineValues['timestamp']!)}',
+  );
   if (hasFourTiers && stockDartVersion != null) {
-    buf.writeln('- **Stock Dart SDK (Tier 0 & Tier 2)**: $stockDartVersion');
-    buf.writeln('- **New Dart SDK (Tier 1 & Tier 3)**: $dartVersion');
+    buf.writeln(
+      '- **Stock Dart SDK (Tier 0 & Tier 2)**: '
+      '${_liveSpan('stock_dart_version', stockDartVersion)}',
+    );
+    buf.writeln(
+      '- **New Dart SDK (Tier 1 & Tier 3)**: '
+      '${_liveSpan('dart_version', dartVersion)}',
+    );
   } else {
-    buf.writeln('- **SDK Version**: $dartVersion');
+    buf.writeln('- **SDK Version**: ${_liveSpan('dart_version', dartVersion)}');
   }
-  buf.writeln('- **Repo Commit**: $commit');
-  buf.writeln('- **Host OS**: $os, Hostname: $host');
-  buf.writeln('- **Trials**: $trialCount (reporting `$metric` latency)\n');
+  buf.writeln('- **Repo Commit**: ${_liveSpan('commit', commit)}');
+  buf.writeln(
+    '- **Host OS**: ${_liveSpan('os', inlineValues['os']!)}, '
+    'Hostname: ${_liveSpan('host', inlineValues['host']!)}',
+  );
+  buf.writeln(
+    '- **Trials**: ${_liveSpan('trial_count', inlineValues['trial_count']!)} '
+    '(reporting `$metric` latency)\n',
+  );
 }
 
 int _extractTrialCount(dynamic benchmarks) {
@@ -701,26 +940,30 @@ void _writeFourTierLegendSection(StringBuffer buf, {bool streaming = false}) {
   );
 }
 
-void _writeFourTierRuntimeSummary(
-  StringBuffer buf,
+const List<String> _fourTierSummaryHeaders = [
+  'Target Runtime',
+  'Tier / Configuration',
+  '📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ]',
+  '📥 Decode GeoMean<br/>(vs Tier 0 / vs Tier 1)',
+  '📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ]',
+  '📤 Encode GeoMean<br/>(vs Tier 0 / vs Tier 1)',
+];
+
+const List<String> _fourTierSummaryAlignments = [
+  ':---',
+  ':---',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+];
+
+List<List<String>> _buildFourTierSummaryRows(
   Map<String, Map<String, Map<String, double>>> results, {
   String decodeMode = 'decode',
   String encodeMode = 'encode',
   List<String> datasets = canonicalDatasets,
 }) {
-  buf.writeln(
-    '### 📊 3-Runtime Summary '
-    '(4-Tier Relative Efficiency & GeoMean Speedups)\n',
-  );
-  buf.writeln(
-    '| Target Runtime | Tier / Configuration | '
-    '📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | '
-    '📥 Decode GeoMean<br/>(vs Tier 0 / vs Tier 1) | '
-    '📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] | '
-    '📤 Encode GeoMean<br/>(vs Tier 0 / vs Tier 1) |',
-  );
-  buf.writeln('| :--- | :--- | :---: | :---: | :---: | :---: |');
-
   const tierSpecs = [
     (
       key: 'stock_json_serializable',
@@ -730,93 +973,69 @@ void _writeFourTierRuntimeSummary(
     (key: 'stock_codable', label: '**Tier 2: `Stock + Codable [Mock]`**'),
     (key: 'codable', label: '**Tier 3: `New + Codable [Native]`**'),
   ];
-
+  final rows = <List<String>>[];
   for (final target in canonicalTargets) {
+    final targetLabel = _formatTargetLabel(target);
     for (final tier in tierSpecs) {
-      _writeFourTierSummaryRow(
-        buf,
-        target,
-        tier.key,
-        tier.label,
+      final decEff = _computeEfficiencyScores(
         results,
-        decodeMode: decodeMode,
-        encodeMode: encodeMode,
+        target,
+        decodeMode,
+        tier.key,
         datasets: datasets,
       );
+      final encEff = _computeEfficiencyScores(
+        results,
+        target,
+        encodeMode,
+        tier.key,
+        datasets: datasets,
+      );
+      final decVsT0 = _computeModeSpeedupGeoMean(
+        results,
+        target,
+        decodeMode,
+        'stock_json_serializable',
+        tier.key,
+        datasets: datasets,
+      );
+      final decVsT1 = _computeModeSpeedupGeoMean(
+        results,
+        target,
+        decodeMode,
+        'json_serializable',
+        tier.key,
+        datasets: datasets,
+      );
+      final encVsT0 = _computeModeSpeedupGeoMean(
+        results,
+        target,
+        encodeMode,
+        'stock_json_serializable',
+        tier.key,
+        datasets: datasets,
+      );
+      final encVsT1 = _computeModeSpeedupGeoMean(
+        results,
+        target,
+        encodeMode,
+        'json_serializable',
+        tier.key,
+        datasets: datasets,
+      );
+      rows.add([
+        targetLabel,
+        tier.label,
+        _formatEfficiencyTriplet(decEff),
+        '**${decVsT0.toStringAsFixed(2)}x** / '
+            '**${decVsT1.toStringAsFixed(2)}x**',
+        _formatEfficiencyTriplet(encEff),
+        '**${encVsT0.toStringAsFixed(2)}x** / '
+            '**${encVsT1.toStringAsFixed(2)}x**',
+      ]);
     }
   }
-
-  buf
-    ..writeln()
-    ..writeln(_efficiencyIndexCallout())
-    ..writeln('${'-' * 72}\n');
-}
-
-void _writeFourTierSummaryRow(
-  StringBuffer buf,
-  String target,
-  String tierKey,
-  String tierLabel,
-  Map<String, Map<String, Map<String, double>>> results, {
-  required String decodeMode,
-  required String encodeMode,
-  required List<String> datasets,
-}) {
-  final decEff = _computeEfficiencyScores(
-    results,
-    target,
-    decodeMode,
-    tierKey,
-    datasets: datasets,
-  );
-  final encEff = _computeEfficiencyScores(
-    results,
-    target,
-    encodeMode,
-    tierKey,
-    datasets: datasets,
-  );
-  final decVsT0 = _computeModeSpeedupGeoMean(
-    results,
-    target,
-    decodeMode,
-    'stock_json_serializable',
-    tierKey,
-    datasets: datasets,
-  );
-  final decVsT1 = _computeModeSpeedupGeoMean(
-    results,
-    target,
-    decodeMode,
-    'json_serializable',
-    tierKey,
-    datasets: datasets,
-  );
-  final encVsT0 = _computeModeSpeedupGeoMean(
-    results,
-    target,
-    encodeMode,
-    'stock_json_serializable',
-    tierKey,
-    datasets: datasets,
-  );
-  final encVsT1 = _computeModeSpeedupGeoMean(
-    results,
-    target,
-    encodeMode,
-    'json_serializable',
-    tierKey,
-    datasets: datasets,
-  );
-
-  final targetLabel = _formatTargetLabel(target);
-  buf.writeln(
-    '| $targetLabel | $tierLabel | '
-    '${_formatEfficiencyTriplet(decEff)} | '
-    '**${decVsT0.toStringAsFixed(2)}x** / **${decVsT1.toStringAsFixed(2)}x** | '
-    '${_formatEfficiencyTriplet(encEff)} | '
-    '**${encVsT0.toStringAsFixed(2)}x** / **${encVsT1.toStringAsFixed(2)}x** |',
-  );
+  return rows;
 }
 
 List<double> _computeEfficiencyScores(
@@ -868,46 +1087,50 @@ double _computeModeSpeedupGeoMean(
   return _geomean(ratios);
 }
 
-void _writeTwoTierRuntimeSummary(
-  StringBuffer buf,
+const List<String> _twoTierSummaryHeaders = [
+  'Target Runtime',
+  'Dart Configuration',
+  '📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ]',
+  '📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ]',
+];
+
+const List<String> _twoTierSummaryAlignments = [
+  ':---',
+  ':---',
+  ':---:',
+  ':---:',
+];
+
+List<List<String>> _buildTwoTierSummaryRows(
   Map<String, Map<String, Map<String, double>>> results, {
   String decodeMode = 'decode',
   String encodeMode = 'encode',
   List<String> datasets = canonicalDatasets,
-}) {
-  buf.writeln('### 📊 3-Runtime Summary (Relative Efficiency Index)\n');
-  buf.writeln(
-    '| Target Runtime | Dart Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] |',
-  );
-  buf.writeln('| :--- | :--- | :---: | :---: |');
-
-  for (final target in canonicalTargets) {
-    final decodeScores = _computeEfficiencyScores(
-      results,
-      target,
-      decodeMode,
-      'codable',
-      datasets: datasets,
-    );
-    final encodeScores = _computeEfficiencyScores(
-      results,
-      target,
-      encodeMode,
-      'codable',
-      datasets: datasets,
-    );
-    buf.writeln(
-      '| ${_formatTargetLabel(target)} | **`New Dart + Codable`** | '
-      '${_formatEfficiencyTriplet(decodeScores)} | '
-      '${_formatEfficiencyTriplet(encodeScores)} |',
-    );
-  }
-
-  buf
-    ..writeln()
-    ..writeln(_efficiencyIndexCallout())
-    ..writeln('${'-' * 72}\n');
-}
+}) => [
+  for (final target in canonicalTargets)
+    [
+      _formatTargetLabel(target),
+      '**`New Dart + Codable`**',
+      _formatEfficiencyTriplet(
+        _computeEfficiencyScores(
+          results,
+          target,
+          decodeMode,
+          'codable',
+          datasets: datasets,
+        ),
+      ),
+      _formatEfficiencyTriplet(
+        _computeEfficiencyScores(
+          results,
+          target,
+          encodeMode,
+          'codable',
+          datasets: datasets,
+        ),
+      ),
+    ],
+];
 
 String _formatTargetLabel(String target) => switch (target) {
   'aot' => '**AOT (`dart compile exe`)**',
@@ -943,15 +1166,49 @@ String _efficiencyIndexCallout() =>
     '🟢 `≥ 90` (Within 10% of peak) • 🟡 `70–89` (Good / moderate) • '
     '🔴 `< 70` (Significant performance gap).\n';
 
+const List<String> _fourTierModeHeaders = [
+  'Workload / Dataset',
+  'Tier 0: Stock + json_serial',
+  'Tier 1: New + json_serial',
+  'Tier 2: Stock + Codable [Mock]',
+  'Tier 3: New + Codable [Native]',
+  'Tier 1 vs Tier 0 (SDK + Substrate Build)',
+  'Tier 2 vs Tier 0 (Codable on Stock)',
+  'Speedup vs Tier 0 (Stock json_serial)',
+  'Speedup vs Tier 1 (New json_serial)',
+];
+
+const List<String> _fourTierModeAlignments = [
+  ':---',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+  ':---:',
+];
+
+const List<String> _twoTierModeHeaders = [
+  'Workload / Dataset',
+  'json_serializable',
+  'package:codable',
+  'Speedup vs json_serializable',
+];
+
+const List<String> _twoTierModeAlignments = [':---', ':---:', ':---:', ':---:'];
+
 void _writeTargetSection(
   StringBuffer buf,
-  String target,
-  Map<String, Map<String, Map<String, double>>> results, {
+  String target, {
+  required String namespace,
+  required String src,
   required bool hasFourTiers,
-  Set<String> unstable = const {},
-  String decodeMode = 'decode',
-  String encodeMode = 'encode',
-  List<String> datasets = canonicalDatasets,
+  required String decodeMode,
+  required String encodeMode,
+  required Map<String, List<List<String>>> customTableRows,
+  required Map<String, Object> inlineValues,
 }) {
   final upper = target.toUpperCase();
   buf.writeln('### 🎯 $upper Target Detailed Breakdown\n');
@@ -962,46 +1219,91 @@ void _writeTargetSection(
       'encode_stream' => 'Encode Stream (BytesBuilder / ByteConversionSink)',
       _ => '${mode[0].toUpperCase()}${mode.substring(1)}',
     };
+    final tableId = '$target-${mode.replaceAll('_', '-')}';
     buf.writeln('#### Detailed Breakdown: $upper $modeCap\n');
+    _writeSentinelTable(
+      buf,
+      namespace: namespace,
+      sentinelId: tableId,
+      src: src,
+      headers: hasFourTiers ? _fourTierModeHeaders : _twoTierModeHeaders,
+      alignments: hasFourTiers
+          ? _fourTierModeAlignments
+          : _twoTierModeAlignments,
+      rows: customTableRows[tableId]!,
+    );
     if (hasFourTiers) {
-      _writeFourTierModeTable(
-        buf,
-        target,
-        mode,
-        results,
-        unstable,
-        datasets: datasets,
-      );
-    } else {
-      _writeTwoTierModeTable(buf, target, mode, results, datasets: datasets);
+      final flagged = inlineValues['$tableId-unstable'] as int? ?? 0;
+      if (flagged > 0) {
+        final fSpan = _liveSpan('$tableId-unstable', flagged);
+        final dSpan = _liveSpan(
+          '$tableId-datasets',
+          inlineValues['$tableId-datasets']!,
+        );
+        buf.writeln(
+          '> ⚠️ $fSpan of $dSpan workloads in this table '
+          'draw on samples flagged `is_robust_stable: false`. The Geometric '
+          'Mean includes them and inherits their uncertainty.\n',
+        );
+      }
+      buf.writeln();
     }
   }
   buf.writeln('${'-' * 72}\n');
 }
 
-void _writeFourTierModeTable(
-  StringBuffer buf,
+({
+  List<String> row,
+  bool isFlagged,
+  double? t1VsT0,
+  double? t2VsT0,
+  double? t3VsT0,
+  double? t3VsT1,
+})
+_evaluateFourTierDatasetRow(
+  String target,
+  String groupKey,
+  String ds,
+  Map<String, double>? group,
+  Set<String> unstable,
+) {
+  final t0 = group?['stock_json_serializable'];
+  final t1 = group?['json_serializable'];
+  final t2 = group?['stock_codable'];
+  final t3 = group?['codable'];
+  final u0 = unstable.contains('$target|$groupKey|stock_json_serializable');
+  final u1 = unstable.contains('$target|$groupKey|json_serializable');
+  final u2 = unstable.contains('$target|$groupKey|stock_codable');
+  final u3 = unstable.contains('$target|$groupKey|codable');
+
+  return (
+    row: [
+      '**${datasetNames[ds]}**',
+      _formatNullableTime(t0),
+      _formatNullableTime(t1),
+      _formatNullableTime(t2),
+      '**${_formatNullableTime(t3)}**',
+      _formatGatedSpeedup(t0, t1, u0 || u1),
+      _formatGatedSpeedup(t0, t2, u0 || u2),
+      _formatGatedSpeedup(t0, t3, u0 || u3),
+      _formatGatedSpeedup(t1, t3, u1 || u3),
+    ],
+    isFlagged: u0 || u1 || u2 || u3,
+    t1VsT0: (t0 != null && t1 != null) ? t0 / t1 : null,
+    t2VsT0: (t0 != null && t2 != null) ? t0 / t2 : null,
+    t3VsT0: (t0 != null && t3 != null) ? t0 / t3 : null,
+    t3VsT1: (t1 != null && t3 != null) ? t1 / t3 : null,
+  );
+}
+
+({List<List<String>> rows, int flagged}) _buildFourTierModeTableData(
   String target,
   String mode,
   Map<String, Map<String, Map<String, double>>> results,
   Set<String> unstable, {
   List<String> datasets = canonicalDatasets,
 }) {
-  buf.writeln(
-    '| Workload / Dataset | '
-    'Tier 0: Stock + json_serial | '
-    'Tier 1: New + json_serial | '
-    'Tier 2: Stock + Codable [Mock] | '
-    'Tier 3: New + Codable [Native] | '
-    'Tier 1 vs Tier 0 (SDK + Substrate Build) | '
-    'Tier 2 vs Tier 0 (Codable on Stock) | '
-    'Speedup vs Tier 0 (Stock json_serial) | '
-    'Speedup vs Tier 1 (New json_serial) |',
-  );
-  buf.writeln(
-    '| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |',
-  );
-
+  final rows = <List<String>>[];
   final t1VsT0Ratios = <double>[];
   final t2VsT0Ratios = <double>[];
   final t3VsT0Ratios = <double>[];
@@ -1010,106 +1312,106 @@ void _writeFourTierModeTable(
 
   for (final ds in datasets) {
     final groupKey = '${ds}_$mode';
-    final group = results[target]?[groupKey];
-    final t0 = group?['stock_json_serializable'];
-    final t1 = group?['json_serializable'];
-    final t2 = group?['stock_codable'];
-    final t3 = group?['codable'];
-    final dsName = datasetNames[ds]!;
-
-    bool shaky(String candidateKey) =>
-        unstable.contains('$target|$groupKey|$candidateKey');
-
-    final u0 = shaky('stock_json_serializable');
-    final u1 = shaky('json_serializable');
-    final u2 = shaky('stock_codable');
-    final u3 = shaky('codable');
-    if (u0 || u1 || u2 || u3) flagged++;
-
-    if (t0 != null && t1 != null) t1VsT0Ratios.add(t0 / t1);
-    if (t0 != null && t2 != null) t2VsT0Ratios.add(t0 / t2);
-    if (t0 != null && t3 != null) t3VsT0Ratios.add(t0 / t3);
-    if (t1 != null && t3 != null) t3VsT1Ratios.add(t1 / t3);
-
-    buf.writeln(
-      '| **$dsName** | '
-      '${_formatNullableTime(t0)} | '
-      '${_formatNullableTime(t1)} | '
-      '${_formatNullableTime(t2)} | '
-      '**${_formatNullableTime(t3)}** | '
-      '${_formatGatedSpeedup(t0, t1, u0 || u1)} | '
-      '${_formatGatedSpeedup(t0, t2, u0 || u2)} | '
-      '${_formatGatedSpeedup(t0, t3, u0 || u3)} | '
-      '${_formatGatedSpeedup(t1, t3, u1 || u3)} |',
+    final eval = _evaluateFourTierDatasetRow(
+      target,
+      groupKey,
+      ds,
+      results[target]?[groupKey],
+      unstable,
     );
+    rows.add(eval.row);
+    if (eval.isFlagged) flagged++;
+    if (eval.t1VsT0 case final r?) t1VsT0Ratios.add(r);
+    if (eval.t2VsT0 case final r?) t2VsT0Ratios.add(r);
+    if (eval.t3VsT0 case final r?) t3VsT0Ratios.add(r);
+    if (eval.t3VsT1 case final r?) t3VsT1Ratios.add(r);
   }
 
-  buf.writeln(
-    '| **Geometric Mean** | — | — | — | — | '
-    '${_formatRatioGeoMean(t1VsT0Ratios)} | '
-    '${_formatRatioGeoMean(t2VsT0Ratios)} | '
-    '${_formatRatioGeoMean(t3VsT0Ratios)} | '
-    '${_formatRatioGeoMean(t3VsT1Ratios)} |',
-  );
-  buf.writeln();
-  if (flagged > 0) {
-    buf.writeln(
-      '> ⚠️ $flagged of ${datasets.length} workloads in this table '
-      'draw on samples flagged `is_robust_stable: false`. The Geometric Mean '
-      'includes them and inherits their uncertainty.\n',
-    );
-  }
-  buf.writeln();
+  rows.add([
+    '**Geometric Mean**',
+    '—',
+    '—',
+    '—',
+    '—',
+    _formatRatioGeoMean(t1VsT0Ratios),
+    _formatRatioGeoMean(t2VsT0Ratios),
+    _formatRatioGeoMean(t3VsT0Ratios),
+    _formatRatioGeoMean(t3VsT1Ratios),
+  ]);
+  return (rows: rows, flagged: flagged);
 }
 
-void _writeTwoTierModeTable(
-  StringBuffer buf,
+List<List<String>> _buildTwoTierModeRows(
   String target,
   String mode,
   Map<String, Map<String, Map<String, double>>> results, {
   List<String> datasets = canonicalDatasets,
-}) {
-  buf.writeln(
-    '| Workload / Dataset | json_serializable | package:codable | '
-    'Speedup vs json_serializable |',
-  );
-  buf.writeln('| :--- | :---: | :---: | :---: |');
+}) => [
+  for (final ds in datasets)
+    if ((
+          results[target]?['${ds}_$mode']?['json_serializable'],
+          results[target]?['${ds}_$mode']?['codable'],
+        )
+        case (final jsVal?, final codableVal?))
+      [
+        '**${datasetNames[ds]}**',
+        _formatTime(jsVal),
+        '**${_formatTime(codableVal)}**',
+        _formatSpeedup(jsVal, codableVal),
+      ]
+    else
+      ['**${datasetNames[ds]}**', 'N/A', 'N/A', 'N/A'],
+];
 
-  for (final ds in datasets) {
-    final b = '${ds}_$mode';
-    final jsVal = results[target]?[b]?['json_serializable'];
-    final codableVal = results[target]?[b]?['codable'];
-    final dsName = datasetNames[ds]!;
-
-    if (jsVal != null && codableVal != null) {
-      buf.writeln(
-        '| **$dsName** | ${_formatTime(jsVal)} | '
-        '**${_formatTime(codableVal)}** | '
-        '${_formatSpeedup(jsVal, codableVal)} |',
-      );
-    } else {
-      buf.writeln('| **$dsName** | N/A | N/A | N/A |');
-    }
-  }
-  buf.writeln();
+String _formatStreamVsMonoRatio(
+  Map<String, double> monoGroup,
+  Map<String, double> streamGroup,
+  String key,
+) {
+  final m = monoGroup[key];
+  final s = streamGroup[key];
+  if (m == null || s == null || m <= 0) return 'N/A';
+  return '`${(s / m).toStringAsFixed(2)}x` '
+      '(${_formatTime(s)} vs ${_formatTime(m)})';
 }
 
-void _writeStreamingVsMonolithicSection(
-  StringBuffer buf,
+List<List<String>> _buildStreamingVsMonolithicRows(
   Map<String, Map<String, Map<String, double>>> results,
   List<String> datasets,
 ) {
-  var hasMonolithic = false;
+  final rows = <List<String>>[];
   for (final target in canonicalTargets) {
-    for (final ds in datasets) {
-      if (results[target]?.containsKey('${ds}_decode') ?? false) {
-        hasMonolithic = true;
-        break;
+    final upper = target.toUpperCase();
+    for (final baseMode in ['decode', 'encode']) {
+      final modeLabel = baseMode == 'decode' ? '📥 Decode' : '📤 Encode';
+      for (final ds in datasets) {
+        final monoGroup = results[target]?['${ds}_$baseMode'];
+        final streamGroup = results[target]?['${ds}_${baseMode}_stream'];
+        if (monoGroup == null || streamGroup == null) continue;
+        rows.add([
+          '**$upper**',
+          '$modeLabel `${datasetNames[ds]}`',
+          _formatStreamVsMonoRatio(
+            monoGroup,
+            streamGroup,
+            'stock_json_serializable',
+          ),
+          _formatStreamVsMonoRatio(monoGroup, streamGroup, 'json_serializable'),
+          _formatStreamVsMonoRatio(monoGroup, streamGroup, 'stock_codable'),
+          '**${_formatStreamVsMonoRatio(monoGroup, streamGroup, 'codable')}**',
+        ]);
       }
     }
   }
-  if (!hasMonolithic) return;
+  return rows;
+}
 
+void _writeStreamingVsMonolithicSection(
+  StringBuffer buf, {
+  required String namespace,
+  required String src,
+  required List<List<String>> rows,
+}) {
   buf.writeln(
     '### 🔄 Streaming vs. Monolithic Single-Buffer Overhead '
     '(`Stream / Sink` vs. `Single Buffer`)\n',
@@ -1120,43 +1422,22 @@ void _writeStreamingVsMonolithicSection(
     '`1.00x` = zero streaming overhead, `< 1.00x` = streaming is faster than '
     'monolithic allocation).\n',
   );
-  buf.writeln(
-    '| Target | Mode & Dataset | '
-    'Tier 0 Ratio (Stream / Mono) | '
-    'Tier 1 Ratio (Stream / Mono) | '
-    'Tier 2 Ratio (Stream / Mono) | '
-    'Tier 3 Ratio (Stream / Mono) |',
+  _writeSentinelTable(
+    buf,
+    namespace: namespace,
+    sentinelId: 'stream-vs-mono',
+    src: src,
+    headers: const [
+      'Target',
+      'Mode & Dataset',
+      'Tier 0 Ratio (Stream / Mono)',
+      'Tier 1 Ratio (Stream / Mono)',
+      'Tier 2 Ratio (Stream / Mono)',
+      'Tier 3 Ratio (Stream / Mono)',
+    ],
+    alignments: const [':---', ':---', ':---:', ':---:', ':---:', ':---:'],
+    rows: rows,
   );
-  buf.writeln('| :--- | :--- | :---: | :---: | :---: | :---: |');
-
-  for (final target in canonicalTargets) {
-    final upper = target.toUpperCase();
-    for (final baseMode in ['decode', 'encode']) {
-      final streamMode = '${baseMode}_stream';
-      final modeLabel = baseMode == 'decode' ? '📥 Decode' : '📤 Encode';
-      for (final ds in datasets) {
-        final monoGroup = results[target]?['${ds}_$baseMode'];
-        final streamGroup = results[target]?['${ds}_$streamMode'];
-        if (monoGroup == null || streamGroup == null) continue;
-        String fmtRatio(String key) {
-          final m = monoGroup[key];
-          final s = streamGroup[key];
-          if (m == null || s == null || m <= 0) return 'N/A';
-          return '`${(s / m).toStringAsFixed(2)}x` '
-              '(${_formatTime(s)} vs ${_formatTime(m)})';
-        }
-
-        buf.writeln(
-          '| **$upper** | $modeLabel `${datasetNames[ds]}` | '
-          '${fmtRatio('stock_json_serializable')} | '
-          '${fmtRatio('json_serializable')} | '
-          '${fmtRatio('stock_codable')} | '
-          '**${fmtRatio('codable')}** |',
-        );
-      }
-    }
-  }
-  buf.writeln();
   buf.writeln('${'-' * 72}\n');
 }
 
