@@ -888,7 +888,8 @@ void _writeProvenanceSection(
     'Hostname: ${renderLiveSpan('host', inlineValues['host']!)}',
   );
   buf.writeln(
-    '- **Trials**: ${renderLiveSpan('trial_count', inlineValues['trial_count']!)} '
+    '- **Trials**: '
+    '${renderLiveSpan('trial_count', inlineValues['trial_count']!)} '
     '(reporting `$metric` latency)\n',
   );
 }
