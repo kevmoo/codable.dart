@@ -267,6 +267,7 @@ void main() {
           '| 1 | `_advanceProperty` | `package:codable/src/json/driver_js.dart:220` | 60 | 60.0% |',
         ),
       );
+      expect(table, isNot(contains('mdformat')));
     });
   });
 }

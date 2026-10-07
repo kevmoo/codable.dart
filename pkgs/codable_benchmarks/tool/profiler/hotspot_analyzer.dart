@@ -171,7 +171,6 @@ class HotspotAnalyzer {
     int totalSamples = 0,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln('<!-- mdformat off(prevent table wrapping) -->');
     buffer.writeln('| Rank | Function | Location | Samples | % CPU |');
     buffer.writeln('| :---: | :--- | :--- | :---: | :---: |');
     for (final h in hotFunctions) {
@@ -181,7 +180,6 @@ class HotspotAnalyzer {
         '| ${h.rank} | `${h.name}` | $loc | ${h.samples} | $pct% |',
       );
     }
-    buffer.writeln('<!-- mdformat on -->');
     return buffer.toString();
   }
 }
