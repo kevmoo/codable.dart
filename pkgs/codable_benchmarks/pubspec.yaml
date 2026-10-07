@@ -22,6 +22,10 @@ dev_dependencies:
   dart_flutter_team_lints: ^3.0.0
   http: ^1.1.0
   json_serializable: ^6.9.0
+  md_live:
+    git:
+      url: https://github.com/kevmoo/md_live.git
+      ref: 3821e210d0a3816aad23c3eb86029fb840f84ef1
   path: ^1.9.0
   shelf: ^1.4.0
   shelf_static: ^1.1.0

@@ -1,11 +1,11 @@
 ### 📝 Provenance
 
-- **Run Timestamp**: 2026-10-02T04:23:46.670Z
-- **Stock Dart SDK (Tier 0 & Tier 2)**: 3.14.0-271.0.dev (dev) (Fri Sep 25 05:03:10 2026 -0700) on "linux_x64"
-- **New Dart SDK (Tier 1 & Tier 3)**: 3.14.0-271.0.dev.json-next.b1e2a8de06b07a0f94b642773c585784a8e8a911 (dev) (Thu Oct 1 20:53:39 2026 -0700) on "linux_x64"
-- **Repo Commit**: 1927fe6d60f802d44798756449b2a8a56fe3f484
-- **Host OS**: linux, Hostname: bluefin
-- **Trials**: 15 (reporting `median` latency)
+- **Run Timestamp**: <span data-live="timestamp">2026-10-02T04:23:46.670Z</span>
+- **Stock Dart SDK (Tier 0 & Tier 2)**: <span data-live="stock_dart_version">3.14.0-271.0.dev (dev) (Fri Sep 25 05:03:10 2026 -0700) on "linux_x64"</span>
+- **New Dart SDK (Tier 1 & Tier 3)**: <span data-live="dart_version">3.14.0-271.0.dev.json-next.b1e2a8de06b07a0f94b642773c585784a8e8a911 (dev) (Thu Oct 1 20:53:39 2026 -0700) on "linux_x64"</span>
+- **Repo Commit**: <span data-live="commit">1927fe6d60f802d44798756449b2a8a56fe3f484</span>
+- **Host OS**: <span data-live="os">linux</span>, Hostname: <span data-live="host">bluefin</span>
+- **Trials**: <span data-live="trial_count">15</span> (reporting `median` latency)
 
 ### 🏛️ The 4 Dart Serialization Tiers
 
@@ -15,6 +15,8 @@
 - **Tier 3 (`New Dart + Codable [Native Substrate]`)**: Full end-to-end stack (`package:codable` + `dart:convert` Layer 1 native `JsonTokenReader` / `JsonUtf8TokenWriter` substrate).
 
 ### 📊 3-Runtime Summary (4-Tier Relative Efficiency & GeoMean Speedups)
+
+<!-- bench:runtime-summary:start src="benchmark_results.json#benchmarks" -->
 
 | Target Runtime | Tier / Configuration | 📥 Decode Efficiency<br/>[ Worst / GeoMean / Best ] | 📥 Decode GeoMean<br/>(vs Tier 0 / vs Tier 1) | 📤 Encode Efficiency<br/>[ Worst / GeoMean / Best ] | 📤 Encode GeoMean<br/>(vs Tier 0 / vs Tier 1) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
@@ -31,6 +33,8 @@
 | **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 2: `Stock + Codable [Mock]`** | 🟡 `[ 53 / 71 / 90 ]` | **1.13x** / **1.05x** | 🟢 `[ 74 / 93 / 100 ]` | **1.73x** / **1.02x** |
 | **WASM (`dart2wasm` / Node 24 / V8)** | **Tier 3: `New + Codable [Native]`** | 🟢 `[ 94 / 98 / 100 ]` | **1.57x** / **1.45x** | 🟢 `[ 74 / 94 / 100 ]` | **1.73x** / **1.02x** |
 
+<!-- bench:runtime-summary:end -->
+
 > **Scoring Metric**: **Relative Throughput Efficiency** (`100` = Peak Speed across all measured tiers). Calculated as `round((MinLatency / Latency) * 100)` per workload, aggregated across benchmarks using the **Geometric Mean** (Fleming & Wallace 1986).
 > - **`[ Worst / GeoMean / Best ]`**: Range from lowest score (worst workload) to the geometric mean and peak dataset score
 >   across the active canonical benchmarks.
@@ -42,17 +46,25 @@
 
 These diagnostics bound how much of the tables above is signal. Read them before crediting any ratio.
 
+<!-- bench:decode-control:start src="benchmark_results.json#benchmarks" -->
+
 | Target Runtime | Decode Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |
 | :--- | :---: | :--- |
 | **AOT** | **0.985x** | `[0.996, 0.976, 0.985, 0.960, 1.009]` |
 | **JS** | **1.001x** | `[1.003, 1.009, 1.012, 0.989, 0.992]` |
 | **WASM** | **1.020x** | `[1.014, 1.079, 0.985, 1.013, 1.013]` |
 
+<!-- bench:decode-control:end -->
+
+<!-- bench:encode-control:start src="benchmark_results.json#benchmarks" -->
+
 | Target Runtime | Encode Control Drift (Tier 1 / Tier 0) | Per-Dataset Control Ratios |
 | :--- | :---: | :--- |
 | **AOT** | **0.982x** | `[0.976, 0.971, 0.960, 1.000, 1.001]` |
 | **JS** | **1.031x** | `[1.363, 0.978, 1.029, 0.997, 0.853]` |
 | **WASM** | **0.981x** | `[0.994, 0.982, 1.003, 0.948, 0.980]` |
+
+<!-- bench:encode-control:end -->
 
 > **Decode control**: `json_serializable_literal` calls `jsonDecode(String)` plus `.fromJson()` hydration. On AOT and JS the fork alters only the UTF-8 *byte* parser (`_JsonUtf8Parser`), leaving this String path source-identical.
 >
@@ -64,11 +76,13 @@ These diagnostics bound how much of the tables above is signal. Read them before
 >
 > **Which comparisons the control actually bounds.** Tier 0 and Tier 2 run on the stock `dart` binary; Tier 1 and Tier 3 run on the fork binary. Two binaries cannot share a process, so per-build and per-process bias falls entirely on the **cross-pass** ratios — *Tier 1 vs Tier 0*, *Tier 3 vs Tier 0*, and any Tier 2 vs Tier 1/3 comparison. It **cancels** in the **same-pass** ratios: *Tier 3 vs Tier 1* (both fork) and *Tier 2 vs Tier 0* (both stock). Do not discount same-pass figures on control-drift grounds.
 >
-> **Sample stability**: 32 of 210 measured cells (15%) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
+> **Sample stability**: <span data-live="unstable_cells">32</span> of <span data-live="total_cells">210</span> measured cells (<span data-live="unstable_pct">15%</span>) are flagged `is_robust_stable: false` by the harness. Ratios involving them are marked ⚠️ in the breakdowns below and must not be quoted as measurements.
 
 ### 🎯 AOT Target Detailed Breakdown
 
 #### Detailed Breakdown: AOT Decode
+
+<!-- bench:aot-decode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -79,10 +93,14 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **twitter.json (0.62 MB)** | 1.54 ms | 1.54 ms | 2.05 ms | **1.59 ms** | **1.00x** | **0.75x** | **0.96x** | **0.96x** |
 | **Geometric Mean** | — | — | — | — | **1.07x** | **1.36x** | **1.73x** | **1.62x** |
 
-> ⚠️ 2 of 5 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
+<!-- bench:aot-decode:end -->
+
+> ⚠️ <span data-live="aot-decode-unstable">2</span> of <span data-live="aot-decode-datasets">5</span> workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: AOT Encode
+
+<!-- bench:aot-encode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -93,7 +111,9 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **twitter.json (0.62 MB)** | 2.99 ms | 1.65 ms | 883.6 µs | **887.2 µs** | **1.82x** ⚠️ | **3.38x** | **3.37x** | **1.86x** ⚠️ |
 | **Geometric Mean** | — | — | — | — | **1.88x** | **2.99x** | **3.07x** | **1.63x** |
 
-> ⚠️ 3 of 5 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
+<!-- bench:aot-encode:end -->
+
+> ⚠️ <span data-live="aot-encode-unstable">3</span> of <span data-live="aot-encode-datasets">5</span> workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 ------------------------------------------------------------------------
@@ -101,6 +121,8 @@ These diagnostics bound how much of the tables above is signal. Read them before
 ### 🎯 JS Target Detailed Breakdown
 
 #### Detailed Breakdown: JS Decode
+
+<!-- bench:js-decode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -111,10 +133,14 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **twitter.json (0.62 MB)** | 2.15 ms | 2.10 ms | 1.74 ms | **1.73 ms** | **1.02x** | **1.24x** | **1.24x** | **1.22x** |
 | **Geometric Mean** | — | — | — | — | **1.01x** | **1.70x** | **1.73x** | **1.71x** |
 
-> ⚠️ 2 of 5 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
+<!-- bench:js-decode:end -->
+
+> ⚠️ <span data-live="js-decode-unstable">2</span> of <span data-live="js-decode-datasets">5</span> workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: JS Encode
+
+<!-- bench:js-encode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -125,12 +151,16 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **twitter.json (0.62 MB)** | 3.03 ms | 1.81 ms | 1.74 ms | **1.72 ms** | **1.68x** | **1.74x** | **1.76x** | **1.05x** |
 | **Geometric Mean** | — | — | — | — | **1.41x** | **2.21x** | **2.20x** | **1.56x** |
 
+<!-- bench:js-encode:end -->
+
 
 ------------------------------------------------------------------------
 
 ### 🎯 WASM Target Detailed Breakdown
 
 #### Detailed Breakdown: WASM Decode
+
+<!-- bench:wasm-decode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -141,10 +171,14 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **twitter.json (0.62 MB)** | 1.79 ms | 1.73 ms | 2.16 ms | **1.80 ms** | **1.04x** | **0.83x** | **1.00x** | **0.96x** |
 | **Geometric Mean** | — | — | — | — | **1.08x** | **1.13x** | **1.57x** | **1.45x** |
 
-> ⚠️ 1 of 5 workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
+<!-- bench:wasm-decode:end -->
+
+> ⚠️ <span data-live="wasm-decode-unstable">1</span> of <span data-live="wasm-decode-datasets">5</span> workloads in this table draw on samples flagged `is_robust_stable: false`. The Geometric Mean includes them and inherits their uncertainty.
 
 
 #### Detailed Breakdown: WASM Encode
+
+<!-- bench:wasm-encode:start src="benchmark_results.json#benchmarks" -->
 
 | Workload / Dataset | Tier 0: Stock + json_serial | Tier 1: New + json_serial | Tier 2: Stock + Codable [Mock] | Tier 3: New + Codable [Native] | Tier 1 vs Tier 0 (SDK + Substrate Build) | Tier 2 vs Tier 0 (Codable on Stock) | Speedup vs Tier 0 (Stock json_serial) | Speedup vs Tier 1 (New json_serial) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -154,6 +188,8 @@ These diagnostics bound how much of the tables above is signal. Read them before
 | **small.json (0.55 KB)** | 2.8 µs | 1.8 µs | 1.7 µs | **1.7 µs** | **1.55x** | **1.63x** | **1.63x** | **1.05x** |
 | **twitter.json (0.62 MB)** | 2.98 ms | 1.92 ms | 1.90 ms | **1.90 ms** | **1.55x** | **1.57x** | **1.56x** | **1.01x** |
 | **Geometric Mean** | — | — | — | — | **1.70x** | **1.73x** | **1.73x** | **1.02x** |
+
+<!-- bench:wasm-encode:end -->
 
 
 ------------------------------------------------------------------------
