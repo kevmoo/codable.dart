@@ -1,4 +1,3 @@
-<!-- mdformat off(prevent table wrapping) -->
 # E2E Test Infra: `package:codable`
 
 ## Test Philosophy
@@ -60,7 +59,6 @@
 - Tier 3: Pairwise coverage of cross-feature interactions (e.g. custom decoder inside unkeyed array, aliased key in polymorphic subtype)
 - Tier 4: ≥5 realistic application-level scenarios
 - Total Target: ~260+ tests across the test suite
-<!-- mdformat on -->
 
 ## Benchmark Execution & Telemetry Protocol
 When running comparative performance benchmarks across engines/tiers, always persist structured JSON and markdown results to keep repository telemetry current:
