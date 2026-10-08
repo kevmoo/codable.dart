@@ -25,7 +25,7 @@ dev_dependencies:
   md_live:
     git:
       url: https://github.com/kevmoo/md_live.git
-      ref: e6a1a116a986cd52fa5a64a44122a7b103c536c8
+      ref: 4aa9fe3b1704008b162dd78ff910f0b4de249611
   path: ^1.9.0
   shelf: ^1.4.0
   shelf_static: ^1.1.0
