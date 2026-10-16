@@ -19,8 +19,9 @@ dev_dependencies:
 
 ## Usage
 
-Annotate your domain class with `@Codable()` and include a `part '<file>.g.dart';`
-directive. Your domain class stays completely free of serialization boilerplate:
+Annotate your domain class with `@Codable()` and include a
+`part '<file>.g.dart';` directive. Your domain class stays completely free of
+serialization boilerplate:
 
 ```dart
 import 'package:codable/codable_json.dart';

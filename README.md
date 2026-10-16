@@ -12,9 +12,14 @@ streaming drivers for Dart.
 ## Quick Links
 
 - **[User Guide & Architecture (`pkgs/codable/README.md`)](pkgs/codable/README.md)**:
-  1. [The General `Codable` Model](pkgs/codable/README.md#1-the-general-codable-model) (`Codable<T>` companion classes, `Decoder` / `Encoder` containers: `keyed`, `mapped`, `unkeyed`, `singleValue`, and VM/Wasm vs. Web JS routing)
-  2. [Using `JsonCodableDecoder` and `JsonCodableEncoder`](pkgs/codable/README.md#2-using-jsoncodabledecoder-and-jsoncodableencoder) (bytes, strings, chunked streams, and `@Codable()` annotations)
-  3. [Implementing Your Own `Codable`](pkgs/codable/README.md#3-implementing-your-own-codable) (manual `Codable<T>` / `Decodable<T>` / `Encodable<T>` companions, custom field converters, and polymorphic hierarchies)
+  1. [The General `Codable` Model](pkgs/codable/README.md#1-the-general-codable-model)
+     (`Codable<T>` companion classes, `Decoder` / `Encoder` containers: `keyed`,
+     `mapped`, `unkeyed`, `singleValue`, and VM/Wasm vs. Web JS routing)
+  2. [Using `JsonCodableDecoder` and `JsonCodableEncoder`](pkgs/codable/README.md#2-using-jsoncodabledecoder-and-jsoncodableencoder)
+     (bytes, strings, chunked streams, and `@Codable()` annotations)
+  3. [Implementing Your Own `Codable`](pkgs/codable/README.md#3-implementing-your-own-codable)
+     (manual `Codable<T>` / `Decodable<T>` / `Encodable<T>` companions, custom
+     field converters, and polymorphic hierarchies)
 - **[Code Generation Guide (`pkgs/codable_builder/README.md`)](pkgs/codable_builder/README.md)**
 - **[Runnable Examples (`pkgs/codable/example/`)](pkgs/codable/example/)**
 - **[Benchmark Reports (`pkgs/codable_benchmarks/BENCHMARK_REPORT.md`)](pkgs/codable_benchmarks/BENCHMARK_REPORT.md)**
