@@ -12,7 +12,8 @@ For user-facing documentation, see:
 
 Three-Layer Architecture:
 
-1. **Layer 1: Low-Level JSON Streaming Substrate (`pkgs/codable/lib/src/json/substrate/`)**:
+1. **Layer 1: Low-Level JSON Streaming Substrate
+   (`pkgs/codable/lib/src/json/substrate/`)**:
    - Pure standalone Dart implementation of streaming JSON primitives (`mock/`)
      plus conditional native SDK re-exports (`substrate_native.dart`).
    - Imperative pull reader (`JsonTokenReader`), push writer (`JsonTokenWriter`,
@@ -20,7 +21,8 @@ Three-Layer Architecture:
      `decodeStringUtf8`), key options hash tables (`JsonKeyOptions`), and UTF-8
      codecs (`JsonUtf8Codec`, `jsonUtf8`).
    - Enforces a 1,024-level nesting depth limit for Anti-DoS protection.
-2. **Layer 2: Pure Abstract Ecosystem Contracts (`pkgs/codable/lib/codable.dart` & `pkgs/codable/lib/src/contracts/`)**:
+2. **Layer 2: Pure Abstract Ecosystem Contracts (`pkgs/codable/lib/codable.dart`
+   & `pkgs/codable/lib/src/contracts/`)**:
    - Format-agnostic companion contracts decoupled from domain classes and
      in-memory payload representation: `Codable<T>`, `Decodable<T>`,
      `Encodable<T>`, `SuperDecodable<T>`, `Decoder`, `Encoder`, `KeyedDecoder`,
@@ -30,7 +32,8 @@ Three-Layer Architecture:
    - Direct primitive reader/writer methods and typed collection helpers
      (`decodeList<T>`, `decodeIntList`, `decodeDoubleList`, `decodeFloat64List`,
      `decodeStringList`, `decodeBoolList`).
-3. **Layer 3: Target-Aware Format Drivers (`pkgs/codable/lib/src/json/driver/`)**:
+3. **Layer 3: Target-Aware Format Drivers
+   (`pkgs/codable/lib/src/json/driver/`)**:
    - `JsonCodableDecoder` and `JsonCodableEncoder` bind Layer 2 contracts to
      Layer 1 UTF-8 streaming tokens on VM/AOT/Wasm (`driver_streaming.dart`) and
      to browser `JSON.parse` / `JSON.stringify` `JSObject` traversal on Web JS

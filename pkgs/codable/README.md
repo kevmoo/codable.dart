@@ -28,10 +28,10 @@ models from how the JSON payload is represented in memory.
 - `package:codable/codable.dart` — Format-agnostic companion contracts
   (`Codable<T>`, `Decodable<T>`, `Encodable<T>`, `SuperDecodable<T>`, `Decoder`,
   `Encoder`, `KeyOptions`, and `@Codable` annotations).
-- `package:codable/codable_json.dart` — Re-exports `package:codable/codable.dart`
-  plus the JSON drivers (`JsonCodableDecoder`, `JsonCodableEncoder`) and
-  low-level UTF-8 token streaming primitives (`JsonTokenReader`,
-  `JsonTokenWriter`, `JsonKeyOptions`, `jsonUtf8`).
+- `package:codable/codable_json.dart` — Re-exports
+  `package:codable/codable.dart` plus the JSON drivers (`JsonCodableDecoder`,
+  `JsonCodableEncoder`) and low-level UTF-8 token streaming primitives
+  (`JsonTokenReader`, `JsonTokenWriter`, `JsonKeyOptions`, `jsonUtf8`).
 
 ### Core Companion Contracts
 
@@ -74,25 +74,23 @@ A `Decoder` or `Encoder` represents a single value position in the payload and
 opens one of four container shapes:
 
 - **`KeyedDecoder` / `KeyedEncoder` (`decoder.keyed({options})` /
-  `encoder.keyed({options})`)**:
-  Sequential streaming over object key-value pairs (`{ "id": 1, "name": "Ada" }`).
-  Callers advance through fields in wire order using `while (keyed.moveNextKey())`,
-  match expected keys in `O(key length)` via `keyed.selectKeyIndex(options)` (without
-  allocating a `String` per key), and call `keyed.skipValue()` on unknown fields.
-- **`MappedDecoder` (`decoder.mapped()`)**:
-  Random-access key lookup (`mapped.containsKey('id')`, `mapped.readInt('id')`,
+  `encoder.keyed({options})`)**: Sequential streaming over object key-value
+  pairs (`{ "id": 1, "name": "Ada" }`). Callers advance through fields in wire
+  order using `while (keyed.moveNextKey())`, match expected keys in
+  `O(key length)` via `keyed.selectKeyIndex(options)` (without allocating a
+  `String` per key), and call `keyed.skipValue()` on unknown fields.
+- **`MappedDecoder` (`decoder.mapped()`)**: Random-access key lookup
+  (`mapped.containsKey('id')`, `mapped.readInt('id')`,
   `mapped.decodeKey('user', const UserCodable())`). Used when fields must be
   inspected out of order or when backed by an in-memory object representation
   such as browser `JSON.parse()` on Web JS.
 - **`UnkeyedDecoder` / `UnkeyedEncoder` (`decoder.unkeyed()` /
-  `encoder.unkeyed()`)**:
-  Sequential iteration over arrays (`[1, 2, 3]`) using `while (unkeyed.moveNext())`,
-  plus bulk typed-list helpers (`decodeIntList()`, `decodeDoubleList()`,
-  `decodeFloat64List()`, `decodeStringList()`).
+  `encoder.unkeyed()`)**: Sequential iteration over arrays (`[1, 2, 3]`) using
+  `while (unkeyed.moveNext())`, plus bulk typed-list helpers (`decodeIntList()`,
+  `decodeDoubleList()`, `decodeFloat64List()`, `decodeStringList()`).
 - **`SingleValueDecoder` / `SingleValueEncoder` (`decoder.singleValue()` /
-  `encoder.singleValue()`)**:
-  Reads or writes a single scalar primitive (`int`, `double`, `String`, `bool`,
-  `null`) or delegates a custom wrapper type.
+  `encoder.singleValue()`)**: Reads or writes a single scalar primitive (`int`,
+  `double`, `String`, `bool`, `null`) or delegates a custom wrapper type.
 
 ### Target-Aware Execution (VM / Wasm vs. Web JS)
 
@@ -101,9 +99,8 @@ for the current compilation target:
 
 - **Dart VM / AOT / Wasm (`driver_streaming.dart`)**: Streams directly over
   contiguous UTF-8 `Uint8List` buffers via `JsonTokenReader` and formats UTF-8
-  bytes directly via `AdaptiveJsonTokenWriter`, matching keys against
-  pre-hashed UTF-8 byte tables (`KeyOptions`) with zero intermediate `Map`
-  allocations.
+  bytes directly via `AdaptiveJsonTokenWriter`, matching keys against pre-hashed
+  UTF-8 byte tables (`KeyOptions`) with zero intermediate `Map` allocations.
 - **Web JS (`dart2js` / `ddc` via `driver_js.dart`)**: Delegates parsing to the
   browser's native C++ `JSON.parse()` and traverses `JSObject` / `JSArray`
   properties directly via `package:web` / `dart:js_interop` without wrapping
@@ -113,10 +110,10 @@ for the current compilation target:
 
 ### Defining an Annotated Model
 
-Annotate your domain class with `@Codable()` and include a `part '<file>.g.dart';`
-directive. `package:codable_builder` generates a `const` companion class
-`<ClassName>Codable` implementing `Codable<<ClassName>>`—leaving your domain
-class completely clean:
+Annotate your domain class with `@Codable()` and include a
+`part '<file>.g.dart';` directive. `package:codable_builder` generates a `const`
+companion class `<ClassName>Codable` implementing `Codable<<ClassName>>`—leaving
+your domain class completely clean:
 
 ```dart
 import 'package:codable/codable_json.dart';
@@ -302,8 +299,8 @@ final class PointCodable implements Codable<Point> {
 
 For nested models or lists inside a manual `KeyedDecoder` loop:
 
-- **Single nested object**: `owner = keyed.decodeValue(const UserCodable());` (or
-  `owner = const UserCodable().decode(keyed.nestedDecoder());`).
+- **Single nested object**: `owner = keyed.decodeValue(const UserCodable());`
+  (or `owner = const UserCodable().decode(keyed.nestedDecoder());`).
 - **Nullable nested object**:
   `owner = keyed.decodeNullableValue(const UserCodable());`
 - **List of nested objects**: `items = keyed.decodeList(const ItemCodable());`
