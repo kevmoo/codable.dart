@@ -1,18 +1,18 @@
 ### 📝 Provenance
 
+<!-- prettier-ignore-start -->
 - **Run Timestamp**: <span data-live="timestamp">2026-10-02T04:23:46.670Z</span>
 - **Stock Dart SDK (Tier 0 & Tier 2)**:
-  <span data-live="stock_dart_version">3.14.0-271.0.dev (dev) (Fri Sep 25
-  05:03:10 2026 -0700) on "linux_x64"</span>
+  <span data-live="stock_dart_version">3.14.0-271.0.dev (dev) (Fri Sep 25 05:03:10 2026 -0700) on "linux_x64"</span>
 - **New Dart SDK (Tier 1 & Tier 3)**:
-  <span data-live="dart_version">3.14.0-271.0.dev.json-next.b1e2a8de06b07a0f94b642773c585784a8e8a911
-  (dev) (Thu Oct 1 20:53:39 2026 -0700) on "linux_x64"</span>
+  <span data-live="dart_version">3.14.0-271.0.dev.json-next.b1e2a8de06b07a0f94b642773c585784a8e8a911 (dev) (Thu Oct 1 20:53:39 2026 -0700) on "linux_x64"</span>
 - **Repo Commit**:
   <span data-live="commit">1927fe6d60f802d44798756449b2a8a56fe3f484</span>
 - **Host OS**: <span data-live="os">linux</span>, Hostname:
   <span data-live="host">bluefin</span>
 - **Trials**: <span data-live="trial_count">15</span> (reporting `median`
   latency)
+<!-- prettier-ignore-end -->
 
 ### 🏛️ The 4 Dart Serialization Tiers
 
