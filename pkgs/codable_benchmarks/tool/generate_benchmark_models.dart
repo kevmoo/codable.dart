@@ -27,7 +27,7 @@ Future<void> _generateModelPart(File file) async {
 
   for (final decl in unit.declarations) {
     if (decl is! ClassDeclaration) continue;
-    final element = decl.declaredElement;
+    final element = decl.declaredFragment?.element;
     if (element == null) continue;
     final annotation = codableTypeChecker.firstAnnotationOf(element);
     if (annotation == null) continue;
