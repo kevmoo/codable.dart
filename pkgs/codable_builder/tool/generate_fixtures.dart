@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
@@ -41,8 +39,9 @@ void main() async {
   for (final className in classes) {
     ClassElement? element;
     for (final decl in unit.declarations) {
-      if (decl is ClassDeclaration && decl.name.lexeme == className) {
-        element = decl.declaredElement;
+      if (decl is ClassDeclaration &&
+          decl.declaredFragment?.element.name == className) {
+        element = decl.declaredFragment?.element;
         break;
       }
     }

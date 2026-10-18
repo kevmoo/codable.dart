@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: deprecated_member_use
-
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:codable/codable.dart';
@@ -38,9 +36,10 @@ final class ModelVisitor {
 
     final rawFields = <_RawFieldData>[];
 
-    for (final param in constructor.parameters) {
+    for (final param in constructor.formalParameters) {
       final field =
-          element.getField(param.name) ?? element.getGetter(param.name);
+          element.getField(param.name ?? '') ??
+          element.getGetter(param.name ?? '');
 
       // Check annotations on parameter first, then on field
       final paramKeyAnnotation = codableKeyTypeChecker.firstAnnotationOf(param);
@@ -97,7 +96,8 @@ final class ModelVisitor {
         );
       }
 
-      final wireName = customName ?? applyFieldRename(param.name, fieldRename);
+      final wireName =
+          customName ?? applyFieldRename(param.name ?? '', fieldRename);
       final isNullable = _typeClassifier.isNullable(param.type);
 
       final classified = _typeClassifier.classify(
@@ -109,7 +109,7 @@ final class ModelVisitor {
       rawFields.add(
         _RawFieldData(
           param: param,
-          name: param.name,
+          name: param.name ?? '',
           wireName: wireName,
           aliases: aliases,
           type: param.type,
@@ -227,7 +227,7 @@ final class ModelVisitor {
 
     return ModelDescriptor(
       element: element,
-      className: element.name,
+      className: element.name ?? '',
       createEncoder: createEncoder,
       createDecoder: createDecoder,
       useGoldenMask: useGoldenMask,
@@ -274,7 +274,7 @@ final class ModelVisitor {
 }
 
 final class _RawFieldData {
-  final ParameterElement param;
+  final FormalParameterElement param;
   final String name;
   final String wireName;
   final List<String> aliases;

@@ -2,24 +2,27 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: deprecated_member_use
-
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:codable/codable.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'field_descriptor.dart';
 
 /// TypeChecker for [@Codable].
-const codableTypeChecker = TypeChecker.fromRuntime(Codable);
+const codableTypeChecker = TypeChecker.fromUrl(
+  'package:codable/src/contracts/codable.dart#Codable',
+);
 
 /// TypeChecker for [@CodableKey].
-const codableKeyTypeChecker = TypeChecker.fromRuntime(CodableKey);
+const codableKeyTypeChecker = TypeChecker.fromUrl(
+  'package:codable/src/contracts/annotations.dart#CodableKey',
+);
 
 /// TypeChecker for [@CodableTuple].
-const codableTupleTypeChecker = TypeChecker.fromRuntime(CodableTuple);
+const codableTupleTypeChecker = TypeChecker.fromUrl(
+  'package:codable/src/contracts/annotations.dart#CodableTuple',
+);
 
 /// Result record for [TypeClassifier.classify].
 typedef TypeClassification = ({

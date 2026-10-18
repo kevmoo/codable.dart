@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: deprecated_member_use, lines_longer_than_80_chars
-
 import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
@@ -37,8 +35,9 @@ void main() {
 
   ClassElement? findClass(String className) {
     for (final decl in unit.declarations) {
-      if (decl is ClassDeclaration && decl.name.lexeme == className) {
-        return decl.declaredElement;
+      if (decl is ClassDeclaration &&
+          decl.declaredFragment?.element.name == className) {
+        return decl.declaredFragment?.element;
       }
     }
     return null;

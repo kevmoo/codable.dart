@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
@@ -32,7 +30,7 @@ Future<void> generateForFile(String sourceRelPath, String targetRelPath) async {
 
   for (final decl in unit.declarations) {
     if (decl is! ClassDeclaration) continue;
-    final element = decl.declaredElement;
+    final element = decl.declaredFragment?.element;
     if (element == null) continue;
     final annotation = codableTypeChecker.firstAnnotationOf(element);
     if (annotation == null) continue;
