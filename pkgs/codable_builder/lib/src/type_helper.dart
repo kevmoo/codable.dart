@@ -195,7 +195,4 @@ final class TypeClassifier {
   bool isCodableElement(Element element) {
     return codableTypeChecker.hasAnnotationOf(element);
   }
-
-  /// Whether [type] is nullable.
-  bool isNullable(DartType type) => type.isNullableType;
 }
