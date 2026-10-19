@@ -3,9 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
 
@@ -56,10 +56,10 @@ final class TypeClassifier {
       return _emptyClassification(primitive);
     }
 
-    final element = type.element;
-    final enumClassification = _classifyEnum(element);
+    final enumClassification = _classifyEnum(type);
     if (enumClassification != null) return enumClassification;
 
+    final element = type.element;
     final collection = _classifyCollection(type, element);
     if (collection != null) return collection;
 
@@ -90,10 +90,9 @@ final class TypeClassifier {
     return null;
   }
 
-  static TypeClassification? _classifyEnum(Element? element) {
-    if (element is! EnumElement) return null;
-    final constants = element.fields
-        .where((f) => f.isEnumConstant)
+  static TypeClassification? _classifyEnum(DartType type) {
+    if (!type.isEnum) return null;
+    final constants = type.enumConstants
         .map((f) => f.name)
         .whereType<String>()
         .toList();
@@ -195,11 +194,5 @@ final class TypeClassifier {
   /// Whether [element] has a `@Codable` annotation.
   bool isCodableElement(Element element) {
     return codableTypeChecker.hasAnnotationOf(element);
-  }
-
-  /// Whether [type] is nullable.
-  bool isNullable(DartType type) {
-    return type.nullabilitySuffix == NullabilitySuffix.question ||
-        type is DynamicType;
   }
 }

@@ -6,6 +6,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:codable/codable.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
 import 'type_helper.dart';
@@ -25,27 +26,20 @@ final class ModelVisitor {
     final useGoldenMask = annotation.peek('useGoldenMask')?.boolValue ?? true;
     final fieldRename = _extractFieldRename(annotation);
 
-    final constructor =
-        element.unnamedConstructor ?? element.constructors.firstOrNull;
-    if (constructor == null) {
-      throw InvalidGenerationSourceError(
-        'Class "${element.name}" does not have any constructors.',
-        element: element,
-      );
-    }
+    final constructor = _selectConstructor(element);
 
     final rawFields = <_RawFieldData>[];
 
     for (final param in constructor.formalParameters) {
-      final field =
-          element.getField(param.name ?? '') ??
-          element.getGetter(param.name ?? '');
+      final paramName = param.name ?? '';
 
-      // Check annotations on parameter first, then on field
+      // Check annotations on parameter first, then on property (field/getter)
       final paramKeyAnnotation = codableKeyTypeChecker.firstAnnotationOf(param);
-      final fieldKeyAnnotation = field != null
-          ? codableKeyTypeChecker.firstAnnotationOf(field)
-          : null;
+      final fieldKeyAnnotation = firstAnnotationOnProperty(
+        element,
+        paramName,
+        codableKeyTypeChecker,
+      );
       final keyAnnotation = paramKeyAnnotation ?? fieldKeyAnnotation;
       final keyReader = keyAnnotation != null
           ? ConstantReader(keyAnnotation)
@@ -54,9 +48,11 @@ final class ModelVisitor {
       final paramTupleAnnotation = codableTupleTypeChecker.firstAnnotationOf(
         param,
       );
-      final fieldTupleAnnotation = field != null
-          ? codableTupleTypeChecker.firstAnnotationOf(field)
-          : null;
+      final fieldTupleAnnotation = firstAnnotationOnProperty(
+        element,
+        paramName,
+        codableTupleTypeChecker,
+      );
       final tupleAnnotation = paramTupleAnnotation ?? fieldTupleAnnotation;
       final tupleReader = tupleAnnotation != null
           ? ConstantReader(tupleAnnotation)
@@ -98,7 +94,7 @@ final class ModelVisitor {
 
       final wireName =
           customName ?? applyFieldRename(param.name ?? '', fieldRename);
-      final isNullable = _typeClassifier.isNullable(param.type);
+      final isNullable = param.type.isNullableType;
 
       final classified = _typeClassifier.classify(
         param.type,
@@ -236,6 +232,21 @@ final class ModelVisitor {
       requiredFields: processedRequiredFields,
       allOptionsKeys: allOptionsKeys,
     );
+  }
+
+  ConstructorElement _selectConstructor(ClassElement element) {
+    try {
+      return constructorByName(element, '');
+    } on InvalidGenerationSourceError {
+      final fallback = element.constructors.firstOrNull;
+      if (fallback != null) {
+        return fallback;
+      }
+      throw InvalidGenerationSourceError(
+        'Class "${element.name}" does not have any constructors.',
+        element: element,
+      );
+    }
   }
 
   FieldRename _extractFieldRename(ConstantReader annotation) {
