@@ -3,8 +3,37 @@ import 'dart:typed_data';
 import 'codable.dart';
 import 'static_key.dart';
 
+/// High-level structural kind of an upcoming value in a [Decoder] stream.
+enum ValueKind {
+  /// A null value (`null`).
+  nullValue,
+
+  /// A boolean value (`true` or `false`).
+  boolean,
+
+  /// A numeric value (integer or floating-point).
+  number,
+
+  /// A string value.
+  string,
+
+  /// A sequential array / list container.
+  list,
+
+  /// A keyed object / map container.
+  map,
+}
+
 /// Top-level decoding context providing access to specialized decoding
 /// containers.
+///
+/// **Ephemeral Cursor Lifetime**: A [Decoder] and any container opened from it
+/// ([KeyedDecoder], [UnkeyedDecoder], [SingleValueDecoder]) represent an
+/// ephemeral, single-pass cursor over the underlying input stream. Decoders and
+/// containers must be consumed synchronously within [Decodable.decode] and must
+/// **never** be retained or accessed after `decode()` returns. Streaming chunked
+/// decoders may recycle or pool the backing byte buffer once `decode()`
+/// completes unless [payload] is accessed during decoding.
 abstract interface class Decoder {
   /// Extensible context map for passing runtime dependency handles, options, or
   /// flags.
@@ -12,8 +41,11 @@ abstract interface class Decoder {
 
   /// Exposes the underlying payload byte buffer for zero-allocation span
   /// operations, or `null` if the decoder does not operate over a contiguous
-  /// byte buffer.
+  /// byte buffer (such as an in-memory object-tree or JS object decoder).
   Uint8List? get payload;
+
+  /// Peeks at the [ValueKind] of the upcoming value without consuming it.
+  ValueKind peekKind();
 
   /// Opens a streaming sequential keyed container for reading object fields.
   KeyedDecoder keyed({KeyOptions? options});
@@ -34,6 +66,9 @@ abstract interface class Decoder {
 }
 
 /// Sequential streaming decoder matching keys in incoming stream order.
+///
+/// Instances are ephemeral single-pass cursors scoped to the current object and
+/// must not be retained after [Decodable.decode] returns.
 abstract interface class KeyedDecoder {
   /// Advances to the next key-value pair in the object, consuming any comma
   /// delimiter.
@@ -45,6 +80,10 @@ abstract interface class KeyedDecoder {
   /// Peeks at the upcoming field key without consuming it, or `null` if at the
   /// end of the object or if the driver does not support lookahead.
   String? peekKey();
+
+  /// Peeks at the [ValueKind] of the current field's value without consuming
+  /// it.
+  ValueKind peekKind();
 
   /// Selects the index of the next key from pre-compiled [options], or `-1` if
   /// unknown.
@@ -74,17 +113,30 @@ abstract interface class KeyedDecoder {
   /// Reads a nullable double value.
   double? readNullableDouble();
 
+  /// Reads a non-nullable numeric value ([int] or [double]).
+  num readNum();
+
+  /// Reads a nullable numeric value ([int] or [double]).
+  num? readNullableNum();
+
   /// Reads a non-nullable String value.
   String readString();
 
   /// Reads a nullable String value.
   String? readNullableString();
 
-  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
+  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`
+  /// into [Decoder.payload].
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or
-  /// `null` if null.
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)` into
+  /// [Decoder.payload], or `null` if the value is null.
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.
@@ -133,6 +185,9 @@ abstract interface class MappedDecoder {
   /// Whether the value associated with [key] is null.
   bool isNull(String key);
 
+  /// Peeks at the [ValueKind] of the value associated with [key].
+  ValueKind peekKind(String key);
+
   /// Reads a non-nullable integer value by [key].
   int readInt(String key);
 
@@ -144,6 +199,12 @@ abstract interface class MappedDecoder {
 
   /// Reads a nullable double value by [key].
   double? readNullableDouble(String key);
+
+  /// Reads a non-nullable numeric value ([int] or [double]) by [key].
+  num readNum(String key);
+
+  /// Reads a nullable numeric value ([int] or [double]) by [key].
+  num? readNullableNum(String key);
 
   /// Reads a non-nullable String value by [key].
   String readString(String key);
@@ -188,9 +249,16 @@ abstract interface class MappedDecoder {
 }
 
 /// Sequential decoder for homogeneous or heterogeneous arrays / lists.
+///
+/// Instances are ephemeral single-pass cursors scoped to the current array and
+/// must not be retained after [Decodable.decode] returns.
 abstract interface class UnkeyedDecoder {
   /// Advances to the next element in the array, consuming any comma delimiter.
   bool moveNext();
+
+  /// Peeks at the [ValueKind] of the next element in the sequence without
+  /// consuming it.
+  ValueKind peekKind();
 
   /// Whether the next element in the sequence is null.
   bool isNextNull();
@@ -213,6 +281,12 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable double element.
   double? readNullableDouble();
 
+  /// Reads a non-nullable numeric element ([int] or [double]).
+  num readNum();
+
+  /// Reads a nullable numeric element ([int] or [double]).
+  num? readNullableNum();
+
   /// Reads a non-nullable String element.
   String readString();
 
@@ -220,11 +294,17 @@ abstract interface class UnkeyedDecoder {
   String? readNullableString();
 
   /// Reads a non-nullable String element as a raw UTF-8 byte span
-  /// `(start, end)`.
+  /// `(start, end)` into [Decoder.payload].
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String element as a raw UTF-8 byte span `(start, end)`,
-  /// or `null` if null.
+  /// Reads a nullable String element as a raw UTF-8 byte span `(start, end)`
+  /// into [Decoder.payload], or `null` if the element is null.
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean element.
@@ -261,7 +341,13 @@ abstract interface class UnkeyedDecoder {
 }
 
 /// Decoder for standalone scalar values or primitive wrappers.
+///
+/// Instances are ephemeral single-pass cursors and must not be retained after
+/// [Decodable.decode] returns.
 abstract interface class SingleValueDecoder {
+  /// Peeks at the [ValueKind] of the scalar value without consuming it.
+  ValueKind peekKind();
+
   /// Whether the scalar value is null.
   bool isNull();
 
@@ -280,17 +366,30 @@ abstract interface class SingleValueDecoder {
   /// Reads a nullable double value.
   double? readNullableDouble();
 
+  /// Reads a non-nullable numeric value ([int] or [double]).
+  num readNum();
+
+  /// Reads a nullable numeric value ([int] or [double]).
+  num? readNullableNum();
+
   /// Reads a non-nullable String value.
   String readString();
 
   /// Reads a nullable String value.
   String? readNullableString();
 
-  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`.
+  /// Reads a non-nullable String value as a raw UTF-8 byte span `(start, end)`
+  /// into [Decoder.payload].
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end) readStringSpan();
 
-  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)`, or
-  /// `null` if null.
+  /// Reads a nullable String value as a raw UTF-8 byte span `(start, end)` into
+  /// [Decoder.payload], or `null` if the value is null.
+  ///
+  /// Throws [UnsupportedError] on object-tree decoders where
+  /// `Decoder.payload == null`.
   (int start, int end)? readNullableStringSpan();
 
   /// Reads a non-nullable boolean value.

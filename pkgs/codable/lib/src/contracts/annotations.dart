@@ -56,8 +56,17 @@ final class CodableKey {
   /// Whether to ignore this field during serialization and deserialization.
   final bool ignore;
 
-  /// Custom decoder class instance or type for custom value conversion.
+  /// Custom [Codable] codec instance or type for bidirectional value
+  /// conversion.
+  final Object? codable;
+
+  /// Custom [Decodable] or [Codable] class instance or type for custom value
+  /// conversion.
   final Object? customDecoder;
+
+  /// Custom [Encodable] or [Codable] class instance or type for custom value
+  /// serialization.
+  final Object? customEncoder;
 
   /// Default value expression / constant if missing from payload.
   final Object? defaultValue;
@@ -67,7 +76,9 @@ final class CodableKey {
     this.name,
     this.aliases,
     this.ignore = false,
+    this.codable,
     this.customDecoder,
+    this.customEncoder,
     this.defaultValue,
   });
 }

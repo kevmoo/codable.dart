@@ -15,20 +15,19 @@ final class DateTimeEpochDecoder implements Codable<DateTime> {
 
   @override
   DateTime decode(Decoder decoder) {
-    if (decoder is JsonCodableDecoder) {
-      final token = decoder.reader.peek();
-      if (token == JsonTokenType.number) {
-        return DateTime.fromMillisecondsSinceEpoch(decoder.reader.readInt());
-      }
-      return DateTime.parse(decoder.reader.readString());
-    }
     final sv = decoder.singleValue();
-    final str = sv.readString();
-    final asInt = int.tryParse(str);
-    if (asInt != null) {
-      return DateTime.fromMillisecondsSinceEpoch(asInt);
-    }
-    return DateTime.parse(str);
+    return switch (sv.peekKind()) {
+      ValueKind.number => DateTime.fromMillisecondsSinceEpoch(sv.readInt()),
+      ValueKind.string => switch (sv.readString()) {
+        final str => switch (int.tryParse(str)) {
+          final epochMs? => DateTime.fromMillisecondsSinceEpoch(epochMs),
+          null => DateTime.parse(str),
+        },
+      },
+      final kind => throw CodableException(
+        'Expected number or string for DateTime, found $kind',
+      ),
+    };
   }
 
   @override
@@ -39,7 +38,7 @@ final class DateTimeEpochDecoder implements Codable<DateTime> {
 
 @Codable()
 class DateTimeExample {
-  @CodableKey(customDecoder: DateTimeEpochDecoder())
+  @CodableKey(codable: DateTimeEpochDecoder())
   final DateTime when;
 
   const DateTimeExample(this.when);

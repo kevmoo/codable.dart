@@ -4,6 +4,10 @@
 
 part of 'domain_models_test.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -531,6 +535,288 @@ final class BicycleCodable implements Codable<Bicycle> {
     final keyed = encoder.keyed();
     keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
     keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for TelemetryPacket
+// =============================================================================
+extension type const _$TelemetryPacketSchema(int _value) {
+  // String Name Constants
+  static const String namePacketId = 'packetId';
+  static const String nameRegionZip = 'regionZip';
+  static const String nameStatusCode = 'statusCode';
+  static const String nameReading = 'reading';
+  static const String nameDelta = 'delta';
+  static const String nameHistory = 'history';
+  static const String nameCounters = 'counters';
+  static const String nameVehicle = 'vehicle';
+  static const String nameNotes = 'notes';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPacketId = 0;
+  static const int keyRegionZip = 1;
+  static const int keyStatusCode = 2;
+  static const int keyReading = 3;
+  static const int keyDelta = 4;
+  static const int keyHistory = 5;
+  static const int keyCounters = 6;
+  static const int keyVehicle = 7;
+  static const int keyNotes = 8;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$TelemetryPacketSchema.namePacketId,
+    _$TelemetryPacketSchema.nameRegionZip,
+    _$TelemetryPacketSchema.nameStatusCode,
+    _$TelemetryPacketSchema.nameReading,
+    _$TelemetryPacketSchema.nameDelta,
+    _$TelemetryPacketSchema.nameHistory,
+    _$TelemetryPacketSchema.nameCounters,
+    _$TelemetryPacketSchema.nameVehicle,
+    _$TelemetryPacketSchema.nameNotes,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$TelemetryPacketSchema none = _$TelemetryPacketSchema(0);
+  static const int _packetIdBit = 1 << 0;
+  static const _$TelemetryPacketSchema packetId = _$TelemetryPacketSchema(
+    _packetIdBit,
+  );
+  static const int _regionZipBit = 1 << 1;
+  static const _$TelemetryPacketSchema regionZip = _$TelemetryPacketSchema(
+    _regionZipBit,
+  );
+  static const int _statusCodeBit = 1 << 2;
+  static const _$TelemetryPacketSchema statusCode = _$TelemetryPacketSchema(
+    _statusCodeBit,
+  );
+  static const int _readingBit = 1 << 3;
+  static const _$TelemetryPacketSchema reading = _$TelemetryPacketSchema(
+    _readingBit,
+  );
+  static const int _vehicleBit = 1 << 4;
+  static const _$TelemetryPacketSchema vehicle = _$TelemetryPacketSchema(
+    _vehicleBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$TelemetryPacketSchema golden = _$TelemetryPacketSchema(
+    _packetIdBit | _regionZipBit | _statusCodeBit | _readingBit | _vehicleBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$TelemetryPacketSchema operator |(_$TelemetryPacketSchema other) =>
+      _$TelemetryPacketSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _packetIdBit) == 0) {
+      missing.add(namePacketId);
+    }
+    if ((_value & _regionZipBit) == 0) {
+      missing.add(nameRegionZip);
+    }
+    if ((_value & _statusCodeBit) == 0) {
+      missing.add(nameStatusCode);
+    }
+    if ((_value & _readingBit) == 0) {
+      missing.add(nameReading);
+    }
+    if ((_value & _vehicleBit) == 0) {
+      missing.add(nameVehicle);
+    }
+    throw CodableException(
+      'Missing required fields for TelemetryPacket: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for TelemetryPacket
+// =============================================================================
+final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
+  const TelemetryPacketCodable();
+
+  @override
+  TelemetryPacket decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$TelemetryPacketSchema.keyOptions);
+
+    String? packetId;
+    String? regionZip;
+    String? statusCode;
+    num? reading;
+    num? delta;
+    var history = const <num>[];
+    var counters = const <String, num>{};
+    Vehicle? vehicle;
+    String? notes;
+    var seen = _$TelemetryPacketSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TelemetryPacketSchema.keyOptions)) {
+        case _$TelemetryPacketSchema.keyPacketId:
+          if ((seen._value & _$TelemetryPacketSchema.packetId._value) != 0) {
+            throw const CodableException('Duplicate field "packetId"');
+          }
+          packetId = keyed.decodeValue(const FlexibleIdDecoder());
+          seen |= _$TelemetryPacketSchema.packetId;
+          break;
+        case _$TelemetryPacketSchema.keyRegionZip:
+          if ((seen._value & _$TelemetryPacketSchema.regionZip._value) != 0) {
+            throw const CodableException('Duplicate field "regionZip"');
+          }
+          regionZip = keyed.decodeValue(const ZipCodeDecoder());
+          seen |= _$TelemetryPacketSchema.regionZip;
+          break;
+        case _$TelemetryPacketSchema.keyStatusCode:
+          if ((seen._value & _$TelemetryPacketSchema.statusCode._value) != 0) {
+            throw const CodableException('Duplicate field "statusCode"');
+          }
+          statusCode = keyed.readString();
+          seen |= _$TelemetryPacketSchema.statusCode;
+          break;
+        case _$TelemetryPacketSchema.keyReading:
+          if ((seen._value & _$TelemetryPacketSchema.reading._value) != 0) {
+            throw const CodableException('Duplicate field "reading"');
+          }
+          reading = keyed.readNum();
+          seen |= _$TelemetryPacketSchema.reading;
+          break;
+        case _$TelemetryPacketSchema.keyDelta:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            delta = null;
+          } else {
+            delta = keyed.readNum();
+          }
+          break;
+        case _$TelemetryPacketSchema.keyHistory:
+          history = keyed.decodeList<num>(
+            Decodable.fromFunction((d) => d.singleValue().readNum()),
+          );
+          break;
+        case _$TelemetryPacketSchema.keyCounters:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, num>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readNum();
+            }
+            counters = m;
+          }
+          break;
+        case _$TelemetryPacketSchema.keyVehicle:
+          if ((seen._value & _$TelemetryPacketSchema.vehicle._value) != 0) {
+            throw const CodableException('Duplicate field "vehicle"');
+          }
+          vehicle = keyed.decodeValue(const VehicleSuperDecodable());
+          seen |= _$TelemetryPacketSchema.vehicle;
+          break;
+        case _$TelemetryPacketSchema.keyNotes:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            notes = null;
+          } else {
+            notes = keyed.readString();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return TelemetryPacket(
+      packetId: packetId!,
+      regionZip: regionZip!,
+      statusCode: statusCode!,
+      reading: reading!,
+      delta: delta,
+      history: history,
+      counters: counters,
+      vehicle: vehicle!,
+      notes: notes,
+    );
+  }
+
+  @override
+  void encode(TelemetryPacket instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeString(_$TelemetryPacketSchema.namePacketId, instance.packetId);
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameRegionZip,
+      instance.regionZip,
+      const ZipCodeDecoder(),
+    );
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameStatusCode,
+      instance.statusCode,
+      const UpperCodeEncoder(),
+    );
+    switch (instance.reading) {
+      case final int v:
+        keyed.encodeInt(_$TelemetryPacketSchema.nameReading, v);
+      case final v:
+        keyed.encodeDouble(_$TelemetryPacketSchema.nameReading, v.toDouble());
+    }
+    if (instance.delta != null) {
+      switch (instance.delta!) {
+        case final int v:
+          keyed.encodeInt(_$TelemetryPacketSchema.nameDelta, v);
+        case final v:
+          keyed.encodeDouble(_$TelemetryPacketSchema.nameDelta, v.toDouble());
+      }
+    }
+    keyed.encodeList(
+      _$TelemetryPacketSchema.nameHistory,
+      instance.history,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameCounters,
+      instance.counters,
+      Encodable.fromFunction((Map<String, num> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          switch (entry.value) {
+            case final int v:
+              k.encodeInt(entry.key, v);
+            case final v:
+              k.encodeDouble(entry.key, v.toDouble());
+          }
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameVehicle,
+      instance.vehicle,
+      const VehicleCodable(),
+    );
+    if (instance.notes != null) {
+      keyed.encodeString(_$TelemetryPacketSchema.nameNotes, instance.notes!);
+    }
   }
 }
 

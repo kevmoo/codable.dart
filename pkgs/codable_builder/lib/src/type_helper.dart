@@ -14,6 +14,16 @@ const codableTypeChecker = TypeChecker.fromUrl(
   'package:codable/src/contracts/codable.dart#Codable',
 );
 
+/// TypeChecker for `Decodable`.
+const decodableTypeChecker = TypeChecker.fromUrl(
+  'package:codable/src/contracts/codable.dart#Decodable',
+);
+
+/// TypeChecker for `Encodable`.
+const encodableTypeChecker = TypeChecker.fromUrl(
+  'package:codable/src/contracts/codable.dart#Encodable',
+);
+
 /// TypeChecker for [@CodableKey].
 const codableKeyTypeChecker = TypeChecker.fromUrl(
   'package:codable/src/contracts/annotations.dart#CodableKey',
@@ -27,6 +37,7 @@ const codableTupleTypeChecker = TypeChecker.fromUrl(
 /// Result record for [TypeClassifier.classify].
 typedef TypeClassification = ({
   TypeCategory category,
+  TypeCategory nativeCategory,
   DartType? elementType,
   DartType? mapKeyType,
   DartType? mapValueType,
@@ -42,11 +53,23 @@ final class TypeClassifier {
     DartType type, {
     int? tupleLength,
     String? customDecoderCode,
+    String? customEncoderCode,
   }) {
-    if (customDecoderCode != null) {
-      return _emptyClassification(TypeCategory.custom);
+    final native = _classifyNative(type, tupleLength: tupleLength);
+    if (customDecoderCode != null || customEncoderCode != null) {
+      return (
+        category: TypeCategory.custom,
+        nativeCategory: native.category,
+        elementType: native.elementType,
+        mapKeyType: native.mapKeyType,
+        mapValueType: native.mapValueType,
+        enumConstants: native.enumConstants,
+      );
     }
+    return native;
+  }
 
+  TypeClassification _classifyNative(DartType type, {int? tupleLength}) {
     if (tupleLength != null && tupleLength > 0) {
       return _emptyClassification(TypeCategory.tuple);
     }
@@ -75,6 +98,7 @@ final class TypeClassifier {
 
   static TypeClassification _emptyClassification(TypeCategory category) => (
     category: category,
+    nativeCategory: category,
     elementType: null,
     mapKeyType: null,
     mapValueType: null,
@@ -98,6 +122,7 @@ final class TypeClassifier {
         .toList();
     return (
       category: TypeCategory.enumType,
+      nativeCategory: TypeCategory.enumType,
       elementType: null,
       mapKeyType: null,
       mapValueType: null,
@@ -120,6 +145,7 @@ final class TypeClassifier {
           : null;
       return (
         category: TypeCategory.list,
+        nativeCategory: TypeCategory.list,
         elementType: elemType,
         mapKeyType: null,
         mapValueType: null,
@@ -136,6 +162,7 @@ final class TypeClassifier {
           : null;
       return (
         category: TypeCategory.set,
+        nativeCategory: TypeCategory.set,
         elementType: elemType,
         mapKeyType: null,
         mapValueType: null,
@@ -155,6 +182,7 @@ final class TypeClassifier {
           : null;
       return (
         category: TypeCategory.map,
+        nativeCategory: TypeCategory.map,
         elementType: null,
         mapKeyType: keyType,
         mapValueType: valType,
@@ -182,8 +210,12 @@ final class TypeClassifier {
       'Uint8ClampedList',
     };
     if (element == null || !typedDataNames.contains(element.name)) return null;
+    final category = tupleLength != null
+        ? TypeCategory.tuple
+        : TypeCategory.list;
     return (
-      category: tupleLength != null ? TypeCategory.tuple : TypeCategory.list,
+      category: category,
+      nativeCategory: category,
       elementType: null,
       mapKeyType: null,
       mapValueType: null,

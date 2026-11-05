@@ -708,6 +708,451 @@ final class UserProfileCustomCodable implements Codable<UserProfileCustom> {
 }
 
 // =============================================================================
+// 1. Unified Schema Descriptor for CodableKeyVariantsModel
+// =============================================================================
+extension type const _$CodableKeyVariantsModelSchema(int _value) {
+  // String Name Constants
+  static const String nameZip = 'zip';
+  static const String nameDecodeOnlyZip = 'decodeOnlyZip';
+  static const String nameUpperCode = 'upperCode';
+  static const String nameCreatedAt = 'createdAt';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyZip = 0;
+  static const int keyDecodeOnlyZip = 1;
+  static const int keyUpperCode = 2;
+  static const int keyCreatedAt = 3;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CodableKeyVariantsModelSchema.nameZip,
+    _$CodableKeyVariantsModelSchema.nameDecodeOnlyZip,
+    _$CodableKeyVariantsModelSchema.nameUpperCode,
+    _$CodableKeyVariantsModelSchema.nameCreatedAt,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CodableKeyVariantsModelSchema none =
+      _$CodableKeyVariantsModelSchema(0);
+  static const int _zipBit = 1 << 0;
+  static const _$CodableKeyVariantsModelSchema zip =
+      _$CodableKeyVariantsModelSchema(_zipBit);
+  static const int _decodeOnlyZipBit = 1 << 1;
+  static const _$CodableKeyVariantsModelSchema decodeOnlyZip =
+      _$CodableKeyVariantsModelSchema(_decodeOnlyZipBit);
+  static const int _upperCodeBit = 1 << 2;
+  static const _$CodableKeyVariantsModelSchema upperCode =
+      _$CodableKeyVariantsModelSchema(_upperCodeBit);
+  static const int _createdAtBit = 1 << 3;
+  static const _$CodableKeyVariantsModelSchema createdAt =
+      _$CodableKeyVariantsModelSchema(_createdAtBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CodableKeyVariantsModelSchema golden =
+      _$CodableKeyVariantsModelSchema(
+        _zipBit | _decodeOnlyZipBit | _upperCodeBit | _createdAtBit,
+      );
+
+  @pragma('vm:prefer-inline')
+  _$CodableKeyVariantsModelSchema operator |(
+    _$CodableKeyVariantsModelSchema other,
+  ) => _$CodableKeyVariantsModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _zipBit) == 0) {
+      missing.add(nameZip);
+    }
+    if ((_value & _decodeOnlyZipBit) == 0) {
+      missing.add(nameDecodeOnlyZip);
+    }
+    if ((_value & _upperCodeBit) == 0) {
+      missing.add(nameUpperCode);
+    }
+    if ((_value & _createdAtBit) == 0) {
+      missing.add(nameCreatedAt);
+    }
+    throw CodableException(
+      'Missing required fields for CodableKeyVariantsModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for CodableKeyVariantsModel
+// =============================================================================
+final class CodableKeyVariantsModelCodable
+    implements Codable<CodableKeyVariantsModel> {
+  const CodableKeyVariantsModelCodable();
+
+  @override
+  CodableKeyVariantsModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$CodableKeyVariantsModelSchema.keyOptions,
+    );
+
+    String? zip;
+    String? decodeOnlyZip;
+    String? upperCode;
+    DateTime? createdAt;
+    var seen = _$CodableKeyVariantsModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$CodableKeyVariantsModelSchema.keyOptions,
+      )) {
+        case _$CodableKeyVariantsModelSchema.keyZip:
+          if ((seen._value & _$CodableKeyVariantsModelSchema.zip._value) != 0) {
+            throw const CodableException('Duplicate field "zip"');
+          }
+          zip = keyed.decodeValue(const ZipCodeDecoder());
+          seen |= _$CodableKeyVariantsModelSchema.zip;
+          break;
+        case _$CodableKeyVariantsModelSchema.keyDecodeOnlyZip:
+          if ((seen._value &
+                  _$CodableKeyVariantsModelSchema.decodeOnlyZip._value) !=
+              0) {
+            throw const CodableException('Duplicate field "decodeOnlyZip"');
+          }
+          decodeOnlyZip = keyed.decodeValue(const ZipDecodeOnly());
+          seen |= _$CodableKeyVariantsModelSchema.decodeOnlyZip;
+          break;
+        case _$CodableKeyVariantsModelSchema.keyUpperCode:
+          if ((seen._value &
+                  _$CodableKeyVariantsModelSchema.upperCode._value) !=
+              0) {
+            throw const CodableException('Duplicate field "upperCode"');
+          }
+          upperCode = keyed.readString();
+          seen |= _$CodableKeyVariantsModelSchema.upperCode;
+          break;
+        case _$CodableKeyVariantsModelSchema.keyCreatedAt:
+          if ((seen._value &
+                  _$CodableKeyVariantsModelSchema.createdAt._value) !=
+              0) {
+            throw const CodableException('Duplicate field "createdAt"');
+          }
+          createdAt = keyed.decodeValue(const EpochMsDateTimeDecoder());
+          seen |= _$CodableKeyVariantsModelSchema.createdAt;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CodableKeyVariantsModel(
+      zip: zip!,
+      decodeOnlyZip: decodeOnlyZip!,
+      upperCode: upperCode!,
+      createdAt: createdAt!,
+    );
+  }
+
+  @override
+  void encode(CodableKeyVariantsModel instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeValue(
+      _$CodableKeyVariantsModelSchema.nameZip,
+      instance.zip,
+      const ZipCodeDecoder(),
+    );
+    keyed.encodeString(
+      _$CodableKeyVariantsModelSchema.nameDecodeOnlyZip,
+      instance.decodeOnlyZip,
+    );
+    keyed.encodeValue(
+      _$CodableKeyVariantsModelSchema.nameUpperCode,
+      instance.upperCode,
+      const UpperCaseStringEncoder(),
+    );
+    keyed.encodeValue(
+      _$CodableKeyVariantsModelSchema.nameCreatedAt,
+      instance.createdAt,
+      const EpochMsDateTimeEncoder(),
+    );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for NumericMeasurement
+// =============================================================================
+extension type const _$NumericMeasurementSchema(int _value) {
+  // String Name Constants
+  static const String nameScore = 'score';
+  static const String nameOptionalScore = 'optionalScore';
+  static const String nameSamples = 'samples';
+  static const String nameNullableSamples = 'nullableSamples';
+  static const String nameDistinctValues = 'distinctValues';
+  static const String nameMetrics = 'metrics';
+  static const String nameNullableMetrics = 'nullableMetrics';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyScore = 0;
+  static const int keyOptionalScore = 1;
+  static const int keySamples = 2;
+  static const int keyNullableSamples = 3;
+  static const int keyDistinctValues = 4;
+  static const int keyMetrics = 5;
+  static const int keyNullableMetrics = 6;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$NumericMeasurementSchema.nameScore,
+    _$NumericMeasurementSchema.nameOptionalScore,
+    _$NumericMeasurementSchema.nameSamples,
+    _$NumericMeasurementSchema.nameNullableSamples,
+    _$NumericMeasurementSchema.nameDistinctValues,
+    _$NumericMeasurementSchema.nameMetrics,
+    _$NumericMeasurementSchema.nameNullableMetrics,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$NumericMeasurementSchema none = _$NumericMeasurementSchema(0);
+  static const int _scoreBit = 1 << 0;
+  static const _$NumericMeasurementSchema score = _$NumericMeasurementSchema(
+    _scoreBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$NumericMeasurementSchema golden = _$NumericMeasurementSchema(
+    _scoreBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$NumericMeasurementSchema operator |(_$NumericMeasurementSchema other) =>
+      _$NumericMeasurementSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _scoreBit) == 0) {
+      missing.add(nameScore);
+    }
+    throw CodableException(
+      'Missing required fields for NumericMeasurement: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for NumericMeasurement
+// =============================================================================
+final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
+  const NumericMeasurementCodable();
+
+  @override
+  NumericMeasurement decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$NumericMeasurementSchema.keyOptions);
+
+    num? score;
+    num? optionalScore;
+    var samples = const <num>[];
+    var nullableSamples = const <num?>[];
+    var distinctValues = const <num>{};
+    var metrics = const <String, num>{};
+    var nullableMetrics = const <String, num?>{};
+    var seen = _$NumericMeasurementSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$NumericMeasurementSchema.keyOptions)) {
+        case _$NumericMeasurementSchema.keyScore:
+          if ((seen._value & _$NumericMeasurementSchema.score._value) != 0) {
+            throw const CodableException('Duplicate field "score"');
+          }
+          score = keyed.readNum();
+          seen |= _$NumericMeasurementSchema.score;
+          break;
+        case _$NumericMeasurementSchema.keyOptionalScore:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            optionalScore = null;
+          } else {
+            optionalScore = keyed.readNum();
+          }
+          break;
+        case _$NumericMeasurementSchema.keySamples:
+          samples = keyed.decodeList<num>(
+            Decodable.fromFunction((d) => d.singleValue().readNum()),
+          );
+          break;
+        case _$NumericMeasurementSchema.keyNullableSamples:
+          nullableSamples = keyed.decodeList<num?>(
+            Decodable.fromFunction((d) => d.singleValue().readNullableNum()),
+          );
+          break;
+        case _$NumericMeasurementSchema.keyDistinctValues:
+          distinctValues = keyed
+              .decodeList<num>(
+                Decodable.fromFunction((d) => d.singleValue().readNum()),
+              )
+              .toSet();
+          break;
+        case _$NumericMeasurementSchema.keyMetrics:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, num>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readNum();
+            }
+            metrics = m;
+          }
+          break;
+        case _$NumericMeasurementSchema.keyNullableMetrics:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, num?>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              if (k.isNextNull()) {
+                k.readNull();
+                m[key] = null as num?;
+              } else {
+                m[key] = k.readNum();
+              }
+            }
+            nullableMetrics = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return NumericMeasurement(
+      score: score!,
+      optionalScore: optionalScore,
+      samples: samples,
+      nullableSamples: nullableSamples,
+      distinctValues: distinctValues,
+      metrics: metrics,
+      nullableMetrics: nullableMetrics,
+    );
+  }
+
+  @override
+  void encode(NumericMeasurement instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    switch (instance.score) {
+      case final int v:
+        keyed.encodeInt(_$NumericMeasurementSchema.nameScore, v);
+      case final v:
+        keyed.encodeDouble(_$NumericMeasurementSchema.nameScore, v.toDouble());
+    }
+    if (instance.optionalScore != null) {
+      switch (instance.optionalScore!) {
+        case final int v:
+          keyed.encodeInt(_$NumericMeasurementSchema.nameOptionalScore, v);
+        case final v:
+          keyed.encodeDouble(
+            _$NumericMeasurementSchema.nameOptionalScore,
+            v.toDouble(),
+          );
+      }
+    }
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameSamples,
+      instance.samples,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameNullableSamples,
+      instance.nullableSamples,
+      Encodable.fromFunction((num? item, e) {
+        if (item == null) {
+          e.singleValue().encodeNull();
+        } else {
+          switch (item) {
+            case final int v:
+              e.singleValue().encodeInt(v);
+            case final v:
+              e.singleValue().encodeDouble(v.toDouble());
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameDistinctValues,
+      instance.distinctValues,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$NumericMeasurementSchema.nameMetrics,
+      instance.metrics,
+      Encodable.fromFunction((Map<String, num> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          switch (entry.value) {
+            case final int v:
+              k.encodeInt(entry.key, v);
+            case final v:
+              k.encodeDouble(entry.key, v.toDouble());
+          }
+        }
+      }),
+    );
+    keyed.encodeValue(
+      _$NumericMeasurementSchema.nameNullableMetrics,
+      instance.nullableMetrics,
+      Encodable.fromFunction((Map<String, num?> map, e) {
+        final k = e.keyed();
+        for (final entry in map.entries) {
+          switch (entry.value) {
+            case null:
+              break;
+            case final int v:
+              k.encodeInt(entry.key, v);
+            case final v:
+              k.encodeDouble(entry.key, v.toDouble());
+          }
+        }
+      }),
+    );
+  }
+}
+
+// =============================================================================
 // 1. Unified Schema Descriptor for Team
 // =============================================================================
 extension type const _$TeamSchema(int _value) {

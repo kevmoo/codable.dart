@@ -246,5 +246,52 @@ void main() {
       // UserAccount has 1 nullable field (`location`) and 4 non-nullable fields
       check('isNextNull()'.allMatches(userAccountOutput).length).equals(1);
     });
+
+    test('generates readNum / readNullableNum and int-preserving num collection codecs for NumericMeasurement', () {
+      final output = runGeneratorFor('NumericMeasurement');
+
+      check(output).contains('score = keyed.readNum();');
+      check(output).contains('optionalScore = keyed.readNum();');
+      check(output).contains(
+        'samples = keyed.decodeList<num>(Decodable.fromFunction((d) => d.singleValue().readNum()));',
+      );
+      check(output).contains(
+        'nullableSamples = keyed.decodeList<num?>(Decodable.fromFunction((d) => d.singleValue().readNullableNum()));',
+      );
+      check(output).contains(
+        'distinctValues = keyed.decodeList<num>(Decodable.fromFunction((d) => d.singleValue().readNum())).toSet();',
+      );
+      check(output).contains('m[key] = k.readNum();');
+      check(output).not((s) => s.contains('decodeUniformDoubleList'));
+    });
+
+    test('generates asymmetric and symmetric codec calls for CodableKeyVariantsModel', () {
+      final output = runGeneratorFor('CodableKeyVariantsModel');
+
+      check(output)
+          .contains('zip = keyed.decodeValue(const ZipCodeDecoder());');
+      check(output).contains(
+        'keyed.encodeValue(_\$CodableKeyVariantsModelSchema.nameZip, instance.zip, const ZipCodeDecoder());',
+      );
+      // decode-only falls back to native encodeString
+      check(
+        output,
+      ).contains('decodeOnlyZip = keyed.decodeValue(const ZipDecodeOnly());');
+      check(output).contains(
+        'keyed.encodeString(_\$CodableKeyVariantsModelSchema.nameDecodeOnlyZip, instance.decodeOnlyZip);',
+      );
+      // encode-only falls back to native readString
+      check(output).contains('upperCode = keyed.readString();');
+      check(output).contains(
+        'keyed.encodeValue(_\$CodableKeyVariantsModelSchema.nameUpperCode, instance.upperCode, const UpperCaseStringEncoder());',
+      );
+      // paired customDecoder + customEncoder
+      check(output).contains(
+        'createdAt = keyed.decodeValue(const EpochMsDateTimeDecoder());',
+      );
+      check(output).contains(
+        'keyed.encodeValue(_\$CodableKeyVariantsModelSchema.nameCreatedAt, instance.createdAt, const EpochMsDateTimeEncoder());',
+      );
+    });
   });
 }

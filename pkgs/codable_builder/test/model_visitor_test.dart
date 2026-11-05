@@ -183,5 +183,64 @@ void main() {
           .has((e) => e.message, 'message')
           .contains('exceeds the maximum golden mask limit of 62');
     });
+
+    test('extracts codable, customDecoder, and customEncoder on CodableKeyVariantsModel', () {
+      final model = visit('CodableKeyVariantsModel');
+      final fields = {for (final f in model.fields) f.name: f};
+
+      final zip = fields['zip']!;
+      check(zip.category).equals(TypeCategory.custom);
+      check(zip.customDecoderCode).equals('const ZipCodeDecoder()');
+      check(zip.customEncoderCode).equals('const ZipCodeDecoder()');
+
+      final decodeOnlyZip = fields['decodeOnlyZip']!;
+      check(decodeOnlyZip.category).equals(TypeCategory.custom);
+      check(decodeOnlyZip.nativeCategory).equals(TypeCategory.primitiveString);
+      check(decodeOnlyZip.customDecoderCode).equals('const ZipDecodeOnly()');
+      check(decodeOnlyZip.customEncoderCode).isNull();
+
+      final upperCode = fields['upperCode']!;
+      check(upperCode.category).equals(TypeCategory.custom);
+      check(upperCode.nativeCategory).equals(TypeCategory.primitiveString);
+      check(upperCode.customDecoderCode).isNull();
+      check(upperCode.customEncoderCode)
+          .equals('const UpperCaseStringEncoder()');
+
+      final createdAt = fields['createdAt']!;
+      check(createdAt.category).equals(TypeCategory.custom);
+      check(createdAt.customDecoderCode)
+          .equals('const EpochMsDateTimeDecoder()');
+      check(createdAt.customEncoderCode)
+          .equals('const EpochMsDateTimeEncoder()');
+    });
+
+    test('extracts primitiveNum and num collections on NumericMeasurement without uniform double list', () {
+      final model = visit('NumericMeasurement');
+      check(model.isUniformDoubleModel).isFalse();
+      final score = model.fields.firstWhere((f) => f.name == 'score');
+      check(score.category).equals(TypeCategory.primitiveNum);
+    });
+
+    test('validates @CodableKey codec assignability at build time', () {
+      check(() => visit('InvalidCodableMissingEncoder'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('must implement Encodable');
+
+      check(() => visit('InvalidCustomDecoderNotDecodable'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('must implement Decodable');
+
+      check(() => visit('InvalidCustomEncoderNotEncodable'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('must implement Encodable');
+
+      check(() => visit('InvalidDecodeOnlyNonNativeType'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('not natively encodable');
+    });
   });
 }

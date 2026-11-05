@@ -23,6 +23,16 @@ part 'domain_models_test.g.dart';
 // Concrete Mock JSON Driver & Test Container Implementations
 // ============================================================================
 
+ValueKind _testValueKind(Object? v) {
+  if (v == null) return ValueKind.nullValue;
+  if (v is bool) return ValueKind.boolean;
+  if (v is num) return ValueKind.number;
+  if (v is String) return ValueKind.string;
+  if (v is List) return ValueKind.list;
+  if (v is Map) return ValueKind.map;
+  throw CodableException('Unexpected test value kind for $v');
+}
+
 final class _TestDecoder implements Decoder {
   final Object? _data;
   @override
@@ -33,6 +43,14 @@ final class _TestDecoder implements Decoder {
   Uint8List? get payload => null;
 
   _TestDecoder(this._data, {this.userInfo = const {}});
+
+  @override
+  ValueKind peekKind() {
+    if (_activeKeyed != null && _activeKeyed!._hasCurrent) {
+      return _testValueKind(_activeKeyed!._currentValue);
+    }
+    return _testValueKind(_data);
+  }
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -128,6 +146,9 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  ValueKind peekKind() => _testValueKind(_currentValue);
+
+  @override
   int readInt() {
     final v = _currentValue;
     if (v is int) return v;
@@ -153,6 +174,20 @@ final class _TestKeyedDecoder implements KeyedDecoder {
     final v = _currentValue;
     if (v == null) return null;
     return readDouble();
+  }
+
+  @override
+  num readNum() {
+    final v = _currentValue;
+    if (v is num) return v;
+    throw CodableException('Expected num, found ${v.runtimeType}: $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    final v = _currentValue;
+    if (v == null) return null;
+    return readNum();
   }
 
   @override
@@ -331,6 +366,9 @@ final class _TestMappedDecoder implements MappedDecoder {
   bool containsKey(String key) => _map.containsKey(key);
 
   @override
+  ValueKind peekKind(String key) => _testValueKind(_map[key]);
+
+  @override
   int readInt(String key) {
     if (!_map.containsKey(key)) {
       throw CodableException('Missing required key "$key" in MappedDecoder');
@@ -364,6 +402,24 @@ final class _TestMappedDecoder implements MappedDecoder {
   double? readNullableDouble(String key) {
     if (!_map.containsKey(key) || _map[key] == null) return null;
     return readDouble(key);
+  }
+
+  @override
+  num readNum(String key) {
+    if (!_map.containsKey(key)) {
+      throw CodableException('Missing required key "$key" in MappedDecoder');
+    }
+    final v = _map[key];
+    if (v is num) return v;
+    throw CodableException(
+      'Expected num for key "$key", found ${v.runtimeType}: $v',
+    );
+  }
+
+  @override
+  num? readNullableNum(String key) {
+    if (!_map.containsKey(key) || _map[key] == null) return null;
+    return readNum(key);
   }
 
   @override
@@ -556,12 +612,23 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   bool moveNext() => _index < _list.length;
 
   @override
+  ValueKind peekKind() {
+    if (!moveNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
+    return _testValueKind(_list[_index]);
+  }
+
+  @override
   int readInt() {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    final v = _list[_index++];
-    if (v is int) return v;
+    final v = _list[_index];
+    if (v is int) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected int, found ${v.runtimeType}: $v');
   }
 
@@ -580,8 +647,11 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    final v = _list[_index++];
-    if (v is num) return v.toDouble();
+    final v = _list[_index];
+    if (v is num) {
+      _index++;
+      return v.toDouble();
+    }
     throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
   }
 
@@ -596,12 +666,38 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  num readNum() {
+    if (!moveNext()) {
+      throw const CodableException('End of array in UnkeyedDecoder');
+    }
+    final v = _list[_index];
+    if (v is num) {
+      _index++;
+      return v;
+    }
+    throw CodableException('Expected num, found ${v.runtimeType}: $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    if (!moveNext()) return null;
+    if (_list[_index] == null) {
+      _index++;
+      return null;
+    }
+    return readNum();
+  }
+
+  @override
   String readString() {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    final v = _list[_index++];
-    if (v is String) return v;
+    final v = _list[_index];
+    if (v is String) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected String, found ${v.runtimeType}: $v');
   }
 
@@ -633,8 +729,11 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    final v = _list[_index++];
-    if (v is bool) return v;
+    final v = _list[_index];
+    if (v is bool) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected bool, found ${v.runtimeType}: $v');
   }
 
@@ -659,10 +758,11 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    final v = _list[_index++];
+    final v = _list[_index];
     if (v != null) {
       throw CodableException('Expected null, found ${v.runtimeType}: $v');
     }
+    _index++;
   }
 
   @override
@@ -770,6 +870,9 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   _TestSingleValueDecoder(this._value, this._rootDecoder);
 
   @override
+  ValueKind peekKind() => _testValueKind(_value);
+
+  @override
   int readInt() {
     final v = _value;
     if (v is int) return v;
@@ -797,6 +900,21 @@ final class _TestSingleValueDecoder implements SingleValueDecoder {
   double? readNullableDouble() {
     if (_value == null) return null;
     return readDouble();
+  }
+
+  @override
+  num readNum() {
+    final v = _value;
+    if (v is num) return v;
+    throw CodableException(
+      'Expected num, found ${_value.runtimeType}: $_value',
+    );
+  }
+
+  @override
+  num? readNullableNum() {
+    if (_value == null) return null;
+    return readNum();
   }
 
   @override
@@ -1188,11 +1306,13 @@ class ZipCodeDecoder implements Codable<String> {
   @override
   String decode(Decoder decoder) {
     final single = decoder.singleValue();
-    try {
-      return single.readString();
-    } catch (_) {
-      return single.readInt().toString();
-    }
+    return switch (single.peekKind()) {
+      ValueKind.string => single.readString(),
+      ValueKind.number => single.readInt().toString(),
+      final kind => throw CodableException(
+        'Expected string or int for zip, found $kind',
+      ),
+    };
   }
 
   @override
@@ -1322,7 +1442,7 @@ class Bicycle extends Vehicle {
 }
 
 /// Tagged polymorphic descriptor registry.
-class VehicleSuperDecodable implements SuperDecodable<Vehicle> {
+class VehicleSuperDecodable extends SuperDecodable<Vehicle> {
   const VehicleSuperDecodable();
 
   @override
@@ -1333,6 +1453,71 @@ class VehicleSuperDecodable implements SuperDecodable<Vehicle> {
     'car': CarCodable(),
     'bicycle': BicycleCodable(),
   };
+}
+
+/// Decode-only custom converter normalizing int or string IDs.
+final class FlexibleIdDecoder implements Decodable<String> {
+  const FlexibleIdDecoder();
+
+  @override
+  String decode(Decoder decoder) {
+    final sv = decoder.singleValue();
+    return switch (sv.peekKind()) {
+      ValueKind.string => sv.readString(),
+      ValueKind.number => sv.readInt().toString(),
+      ValueKind.boolean => sv.readBool().toString(),
+      final kind => throw CodableException('Unsupported id kind: $kind'),
+    };
+  }
+}
+
+/// Encode-only custom converter uppercasing string codes.
+final class UpperCodeEncoder implements Encodable<String> {
+  const UpperCodeEncoder();
+
+  @override
+  void encode(String value, Encoder encoder) {
+    encoder.singleValue().encodeString(value.toUpperCase());
+  }
+}
+
+/// Domain model exercising `num`, `List<num>`, `codable:`, `customDecoder:`,
+/// `customEncoder:`, and `SuperDecodable<Vehicle>` on real `JsonCodableDecoder`.
+@Codable()
+class TelemetryPacket {
+  @CodableKey(customDecoder: FlexibleIdDecoder())
+  final String packetId;
+
+  @CodableKey(codable: ZipCodeDecoder())
+  final String regionZip;
+
+  @CodableKey(customEncoder: UpperCodeEncoder())
+  final String statusCode;
+
+  final num reading;
+  final num? delta;
+  final List<num> history;
+  final Map<String, num> counters;
+
+  @CodableKey(
+    customDecoder: VehicleSuperDecodable(),
+    customEncoder: VehicleCodable(),
+  )
+  final Vehicle vehicle;
+
+  final String? notes;
+
+  const TelemetryPacket({
+    required this.packetId,
+    required this.regionZip,
+    required this.statusCode,
+    required this.reading,
+    this.delta,
+    this.history = const [],
+    this.counters = const {},
+    required this.vehicle,
+    this.notes,
+  });
 }
 
 /// Nested location model for pairwise testing.
@@ -2668,6 +2853,216 @@ void main() {
           check(mapped.readString('data')).equals(padding);
         },
       );
+    });
+
+    group('JSON Contract Fixes: peekKind, speculative recovery, num, CodableKey, and MappedDecoder/SuperDecodable', () {
+      for (final (label, padLen) in [
+        ('<= 2048 bytes', 0),
+        ('> 2048 bytes', 2200),
+      ]) {
+        group('Payload size $label', () {
+          Uint8List makeBytes(String json) =>
+              Uint8List.fromList(utf8.encode(json));
+
+          test('peekKind() inspects all ValueKind variants across Decoder, Keyed, Unkeyed, SingleValue, and Mapped', () {
+            final pad = 'p' * padLen;
+            final raw =
+                '{"n": null, "b": true, "i": 42, "d": 3.5, "s": "hello$pad", "l": [1, "two", false, null, [], {}], "m": {"k": 7}}';
+            final bytes = makeBytes(raw);
+            if (padLen == 0) {
+              check(bytes.length).isLessOrEqual(2048);
+            } else {
+              check(bytes.length).isGreaterThan(2048);
+            }
+
+            // Streaming decoder path
+            final dec = JsonCodableDecoder.fromBytes(bytes);
+            check(dec.peekKind()).equals(ValueKind.map);
+            final keyed = dec.keyed();
+            final seenKinds = <String, ValueKind>{};
+            while (keyed.moveNextKey()) {
+              final k = keyed.nextKey();
+              seenKinds[k] = keyed.peekKind();
+              if (k == 'l') {
+                final u = keyed.nestedDecoder().unkeyed();
+                final elemKinds = <ValueKind>[];
+                while (u.moveNext()) {
+                  elemKinds.add(u.peekKind());
+                  u.skipElement();
+                }
+                check(elemKinds).deepEquals([
+                  ValueKind.number,
+                  ValueKind.string,
+                  ValueKind.boolean,
+                  ValueKind.nullValue,
+                  ValueKind.list,
+                  ValueKind.map,
+                ]);
+              } else {
+                keyed.skipValue();
+              }
+            }
+            check(seenKinds['n']).equals(ValueKind.nullValue);
+            check(seenKinds['b']).equals(ValueKind.boolean);
+            check(seenKinds['i']).equals(ValueKind.number);
+            check(seenKinds['d']).equals(ValueKind.number);
+            check(seenKinds['s']).equals(ValueKind.string);
+            check(seenKinds['l']).equals(ValueKind.list);
+            check(seenKinds['m']).equals(ValueKind.map);
+
+            // Mapped / _DartObjectDecoder path
+            final mapped = JsonCodableDecoder.fromBytes(bytes).mapped();
+            check(mapped.peekKind('n')).equals(ValueKind.nullValue);
+            check(mapped.peekKind('b')).equals(ValueKind.boolean);
+            check(mapped.peekKind('i')).equals(ValueKind.number);
+            check(mapped.peekKind('s')).equals(ValueKind.string);
+            check(mapped.peekKind('l')).equals(ValueKind.list);
+            check(mapped.peekKind('m')).equals(ValueKind.map);
+            check(mapped.nestedDecoder('i').singleValue().peekKind())
+                .equals(ValueKind.number);
+            check(mapped.nestedDecoder('s').singleValue().peekKind())
+                .equals(ValueKind.string);
+          });
+
+          test('speculative primitive read failure does not advance cursor in streaming or object-tree decoders', () {
+            final pad = 'x' * padLen;
+            final raw =
+                '{"zipStr": "02138", "zipInt": 90210, "arr": ["abc", 77], "pad": "$pad"}';
+            final bytes = makeBytes(raw);
+
+            // Reverse order: try readInt() first on a string, then fallback to readString()
+            final reverseCodec = Decodable<String>.fromFunction((d) {
+              final sv = d.singleValue();
+              try {
+                return sv.readInt().toString();
+              } on Object {
+                return sv.readString();
+              }
+            });
+
+            // 1. Streaming JsonCodableDecoder
+            final streamDec = JsonCodableDecoder.fromBytes(bytes);
+            final k = streamDec.keyed();
+            String? zipStr;
+            String? zipInt;
+            final arrItems = <String>[];
+            while (k.moveNextKey()) {
+              switch (k.nextKey()) {
+                case 'zipStr':
+                  zipStr = k.decodeValue(reverseCodec);
+                case 'zipInt':
+                  zipInt = k.decodeValue(reverseCodec);
+                case 'arr':
+                  final u = k.nestedDecoder().unkeyed();
+                  while (u.moveNext()) {
+                    try {
+                      arrItems.add(u.readInt().toString());
+                    } on Object {
+                      arrItems.add(u.readString());
+                    }
+                  }
+                default:
+                  k.skipValue();
+              }
+            }
+            check(zipStr).equals('02138');
+            check(zipInt).equals('90210');
+            check(arrItems).deepEquals(['abc', '77']);
+
+            // 2. Object-tree _DartObjectDecoder via mapped()
+            final mapped = JsonCodableDecoder.fromBytes(bytes).mapped();
+            check(mapped.decodeKey('zipStr', reverseCodec)).equals('02138');
+            check(mapped.decodeKey('zipInt', reverseCodec)).equals('90210');
+          });
+
+          test('VehicleCodable and VehicleSuperDecodable decode directly from JsonCodableDecoder.fromBytes', () {
+            final pad = 'v' * padLen;
+            final trailingCarJson =
+                '{"pad": "$pad", "maxSpeed": 240, "doors": 2, "type": "car"}';
+            final leadingBikeJson =
+                '{"type": "bicycle", "pad": "$pad", "maxSpeed": 32, "hasBell": true}';
+
+            final car1 = const VehicleCodable().decode(
+              JsonCodableDecoder.fromBytes(makeBytes(trailingCarJson)),
+            );
+            check(car1).equals(const Car(maxSpeed: 240, doors: 2));
+
+            final car2 = const VehicleSuperDecodable().decode(
+              JsonCodableDecoder.fromBytes(makeBytes(trailingCarJson)),
+            );
+            check(car2).equals(const Car(maxSpeed: 240, doors: 2));
+
+            final bike = const VehicleSuperDecodable().decode(
+              JsonCodableDecoder.fromBytes(makeBytes(leadingBikeJson)),
+            );
+            check(bike).equals(const Bicycle(maxSpeed: 32, hasBell: true));
+          });
+
+          test('TelemetryPacket roundtrips num, List<num>, Map<String, num>, CodableKey variants, and SuperDecodable', () {
+            final pad = 'n' * padLen;
+            final raw = jsonEncode({
+              'packetId': 9988,
+              'regionZip': 94107,
+              'statusCode': 'ok',
+              'reading': 42,
+              'delta': -1.25,
+              'history': [10, 20.5, 30],
+              'counters': {'hits': 7, 'ratio': 0.75},
+              'vehicle': {'maxSpeed': 180, 'doors': 4, 'type': 'car'},
+              'notes': pad,
+            });
+            final bytes = makeBytes(raw);
+
+            // Decode via streaming JsonCodableDecoder
+            final decoded = const TelemetryPacketCodable().decode(
+              JsonCodableDecoder.fromBytes(bytes),
+            );
+            check(decoded.packetId).equals('9988');
+            check(decoded.regionZip).equals('94107');
+            check(decoded.statusCode).equals('ok');
+            check(decoded.reading).isA<int>().equals(42);
+            check(decoded.delta).isA<double>().equals(-1.25);
+            check(decoded.history.length).equals(3);
+            check(decoded.history[0]).isA<int>().equals(10);
+            check(decoded.history[1]).isA<double>().equals(20.5);
+            check(decoded.history[2]).isA<int>().equals(30);
+            check(decoded.counters['hits']).isA<int>().equals(7);
+            check(decoded.counters['ratio']).isA<double>().equals(0.75);
+            check(decoded.vehicle).equals(const Car(maxSpeed: 180, doors: 4));
+
+            // Decode via mapped() -> _DartObjectKeyedDecoder handoff
+            final handoffDec = JsonCodableDecoder.fromBytes(bytes);
+            check(handoffDec.mapped().readNum('reading')).isA<int>().equals(42);
+            final fromHandoff = const TelemetryPacketCodable().decode(
+              handoffDec,
+            );
+            check(fromHandoff.history[0]).isA<int>().equals(10);
+            check(fromHandoff.vehicle)
+                .equals(const Car(maxSpeed: 180, doors: 4));
+
+            // Encode via JsonCodableEncoder and verify wire types & customEncoder
+            final outBytes = JsonCodableEncoder.toBytes(
+              decoded,
+              const TelemetryPacketCodable(),
+            );
+            final outStr = utf8.decode(outBytes);
+            check(outStr).contains('"statusCode":"OK"');
+            check(outStr).contains('"reading":42');
+            check(outStr).contains('"history":[10,20.5,30]');
+
+            // Roundtrip via TestJsonDriver as well
+            final testDecoded = TestJsonDriver.decodeBytes(
+              outBytes,
+              const TelemetryPacketCodable(),
+            );
+            check(testDecoded.statusCode).equals('OK');
+            check(testDecoded.reading).isA<int>().equals(42);
+            check(testDecoded.history[0]).isA<int>().equals(10);
+            check(testDecoded.vehicle)
+                .equals(const Car(maxSpeed: 180, doors: 4));
+          });
+        });
+      }
     });
   });
 }

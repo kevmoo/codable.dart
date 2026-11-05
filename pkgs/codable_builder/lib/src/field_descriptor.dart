@@ -40,6 +40,9 @@ final class FieldDescriptor {
   /// The classified high-level type category.
   final TypeCategory category;
 
+  /// The underlying native type category (ignoring custom codecs).
+  final TypeCategory nativeCategory;
+
   /// Whether this parameter is positional in the primary constructor.
   final bool isPositional;
 
@@ -64,6 +67,9 @@ final class FieldDescriptor {
 
   /// Revived custom decoder expression (e.g. `const ZipCodeDecoder()`).
   final String? customDecoderCode;
+
+  /// Revived custom encoder expression (e.g. `const ZipCodeDecoder()`).
+  final String? customEncoderCode;
 
   /// Fixed length if annotated with `@CodableTuple(length)`.
   final int? tupleLength;
@@ -95,6 +101,7 @@ final class FieldDescriptor {
     required this.aliases,
     required this.type,
     required this.category,
+    TypeCategory? nativeCategory,
     required this.isPositional,
     required this.isNamed,
     required this.isRequired,
@@ -103,6 +110,7 @@ final class FieldDescriptor {
     this.defaultValueCode,
     required this.ignore,
     this.customDecoderCode,
+    this.customEncoderCode,
     this.tupleLength,
     this.elementType,
     this.mapKeyType,
@@ -111,7 +119,7 @@ final class FieldDescriptor {
     this.reqBitIndex,
     required this.keyIndex,
     required this.aliasIndices,
-  });
+  }) : nativeCategory = nativeCategory ?? category;
 
   /// Whether this field participates in golden mask validation.
   bool get participatesInGoldenMask =>
@@ -167,11 +175,10 @@ final class ModelDescriptor {
     return activeFields.every(
       (f) =>
           (f.category == TypeCategory.primitiveDouble ||
-              f.category == TypeCategory.primitiveNum ||
-              f.type.isDartCoreDouble ||
-              f.type.isDartCoreNum) &&
+              f.type.isDartCoreDouble) &&
           !f.isNullable &&
           f.customDecoderCode == null &&
+          f.customEncoderCode == null &&
           f.tupleLength == null,
     );
   }

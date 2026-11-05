@@ -129,27 +129,45 @@ final class DecoderGeneratorHelper {
     buffer.writeln('  static final KeyOptions keyOptions = options;');
 
     // Enum Options
-    for (final field in nonIgnoredFields) {
-      if (field.category == TypeCategory.enumType &&
-          field.enumConstants != null &&
-          field.enumConstants!.isNotEmpty) {
-        buffer.writeln();
-        buffer.writeln('  // Enum Options for ${field.name}');
-        buffer.writeln(
-          '  static final KeyOptions ${field.name}EnumOptions = '
-          'KeyOptions.of(const [',
-        );
-        for (final constant in field.enumConstants!) {
-          buffer.writeln("    '$constant',");
-        }
-        buffer.writeln('  ]);');
-        buffer.writeln(
-          '  static final KeyOptions ${field.name}KeyOptions = '
-          '${field.name}EnumOptions;',
-        );
-      }
-    }
+    _writeSchemaEnumOptions(buffer, nonIgnoredFields);
 
+    _writeSchemaBitmaskValidation(buffer, schemaName);
+
+    buffer.writeln('}');
+  }
+
+  void _writeSchemaEnumOptions(
+    StringBuffer buffer,
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
+    for (final field in nonIgnoredFields) {
+      final needsEnumOptions =
+          field.category == TypeCategory.enumType ||
+          (field.category == TypeCategory.custom &&
+              field.customDecoderCode == null &&
+              field.nativeCategory == TypeCategory.enumType);
+      final constants = field.enumConstants;
+      if (!needsEnumOptions || constants == null || constants.isEmpty) {
+        continue;
+      }
+      buffer.writeln();
+      buffer.writeln('  // Enum Options for ${field.name}');
+      buffer.writeln(
+        '  static final KeyOptions ${field.name}EnumOptions = '
+        'KeyOptions.of(const [',
+      );
+      for (final constant in constants) {
+        buffer.writeln("    '$constant',");
+      }
+      buffer.writeln('  ]);');
+      buffer.writeln(
+        '  static final KeyOptions ${field.name}KeyOptions = '
+        '${field.name}EnumOptions;',
+      );
+    }
+  }
+
+  void _writeSchemaBitmaskValidation(StringBuffer buffer, String schemaName) {
     buffer.writeln();
     buffer.writeln('  // Bitmask Flags strictly for Required Fields');
     buffer.writeln('  static const $schemaName none = $schemaName(0);');
@@ -212,8 +230,6 @@ final class DecoderGeneratorHelper {
       );
       buffer.writeln('  }');
     }
-
-    buffer.writeln('}');
   }
 
   void _writeDecoder(StringBuffer buffer) {
@@ -345,8 +361,9 @@ final class DecoderGeneratorHelper {
     StringBuffer buffer,
     FieldDescriptor field, {
     required String indent,
+    TypeCategory? categoryOverride,
   }) {
-    switch (field.category) {
+    switch (categoryOverride ?? field.category) {
       case TypeCategory.primitiveInt:
         buffer.writeln('$indent${field.name} = keyed.readInt();');
       case TypeCategory.primitiveDouble:
@@ -361,10 +378,19 @@ final class DecoderGeneratorHelper {
         final schemaName = '_\$${model.className}Schema';
         _writeKeyedEnumFieldRead(buffer, field, schemaName, indent: indent);
       case TypeCategory.custom:
-        buffer.writeln(
-          '$indent${field.name} = '
-          'keyed.decodeValue(${field.customDecoderCode});',
-        );
+        if (field.customDecoderCode != null) {
+          buffer.writeln(
+            '$indent${field.name} = '
+            'keyed.decodeValue(${field.customDecoderCode});',
+          );
+        } else {
+          _writeKeyedFieldRead(
+            buffer,
+            field,
+            indent: indent,
+            categoryOverride: field.nativeCategory,
+          );
+        }
       case TypeCategory.tuple:
         buffer.writeln('$indent${field.name} = keyed.decodeFloat64List();');
       case TypeCategory.list:
@@ -414,293 +440,361 @@ final class DecoderGeneratorHelper {
     FieldDescriptor field, {
     required String indent,
   }) {
-    final typeName = field.type.element?.name;
-    if (typeName == 'Float64List') {
-      buffer.writeln('$indent${field.name} = keyed.decodeFloat64List();');
-      return;
-    } else if (typeName == 'Int64List') {
-      buffer.writeln(
-        '$indent${field.name} = Int64List.fromList(keyed.decodeIntList());',
-      );
-      return;
-    } else if (typeName == 'Int32List') {
-      buffer.writeln(
-        '$indent${field.name} = Int32List.fromList(keyed.decodeIntList());',
-      );
-      return;
-    } else if (typeName == 'Uint8List') {
-      buffer.writeln(
-        '$indent${field.name} = Uint8List.fromList(keyed.decodeIntList());',
-      );
-      return;
-    } else if (typeName == 'Float32List') {
-      buffer.writeln(
-        '$indent${field.name} = Float32List.fromList(keyed.decodeDoubleList());',
-      );
+    if (_tryWriteTypedDataListRead(buffer, field, indent: indent)) {
       return;
     }
 
     final elemType = field.elementType;
-    final isNullable = elemType?.isNullableType ?? false;
     if (elemType == null) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList('
         'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic));',
       );
-    } else if (elemType.isDartCoreInt && !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
-    } else if ((elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
-    } else if (elemType.isDartCoreString && !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
-    } else if (elemType.isDartCoreBool && !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
-    } else if (elemType.element?.name == 'Float64List' && !isNullable) {
-      buffer.writeln(
-        '$indent{\n'
-        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-        '$indent  final l = <Float64List>[];\n'
-        '$indent  while (u.moveNext()) {\n'
-        '$indent    l.add(u.decodeFloat64List());\n'
-        '$indent  }\n'
-        '$indent  ${field.name} = l;\n'
-        '$indent}',
-      );
-    } else if (elemType.element?.name == 'Int64List' && !isNullable) {
-      buffer.writeln(
-        '$indent{\n'
-        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-        '$indent  final l = <Int64List>[];\n'
-        '$indent  while (u.moveNext()) {\n'
-        '$indent    l.add(Int64List.fromList(u.decodeIntList()));\n'
-        '$indent  }\n'
-        '$indent  ${field.name} = l;\n'
-        '$indent}',
-      );
-    } else if (!isNullable &&
+      return;
+    }
+
+    final isNullable = elemType.isNullableType;
+    if (!isNullable &&
+        _tryWriteNonNullFastListRead(buffer, field, elemType, indent: indent)) {
+      return;
+    }
+    if (!isNullable &&
         (elemType.isDartCoreList || elemType.element?.name == 'List')) {
-      final inner =
-          elemType is InterfaceType && elemType.typeArguments.isNotEmpty
-          ? elemType.typeArguments.first
-          : null;
-      if (inner != null && inner.isDartCoreDouble && !inner.isNullableType) {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <List<double>>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    l.add(u.decodeDoubleList());\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
-        );
-      } else if (inner != null && inner.element?.name == 'Float64List') {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <Float64List>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    l.add(u.decodeFloat64List());\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
-        );
-      } else if (inner != null &&
-          inner.isDartCoreInt &&
-          !inner.isNullableType) {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <List<int>>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    l.add(u.decodeIntList());\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
-        );
-      } else if (inner != null &&
-          inner.isDartCoreString &&
-          !inner.isNullableType) {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <List<String>>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    l.add(u.decodeStringList());\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
-        );
-      } else if (inner != null &&
-          inner.isDartCoreBool &&
-          !inner.isNullableType) {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <List<bool>>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    l.add(u.decodeBoolList());\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
-        );
-      } else {
-        buffer.writeln(
-          '$indent${field.name} = keyed.decodeList(${_generateUnkeyedElementExpr(elemType)});',
-        );
-      }
-    } else if (elemType.element is EnumElement) {
-      final enumName = elemType.element!.name;
-      if (isNullable) {
-        buffer.writeln(
-          '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
-          'final v = d.singleValue().readNullableString(); '
-          'return v == null ? null : $enumName.values.byName(v); }));',
-        );
-      } else {
-        buffer.writeln(
-          '$indent${field.name} = keyed.decodeList('
-          'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString())));',
-        );
-      }
-    } else if (elemType.element != null &&
+      _writeNestedListRead(buffer, field, elemType, indent: indent);
+      return;
+    }
+    if (elemType.element is EnumElement) {
+      _writeEnumListRead(buffer, field, elemType, indent: indent);
+      return;
+    }
+    if (elemType.element != null &&
         const TypeClassifier().isCodableElement(elemType.element!)) {
-      final nestedName = elemType.element!.name;
-      if (isNullable) {
+      _writeCodableListRead(buffer, field, elemType, indent: indent);
+      return;
+    }
+    if (isNullable &&
+        _tryWriteNullablePrimitiveListRead(
+          buffer,
+          field,
+          elemType,
+          indent: indent,
+        )) {
+      return;
+    }
+    final elemTypeStr = elemType.getDisplayString();
+    buffer.writeln(
+      '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
+      'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic));',
+    );
+  }
+
+  bool _tryWriteTypedDataListRead(
+    StringBuffer buffer,
+    FieldDescriptor field, {
+    required String indent,
+  }) {
+    switch (field.type.element?.name) {
+      case 'Float64List':
+        buffer.writeln('$indent${field.name} = keyed.decodeFloat64List();');
+        return true;
+      case 'Int64List':
         buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final l = <$nestedName?>[];\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    if (u.isNextNull()) {\n'
-          '$indent      u.readNull();\n'
-          '$indent      l.add(null);\n'
-          '$indent    } else {\n'
-          '$indent      l.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
-          '$indent    }\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = l;\n'
-          '$indent}',
+          '$indent${field.name} = Int64List.fromList(keyed.decodeIntList());',
         );
-      } else {
+        return true;
+      case 'Int32List':
         buffer.writeln(
-          '$indent${field.name} = '
-          'const ${nestedName}Codable().decodeList(keyed.nestedDecoder());',
+          '$indent${field.name} = Int32List.fromList(keyed.decodeIntList());',
         );
-      }
-    } else if (elemType.isDartCoreString && isNullable) {
+        return true;
+      case 'Uint8List':
+        buffer.writeln(
+          '$indent${field.name} = Uint8List.fromList(keyed.decodeIntList());',
+        );
+        return true;
+      case 'Float32List':
+        buffer.writeln(
+          '$indent${field.name} = Float32List.fromList(keyed.decodeDoubleList());',
+        );
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  bool _tryWriteNonNullFastListRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    DartType elemType, {
+    required String indent,
+  }) {
+    if (elemType.isDartCoreInt) {
+      buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
+      return true;
+    }
+    if (elemType.isDartCoreDouble) {
+      buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
+      return true;
+    }
+    if (elemType.isDartCoreNum) {
       buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<String?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableString()));',
+        '$indent${field.name} = keyed.decodeList<num>('
+        'Decodable.fromFunction((d) => d.singleValue().readNum()));',
       );
-    } else if (elemType.isDartCoreInt && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<int?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableInt()));',
+      return true;
+    }
+    if (elemType.isDartCoreString) {
+      buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
+      return true;
+    }
+    if (elemType.isDartCoreBool) {
+      buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
+      return true;
+    }
+    if (elemType.element?.name == 'Float64List') {
+      _writeUnkeyedLoopListRead(
+        buffer,
+        field.name,
+        'Float64List',
+        'u.decodeFloat64List()',
+        indent: indent,
       );
-    } else if ((elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<double?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableDouble()));',
+      return true;
+    }
+    if (elemType.element?.name == 'Int64List') {
+      _writeUnkeyedLoopListRead(
+        buffer,
+        field.name,
+        'Int64List',
+        'Int64List.fromList(u.decodeIntList())',
+        indent: indent,
       );
-    } else if (elemType.isDartCoreBool && isNullable) {
+      return true;
+    }
+    return false;
+  }
+
+  void _writeNestedListRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    DartType elemType, {
+    required String indent,
+  }) {
+    final inner = elemType is InterfaceType && elemType.typeArguments.isNotEmpty
+        ? elemType.typeArguments.first
+        : null;
+    final fastSpec = inner != null ? _nestedFastListSpec(inner) : null;
+    if (fastSpec != null) {
+      _writeUnkeyedLoopListRead(
+        buffer,
+        field.name,
+        fastSpec.$1,
+        fastSpec.$2,
+        indent: indent,
+      );
+      return;
+    }
+    buffer.writeln(
+      '$indent${field.name} = keyed.decodeList(${_generateUnkeyedElementExpr(elemType)});',
+    );
+  }
+
+  (String, String)? _nestedFastListSpec(DartType inner) {
+    if (inner.element?.name == 'Float64List') {
+      return ('Float64List', 'u.decodeFloat64List()');
+    }
+    if (inner.isNullableType) return null;
+    if (inner.isDartCoreDouble) return ('List<double>', 'u.decodeDoubleList()');
+    if (inner.isDartCoreInt) return ('List<int>', 'u.decodeIntList()');
+    if (inner.isDartCoreString) return ('List<String>', 'u.decodeStringList()');
+    if (inner.isDartCoreBool) return ('List<bool>', 'u.decodeBoolList()');
+    return null;
+  }
+
+  void _writeUnkeyedLoopListRead(
+    StringBuffer buffer,
+    String fieldName,
+    String listElementType,
+    String decodeExpr, {
+    required String indent,
+  }) {
+    buffer.writeln(
+      '$indent{\n'
+      '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
+      '$indent  final l = <$listElementType>[];\n'
+      '$indent  while (u.moveNext()) {\n'
+      '$indent    l.add($decodeExpr);\n'
+      '$indent  }\n'
+      '$indent  $fieldName = l;\n'
+      '$indent}',
+    );
+  }
+
+  void _writeEnumListRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    DartType elemType, {
+    required String indent,
+  }) {
+    final enumName = elemType.element!.name;
+    if (elemType.isNullableType) {
       buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<bool?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableBool()));',
+        '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
+        'final v = d.singleValue().readNullableString(); '
+        'return v == null ? null : $enumName.values.byName(v); }));',
       );
     } else {
-      final elemTypeStr = elemType.getDisplayString();
       buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
-        'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic));',
+        '$indent${field.name} = keyed.decodeList('
+        'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString())));',
       );
     }
   }
 
+  void _writeCodableListRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    DartType elemType, {
+    required String indent,
+  }) {
+    final nestedName = elemType.element!.name;
+    if (elemType.isNullableType) {
+      buffer.writeln(
+        '$indent{\n'
+        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
+        '$indent  final l = <$nestedName?>[];\n'
+        '$indent  while (u.moveNext()) {\n'
+        '$indent    if (u.isNextNull()) {\n'
+        '$indent      u.readNull();\n'
+        '$indent      l.add(null);\n'
+        '$indent    } else {\n'
+        '$indent      l.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
+        '$indent    }\n'
+        '$indent  }\n'
+        '$indent  ${field.name} = l;\n'
+        '$indent}',
+      );
+    } else {
+      buffer.writeln(
+        '$indent${field.name} = '
+        'const ${nestedName}Codable().decodeList(keyed.nestedDecoder());',
+      );
+    }
+  }
+
+  bool _tryWriteNullablePrimitiveListRead(
+    StringBuffer buffer,
+    FieldDescriptor field,
+    DartType elemType, {
+    required String indent,
+  }) {
+    final spec = _nullablePrimitiveListSpec(elemType);
+    if (spec == null) return false;
+    buffer.writeln(
+      '$indent${field.name} = keyed.decodeList<${spec.$1}>('
+      'Decodable.fromFunction((d) => d.singleValue().${spec.$2}()));',
+    );
+    return true;
+  }
+
+  (String, String)? _nullablePrimitiveListSpec(DartType elemType) {
+    if (elemType.isDartCoreString) return ('String?', 'readNullableString');
+    if (elemType.isDartCoreInt) return ('int?', 'readNullableInt');
+    if (elemType.isDartCoreDouble) return ('double?', 'readNullableDouble');
+    if (elemType.isDartCoreNum) return ('num?', 'readNullableNum');
+    if (elemType.isDartCoreBool) return ('bool?', 'readNullableBool');
+    return null;
+  }
+
   String _generateUnkeyedElementExpr(DartType type) {
     if (type.isDartCoreList || type.element?.name == 'List') {
-      final inner = type is InterfaceType && type.typeArguments.isNotEmpty
-          ? type.typeArguments.first
-          : null;
-      if (type.isNullableType) {
-        if (inner == null) {
-          return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)); })';
-        }
-        return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}); })';
-      }
-      if (inner == null) {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)))';
-      }
-      if (inner.isDartCoreDouble && !inner.isNullableType) {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeDoubleList())';
-      }
-      if (inner.element?.name == 'Float64List') {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
-      }
-      if (inner.isDartCoreInt && !inner.isNullableType) {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeIntList())';
-      }
-      if (inner.isDartCoreString && !inner.isNullableType) {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeStringList())';
-      }
-      if (inner.isDartCoreBool && !inner.isNullableType) {
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeBoolList())';
-      }
-      return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}))';
+      return _generateUnkeyedListElementExpr(type);
     }
-    if (type.element?.name == 'Float64List') {
-      return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
-    }
-    if (type.element?.name == 'Int64List') {
-      return 'Decodable.fromFunction((d) => Int64List.fromList(d.unkeyed().decodeIntList()))';
-    }
-    if (type.element?.name == 'Int32List') {
-      return 'Decodable.fromFunction((d) => Int32List.fromList(d.unkeyed().decodeIntList()))';
-    }
-    if (type.element?.name == 'Uint8List') {
-      return 'Decodable.fromFunction((d) => Uint8List.fromList(d.unkeyed().decodeIntList()))';
-    }
-    if (type.element?.name == 'Float32List') {
-      return 'Decodable.fromFunction((d) => Float32List.fromList(d.unkeyed().decodeDoubleList()))';
-    }
+    final typedData = _tryGenerateTypedDataElementExpr(type);
+    if (typedData != null) return typedData;
     if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       final nestedName = type.element!.name;
-      if (type.isNullableType) {
-        return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return const ${nestedName}Codable().decode(d); })';
-      }
-      return 'const ${nestedName}Codable()';
+      return type.isNullableType
+          ? 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return const ${nestedName}Codable().decode(d); })'
+          : 'const ${nestedName}Codable()';
     }
     if (type.element is EnumElement) {
       final enumName = type.element!.name;
-      if (type.isNullableType) {
-        return 'Decodable.fromFunction((d) { final v = d.singleValue().readNullableString(); return v == null ? null : $enumName.values.byName(v); })';
-      }
-      return 'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))';
-    }
-    if (type.isDartCoreInt) {
       return type.isNullableType
-          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableInt())'
-          : 'Decodable.fromFunction((d) => d.singleValue().readInt())';
+          ? 'Decodable.fromFunction((d) { final v = d.singleValue().readNullableString(); return v == null ? null : $enumName.values.byName(v); })'
+          : 'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))';
     }
-    if (type.isDartCoreDouble || type.isDartCoreNum) {
-      return type.isNullableType
-          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableDouble())'
-          : 'Decodable.fromFunction((d) => d.singleValue().readDouble())';
+    return _generatePrimitiveUnkeyedElementExpr(type);
+  }
+
+  String _generateUnkeyedListElementExpr(DartType type) {
+    final inner = type is InterfaceType && type.typeArguments.isNotEmpty
+        ? type.typeArguments.first
+        : null;
+    if (type.isNullableType) {
+      final innerExpr = inner == null
+          ? 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)'
+          : _generateUnkeyedElementExpr(inner);
+      return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList($innerExpr); })';
     }
-    if (type.isDartCoreString) {
-      return type.isNullableType
-          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableString())'
-          : 'Decodable.fromFunction((d) => d.singleValue().readString())';
+    if (inner == null) {
+      return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)))';
     }
-    if (type.isDartCoreBool) {
-      return type.isNullableType
-          ? 'Decodable.fromFunction((d) => d.singleValue().readNullableBool())'
-          : 'Decodable.fromFunction((d) => d.singleValue().readBool())';
+    final fastCall = _unkeyedFastInnerListCall(inner);
+    if (fastCall != null) {
+      return 'Decodable.fromFunction((d) => d.unkeyed().$fastCall)';
+    }
+    return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}))';
+  }
+
+  String? _unkeyedFastInnerListCall(DartType inner) {
+    if (inner.element?.name == 'Float64List') return 'decodeFloat64List()';
+    if (inner.isNullableType) return null;
+    if (inner.isDartCoreDouble) return 'decodeDoubleList()';
+    if (inner.isDartCoreInt) return 'decodeIntList()';
+    if (inner.isDartCoreString) return 'decodeStringList()';
+    if (inner.isDartCoreBool) return 'decodeBoolList()';
+    return null;
+  }
+
+  String? _tryGenerateTypedDataElementExpr(DartType type) {
+    switch (type.element?.name) {
+      case 'Float64List':
+        return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
+      case 'Int64List':
+        return 'Decodable.fromFunction((d) => Int64List.fromList(d.unkeyed().decodeIntList()))';
+      case 'Int32List':
+        return 'Decodable.fromFunction((d) => Int32List.fromList(d.unkeyed().decodeIntList()))';
+      case 'Uint8List':
+        return 'Decodable.fromFunction((d) => Uint8List.fromList(d.unkeyed().decodeIntList()))';
+      case 'Float32List':
+        return 'Decodable.fromFunction((d) => Float32List.fromList(d.unkeyed().decodeDoubleList()))';
+      default:
+        return null;
+    }
+  }
+
+  String _generatePrimitiveUnkeyedElementExpr(DartType type) {
+    final method = _primitiveSingleValueReadMethod(type);
+    if (method != null) {
+      return 'Decodable.fromFunction((d) => d.singleValue().$method())';
     }
     return 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)';
+  }
+
+  String? _primitiveSingleValueReadMethod(DartType type) {
+    final nullable = type.isNullableType;
+    if (type.isDartCoreInt) return nullable ? 'readNullableInt' : 'readInt';
+    if (type.isDartCoreDouble) {
+      return nullable ? 'readNullableDouble' : 'readDouble';
+    }
+    if (type.isDartCoreNum) return nullable ? 'readNullableNum' : 'readNum';
+    if (type.isDartCoreString) {
+      return nullable ? 'readNullableString' : 'readString';
+    }
+    if (type.isDartCoreBool) return nullable ? 'readNullableBool' : 'readBool';
+    return null;
   }
 
   void _writeKeyedSetRead(
@@ -727,18 +821,24 @@ final class DecoderGeneratorHelper {
         '$indent${field.name} = keyed.decodeList<int?>('
         'Decodable.fromFunction((d) => d.singleValue().readNullableInt())).toSet();',
       );
-    } else if (elemType != null &&
-        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        !isNullable) {
+    } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeDoubleList().toSet();',
       );
-    } else if (elemType != null &&
-        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        isNullable) {
+    } else if (elemType != null && elemType.isDartCoreNum && !isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<num>('
+        'Decodable.fromFunction((d) => d.singleValue().readNum())).toSet();',
+      );
+    } else if (elemType != null && elemType.isDartCoreDouble && isNullable) {
       buffer.writeln(
         '$indent${field.name} = keyed.decodeList<double?>('
         'Decodable.fromFunction((d) => d.singleValue().readNullableDouble())).toSet();',
+      );
+    } else if (elemType != null && elemType.isDartCoreNum && isNullable) {
+      buffer.writeln(
+        '$indent${field.name} = keyed.decodeList<num?>('
+        'Decodable.fromFunction((d) => d.singleValue().readNullableNum())).toSet();',
       );
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
       buffer.writeln('$indent${field.name} = keyed.decodeBoolList().toSet();');
@@ -808,9 +908,10 @@ final class DecoderGeneratorHelper {
       readExpr = 'k.readString()';
     } else if (valType != null && valType.isDartCoreInt) {
       readExpr = 'k.readInt()';
-    } else if (valType != null &&
-        (valType.isDartCoreDouble || valType.isDartCoreNum)) {
+    } else if (valType != null && valType.isDartCoreDouble) {
       readExpr = 'k.readDouble()';
+    } else if (valType != null && valType.isDartCoreNum) {
+      readExpr = 'k.readNum()';
     } else if (valType != null && valType.isDartCoreBool) {
       readExpr = 'k.readBool()';
     } else if (valType != null &&
