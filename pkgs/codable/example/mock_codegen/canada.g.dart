@@ -96,7 +96,7 @@ final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
 
   @override
   void encode(CanadaProperties instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 1);
     keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
   }
 }
@@ -192,7 +192,7 @@ final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
 
   @override
   void encode(CanadaGeometry instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
     keyed.encodeValue(
       _$CanadaGeometrySchema.nameCoordinates,
@@ -332,7 +332,7 @@ final class CanadaFeatureCodable implements Codable<CanadaFeature> {
 
   @override
   void encode(CanadaFeature instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 3);
     keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
     keyed.encodeValue(
       _$CanadaFeatureSchema.nameProperties,
@@ -450,7 +450,7 @@ final class CanadaFeatureCollectionCodable
 
   @override
   void encode(CanadaFeatureCollection instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
     keyed.encodeList(
       _$CanadaFeatureCollectionSchema.nameFeatures,

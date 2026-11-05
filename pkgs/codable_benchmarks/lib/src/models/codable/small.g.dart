@@ -4,6 +4,10 @@
 
 part of 'small.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for SmallLocation
 // =============================================================================
@@ -149,7 +153,7 @@ final class SmallLocationCodable implements Codable<SmallLocation> {
 
   @override
   void encode(SmallLocation instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 4);
     keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
     keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
     keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
@@ -285,7 +289,7 @@ final class SmallMetadataCodable implements Codable<SmallMetadata> {
 
   @override
   void encode(SmallMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 3);
     keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
     keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
     keyed.encodeValue(
@@ -552,7 +556,7 @@ final class SmallDocumentCodable implements Codable<SmallDocument> {
 
   @override
   void encode(SmallDocument instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 10);
     keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
     keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
     keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);

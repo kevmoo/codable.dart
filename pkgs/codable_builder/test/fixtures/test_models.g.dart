@@ -126,7 +126,7 @@ final class PointCodable implements Codable<Point> {
 
   @override
   void encode(Point instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeDouble(_$PointSchema.nameX, instance.x);
     keyed.encodeDouble(_$PointSchema.nameY, instance.y);
   }
@@ -419,7 +419,7 @@ final class AddressCodable implements Codable<Address> {
 
   @override
   void encode(Address instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeString(_$AddressSchema.nameCity, instance.city);
     keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
   }
@@ -564,7 +564,7 @@ final class EnterpriseCodable implements Codable<Enterprise> {
 
   @override
   void encode(Enterprise instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 5);
     keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
     keyed.encodeValue(
       _$EnterpriseSchema.nameHeadquarter,
@@ -580,16 +580,14 @@ final class EnterpriseCodable implements Codable<Enterprise> {
       _$EnterpriseSchema.nameCategories,
       instance.categories.toList(),
     );
-    keyed.encodeValue(
-      _$EnterpriseSchema.nameHeadcountByDept,
-      instance.headcountByDept,
-      Encodable.fromFunction((Map<String, int> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeInt(entry.key, entry.value);
-        }
-      }),
-    );
+    {
+      final k = keyed
+          .nestedEncoder(_$EnterpriseSchema.nameHeadcountByDept)
+          .keyed(length: instance.headcountByDept.length);
+      for (final entry in instance.headcountByDept.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
   }
 }
 
@@ -697,7 +695,7 @@ final class UserProfileCustomCodable implements Codable<UserProfileCustom> {
 
   @override
   void encode(UserProfileCustom instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
     keyed.encodeValue(
       _$UserProfileCustomSchema.nameZip,
@@ -864,7 +862,7 @@ final class CodableKeyVariantsModelCodable
 
   @override
   void encode(CodableKeyVariantsModel instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 4);
     keyed.encodeValue(
       _$CodableKeyVariantsModelSchema.nameZip,
       instance.zip,
@@ -1093,15 +1091,13 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
       _$NumericMeasurementSchema.nameNullableSamples,
       instance.nullableSamples,
       Encodable.fromFunction((num? item, e) {
-        if (item == null) {
-          e.singleValue().encodeNull();
-        } else {
-          switch (item) {
-            case final int v:
-              e.singleValue().encodeInt(v);
-            case final v:
-              e.singleValue().encodeDouble(v.toDouble());
-          }
+        switch (item) {
+          case null:
+            e.singleValue().encodeNull();
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
         }
       }),
     );
@@ -1117,38 +1113,34 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
         }
       }),
     );
-    keyed.encodeValue(
-      _$NumericMeasurementSchema.nameMetrics,
-      instance.metrics,
-      Encodable.fromFunction((Map<String, num> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          switch (entry.value) {
-            case final int v:
-              k.encodeInt(entry.key, v);
-            case final v:
-              k.encodeDouble(entry.key, v.toDouble());
-          }
+    {
+      final k = keyed
+          .nestedEncoder(_$NumericMeasurementSchema.nameMetrics)
+          .keyed(length: instance.metrics.length);
+      for (final entry in instance.metrics.entries) {
+        switch (entry.value) {
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
         }
-      }),
-    );
-    keyed.encodeValue(
-      _$NumericMeasurementSchema.nameNullableMetrics,
-      instance.nullableMetrics,
-      Encodable.fromFunction((Map<String, num?> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          switch (entry.value) {
-            case null:
-              break;
-            case final int v:
-              k.encodeInt(entry.key, v);
-            case final v:
-              k.encodeDouble(entry.key, v.toDouble());
-          }
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$NumericMeasurementSchema.nameNullableMetrics)
+          .keyed(length: instance.nullableMetrics.length);
+      for (final entry in instance.nullableMetrics.entries) {
+        switch (entry.value) {
+          case null:
+            k.encodeNull(entry.key);
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
         }
-      }),
-    );
+      }
+    }
   }
 }
 
@@ -1285,7 +1277,7 @@ final class TeamCodable implements Codable<Team> {
 
   @override
   void encode(Team instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 4);
     keyed.encodeString(_$TeamSchema.nameName, instance.name);
     keyed.encodeList(
       _$TeamSchema.nameRoles,
@@ -1298,23 +1290,21 @@ final class TeamCodable implements Codable<Team> {
       _$TeamSchema.nameNullableTags,
       instance.nullableTags,
       Encodable.fromFunction((String? item, e) {
-        if (item == null) {
-          e.singleValue().encodeNull();
+        e.singleValue().encodeNullableString(item);
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$TeamSchema.nameScores)
+          .keyed(length: instance.scores.length);
+      for (final entry in instance.scores.entries) {
+        if (entry.value case final val1?) {
+          k.encodeInt(entry.key, val1);
         } else {
-          e.singleValue().encodeString(item);
+          k.encodeNull(entry.key);
         }
-      }),
-    );
-    keyed.encodeValue(
-      _$TeamSchema.nameScores,
-      instance.scores,
-      Encodable.fromFunction((Map<String, int?> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeNullableInt(entry.key, entry.value);
-        }
-      }),
-    );
+      }
+    }
   }
 }
 
@@ -1477,7 +1467,7 @@ final class PrimitiveCollectionsModelCodable
 
   @override
   void encode(PrimitiveCollectionsModel instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 7);
     keyed.encodeIntList(
       _$PrimitiveCollectionsModelSchema.nameInts,
       instance.ints,
@@ -1502,25 +1492,81 @@ final class PrimitiveCollectionsModelCodable
       _$PrimitiveCollectionsModelSchema.nameMatrix,
       instance.matrix,
       Encodable.fromFunction((List<double> item, e) {
-        e.unkeyed().encodeList(
-          item,
-          Encodable.fromFunction((double item, e) {
-            e.singleValue().encodeDouble(item);
-          }),
-        );
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeDouble(elem);
+          }
+        }
       }),
     );
     keyed.encodeList(
       _$PrimitiveCollectionsModelSchema.nameNestedFloats,
       instance.nestedFloats,
       Encodable.fromFunction((Float64List item, e) {
-        e.unkeyed().encodeList(
-          item,
-          Encodable.fromFunction(
-            (double item, e) => e.singleValue().encodeDouble(item),
-          ),
-        );
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeDouble(elem);
+          }
+        }
       }),
     );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EmptyRecord
+// =============================================================================
+extension type const _$EmptyRecordSchema(int _value) {
+  // String Name Constants
+
+  // Key Indices for selectKeyIndex()
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const []);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$EmptyRecordSchema none = _$EmptyRecordSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$EmptyRecordSchema operator |(_$EmptyRecordSchema other) =>
+      _$EmptyRecordSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for EmptyRecord
+// =============================================================================
+final class EmptyRecordCodable implements Codable<EmptyRecord> {
+  const EmptyRecordCodable();
+
+  @override
+  EmptyRecord decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$EmptyRecordSchema.keyOptions);
+
+    var seen = _$EmptyRecordSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$EmptyRecordSchema.keyOptions)) {
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return const EmptyRecord();
+  }
+
+  @override
+  void encode(EmptyRecord instance, Encoder encoder) {
+    encoder.keyed(length: 0);
   }
 }

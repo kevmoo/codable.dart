@@ -9,9 +9,10 @@ library;
 export 'dart:typed_data';
 
 export 'src/contracts/annotations.dart';
+export 'src/contracts/base_mixins.dart';
 export 'src/contracts/codable.dart';
 export 'src/contracts/custom_decoder.dart';
 export 'src/contracts/decoder.dart';
 export 'src/contracts/encoder.dart';
 export 'src/contracts/exceptions.dart';
-export 'src/contracts/static_key.dart';
+export 'src/contracts/static_key.dart' show KeyOptions;

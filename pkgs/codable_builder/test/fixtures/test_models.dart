@@ -265,6 +265,18 @@ final class PrimitiveCollectionsModel {
 }
 
 @Codable()
+final class CompositeKeyMapModel {
+  final Map<Point, String> labelsByPoint;
+
+  const CompositeKeyMapModel({this.labelsByPoint = const {}});
+}
+
+@Codable()
+final class EmptyRecord {
+  const EmptyRecord();
+}
+
+@Codable()
 final class HugeModel63 {
   final int f00;
   final int f01;

@@ -253,6 +253,10 @@ abstract interface class MappedDecoder {
 /// Instances are ephemeral single-pass cursors scoped to the current array and
 /// must not be retained after [Decodable.decode] returns.
 abstract interface class UnkeyedDecoder {
+  /// Exact number of elements in this array when known upfront by the format,
+  /// or `null` for streaming delimiter-terminated formats.
+  int? get length;
+
   /// Advances to the next element in the array, consuming any comma delimiter.
   bool moveNext();
 

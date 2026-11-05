@@ -155,6 +155,9 @@ final class ModelDescriptor {
   /// All registered keys in the pre-compiled `JsonKeyOptions` table.
   final List<String> allOptionsKeys;
 
+  /// Whether the selected primary constructor is `const`.
+  final bool isConstConstructor;
+
   ModelDescriptor({
     required this.element,
     required this.className,
@@ -165,6 +168,7 @@ final class ModelDescriptor {
     required this.fields,
     required this.requiredFields,
     required this.allOptionsKeys,
+    this.isConstConstructor = false,
   });
 
   /// Whether all non-ignored fields in this model are homogeneous, non-nullable

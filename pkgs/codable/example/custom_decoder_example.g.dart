@@ -94,7 +94,7 @@ final class DateTimeExampleCodable implements Codable<DateTimeExample> {
 
   @override
   void encode(DateTimeExample instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 1);
     keyed.encodeValue(
       _$DateTimeExampleSchema.nameWhen,
       instance.when,

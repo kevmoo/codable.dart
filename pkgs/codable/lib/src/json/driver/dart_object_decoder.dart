@@ -4,7 +4,7 @@
 
 import 'dart:typed_data';
 
-import '../../contracts/codable.dart';
+import '../../contracts/base_mixins.dart';
 import '../../contracts/decoder.dart';
 import '../../contracts/exceptions.dart';
 import '../../contracts/static_key.dart';
@@ -62,69 +62,6 @@ Object? _parseValueFromReader(JsonTokenReader reader) {
   }
 }
 
-List<T> _decodeObjectModelList<T>(
-  Object? v,
-  Decodable<T> decodable,
-  Map<Object, Object?> userInfo,
-) {
-  if (v is List<Object?>) {
-    return [
-      for (final e in v)
-        decodable.decode(DartObjectDecoder(e, userInfo: userInfo)),
-    ];
-  }
-  throw CodableException('Expected List, found $v');
-}
-
-List<int> _decodeObjectIntList(Object? v) {
-  if (v is List<Object?>) {
-    return [
-      for (final e in v)
-        e is int ? e : throw CodableException('Expected int in list, found $e'),
-    ];
-  }
-  throw CodableException('Expected List, found $v');
-}
-
-List<double> _decodeObjectDoubleList(Object? v) {
-  if (v is List<Object?>) {
-    return [
-      for (final e in v)
-        e is num
-            ? e.toDouble()
-            : throw CodableException('Expected double in list, found $e'),
-    ];
-  }
-  throw CodableException('Expected List, found $v');
-}
-
-Float64List _decodeObjectFloat64List(Object? v) =>
-    Float64List.fromList(_decodeObjectDoubleList(v));
-
-List<String> _decodeObjectStringList(Object? v) {
-  if (v is List<Object?>) {
-    return [
-      for (final e in v)
-        e is String
-            ? e
-            : throw CodableException('Expected String in list, found $e'),
-    ];
-  }
-  throw CodableException('Expected List, found $v');
-}
-
-List<bool> _decodeObjectBoolList(Object? v) {
-  if (v is List<Object?>) {
-    return [
-      for (final e in v)
-        e is bool
-            ? e
-            : throw CodableException('Expected bool in list, found $e'),
-    ];
-  }
-  throw CodableException('Expected List, found $v');
-}
-
 /// In-memory object-tree [Decoder] used when buffering JSON objects for
 /// random-access `mapped()` inspection and `SuperDecodable` handoff.
 final class DartObjectDecoder implements Decoder {
@@ -177,7 +114,9 @@ final class DartObjectDecoder implements Decoder {
 }
 
 /// Random-access [MappedDecoder] over a parsed `Map<String, Object?>`.
-final class DartObjectMappedDecoder implements MappedDecoder {
+final class DartObjectMappedDecoder
+    with BaseMappedDecoderMixin
+    implements MappedDecoder {
   final Map<String, Object?> _map;
   final Map<Object, Object?> _userInfo;
 
@@ -200,18 +139,11 @@ final class DartObjectMappedDecoder implements MappedDecoder {
   }
 
   @override
-  int? readNullableInt(String key) => _map[key] == null ? null : readInt(key);
-
-  @override
   double readDouble(String key) {
     final v = _map[key];
     if (v is num) return v.toDouble();
     throw CodableException('Expected double for $key, found $v');
   }
-
-  @override
-  double? readNullableDouble(String key) =>
-      _map[key] == null ? null : readDouble(key);
 
   @override
   num readNum(String key) {
@@ -221,18 +153,11 @@ final class DartObjectMappedDecoder implements MappedDecoder {
   }
 
   @override
-  num? readNullableNum(String key) => _map[key] == null ? null : readNum(key);
-
-  @override
   String readString(String key) {
     final v = _map[key];
     if (v is String) return v;
     throw CodableException('Expected String for $key, found $v');
   }
-
-  @override
-  String? readNullableString(String key) =>
-      _map[key] == null ? null : readString(key);
 
   @override
   bool readBool(String key) {
@@ -242,10 +167,6 @@ final class DartObjectMappedDecoder implements MappedDecoder {
   }
 
   @override
-  bool? readNullableBool(String key) =>
-      _map[key] == null ? null : readBool(key);
-
-  @override
   Decoder nestedDecoder(String key) {
     final v = _map[key];
     if (v == null) {
@@ -253,39 +174,6 @@ final class DartObjectMappedDecoder implements MappedDecoder {
     }
     return DartObjectDecoder(v, userInfo: _userInfo);
   }
-
-  @override
-  T decodeKey<T>(String key, Decodable<T> decodable) =>
-      decodable.decode(nestedDecoder(key));
-
-  @override
-  T? decodeNullableKey<T>(String key, Decodable<T> decodable) {
-    final v = _map[key];
-    if (v == null) return null;
-    return decodable.decode(DartObjectDecoder(v, userInfo: _userInfo));
-  }
-
-  @override
-  List<T> decodeListKey<T>(String key, Decodable<T> decodable) =>
-      _decodeObjectModelList(_map[key], decodable, _userInfo);
-
-  @override
-  List<int> decodeIntList(String key) => _decodeObjectIntList(_map[key]);
-
-  @override
-  List<double> decodeDoubleList(String key) =>
-      _decodeObjectDoubleList(_map[key]);
-
-  @override
-  Float64List decodeFloat64List(String key) =>
-      _decodeObjectFloat64List(_map[key]);
-
-  @override
-  List<String> decodeStringList(String key) =>
-      _decodeObjectStringList(_map[key]);
-
-  @override
-  List<bool> decodeBoolList(String key) => _decodeObjectBoolList(_map[key]);
 }
 
 mixin _DartObjectSequentialMixin {
@@ -321,14 +209,6 @@ mixin _DartObjectSequentialMixin {
     throw CodableException('Expected int, found $v');
   }
 
-  int? readNullableInt() {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readInt();
-  }
-
   double readDouble() {
     final v = _peekCurrentValue();
     if (v is num) {
@@ -336,14 +216,6 @@ mixin _DartObjectSequentialMixin {
       return v.toDouble();
     }
     throw CodableException('Expected double, found $v');
-  }
-
-  double? readNullableDouble() {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readDouble();
   }
 
   num readNum() {
@@ -355,14 +227,6 @@ mixin _DartObjectSequentialMixin {
     throw CodableException('Expected num, found $v');
   }
 
-  num? readNullableNum() {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readNum();
-  }
-
   String readString() {
     final v = _peekCurrentValue();
     if (v is String) {
@@ -371,20 +235,6 @@ mixin _DartObjectSequentialMixin {
     }
     throw CodableException('Expected String, found $v');
   }
-
-  String? readNullableString() {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readString();
-  }
-
-  (int start, int end) readStringSpan() =>
-      throw UnsupportedError('String spans not supported on object-tree value');
-
-  (int start, int end)? readNullableStringSpan() =>
-      throw UnsupportedError('String spans not supported on object-tree value');
 
   bool readBool() {
     final v = _peekCurrentValue();
@@ -395,36 +245,13 @@ mixin _DartObjectSequentialMixin {
     throw CodableException('Expected bool, found $v');
   }
 
-  bool? readNullableBool() {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return readBool();
-  }
-
   Decoder nestedDecoder() =>
       DartObjectDecoder(_takeCurrentValue(), userInfo: _userInfo);
 }
 
-mixin _DartObjectListMixin on _DartObjectSequentialMixin {
-  List<int> decodeIntList() => _decodeObjectIntList(_takeCurrentValue());
-
-  List<double> decodeDoubleList() =>
-      _decodeObjectDoubleList(_takeCurrentValue());
-
-  Float64List decodeFloat64List() =>
-      _decodeObjectFloat64List(_takeCurrentValue());
-
-  List<String> decodeStringList() =>
-      _decodeObjectStringList(_takeCurrentValue());
-
-  List<bool> decodeBoolList() => _decodeObjectBoolList(_takeCurrentValue());
-}
-
 /// Sequential [KeyedDecoder] over a parsed `Map<String, Object?>`.
 final class DartObjectKeyedDecoder
-    with _DartObjectSequentialMixin, _DartObjectListMixin
+    with BaseKeyedDecoderMixin, _DartObjectSequentialMixin
     implements KeyedDecoder {
   final Map<String, Object?> _map;
   @override
@@ -482,40 +309,14 @@ final class DartObjectKeyedDecoder
       moveNextKey() ? options.indexOf(_activeKey!) : -1;
 
   @override
-  int selectStringIndex(KeyOptions options) => options.indexOf(readString());
-
-  @override
   void skipValue() {
     if (moveNextKey()) _commitCurrentValue();
-  }
-
-  @override
-  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullableValue<T>(Decodable<T> decodable) {
-    final v = _takeCurrentValue();
-    if (v == null) return null;
-    return decodable.decode(DartObjectDecoder(v, userInfo: _userInfo));
-  }
-
-  @override
-  List<T> decodeList<T>(Decodable<T> decodable) =>
-      _decodeObjectModelList(_takeCurrentValue(), decodable, _userInfo);
-
-  @override
-  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
-    if (isNextNull()) {
-      readNull();
-      return null;
-    }
-    return decodeList(decodable);
   }
 }
 
 /// Sequential [UnkeyedDecoder] over a parsed `List<Object?>`.
 final class DartObjectUnkeyedDecoder
-    with _DartObjectSequentialMixin, _DartObjectListMixin
+    with BaseUnkeyedDecoderMixin, _DartObjectSequentialMixin
     implements UnkeyedDecoder {
   final List<Object?> _list;
   @override
@@ -523,6 +324,9 @@ final class DartObjectUnkeyedDecoder
   int _index = 0;
 
   DartObjectUnkeyedDecoder(this._list, this._userInfo);
+
+  @override
+  int? get length => _list.length;
 
   @override
   bool moveNext() => _index < _list.length;
@@ -547,22 +351,11 @@ final class DartObjectUnkeyedDecoder
   void skipElement() {
     _takeCurrentValue();
   }
-
-  @override
-  T decodeElement<T>(Decodable<T> decodable) =>
-      decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullableElement<T>(Decodable<T> decodable) {
-    final v = _takeCurrentValue();
-    if (v == null) return null;
-    return decodable.decode(DartObjectDecoder(v, userInfo: _userInfo));
-  }
 }
 
 /// Single-value [SingleValueDecoder] over an in-memory `Object?`.
 final class DartObjectSingleValueDecoder
-    with _DartObjectSequentialMixin
+    with BaseSingleValueDecoderMixin, _DartObjectSequentialMixin
     implements SingleValueDecoder {
   final Object? _value;
   @override
@@ -581,11 +374,4 @@ final class DartObjectSingleValueDecoder
 
   @override
   bool isNull() => _value == null;
-
-  @override
-  T decode<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullable<T>(Decodable<T> decodable) =>
-      isNull() ? null : decode(decodable);
 }

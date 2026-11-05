@@ -108,7 +108,7 @@ final class CarCodable implements Codable<Car> {
 
   @override
   void encode(Car instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
     keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
@@ -216,7 +216,7 @@ final class BicycleCodable implements Codable<Bicycle> {
 
   @override
   void encode(Bicycle instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
     keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
