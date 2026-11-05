@@ -85,6 +85,9 @@ final class JsonCodableDecoder implements Decoder {
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
 
   @override
+  bool get isHumanReadable => true;
+
+  @override
   ValueKind peekKind() {
     if (hasStreamingBufferedObject(this)) return ValueKind.map;
     return streamingTokenTypeToValueKind(_reader.peek());
@@ -103,6 +106,17 @@ final class JsonCodableDecoder implements Decoder {
   MappedDecoder mapped() {
     final map = bufferStreamingObject(this, _reader, parseObjectFromReader);
     return DartObjectMappedDecoder(map, userInfo);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  MapDecoder map() {
+    final buffered = takeStreamingBufferedObject(this);
+    if (buffered != null) {
+      return DartObjectMapDecoder(buffered, userInfo);
+    }
+    return StreamingMapDecoder(_reader, this);
   }
 
   @override
@@ -268,6 +282,9 @@ final class JsonCodableEncoder implements Encoder {
 
   JsonCodableEncoder(this._writer, {this.userInfo = const {}});
 
+  @override
+  bool get isHumanReadable => true;
+
   /// Encodes [value] to a newly allocated UTF-8 byte buffer using [encodable].
   static Uint8List toBytes<T>(
     T value,
@@ -343,6 +360,15 @@ final class JsonCodableEncoder implements Encoder {
   @pragma('wasm:prefer-inline')
   UnkeyedEncoder unkeyed({int? length}) {
     final enc = _JsonCodableUnkeyedEncoder(this, _writer);
+    _active = enc;
+    return enc;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  MapEncoder map({int? length}) {
+    final enc = _JsonCodableMapEncoder(this, _writer);
     _active = enc;
     return enc;
   }
@@ -450,6 +476,19 @@ final class _JsonCodableKeyedEncoder
   }
 
   @override
+  void encodeBytes(String key, Uint8List value) {
+    _beforeField(key);
+    _writer.writeString(base64Encode(value));
+  }
+
+  @override
+  void encodeNullableBytes(String key, Uint8List? value) {
+    if (value != null) {
+      encodeBytes(key, value);
+    }
+  }
+
+  @override
   void encodeNull(String key) {
     _beforeField(key);
     _writer.writeNull();
@@ -531,6 +570,342 @@ final class _JsonCodableKeyedEncoder
       _writer.writeBool(v);
     }
     _writer.endArray();
+  }
+}
+
+final class _JsonCodableMapEncoder implements MapEncoder, _StreamingClosable {
+  final JsonTokenWriter _writer;
+  final _JsonMapKeyEncoder _keyEncoder;
+  final _JsonMapValueEncoder _valueEncoder;
+  bool _closed = false;
+
+  factory _JsonCodableMapEncoder(
+    JsonCodableEncoder rootEncoder,
+    JsonTokenWriter writer,
+  ) {
+    writer.beginObject();
+    return _JsonCodableMapEncoder._(
+      writer,
+      _JsonMapKeyEncoder(writer, rootEncoder.userInfo),
+      _JsonMapValueEncoder(rootEncoder, writer),
+    );
+  }
+
+  _JsonCodableMapEncoder._(this._writer, this._keyEncoder, this._valueEncoder);
+
+  static Never _throwUnpairedKeyAtClose() => throw const CodableException(
+    'Map key was encoded without a corresponding value',
+  );
+
+  static Never _throwUnpairedKey() => throw const CodableException(
+    'Previous map key was not paired with a value',
+  );
+
+  static Never _throwMissingKey() => throw const CodableException(
+    'Map key must be encoded before valueEncoder()',
+  );
+
+  @override
+  void _close() {
+    if (!_closed) {
+      _valueEncoder._finish();
+      if (_keyEncoder._hasKey) _throwUnpairedKeyAtClose();
+      _writer.endObject();
+      _closed = true;
+    }
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Encoder keyEncoder() {
+    if (_valueEncoder._active != null) _valueEncoder._finish();
+    if (_keyEncoder._hasKey) _throwUnpairedKey();
+    return _keyEncoder;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Encoder valueEncoder() {
+    if (!_keyEncoder._hasKey) _throwMissingKey();
+    _keyEncoder._hasKey = false;
+    return _valueEncoder;
+  }
+}
+
+final class _JsonMapKeyEncoder implements Encoder, SingleValueEncoder {
+  final JsonTokenWriter _writer;
+  @override
+  final Map<Object, Object?> userInfo;
+  bool _hasKey = false;
+
+  _JsonMapKeyEncoder(this._writer, this.userInfo);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
+      throw const CodableException(
+        'JSON map keys must be scalar values, not keyed objects',
+      );
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) => throw const CodableException(
+    'JSON map keys must be scalar values, not arrays',
+  );
+
+  @override
+  MapEncoder map({int? length}) => throw const CodableException(
+    'JSON map keys must be scalar values, not maps',
+  );
+
+  static Never _throwDuplicateKey() =>
+      throw const CodableException('Map key already encoded for current entry');
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _writeKey(String key) {
+    if (_hasKey) _throwDuplicateKey();
+    _writer.writeName(key);
+    _hasKey = true;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeInt(int value) => _writeKey(value.toString());
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeInt(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeDouble(double value) {
+    if (!value.isFinite) {
+      throw CodableException(
+        'JSON map keys must be finite numbers, got $value',
+      );
+    }
+    _writeKey(value.toString());
+  }
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeDouble(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeString(String value) => _writeKey(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeString(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeBool(bool value) => _writeKey(value ? 'true' : 'false');
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeBool(value);
+  }
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      throw const CodableException('JSON map keys cannot be binary bytes');
+
+  @override
+  void encodeNullableBytes(Uint8List? value) => throw const CodableException(
+    'JSON map keys cannot be binary bytes or null',
+  );
+
+  @override
+  void encodeNull() =>
+      throw const CodableException('JSON map keys cannot be null');
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    encodable.encode(value, this);
+    if (!_hasKey) {
+      throw const CodableException('Map key encoder did not write a key');
+    }
+  }
+
+  @override
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encode(value, encodable);
+  }
+}
+
+final class _JsonMapValueEncoder implements Encoder, SingleValueEncoder {
+  final JsonCodableEncoder _rootEncoder;
+  final JsonTokenWriter _writer;
+  _StreamingClosable? _active;
+
+  _JsonMapValueEncoder(this._rootEncoder, this._writer);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Map<Object, Object?> get userInfo => _rootEncoder.userInfo;
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _finish() {
+    final active = _active;
+    if (active != null) {
+      _active = null;
+      active._close();
+    }
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    final enc = _JsonCodableKeyedEncoder(_rootEncoder, _writer);
+    _active = enc;
+    return enc;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  UnkeyedEncoder unkeyed({int? length}) {
+    final enc = _JsonCodableUnkeyedEncoder(_rootEncoder, _writer);
+    _active = enc;
+    return enc;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  MapEncoder map({int? length}) {
+    final enc = _JsonCodableMapEncoder(_rootEncoder, _writer);
+    _active = enc;
+    return enc;
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeInt(int value) => _writer.writeInt(value);
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeInt(value);
+    }
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeDouble(double value) => _writer.writeDouble(value);
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeDouble(value);
+    }
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeString(String value) => _writer.writeString(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(value);
+    }
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeBool(bool value) => _writer.writeBool(value);
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeBool(value);
+    }
+  }
+
+  @override
+  void encodeBytes(Uint8List value) => _writer.writeString(base64Encode(value));
+
+  @override
+  void encodeNullableBytes(Uint8List? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(base64Encode(value));
+    }
+  }
+
+  @override
+  void encodeNull() => _writer.writeNull();
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    final child = JsonCodableEncoder(_writer, userInfo: _rootEncoder.userInfo);
+    encodable.encode(value, child);
+    child._finish();
+  }
+
+  @override
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      encode(value, encodable);
+    }
   }
 }
 
@@ -627,6 +1002,22 @@ final class _JsonCodableUnkeyedEncoder
       _writer.writeNull();
     } else {
       _writer.writeBool(value);
+    }
+  }
+
+  @override
+  void encodeBytes(Uint8List value) {
+    _beforeElement();
+    _writer.writeString(base64Encode(value));
+  }
+
+  @override
+  void encodeNullableBytes(Uint8List? value) {
+    _beforeElement();
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(base64Encode(value));
     }
   }
 
@@ -728,6 +1119,18 @@ final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
       _writer.writeNull();
     } else {
       _writer.writeBool(value);
+    }
+  }
+
+  @override
+  void encodeBytes(Uint8List value) => _writer.writeString(base64Encode(value));
+
+  @override
+  void encodeNullableBytes(Uint8List? value) {
+    if (value == null) {
+      _writer.writeNull();
+    } else {
+      _writer.writeString(base64Encode(value));
     }
   }
 

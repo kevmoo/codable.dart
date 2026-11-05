@@ -1,12 +1,18 @@
 /// Encoder and container contracts for serialization.
 library;
 
+import 'dart:typed_data';
+
 import 'codable.dart';
 import 'static_key.dart';
 
 /// Top-level encoding context providing access to specialized encoding
 /// containers.
 abstract interface class Encoder {
+  /// Whether the underlying format is human-readable (such as JSON or YAML)
+  /// rather than a compact binary wire format (such as CBOR).
+  bool get isHumanReadable;
+
   /// Extensible context map for passing runtime dependency handles, options, or
   /// flags.
   Map<Object, Object?> get userInfo;
@@ -17,8 +23,20 @@ abstract interface class Encoder {
   /// Opens an unkeyed container for writing sequential elements into an array.
   UnkeyedEncoder unkeyed({int? length});
 
+  /// Opens a map container for writing arbitrary key-value entries.
+  MapEncoder map({int? length});
+
   /// Opens a single-value container for writing a standalone scalar value.
   SingleValueEncoder singleValue();
+}
+
+/// Map encoder for writing arbitrary key-value entries.
+abstract interface class MapEncoder {
+  /// Returns an [Encoder] for writing the next map entry's key.
+  Encoder keyEncoder();
+
+  /// Returns an [Encoder] for writing the current map entry's value.
+  Encoder valueEncoder();
 }
 
 /// Keyed encoder for writing object key-value pairs.
@@ -46,6 +64,12 @@ abstract interface class KeyedEncoder {
 
   /// Encodes a nullable boolean value for [key].
   void encodeNullableBool(String key, bool? value);
+
+  /// Encodes a non-nullable binary byte sequence for [key].
+  void encodeBytes(String key, Uint8List value);
+
+  /// Encodes a nullable binary byte sequence for [key].
+  void encodeNullableBytes(String key, Uint8List? value);
 
   /// Encodes an explicit null value for [key].
   void encodeNull(String key);
@@ -102,6 +126,12 @@ abstract interface class UnkeyedEncoder {
   /// Encodes a nullable boolean element.
   void encodeNullableBool(bool? value);
 
+  /// Encodes a non-nullable binary byte sequence element.
+  void encodeBytes(Uint8List value);
+
+  /// Encodes a nullable binary byte sequence element.
+  void encodeNullableBytes(Uint8List? value);
+
   /// Encodes an explicit null element.
   void encodeNull();
 
@@ -144,6 +174,12 @@ abstract interface class SingleValueEncoder {
 
   /// Encodes a nullable boolean scalar value.
   void encodeNullableBool(bool? value);
+
+  /// Encodes a non-nullable binary byte sequence scalar value.
+  void encodeBytes(Uint8List value);
+
+  /// Encodes a nullable binary byte sequence scalar value.
+  void encodeNullableBytes(Uint8List? value);
 
   /// Encodes an explicit null scalar value.
   void encodeNull();

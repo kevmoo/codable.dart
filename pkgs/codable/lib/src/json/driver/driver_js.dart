@@ -192,9 +192,39 @@ ValueKind _jsToValueKind(JSAny? val) {
   if (val.isA<JSBoolean>()) return ValueKind.boolean;
   if (val.isA<JSNumber>()) return ValueKind.number;
   if (val.isA<JSString>()) return ValueKind.string;
+  if (val.isA<JSUint8Array>()) return ValueKind.bytes;
   if (val.isA<JSArray>()) return ValueKind.list;
   if (val.isA<JSObject>()) return ValueKind.map;
   throw CodableException('Unexpected JS value kind: $val');
+}
+
+Uint8List _extractBytes(JSAny? val) {
+  if (val != null) {
+    if (val.isA<JSUint8Array>()) {
+      return (val as JSUint8Array).toDart;
+    }
+    if (val.isA<JSString>()) {
+      return decodeJsonBase64Bytes((val as JSString).toDart);
+    }
+    if (val.isA<JSArray>()) {
+      return _extractByteArray(val as JSArray);
+    }
+  }
+  throw CodableException('Expected base64 string or byte list, found $val');
+}
+
+Uint8List _extractByteArray(JSArray arr) {
+  final len = arr.length;
+  final out = Uint8List(len);
+  for (var i = 0; i < len; i++) {
+    final e = arr.getProperty<JSAny?>(i.toJS);
+    final asInt = _tryJsInt(e);
+    if (asInt == null || asInt < 0 || asInt > 255) {
+      throw CodableException('Expected byte 0..255 in list, found $e');
+    }
+    out[i] = asInt;
+  }
+  return out;
 }
 
 num _jsNumberToNum(JSNumber n) {
@@ -421,6 +451,9 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   @override
+  bool get isHumanReadable => true;
+
+  @override
   ValueKind peekKind() {
     if (_reader != null) {
       if (hasStreamingBufferedObject(this)) return ValueKind.map;
@@ -455,6 +488,28 @@ final class JsonCodableDecoder implements Decoder {
       this,
       (_activeValue ?? _decoded) as JSObject,
     );
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  MapDecoder map() {
+    final reader = _reader;
+    if (reader != null) {
+      final buffered = takeStreamingBufferedObject(this);
+      if (buffered != null) {
+        return DartObjectMapDecoder(buffered, userInfo);
+      }
+      return StreamingMapDecoder(reader, this);
+    }
+    final target = _activeValue ?? _decoded;
+    if (target == null ||
+        !target.isA<JSObject>() ||
+        target.isA<JSArray>() ||
+        target.isA<JSUint8Array>()) {
+      throw CodableException('Expected object for map(), found $target');
+    }
+    return _JsonCodableJsMapDecoder(this, target as JSObject);
   }
 
   @override
@@ -667,6 +722,27 @@ mixin _JsSequentialDecoderMixin {
       return (val as JSBoolean).toDart;
     }
     throw CodableException('Expected bool?, found $val');
+  }
+
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Uint8List readBytes() {
+    final bytes = _extractBytes(_peekJsValue());
+    _commitJsValue();
+    return bytes;
+  }
+
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Uint8List? readNullableBytes() {
+    final val = _peekJsValue();
+    if (val == null) {
+      _commitJsValue();
+      return null;
+    }
+    final bytes = _extractBytes(val);
+    _commitJsValue();
+    return bytes;
   }
 
   @pragma('dart2js:prefer-inline')
@@ -915,6 +991,16 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   }
 
   @override
+  Uint8List readBytes(String key) => _extractBytes(_prop(key));
+
+  @override
+  Uint8List? readNullableBytes(String key) {
+    final v = _prop(key);
+    if (v == null) return null;
+    return _extractBytes(v);
+  }
+
+  @override
   Decoder nestedDecoder(String key) =>
       JsonCodableDecoder._(_prop(key), null, userInfo: _rootDecoder.userInfo);
 
@@ -944,6 +1030,144 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
 
   @override
   List<bool> decodeBoolList(String key) => _extractBoolList(_prop(key));
+}
+
+final class _JsonCodableJsMapDecoder implements MapDecoder {
+  final JSObject _map;
+  final List<String> _keys;
+  final JsonMapKeyDecoder _keyDecoder;
+  final _JsonCodableJsMapValueDecoder _valueDecoder;
+  int _index = 0;
+  bool _hasCurrent = false;
+
+  _JsonCodableJsMapDecoder(JsonCodableDecoder rootDecoder, JSObject map)
+    : _map = map,
+      _keys = _getKeys(map),
+      _keyDecoder = JsonMapKeyDecoder(rootDecoder.userInfo),
+      _valueDecoder = _JsonCodableJsMapValueDecoder(rootDecoder);
+
+  @override
+  int? get length => _keys.length;
+
+  static Never _throwNoActiveEntry() =>
+      throw const CodableException('No active map entry');
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool moveNextEntry() {
+    if (_index >= _keys.length) {
+      _hasCurrent = false;
+      return false;
+    }
+    final key = _keys[_index++];
+    _keyDecoder.key = key;
+    _valueDecoder._val = _map.getProperty<JSAny?>(key.toJS);
+    _hasCurrent = true;
+    return true;
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Decoder keyDecoder() {
+    if (!_hasCurrent) _throwNoActiveEntry();
+    return _keyDecoder;
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Decoder valueDecoder() {
+    if (!_hasCurrent) _throwNoActiveEntry();
+    return _valueDecoder;
+  }
+}
+
+final class _JsonCodableJsMapValueDecoder
+    with _JsSequentialDecoderMixin
+    implements Decoder, SingleValueDecoder {
+  @override
+  final JsonCodableDecoder _rootDecoder;
+  JSAny? _val;
+
+  _JsonCodableJsMapValueDecoder(this._rootDecoder);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Map<Object, Object?> get userInfo => _rootDecoder.userInfo;
+
+  @override
+  Uint8List? get payload => null;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueDecoder singleValue() => this;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  KeyedDecoder keyed({KeyOptions? options}) =>
+      _JsonCodableMappedKeyedDecoder(_rootDecoder, _val as JSObject, options);
+
+  @override
+  MappedDecoder mapped() =>
+      _JsonCodableMappedDecoder(_rootDecoder, _val as JSObject);
+
+  @override
+  MapDecoder map() {
+    final target = _val;
+    if (target == null ||
+        !target.isA<JSObject>() ||
+        target.isA<JSArray>() ||
+        target.isA<JSUint8Array>()) {
+      throw CodableException('Expected object for map(), found $target');
+    }
+    return _JsonCodableJsMapDecoder(_rootDecoder, target as JSObject);
+  }
+
+  @override
+  UnkeyedDecoder unkeyed() =>
+      _JsonCodableUnkeyedDecoder(_rootDecoder, _val as JSArray);
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {
+    final target = _val;
+    if (target != null && target.isA<JSArray>()) {
+      return _extractUniformFloat64Array(target, propertyAliases);
+    }
+    return null;
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool _hasJsValue() => true;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  JSAny? _peekJsValue() => _val;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _commitJsValue() {}
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  bool isNull() => _val == null;
+
+  @override
+  T decode<T>(Decodable<T> decodable) => decodable.decode(this);
+
+  @override
+  T? decodeNullable<T>(Decodable<T> decodable) =>
+      isNull() ? null : decode(decodable);
 }
 
 final class _JsonCodableUnkeyedDecoder
@@ -1057,6 +1281,9 @@ final class JsonCodableEncoder implements Encoder {
 
   JsonCodableEncoder._nested(this.userInfo, this._onRoot);
 
+  @override
+  bool get isHumanReadable => true;
+
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
   void _setRoot(JSAny? value) {
@@ -1137,6 +1364,15 @@ final class JsonCodableEncoder implements Encoder {
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
+  MapEncoder map({int? length}) {
+    final obj = JSObject();
+    _setRoot(obj);
+    return _JsonCodableJsMapEncoder(this, obj);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
   SingleValueEncoder singleValue() =>
       _singleValue ??= _JsonCodableJsSingleValueEncoder(this);
 }
@@ -1177,6 +1413,15 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   @override
   void encodeNullableBool(String key, bool? value) {
     if (value != null) _object[key] = value.toJS;
+  }
+
+  @override
+  void encodeBytes(String key, Uint8List value) =>
+      _object[key] = base64Encode(value).toJS;
+
+  @override
+  void encodeNullableBytes(String key, Uint8List? value) {
+    if (value != null) _object[key] = base64Encode(value).toJS;
   }
 
   @override
@@ -1250,6 +1495,291 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 }
 
+final class _JsonCodableJsMapEncoder implements MapEncoder {
+  final _JsonCodableJsMapKeyEncoder _keyEncoder;
+  final _JsonCodableJsMapValueEncoder _valueEncoder;
+
+  factory _JsonCodableJsMapEncoder(
+    JsonCodableEncoder rootEncoder,
+    JSObject object,
+  ) {
+    return _JsonCodableJsMapEncoder._(
+      _JsonCodableJsMapKeyEncoder(rootEncoder.userInfo),
+      _JsonCodableJsMapValueEncoder(rootEncoder, object),
+    );
+  }
+
+  _JsonCodableJsMapEncoder._(this._keyEncoder, this._valueEncoder);
+
+  static Never _throwUnpairedKey() => throw const CodableException(
+    'Previous map key was not paired with value',
+  );
+
+  static Never _throwMissingKey() => throw const CodableException(
+    'Map key must be encoded before valueEncoder()',
+  );
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Encoder keyEncoder() {
+    if (_keyEncoder._pendingKey != null) _throwUnpairedKey();
+    return _keyEncoder;
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  Encoder valueEncoder() {
+    final key = _keyEncoder._pendingKey;
+    if (key == null) _throwMissingKey();
+    _keyEncoder._pendingKey = null;
+    _valueEncoder._currentKey = key;
+    return _valueEncoder;
+  }
+}
+
+final class _JsonCodableJsMapKeyEncoder implements Encoder, SingleValueEncoder {
+  @override
+  final Map<Object, Object?> userInfo;
+  String? _pendingKey;
+
+  _JsonCodableJsMapKeyEncoder(this.userInfo);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
+      throw const CodableException(
+        'JSON map keys must be scalar values, not keyed objects',
+      );
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) => throw const CodableException(
+    'JSON map keys must be scalar values, not arrays',
+  );
+
+  @override
+  MapEncoder map({int? length}) => throw const CodableException(
+    'JSON map keys must be scalar values, not maps',
+  );
+
+  static Never _throwDuplicateKey() =>
+      throw const CodableException('Map key already encoded for current entry');
+
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _setKey(String key) {
+    if (_pendingKey != null) _throwDuplicateKey();
+    _pendingKey = key;
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeInt(int value) => _setKey(value.toString());
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeInt(value);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeDouble(double value) {
+    if (!value.isFinite) {
+      throw CodableException(
+        'JSON map keys must be finite numbers, got $value',
+      );
+    }
+    _setKey(value.toString());
+  }
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeDouble(value);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeString(String value) => _setKey(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeString(value);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeBool(bool value) => _setKey(value ? 'true' : 'false');
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encodeBool(value);
+  }
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      throw const CodableException('JSON map keys cannot be binary bytes');
+
+  @override
+  void encodeNullableBytes(Uint8List? value) => throw const CodableException(
+    'JSON map keys cannot be binary bytes or null',
+  );
+
+  @override
+  void encodeNull() =>
+      throw const CodableException('JSON map keys cannot be null');
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    encodable.encode(value, this);
+    if (_pendingKey == null) {
+      throw const CodableException('Map key encoder did not write a key');
+    }
+  }
+
+  @override
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
+    if (value == null) {
+      throw const CodableException('JSON map keys cannot be null');
+    }
+    encode(value, encodable);
+  }
+}
+
+final class _JsonCodableJsMapValueEncoder
+    implements Encoder, SingleValueEncoder {
+  final JsonCodableEncoder _rootEncoder;
+  final JSObject _object;
+  String _currentKey = '';
+
+  _JsonCodableJsMapValueEncoder(this._rootEncoder, this._object);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Map<Object, Object?> get userInfo => _rootEncoder.userInfo;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    final obj = JSObject();
+    _object[_currentKey] = obj;
+    return _JsonCodableJsKeyedEncoder(_rootEncoder, obj);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  UnkeyedEncoder unkeyed({int? length}) {
+    final array = length != null
+        ? JSArray<JSAny?>.withLength(length)
+        : JSArray<JSAny?>();
+    _object[_currentKey] = array;
+    return _JsonCodableJsUnkeyedEncoder(_rootEncoder, array);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  MapEncoder map({int? length}) {
+    final obj = JSObject();
+    _object[_currentKey] = obj;
+    return _JsonCodableJsMapEncoder(_rootEncoder, obj);
+  }
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeInt(int value) => _object[_currentKey] = value.toJS;
+
+  @override
+  void encodeNullableInt(int? value) => _object[_currentKey] = value?.toJS;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeDouble(double value) => _object[_currentKey] = value.toJS;
+
+  @override
+  void encodeNullableDouble(double? value) =>
+      _object[_currentKey] = value?.toJS;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeString(String value) => _object[_currentKey] = value.toJS;
+
+  @override
+  void encodeNullableString(String? value) =>
+      _object[_currentKey] = value?.toJS;
+
+  @override
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void encodeBool(bool value) => _object[_currentKey] = value.toJS;
+
+  @override
+  void encodeNullableBool(bool? value) => _object[_currentKey] = value?.toJS;
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      _object[_currentKey] = base64Encode(value).toJS;
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      _object[_currentKey] = value == null ? null : base64Encode(value).toJS;
+
+  @override
+  void encodeNull() => _object[_currentKey] = null;
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    final key = _currentKey;
+    final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+    encodable.encode(value, child);
+    _object[key] = child._root;
+  }
+
+  @override
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
+    if (value == null) {
+      _object[_currentKey] = null;
+    } else {
+      encode(value, encodable);
+    }
+  }
+}
+
 final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   final JsonCodableEncoder _rootEncoder;
   final JSArray<JSAny?> _array;
@@ -1280,6 +1810,14 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
 
   @override
   void encodeNullableBool(bool? value) => _array[_index++] = value?.toJS;
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      _array[_index++] = base64Encode(value).toJS;
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      _array[_index++] = value == null ? null : base64Encode(value).toJS;
 
   @override
   void encodeNull() => _array[_index++] = null;
@@ -1347,6 +1885,14 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
 
   @override
   void encodeNullableBool(bool? value) => _rootEncoder._setRoot(value?.toJS);
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      _rootEncoder._setRoot(base64Encode(value).toJS);
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      _rootEncoder._setRoot(value == null ? null : base64Encode(value).toJS);
 
   @override
   void encodeNull() => _rootEncoder._setRoot(null);

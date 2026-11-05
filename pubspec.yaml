@@ -7,3 +7,5 @@ workspace:
   - pkgs/codable
   - pkgs/codable_builder
   - pkgs/codable_benchmarks
+  - pkgs/codable_yaml
+  - pkgs/codable_cbor

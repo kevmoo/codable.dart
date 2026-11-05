@@ -3,12 +3,21 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
+
+typedef _DecoderSlot = ({
+  String target,
+  String? declareType,
+  String decoderExpr,
+  String indent,
+  int depth,
+});
 
 /// Emits the unified `_$ModelSchema` extension type and companion
 /// `decode` / `decodeList` methods.
@@ -76,18 +85,28 @@ final class DecoderGeneratorHelper {
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
 
-    // String Name Constants
+    _writeSchemaNameAndIndexConstants(buffer, nonIgnoredFields);
+    _writeSchemaKeyOptionsTable(buffer, schemaName, nonIgnoredFields);
+    _writeSchemaEnumOptions(buffer, nonIgnoredFields);
+    _writeSchemaBitmaskValidation(buffer, schemaName);
+
+    buffer.writeln('}');
+  }
+
+  static void _writeSchemaNameAndIndexConstants(
+    StringBuffer buffer,
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
     buffer.writeln('  // String Name Constants');
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
       buffer.writeln(
         "  static const String name$suffix = '${field.wireName}';",
       );
-      for (var i = 0; i < field.aliases.length; i++) {
-        final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+      for (final alias in field.aliases) {
+        final aliasSuffix = toSafeIdentifierSuffix(alias);
         buffer.writeln(
-          '  static const String alias$suffix$aliasSuffix = '
-          "'${field.aliases[i]}';",
+          "  static const String alias$suffix$aliasSuffix = '$alias';",
         );
       }
     }
@@ -105,7 +124,13 @@ final class DecoderGeneratorHelper {
         );
       }
     }
+  }
 
+  void _writeSchemaKeyOptionsTable(
+    StringBuffer buffer,
+    String schemaName,
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
     buffer.writeln();
     buffer.writeln('  // KeyOptions Table');
     if (model.allOptionsKeys.isEmpty) {
@@ -119,27 +144,21 @@ final class DecoderGeneratorHelper {
       for (final field in nonIgnoredFields) {
         final suffix = toSafeIdentifierSuffix(field.name);
         buffer.writeln('    $schemaName.name$suffix,');
-        for (var i = 0; i < field.aliases.length; i++) {
-          final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+        for (final alias in field.aliases) {
+          final aliasSuffix = toSafeIdentifierSuffix(alias);
           buffer.writeln('    $schemaName.alias$suffix$aliasSuffix,');
         }
       }
       buffer.writeln('  ]);');
     }
     buffer.writeln('  static final KeyOptions keyOptions = options;');
-
-    // Enum Options
-    _writeSchemaEnumOptions(buffer, nonIgnoredFields);
-
-    _writeSchemaBitmaskValidation(buffer, schemaName);
-
-    buffer.writeln('}');
   }
 
   void _writeSchemaEnumOptions(
     StringBuffer buffer,
     List<FieldDescriptor> nonIgnoredFields,
   ) {
+    final emittedNames = <String>{};
     for (final field in nonIgnoredFields) {
       final needsEnumOptions =
           field.category == TypeCategory.enumType ||
@@ -150,22 +169,78 @@ final class DecoderGeneratorHelper {
       if (!needsEnumOptions || constants == null || constants.isEmpty) {
         continue;
       }
-      buffer.writeln();
-      buffer.writeln('  // Enum Options for ${field.name}');
-      buffer.writeln(
-        '  static final KeyOptions ${field.name}EnumOptions = '
-        'KeyOptions.of(const [',
-      );
-      for (final constant in constants) {
-        buffer.writeln("    '$constant',");
+      final enumOptName = '${field.name}EnumOptions';
+      final keyOptName = '${field.name}KeyOptions';
+      emittedNames
+        ..add(enumOptName)
+        ..add(keyOptName);
+      buffer.write(_enumKeyOptionsBlock(field.name, enumOptName, constants));
+      buffer.writeln('  static final KeyOptions $keyOptName = $enumOptName;');
+    }
+
+    for (final enumEl in _collectNestedEnums(nonIgnoredFields)) {
+      final enumName = enumEl.name;
+      final constants = _enumConstantNames(enumEl);
+      final optName = 'enum${enumName}KeyOptions';
+      if (enumName == null || constants.isEmpty || !emittedNames.add(optName)) {
+        continue;
       }
-      buffer.writeln('  ]);');
-      buffer.writeln(
-        '  static final KeyOptions ${field.name}KeyOptions = '
-        '${field.name}EnumOptions;',
-      );
+      buffer.write(_enumKeyOptionsBlock(enumName, optName, constants));
     }
   }
+
+  static String _enumKeyOptionsBlock(
+    String label,
+    String optionFieldName,
+    List<String> constants,
+  ) {
+    final out = StringBuffer()
+      ..writeln()
+      ..writeln('  // Enum Options for $label')
+      ..writeln(
+        '  static final KeyOptions $optionFieldName = KeyOptions.of(const [',
+      );
+    for (final constant in constants) {
+      out.writeln("    '$constant',");
+    }
+    out.writeln('  ]);');
+    return out.toString();
+  }
+
+  static List<EnumElement> _collectNestedEnums(
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
+    final found = <EnumElement>[];
+    final seenNames = <String>{};
+    for (final field in nonIgnoredFields) {
+      _collectMapEnumsFromType(field.type, found, seenNames, inMap: false);
+    }
+    return found;
+  }
+
+  static void _collectMapEnumsFromType(
+    DartType? type,
+    List<EnumElement> found,
+    Set<String> seenNames, {
+    required bool inMap,
+  }) {
+    if (type == null) return;
+    final el = type.element;
+    if (inMap && el is EnumElement && el.name != null) {
+      if (seenNames.add(el.name!)) found.add(el);
+    }
+    if (type is! InterfaceType) return;
+    final nextInMap = inMap || type.isDartCoreMap || el?.name == 'Map';
+    for (final arg in type.typeArguments) {
+      _collectMapEnumsFromType(arg, found, seenNames, inMap: nextInMap);
+    }
+  }
+
+  static List<String> _enumConstantNames(EnumElement element) => element.fields
+      .where((f) => f.isEnumConstant)
+      .map((f) => f.name)
+      .whereType<String>()
+      .toList();
 
   void _writeSchemaBitmaskValidation(StringBuffer buffer, String schemaName) {
     buffer.writeln();
@@ -260,29 +335,29 @@ final class DecoderGeneratorHelper {
     }
   }
 
+  static String _firstTypeArgDisplay(DartType? elemType, DartType container) {
+    if (elemType != null) return elemType.getDisplayString();
+    if (container is InterfaceType && container.typeArguments.isNotEmpty) {
+      return container.typeArguments.first.getDisplayString();
+    }
+    return 'dynamic';
+  }
+
   String _formatDefaultValue(FieldDescriptor field) {
     var defaultCode = field.defaultValueCode!;
-    if (field.category == TypeCategory.set && defaultCode == 'const {}') {
-      final elemType =
-          field.elementType?.getDisplayString() ??
-          (field.type is InterfaceType &&
-                  (field.type as InterfaceType).typeArguments.isNotEmpty
-              ? (field.type as InterfaceType).typeArguments.first
-                    .getDisplayString()
-              : 'dynamic');
-      defaultCode = 'const <$elemType>{};';
+    final isSet =
+        field.category == TypeCategory.set ||
+        field.nativeCategory == TypeCategory.set;
+    if (isSet && defaultCode == 'const {}') {
+      final elemType = _firstTypeArgDisplay(field.elementType, field.type);
+      defaultCode = 'const <$elemType>{}';
     } else if (defaultCode == 'const {}') {
+      final keyType = field.mapKeyType?.getDisplayString() ?? 'dynamic';
       final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
-      defaultCode = 'const <String, $valType>{};';
+      defaultCode = 'const <$keyType, $valType>{}';
     } else if (defaultCode == 'const []') {
-      final elemType =
-          field.elementType?.getDisplayString() ??
-          (field.type is InterfaceType &&
-                  (field.type as InterfaceType).typeArguments.isNotEmpty
-              ? (field.type as InterfaceType).typeArguments.first
-                    .getDisplayString()
-              : 'dynamic');
-      defaultCode = 'const <$elemType>[];';
+      final elemType = _firstTypeArgDisplay(field.elementType, field.type);
+      defaultCode = 'const <$elemType>[]';
     }
     if (defaultCode.endsWith(';')) {
       defaultCode = defaultCode.substring(0, defaultCode.length - 1);
@@ -321,8 +396,8 @@ final class DecoderGeneratorHelper {
   ) {
     final suffix = toSafeIdentifierSuffix(field.name);
     buffer.writeln('      case $schemaName.key$suffix:');
-    for (var i = 0; i < field.aliases.length; i++) {
-      final aliasSuffix = toSafeIdentifierSuffix(field.aliases[i]);
+    for (final alias in field.aliases) {
+      final aliasSuffix = toSafeIdentifierSuffix(alias);
       buffer.writeln('      case $schemaName.aliasKey$suffix$aliasSuffix:');
     }
 
@@ -463,6 +538,18 @@ final class DecoderGeneratorHelper {
       _writeNestedListRead(buffer, field, elemType, indent: indent);
       return;
     }
+    if (elemType.isDartCoreMap || elemType.element?.name == 'Map') {
+      buffer.write(
+        _inlineCollectionDecodeCode(elemType, (
+          target: field.name,
+          declareType: null,
+          decoderExpr: 'keyed.nestedDecoder()',
+          indent: indent,
+          depth: 0,
+        ), isSet: false),
+      );
+      return;
+    }
     if (elemType.element is EnumElement) {
       _writeEnumListRead(buffer, field, elemType, indent: indent);
       return;
@@ -508,9 +595,7 @@ final class DecoderGeneratorHelper {
         );
         return true;
       case 'Uint8List':
-        buffer.writeln(
-          '$indent${field.name} = Uint8List.fromList(keyed.decodeIntList());',
-        );
+        buffer.writeln('$indent${field.name} = keyed.readBytes();');
         return true;
       case 'Float32List':
         buffer.writeln(
@@ -522,18 +607,24 @@ final class DecoderGeneratorHelper {
     }
   }
 
+  static String? _fastPrimitiveListCall(DartType type) {
+    if (type.isNullableType) return null;
+    if (type.isDartCoreInt) return 'decodeIntList()';
+    if (type.isDartCoreDouble) return 'decodeDoubleList()';
+    if (type.isDartCoreString) return 'decodeStringList()';
+    if (type.isDartCoreBool) return 'decodeBoolList()';
+    return null;
+  }
+
   bool _tryWriteNonNullFastListRead(
     StringBuffer buffer,
     FieldDescriptor field,
     DartType elemType, {
     required String indent,
   }) {
-    if (elemType.isDartCoreInt) {
-      buffer.writeln('$indent${field.name} = keyed.decodeIntList();');
-      return true;
-    }
-    if (elemType.isDartCoreDouble) {
-      buffer.writeln('$indent${field.name} = keyed.decodeDoubleList();');
+    final fastCall = _fastPrimitiveListCall(elemType);
+    if (fastCall != null) {
+      buffer.writeln('$indent${field.name} = keyed.$fastCall;');
       return true;
     }
     if (elemType.isDartCoreNum) {
@@ -543,36 +634,27 @@ final class DecoderGeneratorHelper {
       );
       return true;
     }
-    if (elemType.isDartCoreString) {
-      buffer.writeln('$indent${field.name} = keyed.decodeStringList();');
-      return true;
-    }
-    if (elemType.isDartCoreBool) {
-      buffer.writeln('$indent${field.name} = keyed.decodeBoolList();');
-      return true;
-    }
-    if (elemType.element?.name == 'Float64List') {
+    final loopSpec = _unkeyedTypedLoopSpec(elemType.element?.name);
+    if (loopSpec != null) {
       _writeUnkeyedLoopListRead(
         buffer,
         field.name,
-        'Float64List',
-        'u.decodeFloat64List()',
-        indent: indent,
-      );
-      return true;
-    }
-    if (elemType.element?.name == 'Int64List') {
-      _writeUnkeyedLoopListRead(
-        buffer,
-        field.name,
-        'Int64List',
-        'Int64List.fromList(u.decodeIntList())',
+        loopSpec.$1,
+        loopSpec.$2,
         indent: indent,
       );
       return true;
     }
     return false;
   }
+
+  static (String, String)? _unkeyedTypedLoopSpec(String? elemName) =>
+      switch (elemName) {
+        'Uint8List' => ('Uint8List', 'u.readBytes()'),
+        'Float64List' => ('Float64List', 'u.decodeFloat64List()'),
+        'Int64List' => ('Int64List', 'Int64List.fromList(u.decodeIntList())'),
+        _ => null,
+      };
 
   void _writeNestedListRead(
     StringBuffer buffer,
@@ -599,15 +681,14 @@ final class DecoderGeneratorHelper {
     );
   }
 
-  (String, String)? _nestedFastListSpec(DartType inner) {
+  static (String, String)? _nestedFastListSpec(DartType inner) {
     if (inner.element?.name == 'Float64List') {
       return ('Float64List', 'u.decodeFloat64List()');
     }
-    if (inner.isNullableType) return null;
-    if (inner.isDartCoreDouble) return ('List<double>', 'u.decodeDoubleList()');
-    if (inner.isDartCoreInt) return ('List<int>', 'u.decodeIntList()');
-    if (inner.isDartCoreString) return ('List<String>', 'u.decodeStringList()');
-    if (inner.isDartCoreBool) return ('List<bool>', 'u.decodeBoolList()');
+    final fastCall = _fastPrimitiveListCall(inner);
+    if (fastCall != null) {
+      return ('List<${inner.getDisplayString()}>', 'u.$fastCall');
+    }
     return null;
   }
 
@@ -637,19 +718,21 @@ final class DecoderGeneratorHelper {
     required String indent,
   }) {
     final enumName = elemType.element!.name;
-    if (elemType.isNullableType) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
-        'final v = d.singleValue().readNullableString(); '
-        'return v == null ? null : $enumName.values.byName(v); }));',
-      );
-    } else {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList('
-        'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString())));',
-      );
-    }
+    buffer.writeln(
+      '$indent${field.name} = keyed.decodeList('
+      '${_enumDecodableExpr(enumName!, isNullable: elemType.isNullableType)});',
+    );
   }
+
+  static String _enumDecodableExpr(
+    String enumName, {
+    required bool isNullable,
+  }) => isNullable
+      ? 'Decodable.fromFunction((d) { '
+            'final v = d.singleValue().readNullableString(); '
+            'return v == null ? null : $enumName.values.byName(v); })'
+      : 'Decodable.fromFunction('
+            '(d) => $enumName.values.byName(d.singleValue().readString()))';
 
   void _writeCodableListRead(
     StringBuffer buffer,
@@ -657,22 +740,15 @@ final class DecoderGeneratorHelper {
     DartType elemType, {
     required String indent,
   }) {
-    final nestedName = elemType.element!.name;
+    final nestedName = elemType.element!.name!;
     if (elemType.isNullableType) {
       buffer.writeln(
-        '$indent{\n'
-        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-        '$indent  final l = <$nestedName?>[];\n'
-        '$indent  while (u.moveNext()) {\n'
-        '$indent    if (u.isNextNull()) {\n'
-        '$indent      u.readNull();\n'
-        '$indent      l.add(null);\n'
-        '$indent    } else {\n'
-        '$indent      l.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
-        '$indent    }\n'
-        '$indent  }\n'
-        '$indent  ${field.name} = l;\n'
-        '$indent}',
+        _nullableCodableUnkeyedBlock(
+          field.name,
+          nestedName,
+          indent: indent,
+          isSet: false,
+        ),
       );
     } else {
       buffer.writeln(
@@ -682,28 +758,43 @@ final class DecoderGeneratorHelper {
     }
   }
 
+  static String _nullableCodableUnkeyedBlock(
+    String fieldName,
+    String nestedName, {
+    required String indent,
+    required bool isSet,
+  }) {
+    final varName = isSet ? 's' : 'l';
+    final literal = isSet ? '<$nestedName?>{}' : '<$nestedName?>[]';
+    return '$indent{\n'
+        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
+        '$indent  final $varName = $literal;\n'
+        '$indent  while (u.moveNext()) {\n'
+        '$indent    if (u.isNextNull()) {\n'
+        '$indent      u.readNull();\n'
+        '$indent      $varName.add(null);\n'
+        '$indent    } else {\n'
+        '$indent      $varName.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
+        '$indent    }\n'
+        '$indent  }\n'
+        '$indent  $fieldName = $varName;\n'
+        '$indent}';
+  }
+
   bool _tryWriteNullablePrimitiveListRead(
     StringBuffer buffer,
     FieldDescriptor field,
     DartType elemType, {
     required String indent,
   }) {
-    final spec = _nullablePrimitiveListSpec(elemType);
-    if (spec == null) return false;
+    final methods = _primitiveSingleValueMethods(elemType);
+    if (methods == null) return false;
+    final typeStr = elemType.getDisplayString();
     buffer.writeln(
-      '$indent${field.name} = keyed.decodeList<${spec.$1}>('
-      'Decodable.fromFunction((d) => d.singleValue().${spec.$2}()));',
+      '$indent${field.name} = keyed.decodeList<$typeStr>('
+      'Decodable.fromFunction((d) => d.singleValue().${methods.$2}()));',
     );
     return true;
-  }
-
-  (String, String)? _nullablePrimitiveListSpec(DartType elemType) {
-    if (elemType.isDartCoreString) return ('String?', 'readNullableString');
-    if (elemType.isDartCoreInt) return ('int?', 'readNullableInt');
-    if (elemType.isDartCoreDouble) return ('double?', 'readNullableDouble');
-    if (elemType.isDartCoreNum) return ('num?', 'readNullableNum');
-    if (elemType.isDartCoreBool) return ('bool?', 'readNullableBool');
-    return null;
   }
 
   String _generateUnkeyedElementExpr(DartType type) {
@@ -720,10 +811,10 @@ final class DecoderGeneratorHelper {
           : 'const ${nestedName}Codable()';
     }
     if (type.element is EnumElement) {
-      final enumName = type.element!.name;
-      return type.isNullableType
-          ? 'Decodable.fromFunction((d) { final v = d.singleValue().readNullableString(); return v == null ? null : $enumName.values.byName(v); })'
-          : 'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))';
+      return _enumDecodableExpr(
+        type.element!.name!,
+        isNullable: type.isNullableType,
+      );
     }
     return _generatePrimitiveUnkeyedElementExpr(type);
   }
@@ -748,17 +839,12 @@ final class DecoderGeneratorHelper {
     return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}))';
   }
 
-  String? _unkeyedFastInnerListCall(DartType inner) {
+  static String? _unkeyedFastInnerListCall(DartType inner) {
     if (inner.element?.name == 'Float64List') return 'decodeFloat64List()';
-    if (inner.isNullableType) return null;
-    if (inner.isDartCoreDouble) return 'decodeDoubleList()';
-    if (inner.isDartCoreInt) return 'decodeIntList()';
-    if (inner.isDartCoreString) return 'decodeStringList()';
-    if (inner.isDartCoreBool) return 'decodeBoolList()';
-    return null;
+    return _fastPrimitiveListCall(inner);
   }
 
-  String? _tryGenerateTypedDataElementExpr(DartType type) {
+  static String? _tryGenerateTypedDataElementExpr(DartType type) {
     switch (type.element?.name) {
       case 'Float64List':
         return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
@@ -767,7 +853,8 @@ final class DecoderGeneratorHelper {
       case 'Int32List':
         return 'Decodable.fromFunction((d) => Int32List.fromList(d.unkeyed().decodeIntList()))';
       case 'Uint8List':
-        return 'Decodable.fromFunction((d) => Uint8List.fromList(d.unkeyed().decodeIntList()))';
+        final method = type.isNullableType ? 'readNullableBytes' : 'readBytes';
+        return 'Decodable.fromFunction((d) => d.singleValue().$method())';
       case 'Float32List':
         return 'Decodable.fromFunction((d) => Float32List.fromList(d.unkeyed().decodeDoubleList()))';
       default:
@@ -775,7 +862,7 @@ final class DecoderGeneratorHelper {
     }
   }
 
-  String _generatePrimitiveUnkeyedElementExpr(DartType type) {
+  static String _generatePrimitiveUnkeyedElementExpr(DartType type) {
     final method = _primitiveSingleValueReadMethod(type);
     if (method != null) {
       return 'Decodable.fromFunction((d) => d.singleValue().$method())';
@@ -783,18 +870,22 @@ final class DecoderGeneratorHelper {
     return 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)';
   }
 
-  String? _primitiveSingleValueReadMethod(DartType type) {
-    final nullable = type.isNullableType;
-    if (type.isDartCoreInt) return nullable ? 'readNullableInt' : 'readInt';
-    if (type.isDartCoreDouble) {
-      return nullable ? 'readNullableDouble' : 'readDouble';
+  static (String, String)? _primitiveSingleValueMethods(DartType type) {
+    if (type.isDartCoreInt) return ('readInt', 'readNullableInt');
+    if (type.isDartCoreDouble) return ('readDouble', 'readNullableDouble');
+    if (type.isDartCoreNum) return ('readNum', 'readNullableNum');
+    if (type.isDartCoreString) return ('readString', 'readNullableString');
+    if (type.isDartCoreBool) return ('readBool', 'readNullableBool');
+    if (type.element?.name == 'Uint8List') {
+      return ('readBytes', 'readNullableBytes');
     }
-    if (type.isDartCoreNum) return nullable ? 'readNullableNum' : 'readNum';
-    if (type.isDartCoreString) {
-      return nullable ? 'readNullableString' : 'readString';
-    }
-    if (type.isDartCoreBool) return nullable ? 'readNullableBool' : 'readBool';
     return null;
+  }
+
+  static String? _primitiveSingleValueReadMethod(DartType type) {
+    final methods = _primitiveSingleValueMethods(type);
+    if (methods == null) return null;
+    return type.isNullableType ? methods.$2 : methods.$1;
   }
 
   void _writeKeyedSetRead(
@@ -803,96 +894,61 @@ final class DecoderGeneratorHelper {
     required String indent,
   }) {
     final elemType = field.elementType;
-    final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
-    final isNullable = elemType?.isNullableType ?? false;
-    if (elemType != null && elemType.isDartCoreString && !isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeStringList().toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreInt && !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeIntList().toSet();');
-    } else if (elemType != null && elemType.isDartCoreString && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<String?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableString())).toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreInt && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<int?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableInt())).toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeDoubleList().toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreNum && !isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<num>('
-        'Decodable.fromFunction((d) => d.singleValue().readNum())).toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreDouble && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<double?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableDouble())).toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreNum && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<num?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableNum())).toSet();',
-      );
-    } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
-      buffer.writeln('$indent${field.name} = keyed.decodeBoolList().toSet();');
-    } else if (elemType != null && elemType.isDartCoreBool && isNullable) {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<bool?>('
-        'Decodable.fromFunction((d) => d.singleValue().readNullableBool())).toSet();',
-      );
-    } else if (elemType != null && elemType.element is EnumElement) {
-      final enumName = elemType.element!.name;
-      if (isNullable) {
-        buffer.writeln(
-          '$indent${field.name} = keyed.decodeList(Decodable.fromFunction((d) { '
-          'final v = d.singleValue().readNullableString(); '
-          'return v == null ? null : $enumName.values.byName(v); })).toSet();',
-        );
-      } else {
-        buffer.writeln(
-          '$indent${field.name} = keyed.decodeList('
-          'Decodable.fromFunction((d) => $enumName.values.byName(d.singleValue().readString()))).toSet();',
-        );
+    if (elemType != null) {
+      final fastSet = _tryFastOrPrimitiveSetLine(field.name, elemType, indent);
+      if (fastSet != null) {
+        buffer.writeln(fastSet);
+        return;
       }
-    } else if (elemType != null &&
-        elemType.element != null &&
-        const TypeClassifier().isCodableElement(elemType.element!)) {
-      final nestedName = elemType.element!.name;
-      if (isNullable) {
-        buffer.writeln(
-          '$indent{\n'
-          '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-          '$indent  final s = <$nestedName?>{};\n'
-          '$indent  while (u.moveNext()) {\n'
-          '$indent    if (u.isNextNull()) {\n'
-          '$indent      u.readNull();\n'
-          '$indent      s.add(null);\n'
-          '$indent    } else {\n'
-          '$indent      s.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
-          '$indent    }\n'
-          '$indent  }\n'
-          '$indent  ${field.name} = s;\n'
-          '$indent}',
+      if (elemType.element is EnumElement) {
+        final decExpr = _enumDecodableExpr(
+          elemType.element!.name!,
+          isNullable: elemType.isNullableType,
         );
-      } else {
         buffer.writeln(
-          '$indent${field.name} = '
-          'const ${nestedName}Codable().decodeList(keyed.nestedDecoder()).toSet();',
+          '$indent${field.name} = keyed.decodeList($decExpr).toSet();',
         );
+        return;
       }
-    } else {
-      buffer.writeln(
-        '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
-        'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)).toSet();',
-      );
+      if (elemType.element != null &&
+          const TypeClassifier().isCodableElement(elemType.element!)) {
+        final nestedName = elemType.element!.name!;
+        final code = elemType.isNullableType
+            ? _nullableCodableUnkeyedBlock(
+                field.name,
+                nestedName,
+                indent: indent,
+                isSet: true,
+              )
+            : '$indent${field.name} = '
+                  'const ${nestedName}Codable().decodeList(keyed.nestedDecoder()).toSet();';
+        buffer.writeln(code);
+        return;
+      }
     }
+    final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
+    buffer.writeln(
+      '$indent${field.name} = keyed.decodeList<$elemTypeStr>('
+      'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)).toSet();',
+    );
+  }
+
+  static String? _tryFastOrPrimitiveSetLine(
+    String fieldName,
+    DartType elemType,
+    String indent,
+  ) {
+    final fastCall = _fastPrimitiveListCall(elemType);
+    if (fastCall != null) {
+      return '$indent$fieldName = keyed.$fastCall.toSet();';
+    }
+    final svMethod = _primitiveSingleValueReadMethod(elemType);
+    if (svMethod != null) {
+      final elemTypeStr = elemType.getDisplayString();
+      return '$indent$fieldName = keyed.decodeList<$elemTypeStr>('
+          'Decodable.fromFunction((d) => d.singleValue().$svMethod())).toSet();';
+    }
+    return null;
   }
 
   void _writeKeyedMapRead(
@@ -900,51 +956,418 @@ final class DecoderGeneratorHelper {
     FieldDescriptor field, {
     required String indent,
   }) {
-    final valType = field.mapValueType;
-    final valTypeStr = valType?.getDisplayString() ?? 'dynamic';
-    final isValNullable = valType?.isNullableType ?? false;
-    final String readExpr;
-    if (valType != null && valType.isDartCoreString) {
-      readExpr = 'k.readString()';
-    } else if (valType != null && valType.isDartCoreInt) {
-      readExpr = 'k.readInt()';
-    } else if (valType != null && valType.isDartCoreDouble) {
-      readExpr = 'k.readDouble()';
-    } else if (valType != null && valType.isDartCoreNum) {
-      readExpr = 'k.readNum()';
-    } else if (valType != null && valType.isDartCoreBool) {
-      readExpr = 'k.readBool()';
-    } else if (valType != null &&
-        valType.element != null &&
-        const TypeClassifier().isCodableElement(valType.element!)) {
-      final nestedName = valType.element!.name;
-      readExpr = 'const ${nestedName}Codable().decode(k.nestedDecoder())';
-    } else {
-      readExpr = 'k.readString() as dynamic';
-    }
+    buffer.write(
+      _inlineMapDecodeCode(field.mapKeyType, field.mapValueType, (
+        target: field.name,
+        declareType: null,
+        decoderExpr: 'keyed.nestedDecoder()',
+        indent: indent,
+        depth: 0,
+      )),
+    );
+  }
 
-    buffer.writeln(
-      '$indent{\n'
-      '$indent  final k = keyed.nestedDecoder().keyed();\n'
-      '$indent  final m = <String, $valTypeStr>{};\n'
-      '$indent  while (k.moveNextKey()) {\n'
-      '$indent    final key = k.nextKey();',
-    );
-    if (isValNullable) {
-      buffer.writeln('$indent    if (k.isNextNull()) {');
-      buffer.writeln('$indent      k.readNull();');
-      buffer.writeln('$indent      m[key] = null as $valTypeStr;');
-      buffer.writeln('$indent    } else {');
-      buffer.writeln('$indent      m[key] = $readExpr;');
-      buffer.writeln('$indent    }');
-    } else {
-      buffer.writeln('$indent    m[key] = $readExpr;');
+  static bool _isStringMapKey(DartType? keyType) =>
+      keyType != null &&
+      keyType.isDartCoreString &&
+      keyType.nullabilitySuffix == NullabilitySuffix.none;
+
+  String _inlineMapDecodeCode(
+    DartType? keyType,
+    DartType? valType,
+    _DecoderSlot slot,
+  ) {
+    if (_isStringMapKey(keyType)) {
+      return _inlineStringMapDecodeCode(valType, slot);
     }
-    buffer.writeln(
-      '$indent  }\n'
-      '$indent  ${field.name} = m;\n'
-      '$indent}',
-    );
+    return _inlineGenericMapDecodeCode(keyType, valType, slot);
+  }
+
+  String _inlineStringMapDecodeCode(DartType? valType, _DecoderSlot slot) {
+    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final kVar = 'k$sfx';
+    final mapVar = 'm$sfx';
+    final keyVar = 'key$sfx';
+    final valTypeStr = valType?.getDisplayString() ?? 'dynamic';
+    final indent = slot.indent;
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('$indent{')
+      ..writeln('$indent  final $kVar = ${slot.decoderExpr}.keyed();')
+      ..writeln('$indent  final $mapVar = <String, $valTypeStr>{};')
+      ..writeln('$indent  while ($kVar.moveNextKey()) {')
+      ..writeln('$indent    final $keyVar = $kVar.nextKey();')
+      ..write(
+        _keyedMapValueDecodeCode(valType, kVar, (
+          target: '$mapVar[$keyVar]',
+          declareType: null,
+          decoderExpr: '$kVar.nestedDecoder()',
+          indent: '$indent    ',
+          depth: slot.depth + 1,
+        )),
+      )
+      ..writeln('$indent  }')
+      ..writeln('$indent  ${slot.target} = $mapVar;')
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  String _keyedMapValueDecodeCode(
+    DartType? type,
+    String kVar,
+    _DecoderSlot slot,
+  ) {
+    if (type == null) {
+      return '${slot.indent}${slot.target} = $kVar.readString() as dynamic;\n';
+    }
+    final scalarMethod = _primitiveSingleValueReadMethod(type);
+    if (scalarMethod != null) {
+      return '${slot.indent}${slot.target} = $kVar.$scalarMethod();\n';
+    }
+    if (!type.isNullableType) {
+      return _nonNullKeyedMapValueDecodeCode(type, kVar, slot);
+    }
+    final indent = slot.indent;
+    final out = StringBuffer()
+      ..writeln('${indent}if ($kVar.isNextNull()) {')
+      ..writeln('$indent  $kVar.readNull();')
+      ..writeln('$indent  ${slot.target} = null;')
+      ..writeln('$indent} else {')
+      ..write(
+        _nonNullKeyedMapValueDecodeCode(type, kVar, (
+          target: slot.target,
+          declareType: null,
+          decoderExpr: '$kVar.nestedDecoder()',
+          indent: '$indent  ',
+          depth: slot.depth + 1,
+        )),
+      )
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  String _nonNullKeyedMapValueDecodeCode(
+    DartType type,
+    String kVar,
+    _DecoderSlot slot,
+  ) {
+    if (type.element is EnumElement) {
+      return _keyedEnumValueDecodeCode(type, kVar, slot);
+    }
+    final fastExpr = _keyedDirectCollectionDecodeExpr(type, kVar);
+    if (fastExpr != null) {
+      return '${slot.indent}${slot.target} = $fastExpr;\n';
+    }
+    return _nonNullComplexDecoderValueCode(type, slot);
+  }
+
+  String _keyedEnumValueDecodeCode(
+    DartType type,
+    String kVar,
+    _DecoderSlot slot,
+  ) {
+    final enumName = type.element!.name!;
+    final schemaName = '_\$${model.className}Schema';
+    final optRef = '$schemaName.enum${enumName}KeyOptions';
+    final indent = slot.indent;
+    final idxVar = 'enumIdx${slot.depth}';
+    return '${indent}final $idxVar = $kVar.selectStringIndex($optRef);\n'
+        '${indent}if ($idxVar < 0 || $idxVar >= $enumName.values.length) {\n'
+        "$indent  throw const CodableException('Unknown $enumName value');\n"
+        '$indent}\n'
+        '$indent${slot.target} = $enumName.values[$idxVar];\n';
+  }
+
+  static String? _keyedDirectCollectionDecodeExpr(DartType type, String kVar) {
+    final typedExpr = switch (type.element?.name) {
+      'Float64List' => '$kVar.decodeFloat64List()',
+      'Float32List' => 'Float32List.fromList($kVar.decodeDoubleList())',
+      'Int64List' => 'Int64List.fromList($kVar.decodeIntList())',
+      'Int32List' => 'Int32List.fromList($kVar.decodeIntList())',
+      _ => null,
+    };
+    if (typedExpr != null) return typedExpr;
+    final isList = type.isDartCoreList || type.element?.name == 'List';
+    final isSet = type.isDartCoreSet || type.element?.name == 'Set';
+    if (!isList && !isSet) return null;
+    final inner = _typeArgAt(type, 0);
+    final fastCall = inner != null ? _fastPrimitiveListCall(inner) : null;
+    if (fastCall == null) return null;
+    return isSet ? '$kVar.$fastCall.toSet()' : '$kVar.$fastCall';
+  }
+
+  String _inlineGenericMapDecodeCode(
+    DartType? keyType,
+    DartType? valType,
+    _DecoderSlot slot,
+  ) {
+    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final mDecVar = 'mDecoder$sfx';
+    final mapVar = 'm$sfx';
+    final keyVar = 'key$sfx';
+    final keyTypeStr = keyType?.getDisplayString() ?? 'dynamic';
+    final valTypeStr = valType?.getDisplayString() ?? 'dynamic';
+    final indent = slot.indent;
+    final bodyIndent = '$indent    ';
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('$indent{')
+      ..writeln('$indent  final $mDecVar = ${slot.decoderExpr}.map();')
+      ..writeln('$indent  final $mapVar = <$keyTypeStr, $valTypeStr>{};')
+      ..writeln('$indent  while ($mDecVar.moveNextEntry()) {')
+      ..write(
+        _decoderValueCode(keyType, (
+          target: keyVar,
+          declareType: keyTypeStr,
+          decoderExpr: '$mDecVar.keyDecoder()',
+          indent: bodyIndent,
+          depth: slot.depth + 1,
+        )),
+      )
+      ..write(
+        _decoderValueCode(valType, (
+          target: '$mapVar[$keyVar]',
+          declareType: null,
+          decoderExpr: '$mDecVar.valueDecoder()',
+          indent: bodyIndent,
+          depth: slot.depth + 1,
+        )),
+      )
+      ..writeln('$indent  }')
+      ..writeln('$indent  ${slot.target} = $mapVar;')
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  String _decoderValueCode(DartType? type, _DecoderSlot slot) {
+    final assignLhs = slot.declareType != null
+        ? 'final ${slot.target}'
+        : slot.target;
+    if (type == null) {
+      return '${slot.indent}$assignLhs = '
+          '${slot.decoderExpr}.singleValue().readString() as dynamic;\n';
+    }
+    final scalarMethod = _primitiveSingleValueReadMethod(type);
+    if (scalarMethod != null) {
+      return '${slot.indent}$assignLhs = '
+          '${slot.decoderExpr}.singleValue().$scalarMethod();\n';
+    }
+    if (type.element is EnumElement) {
+      return _enumDecoderValueCode(type, slot);
+    }
+    if (!type.isNullableType) {
+      return _nonNullComplexDecoderValueCode(type, slot);
+    }
+    final decVar = 'dec${slot.depth}';
+    final svVar = 'sv${slot.depth}';
+    final indent = slot.indent;
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('${indent}final $decVar = ${slot.decoderExpr};')
+      ..writeln('${indent}final $svVar = $decVar.singleValue();')
+      ..writeln('${indent}if ($svVar.isNull()) {')
+      ..writeln('$indent  $svVar.readNull();')
+      ..writeln('$indent  ${slot.target} = null;')
+      ..writeln('$indent} else {')
+      ..write(
+        _nonNullComplexDecoderValueCode(type, (
+          target: slot.target,
+          declareType: null,
+          decoderExpr: decVar,
+          indent: '$indent  ',
+          depth: slot.depth + 1,
+        )),
+      )
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  String _enumDecoderValueCode(DartType type, _DecoderSlot slot) {
+    final enumName = type.element!.name!;
+    final schemaName = '_\$${model.className}Schema';
+    final optRef = '$schemaName.enum${enumName}KeyOptions';
+    final indent = slot.indent;
+    final idxVar = 'enumIdx${slot.depth}';
+    if (!type.isNullableType) {
+      final assignLhs = slot.declareType != null
+          ? 'final ${slot.target}'
+          : slot.target;
+      return '${indent}final $idxVar = '
+          '$optRef.indexOf(${slot.decoderExpr}.singleValue().readString());\n'
+          '${indent}if ($idxVar < 0) {\n'
+          "$indent  throw const CodableException('Unknown $enumName value');\n"
+          '$indent}\n'
+          '$indent$assignLhs = $enumName.values[$idxVar];\n';
+    }
+    final rawVar = 'rawEnum${slot.depth}';
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln(
+        '${indent}final $rawVar = '
+        '${slot.decoderExpr}.singleValue().readNullableString();',
+      )
+      ..writeln('${indent}if ($rawVar == null) {')
+      ..writeln('$indent  ${slot.target} = null;')
+      ..writeln('$indent} else {')
+      ..writeln('$indent  final $idxVar = $optRef.indexOf($rawVar);')
+      ..writeln('$indent  if ($idxVar < 0) {')
+      ..writeln(
+        "$indent    throw const CodableException('Unknown $enumName value');",
+      )
+      ..writeln('$indent  }')
+      ..writeln('$indent  ${slot.target} = $enumName.values[$idxVar];')
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  static DartType? _typeArgAt(DartType type, int index) =>
+      type is InterfaceType && type.typeArguments.length > index
+      ? type.typeArguments[index]
+      : null;
+
+  String _nonNullComplexDecoderValueCode(DartType type, _DecoderSlot slot) {
+    final singleExpr = _nonNullComplexSingleExpr(type, slot.decoderExpr);
+    final assignLhs = slot.declareType != null
+        ? 'final ${slot.target}'
+        : slot.target;
+    if (singleExpr != null) {
+      return '${slot.indent}$assignLhs = $singleExpr;\n';
+    }
+    final name = type.element?.name;
+    final typedCode = _tryTypedDataDecodeCode(name, slot);
+    if (typedCode != null) return typedCode;
+    if (type.isDartCoreMap || name == 'Map') {
+      return _inlineMapDecodeCode(
+        _typeArgAt(type, 0),
+        _typeArgAt(type, 1),
+        slot,
+      );
+    }
+    final isSet = type.isDartCoreSet || name == 'Set';
+    if (isSet || type.isDartCoreList || name == 'List') {
+      return _inlineCollectionDecodeCode(
+        _typeArgAt(type, 0),
+        slot,
+        isSet: isSet,
+      );
+    }
+    return '${slot.indent}$assignLhs = '
+        '${slot.decoderExpr}.singleValue().readString() as dynamic;\n';
+  }
+
+  static String? _nonNullComplexSingleExpr(DartType type, String decExpr) {
+    if (type.element != null &&
+        const TypeClassifier().isCodableElement(type.element!)) {
+      return 'const ${type.element!.name}Codable().decode($decExpr)';
+    }
+    final isSet = type.isDartCoreSet || type.element?.name == 'Set';
+    final isList = type.isDartCoreList || type.element?.name == 'List';
+    final inner = (isList || isSet) ? _typeArgAt(type, 0) : null;
+    if (inner != null &&
+        !inner.isNullableType &&
+        inner.element != null &&
+        const TypeClassifier().isCodableElement(inner.element!)) {
+      final suffix = isSet ? '.toSet()' : '';
+      return 'const ${inner.element!.name}Codable().decodeList($decExpr)$suffix';
+    }
+    return null;
+  }
+
+  static String? _tryTypedDataDecodeCode(String? name, _DecoderSlot slot) {
+    final spec = switch (name) {
+      'Float64List' => ('double', 'readDouble()'),
+      'Float32List' => ('double', 'readDouble()'),
+      'Int64List' => ('int', 'readInt()'),
+      'Int32List' => ('int', 'readInt()'),
+      _ => null,
+    };
+    if (spec == null) return null;
+    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final uVar = 'u$sfx';
+    final lVar = 'l$sfx';
+    final indent = slot.indent;
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('$indent{')
+      ..writeln('$indent  final $uVar = ${slot.decoderExpr}.unkeyed();')
+      ..writeln('$indent  final $lVar = <${spec.$1}>[];')
+      ..writeln('$indent  while ($uVar.moveNext()) {')
+      ..writeln('$indent    $lVar.add($uVar.${spec.$2});')
+      ..writeln('$indent  }')
+      ..writeln('$indent  ${slot.target} = $name.fromList($lVar);')
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  static String? _unkeyedDirectReadExpr(DartType? inner, String uVar) {
+    if (inner == null || inner.isNullableType) return null;
+    if (inner.isDartCoreInt) return '$uVar.readInt()';
+    if (inner.isDartCoreDouble) return '$uVar.readDouble()';
+    if (inner.isDartCoreNum) return '$uVar.readNum()';
+    if (inner.isDartCoreString) return '$uVar.readString()';
+    if (inner.isDartCoreBool) return '$uVar.readBool()';
+    if (inner.element?.name == 'Uint8List') return '$uVar.readBytes()';
+    return null;
+  }
+
+  String _inlineCollectionDecodeCode(
+    DartType? inner,
+    _DecoderSlot slot, {
+    required bool isSet,
+  }) {
+    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final uVar = 'u$sfx';
+    final colVar = isSet ? 's$sfx' : 'l$sfx';
+    final innerStr = inner?.getDisplayString() ?? 'dynamic';
+    final literal = isSet ? '<$innerStr>{}' : '<$innerStr>[]';
+    final indent = slot.indent;
+    final directExpr = _unkeyedDirectReadExpr(inner, uVar);
+
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('$indent{')
+      ..writeln('$indent  final $uVar = ${slot.decoderExpr}.unkeyed();')
+      ..writeln('$indent  final $colVar = $literal;')
+      ..writeln('$indent  while ($uVar.moveNext()) {');
+    if (directExpr != null) {
+      out.writeln('$indent    $colVar.add($directExpr);');
+    } else {
+      final itemVar = 'item$sfx';
+      out
+        ..write(
+          _decoderValueCode(inner, (
+            target: itemVar,
+            declareType: innerStr,
+            decoderExpr: '$uVar.nestedDecoder()',
+            indent: '$indent    ',
+            depth: slot.depth + 1,
+          )),
+        )
+        ..writeln('$indent    $colVar.add($itemVar);');
+    }
+    out
+      ..writeln('$indent  }')
+      ..writeln('$indent  ${slot.target} = $colVar;')
+      ..writeln('$indent}');
+    return out.toString();
   }
 
   void _writeDecoderReturn(StringBuffer buffer) {

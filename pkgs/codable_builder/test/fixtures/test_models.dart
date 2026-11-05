@@ -265,10 +265,55 @@ final class PrimitiveCollectionsModel {
 }
 
 @Codable()
+final class BinaryPayloadModel {
+  final Uint8List payload;
+  final Uint8List? signature;
+  final List<Uint8List> chunks;
+  final List<Uint8List?> nullableChunks;
+  final Map<String, Uint8List> namedBlobs;
+
+  const BinaryPayloadModel({
+    required this.payload,
+    this.signature,
+    this.chunks = const [],
+    this.nullableChunks = const [],
+    this.namedBlobs = const {},
+  });
+}
+
+@Codable()
+final class TypedKeyMapModel {
+  final Map<int, String> statusMessages;
+  final Map<UserRole, int> roleCounts;
+  final Map<bool, double> flagWeights;
+  final Map<String, List<int>> buckets;
+
+  const TypedKeyMapModel({
+    this.statusMessages = const {},
+    this.roleCounts = const {},
+    this.flagWeights = const {},
+    this.buckets = const {},
+  });
+}
+
+@Codable()
 final class CompositeKeyMapModel {
   final Map<Point, String> labelsByPoint;
 
   const CompositeKeyMapModel({this.labelsByPoint = const {}});
+}
+
+@Codable()
+final class StringKeyedNestedMapModel {
+  final Map<String, UserRole> rolesByUser;
+  final Map<String, Address?> officesByCode;
+  final Map<String, Map<String, int>> nestedCounts;
+
+  const StringKeyedNestedMapModel({
+    this.rolesByUser = const {},
+    this.officesByCode = const {},
+    this.nestedCounts = const {},
+  });
 }
 
 @Codable()

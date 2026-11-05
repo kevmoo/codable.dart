@@ -1025,12 +1025,7 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
             final m = <String, num?>{};
             while (k.moveNextKey()) {
               final key = k.nextKey();
-              if (k.isNextNull()) {
-                k.readNull();
-                m[key] = null as num?;
-              } else {
-                m[key] = k.readNum();
-              }
+              m[key] = k.readNullableNum();
             }
             nullableMetrics = m;
           }
@@ -1248,12 +1243,7 @@ final class TeamCodable implements Codable<Team> {
             final m = <String, int?>{};
             while (k.moveNextKey()) {
               final key = k.nextKey();
-              if (k.isNextNull()) {
-                k.readNull();
-                m[key] = null as int?;
-              } else {
-                m[key] = k.readInt();
-              }
+              m[key] = k.readNullableInt();
             }
             scores = m;
           }
@@ -1512,6 +1502,612 @@ final class PrimitiveCollectionsModelCodable
         }
       }),
     );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for BinaryPayloadModel
+// =============================================================================
+extension type const _$BinaryPayloadModelSchema(int _value) {
+  // String Name Constants
+  static const String namePayload = 'payload';
+  static const String nameSignature = 'signature';
+  static const String nameChunks = 'chunks';
+  static const String nameNullableChunks = 'nullableChunks';
+  static const String nameNamedBlobs = 'namedBlobs';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPayload = 0;
+  static const int keySignature = 1;
+  static const int keyChunks = 2;
+  static const int keyNullableChunks = 3;
+  static const int keyNamedBlobs = 4;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$BinaryPayloadModelSchema.namePayload,
+    _$BinaryPayloadModelSchema.nameSignature,
+    _$BinaryPayloadModelSchema.nameChunks,
+    _$BinaryPayloadModelSchema.nameNullableChunks,
+    _$BinaryPayloadModelSchema.nameNamedBlobs,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$BinaryPayloadModelSchema none = _$BinaryPayloadModelSchema(0);
+  static const int _payloadBit = 1 << 0;
+  static const _$BinaryPayloadModelSchema payload = _$BinaryPayloadModelSchema(
+    _payloadBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$BinaryPayloadModelSchema golden = _$BinaryPayloadModelSchema(
+    _payloadBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$BinaryPayloadModelSchema operator |(_$BinaryPayloadModelSchema other) =>
+      _$BinaryPayloadModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _payloadBit) == 0) {
+      missing.add(namePayload);
+    }
+    throw CodableException(
+      'Missing required fields for BinaryPayloadModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for BinaryPayloadModel
+// =============================================================================
+final class BinaryPayloadModelCodable implements Codable<BinaryPayloadModel> {
+  const BinaryPayloadModelCodable();
+
+  @override
+  BinaryPayloadModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$BinaryPayloadModelSchema.keyOptions);
+
+    Uint8List? payload;
+    Uint8List? signature;
+    var chunks = const <Uint8List>[];
+    var nullableChunks = const <Uint8List?>[];
+    var namedBlobs = const <String, Uint8List>{};
+    var seen = _$BinaryPayloadModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$BinaryPayloadModelSchema.keyOptions)) {
+        case _$BinaryPayloadModelSchema.keyPayload:
+          if ((seen._value & _$BinaryPayloadModelSchema.payload._value) != 0) {
+            throw const CodableException('Duplicate field "payload"');
+          }
+          payload = keyed.readBytes();
+          seen |= _$BinaryPayloadModelSchema.payload;
+          break;
+        case _$BinaryPayloadModelSchema.keySignature:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            signature = null;
+          } else {
+            signature = keyed.readBytes();
+          }
+          break;
+        case _$BinaryPayloadModelSchema.keyChunks:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Uint8List>[];
+            while (u.moveNext()) {
+              l.add(u.readBytes());
+            }
+            chunks = l;
+          }
+          break;
+        case _$BinaryPayloadModelSchema.keyNullableChunks:
+          nullableChunks = keyed.decodeList<Uint8List?>(
+            Decodable.fromFunction((d) => d.singleValue().readNullableBytes()),
+          );
+          break;
+        case _$BinaryPayloadModelSchema.keyNamedBlobs:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, Uint8List>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readBytes();
+            }
+            namedBlobs = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return BinaryPayloadModel(
+      payload: payload!,
+      signature: signature,
+      chunks: chunks,
+      nullableChunks: nullableChunks,
+      namedBlobs: namedBlobs,
+    );
+  }
+
+  @override
+  void encode(BinaryPayloadModel instance, Encoder encoder) {
+    final keyed = encoder.keyed();
+    keyed.encodeBytes(_$BinaryPayloadModelSchema.namePayload, instance.payload);
+    if (instance.signature != null) {
+      keyed.encodeBytes(
+        _$BinaryPayloadModelSchema.nameSignature,
+        instance.signature!,
+      );
+    }
+    keyed.encodeList(
+      _$BinaryPayloadModelSchema.nameChunks,
+      instance.chunks,
+      Encodable.fromFunction((Uint8List item, e) {
+        e.singleValue().encodeBytes(item);
+      }),
+    );
+    keyed.encodeList(
+      _$BinaryPayloadModelSchema.nameNullableChunks,
+      instance.nullableChunks,
+      Encodable.fromFunction((Uint8List? item, e) {
+        e.singleValue().encodeNullableBytes(item);
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$BinaryPayloadModelSchema.nameNamedBlobs)
+          .keyed(length: instance.namedBlobs.length);
+      for (final entry in instance.namedBlobs.entries) {
+        k.encodeBytes(entry.key, entry.value);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for TypedKeyMapModel
+// =============================================================================
+extension type const _$TypedKeyMapModelSchema(int _value) {
+  // String Name Constants
+  static const String nameStatusMessages = 'statusMessages';
+  static const String nameRoleCounts = 'roleCounts';
+  static const String nameFlagWeights = 'flagWeights';
+  static const String nameBuckets = 'buckets';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyStatusMessages = 0;
+  static const int keyRoleCounts = 1;
+  static const int keyFlagWeights = 2;
+  static const int keyBuckets = 3;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$TypedKeyMapModelSchema.nameStatusMessages,
+    _$TypedKeyMapModelSchema.nameRoleCounts,
+    _$TypedKeyMapModelSchema.nameFlagWeights,
+    _$TypedKeyMapModelSchema.nameBuckets,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$TypedKeyMapModelSchema none = _$TypedKeyMapModelSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$TypedKeyMapModelSchema operator |(_$TypedKeyMapModelSchema other) =>
+      _$TypedKeyMapModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for TypedKeyMapModel
+// =============================================================================
+final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
+  const TypedKeyMapModelCodable();
+
+  @override
+  TypedKeyMapModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$TypedKeyMapModelSchema.keyOptions);
+
+    var statusMessages = const <int, String>{};
+    var roleCounts = const <UserRole, int>{};
+    var flagWeights = const <bool, double>{};
+    var buckets = const <String, List<int>>{};
+    var seen = _$TypedKeyMapModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TypedKeyMapModelSchema.keyOptions)) {
+        case _$TypedKeyMapModelSchema.keyStatusMessages:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <int, String>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = mDecoder.keyDecoder().singleValue().readInt();
+              m[key] = mDecoder.valueDecoder().singleValue().readString();
+            }
+            statusMessages = m;
+          }
+          break;
+        case _$TypedKeyMapModelSchema.keyRoleCounts:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <UserRole, int>{};
+            while (mDecoder.moveNextEntry()) {
+              final enumIdx1 = _$TypedKeyMapModelSchema.enumUserRoleKeyOptions
+                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
+              if (enumIdx1 < 0) {
+                throw const CodableException('Unknown UserRole value');
+              }
+              final key = UserRole.values[enumIdx1];
+              m[key] = mDecoder.valueDecoder().singleValue().readInt();
+            }
+            roleCounts = m;
+          }
+          break;
+        case _$TypedKeyMapModelSchema.keyFlagWeights:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <bool, double>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = mDecoder.keyDecoder().singleValue().readBool();
+              m[key] = mDecoder.valueDecoder().singleValue().readDouble();
+            }
+            flagWeights = m;
+          }
+          break;
+        case _$TypedKeyMapModelSchema.keyBuckets:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, List<int>>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.decodeIntList();
+            }
+            buckets = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return TypedKeyMapModel(
+      statusMessages: statusMessages,
+      roleCounts: roleCounts,
+      flagWeights: flagWeights,
+      buckets: buckets,
+    );
+  }
+
+  @override
+  void encode(TypedKeyMapModel instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 4);
+    {
+      final m = keyed
+          .nestedEncoder(_$TypedKeyMapModelSchema.nameStatusMessages)
+          .map(length: instance.statusMessages.length);
+      for (final entry in instance.statusMessages.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$TypedKeyMapModelSchema.nameRoleCounts)
+          .map(length: instance.roleCounts.length);
+      for (final entry in instance.roleCounts.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$TypedKeyMapModelSchema.nameFlagWeights)
+          .map(length: instance.flagWeights.length);
+      for (final entry in instance.flagWeights.entries) {
+        m.keyEncoder().singleValue().encodeBool(entry.key);
+        m.valueEncoder().singleValue().encodeDouble(entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$TypedKeyMapModelSchema.nameBuckets)
+          .keyed(length: instance.buckets.length);
+      for (final entry in instance.buckets.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CompositeKeyMapModel
+// =============================================================================
+extension type const _$CompositeKeyMapModelSchema(int _value) {
+  // String Name Constants
+  static const String nameLabelsByPoint = 'labelsByPoint';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLabelsByPoint = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CompositeKeyMapModelSchema.nameLabelsByPoint,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CompositeKeyMapModelSchema none = _$CompositeKeyMapModelSchema(
+    0,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$CompositeKeyMapModelSchema operator |(_$CompositeKeyMapModelSchema other) =>
+      _$CompositeKeyMapModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for CompositeKeyMapModel
+// =============================================================================
+final class CompositeKeyMapModelCodable
+    implements Codable<CompositeKeyMapModel> {
+  const CompositeKeyMapModelCodable();
+
+  @override
+  CompositeKeyMapModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$CompositeKeyMapModelSchema.keyOptions,
+    );
+
+    var labelsByPoint = const <Point, String>{};
+    var seen = _$CompositeKeyMapModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CompositeKeyMapModelSchema.keyOptions)) {
+        case _$CompositeKeyMapModelSchema.keyLabelsByPoint:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <Point, String>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = const PointCodable().decode(mDecoder.keyDecoder());
+              m[key] = mDecoder.valueDecoder().singleValue().readString();
+            }
+            labelsByPoint = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CompositeKeyMapModel(labelsByPoint: labelsByPoint);
+  }
+
+  @override
+  void encode(CompositeKeyMapModel instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 1);
+    {
+      final m = keyed
+          .nestedEncoder(_$CompositeKeyMapModelSchema.nameLabelsByPoint)
+          .map(length: instance.labelsByPoint.length);
+      for (final entry in instance.labelsByPoint.entries) {
+        const PointCodable().encode(entry.key, m.keyEncoder());
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for StringKeyedNestedMapModel
+// =============================================================================
+extension type const _$StringKeyedNestedMapModelSchema(int _value) {
+  // String Name Constants
+  static const String nameRolesByUser = 'rolesByUser';
+  static const String nameOfficesByCode = 'officesByCode';
+  static const String nameNestedCounts = 'nestedCounts';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyRolesByUser = 0;
+  static const int keyOfficesByCode = 1;
+  static const int keyNestedCounts = 2;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$StringKeyedNestedMapModelSchema.nameRolesByUser,
+    _$StringKeyedNestedMapModelSchema.nameOfficesByCode,
+    _$StringKeyedNestedMapModelSchema.nameNestedCounts,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$StringKeyedNestedMapModelSchema none =
+      _$StringKeyedNestedMapModelSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$StringKeyedNestedMapModelSchema operator |(
+    _$StringKeyedNestedMapModelSchema other,
+  ) => _$StringKeyedNestedMapModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for StringKeyedNestedMapModel
+// =============================================================================
+final class StringKeyedNestedMapModelCodable
+    implements Codable<StringKeyedNestedMapModel> {
+  const StringKeyedNestedMapModelCodable();
+
+  @override
+  StringKeyedNestedMapModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$StringKeyedNestedMapModelSchema.keyOptions,
+    );
+
+    var rolesByUser = const <String, UserRole>{};
+    var officesByCode = const <String, Address?>{};
+    var nestedCounts = const <String, Map<String, int>>{};
+    var seen = _$StringKeyedNestedMapModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$StringKeyedNestedMapModelSchema.keyOptions,
+      )) {
+        case _$StringKeyedNestedMapModelSchema.keyRolesByUser:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, UserRole>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              final enumIdx1 = k.selectStringIndex(
+                _$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions,
+              );
+              if (enumIdx1 < 0 || enumIdx1 >= UserRole.values.length) {
+                throw const CodableException('Unknown UserRole value');
+              }
+              m[key] = UserRole.values[enumIdx1];
+            }
+            rolesByUser = m;
+          }
+          break;
+        case _$StringKeyedNestedMapModelSchema.keyOfficesByCode:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, Address?>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              if (k.isNextNull()) {
+                k.readNull();
+                m[key] = null;
+              } else {
+                m[key] = const AddressCodable().decode(k.nestedDecoder());
+              }
+            }
+            officesByCode = m;
+          }
+          break;
+        case _$StringKeyedNestedMapModelSchema.keyNestedCounts:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, Map<String, int>>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              {
+                final k1 = k.nestedDecoder().keyed();
+                final m1 = <String, int>{};
+                while (k1.moveNextKey()) {
+                  final key1 = k1.nextKey();
+                  m1[key1] = k1.readInt();
+                }
+                m[key] = m1;
+              }
+            }
+            nestedCounts = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return StringKeyedNestedMapModel(
+      rolesByUser: rolesByUser,
+      officesByCode: officesByCode,
+      nestedCounts: nestedCounts,
+    );
+  }
+
+  @override
+  void encode(StringKeyedNestedMapModel instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 3);
+    {
+      final k = keyed
+          .nestedEncoder(_$StringKeyedNestedMapModelSchema.nameRolesByUser)
+          .keyed(length: instance.rolesByUser.length);
+      for (final entry in instance.rolesByUser.entries) {
+        k.encodeString(entry.key, entry.value.name);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$StringKeyedNestedMapModelSchema.nameOfficesByCode)
+          .keyed(length: instance.officesByCode.length);
+      for (final entry in instance.officesByCode.entries) {
+        if (entry.value case final val1?) {
+          const AddressCodable().encode(val1, k.nestedEncoder(entry.key));
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$StringKeyedNestedMapModelSchema.nameNestedCounts)
+          .keyed(length: instance.nestedCounts.length);
+      for (final entry in instance.nestedCounts.entries) {
+        {
+          final k1 = k
+              .nestedEncoder(entry.key)
+              .keyed(length: entry.value.length);
+          for (final entry1 in entry.value.entries) {
+            k1.encodeInt(entry1.key, entry1.value);
+          }
+        }
+      }
+    }
   }
 }
 

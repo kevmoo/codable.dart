@@ -276,6 +276,7 @@ void main() {
         check(roundtripped.nullableTags.contains('distributed')).isTrue();
 
         check(roundtripped.scores['latency']).equals(10);
+        check(roundtripped.scores.containsKey('errors')).isTrue();
         check(roundtripped.scores['errors']).isNull();
         check(roundtripped.scores['qps']).equals(50000);
       });
@@ -524,6 +525,475 @@ void main() {
         check(roundtripped.upperCode).equals('ABC');
         check(roundtripped.createdAt).equals(DateTime.utc(2026, 8, 17, 12));
       });
+
+      test('BinaryPayloadModel roundtrips Uint8List via Base64 and decodes [int] fallback', () {
+        final model = BinaryPayloadModel(
+          payload: Uint8List.fromList([0, 1, 2, 254, 255]),
+          signature: Uint8List.fromList([10, 20, 30]),
+          chunks: [
+            Uint8List.fromList([7, 8]),
+            Uint8List.fromList([]),
+          ],
+          nullableChunks: [
+            Uint8List.fromList([99]),
+            null,
+          ],
+          namedBlobs: {
+            'header': Uint8List.fromList([0xCA, 0xFE]),
+          },
+        );
+
+        final encodedBytes = JsonCodableEncoder.toBytes(
+          model,
+          const BinaryPayloadModelCodable(),
+        );
+        final encodedJson = utf8.decode(encodedBytes);
+        check(encodedJson)
+            .contains('"payload":"${base64Encode([0, 1, 2, 254, 255])}"');
+
+        final decoded = const BinaryPayloadModelCodable().decode(
+          JsonCodableDecoder.fromBytes(encodedBytes),
+        );
+        check(decoded.payload).deepEquals([0, 1, 2, 254, 255]);
+        check(decoded.signature).isNotNull().deepEquals([10, 20, 30]);
+        check(decoded.chunks.length).equals(2);
+        check(decoded.chunks[0]).deepEquals([7, 8]);
+        check(decoded.chunks[1]).isEmpty();
+        check(decoded.nullableChunks.length).equals(2);
+        check(decoded.nullableChunks[0]).isNotNull().deepEquals([99]);
+        check(decoded.nullableChunks[1]).isNull();
+        check(decoded.namedBlobs['header'])
+            .isNotNull()
+            .deepEquals([0xCA, 0xFE]);
+
+        final listFallbackBytes = Uint8List.fromList(
+          utf8.encode('{"payload": [0, 128, 255]}'),
+        );
+        final fromList = const BinaryPayloadModelCodable().decode(
+          JsonCodableDecoder.fromBytes(listFallbackBytes),
+        );
+        check(fromList.payload).deepEquals([0, 128, 255]);
+        check(fromList.signature).isNull();
+      });
+
+      test('TypedKeyMapModel roundtrips Map<int, String> and Map<UserRole, int> and validates enum keys', () {
+        const model = TypedKeyMapModel(
+          statusMessages: {200: 'ok', 404: 'not found'},
+          roleCounts: {UserRole.admin: 2, UserRole.guest: 15},
+          flagWeights: {true: 1.5, false: 0.25},
+          buckets: {
+            'low': [1, 2],
+            'high': [10, 20, 30],
+          },
+        );
+
+        final encodedBytes = JsonCodableEncoder.toBytes(
+          model,
+          const TypedKeyMapModelCodable(),
+        );
+        final decoded = const TypedKeyMapModelCodable().decode(
+          JsonCodableDecoder.fromBytes(encodedBytes),
+        );
+
+        check(decoded.statusMessages).deepEquals({200: 'ok', 404: 'not found'});
+        check(decoded.roleCounts)
+            .deepEquals({UserRole.admin: 2, UserRole.guest: 15});
+        check(decoded.flagWeights).deepEquals({true: 1.5, false: 0.25});
+        check(decoded.buckets['low']).isNotNull().deepEquals([1, 2]);
+        check(decoded.buckets['high']).isNotNull().deepEquals([10, 20, 30]);
+
+        final defaultsDecoded = const TypedKeyMapModelCodable().decode(
+          JsonCodableDecoder.fromBytes(Uint8List.fromList(utf8.encode('{}'))),
+        );
+        check(defaultsDecoded.statusMessages).isEmpty();
+        check(defaultsDecoded.roleCounts).isEmpty();
+
+        final invalidEnumKey = Uint8List.fromList(
+          utf8.encode('{"roleCounts": {"superadmin": 1}}'),
+        );
+        check(
+              () => const TypedKeyMapModelCodable().decode(
+                JsonCodableDecoder.fromBytes(invalidEnumKey),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.message, 'message')
+            .contains('Unknown UserRole value');
+      });
+
+      test('passes exact compile-time length hints to Encoder.keyed when all fields are non-nullable', () {
+        int? captureKeyedLength<T>(T value, Encodable<T> codec) {
+          int? captured;
+          JsonCodableEncoder.toBytes<T>(
+            value,
+            Encodable<T>.fromFunction((val, inner) {
+              codec.encode(
+                val,
+                _KeyedLengthSpyEncoder(inner, (len) => captured = len),
+              );
+            }),
+          );
+          return captured;
+        }
+
+        check(captureKeyedLength(const Point(1, 2), const PointCodable()))
+            .equals(2);
+        check(
+          captureKeyedLength(
+            const TypedKeyMapModel(),
+            const TypedKeyMapModelCodable(),
+          ),
+        ).equals(4);
+        check(
+          captureKeyedLength(const EmptyRecord(), const EmptyRecordCodable()),
+        ).equals(0);
+        check(
+          captureKeyedLength(
+            const UserAccount(
+              id: 'u1',
+              emailAddress: 'a@b.c',
+              role: UserRole.admin,
+            ),
+            const UserAccountCodable(),
+          ),
+        ).isNull();
+      });
+
+      test('StringKeyedNestedMapModel roundtrips enum, nullable @Codable, and nested String maps via keyed() only', () {
+        const model = StringKeyedNestedMapModel(
+          rolesByUser: {'alice': UserRole.admin, 'bob': UserRole.member},
+          officesByCode: {
+            'mtv': Address(city: 'Mountain View', street: '1600 Amphitheatre'),
+            'tbd': null,
+          },
+          nestedCounts: {
+            'us': {'ca': 10, 'ny': 5},
+            'eu': {},
+          },
+        );
+
+        final encodeEvents = <String>[];
+        final encodedBytes =
+            JsonCodableEncoder.toBytes<StringKeyedNestedMapModel>(
+              model,
+              Encodable.fromFunction((val, inner) {
+                const StringKeyedNestedMapModelCodable().encode(
+                  val,
+                  _RoutingSpyEncoder(inner, encodeEvents),
+                );
+              }),
+            );
+
+        // Outer model keyed(3) + rolesByUser keyed(2) + officesByCode keyed(2)
+        //   + Address keyed(2) + nestedCounts keyed(2) + us keyed(2) + eu keyed(0)
+        check(encodeEvents).deepEquals([
+          'keyed:3',
+          'keyed:2',
+          'keyed:2',
+          'keyed:2',
+          'keyed:2',
+          'keyed:2',
+          'keyed:0',
+        ]);
+
+        final decodeEvents = <String>[];
+        final decoded = const StringKeyedNestedMapModelCodable().decode(
+          _RoutingSpyDecoder(
+            JsonCodableDecoder.fromBytes(encodedBytes),
+            decodeEvents,
+          ),
+        );
+        check(decodeEvents).not((it) => it.contains('map'));
+        check(decoded.rolesByUser)
+            .deepEquals({'alice': UserRole.admin, 'bob': UserRole.member});
+        check(decoded.officesByCode['mtv']?.city).equals('Mountain View');
+        check(decoded.officesByCode.containsKey('tbd')).isTrue();
+        check(decoded.officesByCode['tbd']).isNull();
+        check(decoded.nestedCounts['us'])
+            .isNotNull()
+            .deepEquals({'ca': 10, 'ny': 5});
+        check(decoded.nestedCounts['eu']).isNotNull().isEmpty();
+
+        final badEnumBytes = Uint8List.fromList(
+          utf8.encode('{"rolesByUser": {"alice": "root"}}'),
+        );
+        check(
+              () => const StringKeyedNestedMapModelCodable().decode(
+                JsonCodableDecoder.fromBytes(badEnumBytes),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.message, 'message')
+            .contains('Unknown UserRole value');
+      });
+
+      test('routes Map<String, V> to keyed() and Map<int/Enum/bool/Composite, V> to map() at runtime', () {
+        const model = TypedKeyMapModel(
+          statusMessages: {200: 'ok', 404: 'missing'},
+          roleCounts: {UserRole.admin: 1},
+          flagWeights: {true: 1.0, false: 0.0},
+          buckets: {
+            'a': [1, 2],
+            'b': [3],
+            'c': [],
+          },
+        );
+
+        final encodeEvents = <String>[];
+        final encodedBytes = JsonCodableEncoder.toBytes<TypedKeyMapModel>(
+          model,
+          Encodable.fromFunction((val, inner) {
+            const TypedKeyMapModelCodable().encode(
+              val,
+              _RoutingSpyEncoder(inner, encodeEvents),
+            );
+          }),
+        );
+
+        // Outer model keyed(4) + 3 non-String maps via map(length:) + buckets via keyed(3)
+        check(encodeEvents)
+            .deepEquals(['keyed:4', 'map:2', 'map:1', 'map:2', 'keyed:3']);
+
+        final decodeEvents = <String>[];
+        final decoded = const TypedKeyMapModelCodable().decode(
+          _RoutingSpyDecoder(
+            JsonCodableDecoder.fromBytes(encodedBytes),
+            decodeEvents,
+          ),
+        );
+        // Outer model keyed + 3 non-String maps via map + buckets via keyed
+        check(decodeEvents).deepEquals(['keyed', 'map', 'map', 'map', 'keyed']);
+        check(decoded.buckets['a']).isNotNull().deepEquals([1, 2]);
+
+        // CompositeKeyMapModel routes Map<Point, String> to map(length: 1)
+        final compositeEvents = <String>[];
+        const composite = CompositeKeyMapModel(
+          labelsByPoint: {Point(1.0, 2.0): 'origin'},
+        );
+        check(
+          () => JsonCodableEncoder.toBytes<CompositeKeyMapModel>(
+            composite,
+            Encodable.fromFunction((val, inner) {
+              const CompositeKeyMapModelCodable().encode(
+                val,
+                _RoutingSpyEncoder(inner, compositeEvents),
+              );
+            }),
+          ),
+        ).throws<CodableException>();
+        check(compositeEvents).deepEquals(['keyed:1', 'map:1', 'keyed:2']);
+      });
     });
   });
+}
+
+final class _KeyedLengthSpyEncoder implements Encoder {
+  final Encoder _inner;
+  final void Function(int? length) _onKeyed;
+
+  _KeyedLengthSpyEncoder(this._inner, this._onKeyed);
+
+  @override
+  bool get isHumanReadable => _inner.isHumanReadable;
+
+  @override
+  Map<Object, Object?> get userInfo => _inner.userInfo;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    _onKeyed(length);
+    return _inner.keyed(options: options, length: length);
+  }
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) => _inner.unkeyed(length: length);
+
+  @override
+  MapEncoder map({int? length}) => _inner.map(length: length);
+
+  @override
+  SingleValueEncoder singleValue() => _inner.singleValue();
+}
+
+final class _RoutingSpyEncoder implements Encoder {
+  final Encoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyEncoder(this._inner, this._events);
+
+  @override
+  bool get isHumanReadable => _inner.isHumanReadable;
+
+  @override
+  Map<Object, Object?> get userInfo => _inner.userInfo;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    _events.add('keyed:$length');
+    return _RoutingSpyKeyedEncoder(
+      _inner.keyed(options: options, length: length),
+      _events,
+    );
+  }
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) => _inner.unkeyed(length: length);
+
+  @override
+  MapEncoder map({int? length}) {
+    _events.add('map:$length');
+    return _RoutingSpyMapEncoder(_inner.map(length: length), _events);
+  }
+
+  @override
+  SingleValueEncoder singleValue() => _inner.singleValue();
+}
+
+final class _RoutingSpyMapEncoder implements MapEncoder {
+  final MapEncoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyMapEncoder(this._inner, this._events);
+
+  @override
+  Encoder keyEncoder() => _RoutingSpyEncoder(_inner.keyEncoder(), _events);
+
+  @override
+  Encoder valueEncoder() => _RoutingSpyEncoder(_inner.valueEncoder(), _events);
+}
+
+final class _RoutingSpyKeyedEncoder
+    with BaseKeyedEncoderMixin
+    implements KeyedEncoder {
+  final KeyedEncoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyKeyedEncoder(this._inner, this._events);
+
+  @override
+  void encodeInt(String key, int value) => _inner.encodeInt(key, value);
+
+  @override
+  void encodeDouble(String key, double value) =>
+      _inner.encodeDouble(key, value);
+
+  @override
+  void encodeString(String key, String value) =>
+      _inner.encodeString(key, value);
+
+  @override
+  void encodeBool(String key, bool value) => _inner.encodeBool(key, value);
+
+  @override
+  void encodeNull(String key) => _inner.encodeNull(key);
+
+  @override
+  Encoder nestedEncoder(String key) =>
+      _RoutingSpyEncoder(_inner.nestedEncoder(key), _events);
+}
+
+final class _RoutingSpyDecoder implements Decoder {
+  final Decoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyDecoder(this._inner, this._events);
+
+  @override
+  bool get isHumanReadable => _inner.isHumanReadable;
+
+  @override
+  Map<Object, Object?> get userInfo => _inner.userInfo;
+
+  @override
+  Uint8List? get payload => _inner.payload;
+
+  @override
+  ValueKind peekKind() => _inner.peekKind();
+
+  @override
+  KeyedDecoder keyed({KeyOptions? options}) {
+    _events.add('keyed');
+    return _RoutingSpyKeyedDecoder(_inner.keyed(options: options), _events);
+  }
+
+  @override
+  MappedDecoder mapped() => _inner.mapped();
+
+  @override
+  MapDecoder map() {
+    _events.add('map');
+    return _RoutingSpyMapDecoder(_inner.map(), _events);
+  }
+
+  @override
+  UnkeyedDecoder unkeyed() => _inner.unkeyed();
+
+  @override
+  SingleValueDecoder singleValue() => _inner.singleValue();
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      _inner.decodeUniformDoubleList(propertyAliases);
+}
+
+final class _RoutingSpyMapDecoder implements MapDecoder {
+  final MapDecoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyMapDecoder(this._inner, this._events);
+
+  @override
+  int? get length => _inner.length;
+
+  @override
+  bool moveNextEntry() => _inner.moveNextEntry();
+
+  @override
+  Decoder keyDecoder() => _RoutingSpyDecoder(_inner.keyDecoder(), _events);
+
+  @override
+  Decoder valueDecoder() => _RoutingSpyDecoder(_inner.valueDecoder(), _events);
+}
+
+final class _RoutingSpyKeyedDecoder
+    with BaseKeyedDecoderMixin
+    implements KeyedDecoder {
+  final KeyedDecoder _inner;
+  final List<String> _events;
+
+  _RoutingSpyKeyedDecoder(this._inner, this._events);
+
+  @override
+  bool moveNextKey() => _inner.moveNextKey();
+
+  @override
+  String nextKey() => _inner.nextKey();
+
+  @override
+  ValueKind peekKind() => _inner.peekKind();
+
+  @override
+  void skipValue() => _inner.skipValue();
+
+  @override
+  void readNull() => _inner.readNull();
+
+  @override
+  int readInt() => _inner.readInt();
+
+  @override
+  double readDouble() => _inner.readDouble();
+
+  @override
+  num readNum() => _inner.readNum();
+
+  @override
+  String readString() => _inner.readString();
+
+  @override
+  bool readBool() => _inner.readBool();
+
+  @override
+  Decoder nestedDecoder() =>
+      _RoutingSpyDecoder(_inner.nestedDecoder(), _events);
 }

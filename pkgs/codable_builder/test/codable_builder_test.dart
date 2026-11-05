@@ -8,8 +8,6 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/file_system/overlay_file_system.dart';
-import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:checks/checks.dart';
 import 'package:codable_builder/codable_builder.dart';
 import 'package:source_gen/source_gen.dart';
@@ -190,6 +188,7 @@ void main() {
         'final k = keyed.nestedEncoder(_\$EnterpriseSchema.nameHeadcountByDept).keyed(length: instance.headcountByDept.length);',
       );
       check(output).contains('k.encodeInt(entry.key, entry.value);');
+      check(output).not((s) => s.contains('.map('));
       // Nested encoder call
       check(output).contains(
         'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, const AddressCodable());',
@@ -215,10 +214,12 @@ void main() {
             .contains('UserRole.values.byName(d.singleValue().readString())');
         check(output).contains('nullableTags = keyed.decodeList<String?>');
         check(output).contains('final k = keyed.nestedDecoder().keyed();');
+        check(output).contains('m[key] = k.readNullableInt();');
         check(output).contains(
           'final k = keyed.nestedEncoder(_\$TeamSchema.nameScores).keyed(length: instance.scores.length);',
         );
         check(output).contains('k.encodeNull(entry.key);');
+        check(output).not((s) => s.contains('.map('));
         check(output).contains(
           'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, Encodable.fromFunction((UserRole item, e) {',
         );
@@ -273,6 +274,8 @@ void main() {
         'distinctValues = keyed.decodeList<num>(Decodable.fromFunction((d) => d.singleValue().readNum())).toSet();',
       );
       check(output).contains('m[key] = k.readNum();');
+      check(output).contains('m[key] = k.readNullableNum();');
+      check(output).not((s) => s.contains('.map('));
       check(output).not((s) => s.contains('decodeUniformDoubleList'));
     });
 
@@ -305,73 +308,141 @@ void main() {
       );
     });
 
-    test('keeps Uint8List mapped to IntList and omits length hint when nullable fields exist', () async {
-      final primOutput = runGeneratorFor('PrimitiveCollectionsModel');
-      check(primOutput).contains('final keyed = encoder.keyed(length: 7);');
-      check(primOutput).contains(
-        'keyed.encodeList(_\$PrimitiveCollectionsModelSchema.nameMatrix, instance.matrix',
-      );
+    test(
+      'emits readBytes and encodeBytes for Uint8List fields and collections',
+      () {
+        final output = runGeneratorFor('BinaryPayloadModel');
 
-      final overlay = OverlayResourceProvider(
-        PhysicalResourceProvider.INSTANCE,
-      );
-      final virtualPath = File(fixturePath).parent.uri
-          .resolve('_virtual_uint8.dart')
-          .toFilePath();
-      overlay.setOverlay(
-        virtualPath,
-        content: '''
-import 'dart:typed_data';
-import 'package:codable/codable.dart';
+        // Nullable field present (`signature`), so omit constant length hint
+        check(output).contains('final keyed = encoder.keyed();');
+        // Top-level Uint8List decode & encode
+        check(output).contains('payload = keyed.readBytes();');
+        check(output).contains(
+          'keyed.encodeBytes(_\$BinaryPayloadModelSchema.namePayload, instance.payload);',
+        );
+        check(output).contains(
+          'keyed.encodeBytes(_\$BinaryPayloadModelSchema.nameSignature, instance.signature!);',
+        );
+        // List<Uint8List> & List<Uint8List?>
+        check(output).contains('l.add(u.readBytes());');
+        check(output).contains('e.singleValue().encodeBytes(item);');
+        check(output).contains('d.singleValue().readNullableBytes()');
+        check(output).contains('e.singleValue().encodeNullableBytes(item);');
+        // Map<String, Uint8List> via 1-hop KeyedDecoder / KeyedEncoder
+        check(output).contains('final k = keyed.nestedDecoder().keyed();');
+        check(output).contains('m[key] = k.readBytes();');
+        check(output).contains('k.encodeBytes(entry.key, entry.value);');
+        check(output).not((s) => s.contains('.map('));
+        check(output).not((s) => s.contains('decodeIntList'));
+        check(output).not((s) => s.contains('encodeIntList'));
+      },
+    );
 
-@Codable()
-final class TypedBufferBox {
-  final Uint8List data;
-  final Uint8List? optionalData;
-  const TypedBufferBox({required this.data, this.optionalData});
-}
-''',
-        modificationStamp: 0,
-      );
-      final virtualCollection = AnalysisContextCollection(
-        includedPaths: [virtualPath],
-        resourceProvider: overlay,
-      );
-      final resolved =
-          await virtualCollection
-                  .contextFor(virtualPath)
-                  .currentSession
-                  .getResolvedUnit(virtualPath)
-              as ResolvedUnitResult;
-      final decl = resolved.unit.declarations
-          .whereType<ClassDeclaration>()
-          .first;
-      final elem = decl.declaredFragment!.element;
-      final ann = codableTypeChecker.firstAnnotationOf(elem)!;
-      final model = const ModelVisitor().visitClass(elem, ConstantReader(ann));
-      final output = const CodableGenerator().generateForModel(model);
-      check(output).contains('final keyed = encoder.keyed();');
+    test('emits Map<int/UserRole, V> via map() and Map<String, List<int>> via keyed()', () {
+      final output = runGeneratorFor('TypedKeyMapModel');
+
+      // Typed const {} defaults (not hardcoded to String)
+      check(output).contains('var statusMessages = const <int, String>{};');
+      check(output).contains('var roleCounts = const <UserRole, int>{};');
+      check(output).contains('var flagWeights = const <bool, double>{};');
+
+      // Constant length hint across 4 non-nullable fields
+      check(output).contains('final keyed = encoder.keyed(length: 4);');
+
+      // Zero closures across both decode and encode
+      check(output).not((s) => s.contains('fromFunction'));
+
+      // Map<int, String> uses MapDecoder / MapEncoder
+      check(output).contains('final mDecoder = keyed.nestedDecoder().map();');
       check(output).contains(
-        'keyed.encodeIntList(_\$TypedBufferBoxSchema.nameData, instance.data);',
+        'final m = keyed.nestedEncoder(_\$TypedKeyMapModelSchema.nameStatusMessages).map(length: instance.statusMessages.length);',
+      );
+      check(
+        output,
+      ).contains('final key = mDecoder.keyDecoder().singleValue().readInt();');
+      check(output)
+          .contains('m.keyEncoder().singleValue().encodeInt(entry.key);');
+
+      // Map<UserRole, int> uses MapDecoder / MapEncoder with schema KeyOptions
+      check(output).contains(
+        'static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [',
       );
       check(output).contains(
-        'keyed.encodeIntList(_\$TypedBufferBoxSchema.nameOptionalData, instance.optionalData!);',
+        'final m = keyed.nestedEncoder(_\$TypedKeyMapModelSchema.nameRoleCounts).map(length: instance.roleCounts.length);',
+      );
+      check(
+        output,
+      ).contains('_\$TypedKeyMapModelSchema.enumUserRoleKeyOptions.indexOf(');
+      check(
+        output,
+      ).contains('m.keyEncoder().singleValue().encodeString(entry.key.name);');
+
+      // Map<String, List<int>> buckets uses 1-hop KeyedDecoder / KeyedEncoder
+      check(output).contains('final k = keyed.nestedDecoder().keyed();');
+      check(output).contains('m[key] = k.decodeIntList();');
+      check(output).contains(
+        'final k = keyed.nestedEncoder(_\$TypedKeyMapModelSchema.nameBuckets).keyed(length: instance.buckets.length);',
+      );
+      check(output).contains('k.encodeIntList(entry.key, entry.value);');
+    });
+
+    test('emits 1-hop KeyedDecoder / KeyedEncoder for enum, nullable @Codable, and nested String maps', () {
+      final output = runGeneratorFor('StringKeyedNestedMapModel');
+
+      check(output).not((s) => s.contains('.map('));
+      check(output).not((s) => s.contains('fromFunction'));
+
+      // Map<String, UserRole> via selectStringIndex + encodeString
+      check(output).contains(
+        'final enumIdx1 = k.selectStringIndex(_\$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions);',
+      );
+      check(output).contains('k.encodeString(entry.key, entry.value.name);');
+
+      // Map<String, Address?> via isNextNull + nestedDecoder / nestedEncoder
+      check(output).contains('if (k.isNextNull()) {');
+      check(
+        output,
+      ).contains('m[key] = const AddressCodable().decode(k.nestedDecoder());');
+      check(output).contains(
+        'const AddressCodable().encode(val1, k.nestedEncoder(entry.key));',
+      );
+      check(output).contains('k.encodeNull(entry.key);');
+
+      // Map<String, Map<String, int>> via nested KeyedDecoder / KeyedEncoder
+      check(output).contains('final k1 = k.nestedDecoder().keyed();');
+      check(output).contains(
+        'final k1 = k.nestedEncoder(entry.key).keyed(length: entry.value.length);',
       );
     });
 
-    test('rejects non-String Map keys with InvalidGenerationSourceError and emits length: 0 on empty models', () {
-      check(() => runGeneratorFor('CompositeKeyMapModel'))
-          .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
-          .contains('Only non-nullable String Map keys are supported');
+    test(
+      'supports @Codable composite map keys and length: 0 on empty models',
+      () {
+        final compositeOutput = runGeneratorFor('CompositeKeyMapModel');
+        check(compositeOutput)
+            .contains('var labelsByPoint = const <Point, String>{};');
+        check(compositeOutput)
+            .contains('final keyed = encoder.keyed(length: 1);');
+        check(compositeOutput)
+            .contains('final mDecoder = keyed.nestedDecoder().map();');
+        check(compositeOutput).contains(
+          'final m = keyed.nestedEncoder(_\$CompositeKeyMapModelSchema.nameLabelsByPoint).map(length: instance.labelsByPoint.length);',
+        );
+        check(compositeOutput).contains(
+          'final key = const PointCodable().decode(mDecoder.keyDecoder());',
+        );
+        check(
+          compositeOutput,
+        ).contains('const PointCodable().encode(entry.key, m.keyEncoder());');
 
-      final emptyOutput = runGeneratorFor('EmptyRecord');
-      check(emptyOutput).contains('encoder.keyed(length: 0);');
-      check(emptyOutput).contains('return const EmptyRecord();');
+        final emptyOutput = runGeneratorFor('EmptyRecord');
+        check(emptyOutput).contains('encoder.keyed(length: 0);');
+        check(emptyOutput).contains('return const EmptyRecord();');
 
-      // UserAccount has nullable `location`, so no length hint
-      final userOutput = runGeneratorFor('UserAccount');
-      check(userOutput).contains('final keyed = encoder.keyed();');
-    });
+        // UserAccount has nullable `location`, so no length hint
+        final userOutput = runGeneratorFor('UserAccount');
+        check(userOutput).contains('final keyed = encoder.keyed();');
+      },
+    );
   });
 }
