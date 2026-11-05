@@ -101,8 +101,226 @@ final class _TestDecoder implements Decoder {
       null;
 }
 
-final class _TestKeyedDecoder implements KeyedDecoder {
+List<T> _decodeTestModelList<T>(
+  Object? v,
+  Decodable<T> decodable,
+  Map<Object, Object?> userInfo,
+) {
+  if (v is List<dynamic>) {
+    return [
+      for (final e in v) decodable.decode(_TestDecoder(e, userInfo: userInfo)),
+    ];
+  }
+  throw CodableException('Expected List, found ${v.runtimeType}: $v');
+}
+
+List<int> _decodeTestIntList(Object? v) {
+  if (v is List<dynamic>) {
+    return [
+      for (final e in v)
+        e is int
+            ? e
+            : throw CodableException(
+                'Expected int element, found ${e.runtimeType}: $e',
+              ),
+    ];
+  }
+  throw CodableException('Expected List<int>, found ${v.runtimeType}: $v');
+}
+
+List<double> _decodeTestDoubleList(Object? v) {
+  if (v is List<dynamic>) {
+    return [
+      for (final e in v)
+        e is num
+            ? e.toDouble()
+            : throw CodableException(
+                'Expected double element, found ${e.runtimeType}: $e',
+              ),
+    ];
+  }
+  throw CodableException('Expected List<double>, found ${v.runtimeType}: $v');
+}
+
+Float64List _decodeTestFloat64List(Object? v) =>
+    Float64List.fromList(_decodeTestDoubleList(v));
+
+List<String> _decodeTestStringList(Object? v) {
+  if (v is List<dynamic>) {
+    return [
+      for (final e in v)
+        e is String
+            ? e
+            : throw CodableException(
+                'Expected String element, found ${e.runtimeType}: $e',
+              ),
+    ];
+  }
+  throw CodableException('Expected List<String>, found ${v.runtimeType}: $v');
+}
+
+List<bool> _decodeTestBoolList(Object? v) {
+  if (v is List<dynamic>) {
+    return [
+      for (final e in v)
+        e is bool
+            ? e
+            : throw CodableException(
+                'Expected bool element, found ${e.runtimeType}: $e',
+              ),
+    ];
+  }
+  throw CodableException('Expected List<bool>, found ${v.runtimeType}: $v');
+}
+
+mixin _TestSequentialDecoderMixin {
+  _TestDecoder get _rootDecoder;
+  bool get _canReadCurrent;
+  bool get _eofReturnsNullOnNullable => false;
+  Object? _peekTestValue();
+  void _commitTestValue();
+
+  Object? _takeTestValue() {
+    final v = _peekTestValue();
+    _commitTestValue();
+    return v;
+  }
+
+  ValueKind peekKind() => _testValueKind(_peekTestValue());
+
+  bool isNextNull() => _canReadCurrent && _peekTestValue() == null;
+
+  void readNull() {
+    final v = _peekTestValue();
+    if (v != null) {
+      throw CodableException('Expected null, found ${v.runtimeType}: $v');
+    }
+    _commitTestValue();
+  }
+
+  int readInt() {
+    final v = _peekTestValue();
+    if (v is int) {
+      _commitTestValue();
+      return v;
+    }
+    throw CodableException('Expected int, found ${v.runtimeType}: $v');
+  }
+
+  int? readNullableInt() {
+    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
+    if (_peekTestValue() == null) {
+      _commitTestValue();
+      return null;
+    }
+    return readInt();
+  }
+
+  double readDouble() {
+    final v = _peekTestValue();
+    if (v is num) {
+      _commitTestValue();
+      return v.toDouble();
+    }
+    throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
+  }
+
+  double? readNullableDouble() {
+    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
+    if (_peekTestValue() == null) {
+      _commitTestValue();
+      return null;
+    }
+    return readDouble();
+  }
+
+  num readNum() {
+    final v = _peekTestValue();
+    if (v is num) {
+      _commitTestValue();
+      return v;
+    }
+    throw CodableException('Expected num, found ${v.runtimeType}: $v');
+  }
+
+  num? readNullableNum() {
+    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
+    if (_peekTestValue() == null) {
+      _commitTestValue();
+      return null;
+    }
+    return readNum();
+  }
+
+  String readString() {
+    final v = _peekTestValue();
+    if (v is String) {
+      _commitTestValue();
+      return v;
+    }
+    throw CodableException('Expected String, found ${v.runtimeType}: $v');
+  }
+
+  String? readNullableString() {
+    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
+    if (_peekTestValue() == null) {
+      _commitTestValue();
+      return null;
+    }
+    return readString();
+  }
+
+  (int start, int end) readStringSpan() {
+    throw UnsupportedError('readStringSpan is not supported on $runtimeType');
+  }
+
+  (int start, int end)? readNullableStringSpan() {
+    if (isNextNull()) {
+      _commitTestValue();
+      return null;
+    }
+    return readStringSpan();
+  }
+
+  bool readBool() {
+    final v = _peekTestValue();
+    if (v is bool) {
+      _commitTestValue();
+      return v;
+    }
+    throw CodableException('Expected bool, found ${v.runtimeType}: $v');
+  }
+
+  bool? readNullableBool() {
+    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
+    if (_peekTestValue() == null) {
+      _commitTestValue();
+      return null;
+    }
+    return readBool();
+  }
+
+  Decoder nestedDecoder() =>
+      _TestDecoder(_takeTestValue(), userInfo: _rootDecoder.userInfo);
+}
+
+mixin _TestListDecoderMixin on _TestSequentialDecoderMixin {
+  List<int> decodeIntList() => _decodeTestIntList(_takeTestValue());
+
+  List<double> decodeDoubleList() => _decodeTestDoubleList(_takeTestValue());
+
+  Float64List decodeFloat64List() => _decodeTestFloat64List(_takeTestValue());
+
+  List<String> decodeStringList() => _decodeTestStringList(_takeTestValue());
+
+  List<bool> decodeBoolList() => _decodeTestBoolList(_takeTestValue());
+}
+
+final class _TestKeyedDecoder
+    with _TestSequentialDecoderMixin, _TestListDecoderMixin
+    implements KeyedDecoder {
   final List<MapEntry<String, dynamic>> _entries;
+  @override
   final _TestDecoder _rootDecoder;
   int _currentIndex = -1;
 
@@ -116,6 +334,15 @@ final class _TestKeyedDecoder implements KeyedDecoder {
     }
     return _entries[_currentIndex].value;
   }
+
+  @override
+  bool get _canReadCurrent => _hasCurrent;
+
+  @override
+  Object? _peekTestValue() => _currentValue;
+
+  @override
+  void _commitTestValue() {}
 
   @override
   bool moveNextKey() => _currentIndex + 1 < _entries.length;
@@ -140,121 +367,13 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  int selectStringIndex(KeyOptions options) {
-    final str = readString();
-    return options.indexOf(str);
-  }
+  int selectStringIndex(KeyOptions options) => options.indexOf(readString());
 
   @override
-  ValueKind peekKind() => _testValueKind(_currentValue);
+  void skipValue() {}
 
   @override
-  int readInt() {
-    final v = _currentValue;
-    if (v is int) return v;
-    throw CodableException('Expected int, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  int? readNullableInt() {
-    final v = _currentValue;
-    if (v == null) return null;
-    return readInt();
-  }
-
-  @override
-  double readDouble() {
-    final v = _currentValue;
-    if (v is num) return v.toDouble();
-    throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  double? readNullableDouble() {
-    final v = _currentValue;
-    if (v == null) return null;
-    return readDouble();
-  }
-
-  @override
-  num readNum() {
-    final v = _currentValue;
-    if (v is num) return v;
-    throw CodableException('Expected num, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  num? readNullableNum() {
-    final v = _currentValue;
-    if (v == null) return null;
-    return readNum();
-  }
-
-  @override
-  String readString() {
-    final v = _currentValue;
-    if (v is String) return v;
-    throw CodableException('Expected String, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  String? readNullableString() {
-    final v = _currentValue;
-    if (v == null) return null;
-    return readString();
-  }
-
-  @override
-  (int start, int end) readStringSpan() {
-    throw UnsupportedError(
-      'readStringSpan is not supported on _TestKeyedDecoder',
-    );
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() {
-    if (isNextNull()) return null;
-    return readStringSpan();
-  }
-
-  @override
-  bool readBool() {
-    final v = _currentValue;
-    if (v is bool) return v;
-    throw CodableException('Expected bool, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  bool? readNullableBool() {
-    final v = _currentValue;
-    if (v == null) return null;
-    return readBool();
-  }
-
-  @override
-  bool isNextNull() => _currentValue == null;
-
-  @override
-  void readNull() {
-    final v = _currentValue;
-    if (v != null) {
-      throw CodableException('Expected null, found ${v.runtimeType}: $v');
-    }
-  }
-
-  @override
-  void skipValue() {
-    // Current value skipped
-  }
-
-  @override
-  Decoder nestedDecoder() =>
-      _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo);
-
-  @override
-  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(
-    _TestDecoder(_currentValue, userInfo: _rootDecoder.userInfo),
-  );
+  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
 
   @override
   T? decodeNullableValue<T>(Decodable<T> decodable) {
@@ -263,96 +382,13 @@ final class _TestKeyedDecoder implements KeyedDecoder {
   }
 
   @override
-  List<T> decodeList<T>(Decodable<T> decodable) {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      return v
-          .map(
-            (e) => decodable.decode(
-              _TestDecoder(e, userInfo: _rootDecoder.userInfo),
-            ),
-          )
-          .toList();
-    }
-    throw CodableException('Expected List, found ${v.runtimeType}: $v');
-  }
+  List<T> decodeList<T>(Decodable<T> decodable) =>
+      _decodeTestModelList(_currentValue, decodable, _rootDecoder.userInfo);
 
   @override
   List<T>? decodeNullableList<T>(Decodable<T> decodable) {
     if (_currentValue == null) return null;
     return decodeList(decodable);
-  }
-
-  @override
-  List<int> decodeIntList() {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is int) return e;
-        throw CodableException('Expected int element, found ${e.runtimeType}');
-      }).toList();
-    }
-    throw CodableException('Expected List<int>, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  List<double> decodeDoubleList() {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is num) return e.toDouble();
-        throw CodableException(
-          'Expected double element, found ${e.runtimeType}',
-        );
-      }).toList();
-    }
-    throw CodableException('Expected List<double>, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  List<String> decodeStringList() {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is String) return e;
-        throw CodableException(
-          'Expected String element, found ${e.runtimeType}',
-        );
-      }).toList();
-    }
-    throw CodableException('Expected List<String>, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  List<bool> decodeBoolList() {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is bool) return e;
-        throw CodableException('Expected bool element, found ${e.runtimeType}');
-      }).toList();
-    }
-    throw CodableException('Expected List<bool>, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  Float64List decodeFloat64List() {
-    final v = _currentValue;
-    if (v is List<dynamic>) {
-      final list = Float64List(v.length);
-      for (var i = 0; i < v.length; i++) {
-        final e = v[i];
-        if (e is num) {
-          list[i] = e.toDouble();
-        } else {
-          throw CodableException(
-            'Expected num element, found ${e.runtimeType}',
-          );
-        }
-      }
-      return list;
-    }
-    throw CodableException('Expected Float64List, found ${v.runtimeType}: $v');
   }
 }
 
@@ -362,6 +398,13 @@ final class _TestMappedDecoder implements MappedDecoder {
 
   _TestMappedDecoder(this._map, this._rootDecoder);
 
+  Object? _requireKey(String key) {
+    if (!_map.containsKey(key)) {
+      throw CodableException('Missing required key "$key" in MappedDecoder');
+    }
+    return _map[key];
+  }
+
   @override
   bool containsKey(String key) => _map.containsKey(key);
 
@@ -370,10 +413,7 @@ final class _TestMappedDecoder implements MappedDecoder {
 
   @override
   int readInt(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
+    final v = _requireKey(key);
     if (v is int) return v;
     throw CodableException(
       'Expected int for key "$key", found ${v.runtimeType}: $v',
@@ -381,17 +421,12 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  int? readNullableInt(String key) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return readInt(key);
-  }
+  int? readNullableInt(String key) =>
+      (!_map.containsKey(key) || _map[key] == null) ? null : readInt(key);
 
   @override
   double readDouble(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
+    final v = _requireKey(key);
     if (v is num) return v.toDouble();
     throw CodableException(
       'Expected double for key "$key", found ${v.runtimeType}: $v',
@@ -399,17 +434,12 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  double? readNullableDouble(String key) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return readDouble(key);
-  }
+  double? readNullableDouble(String key) =>
+      (!_map.containsKey(key) || _map[key] == null) ? null : readDouble(key);
 
   @override
   num readNum(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
+    final v = _requireKey(key);
     if (v is num) return v;
     throw CodableException(
       'Expected num for key "$key", found ${v.runtimeType}: $v',
@@ -417,17 +447,12 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  num? readNullableNum(String key) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return readNum(key);
-  }
+  num? readNullableNum(String key) =>
+      (!_map.containsKey(key) || _map[key] == null) ? null : readNum(key);
 
   @override
   String readString(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
+    final v = _requireKey(key);
     if (v is String) return v;
     throw CodableException(
       'Expected String for key "$key", found ${v.runtimeType}: $v',
@@ -435,17 +460,12 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  String? readNullableString(String key) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return readString(key);
-  }
+  String? readNullableString(String key) =>
+      (!_map.containsKey(key) || _map[key] == null) ? null : readString(key);
 
   @override
   bool readBool(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
+    final v = _requireKey(key);
     if (v is bool) return v;
     throw CodableException(
       'Expected bool for key "$key", found ${v.runtimeType}: $v',
@@ -453,10 +473,8 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  bool? readNullableBool(String key) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return readBool(key);
-  }
+  bool? readNullableBool(String key) =>
+      (!_map.containsKey(key) || _map[key] == null) ? null : readBool(key);
 
   @override
   bool isNull(String key) => _map[key] == null;
@@ -466,143 +484,45 @@ final class _TestMappedDecoder implements MappedDecoder {
       _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo);
 
   @override
-  T decodeKey<T>(String key, Decodable<T> decodable) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    return decodable.decode(
-      _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo),
-    );
-  }
+  T decodeKey<T>(String key, Decodable<T> decodable) => decodable.decode(
+    _TestDecoder(_requireKey(key), userInfo: _rootDecoder.userInfo),
+  );
 
   @override
-  T? decodeNullableKey<T>(String key, Decodable<T> decodable) {
-    if (!_map.containsKey(key) || _map[key] == null) return null;
-    return decodeKey(key, decodable);
-  }
+  T? decodeNullableKey<T>(String key, Decodable<T> decodable) =>
+      (!_map.containsKey(key) || _map[key] == null)
+      ? null
+      : decodeKey(key, decodable);
 
   @override
-  List<T> decodeListKey<T>(String key, Decodable<T> decodable) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      return v
-          .map(
-            (e) => decodable.decode(
-              _TestDecoder(e, userInfo: _rootDecoder.userInfo),
-            ),
-          )
-          .toList();
-    }
-    throw CodableException(
-      'Expected List for key "$key", found ${v.runtimeType}',
-    );
-  }
+  List<T> decodeListKey<T>(String key, Decodable<T> decodable) =>
+      _decodeTestModelList(_requireKey(key), decodable, _rootDecoder.userInfo);
 
   @override
-  List<int> decodeIntList(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is int) return e;
-        throw CodableException('Expected int in list for key "$key", found $e');
-      }).toList();
-    }
-    throw CodableException(
-      'Expected List<int> for key "$key", found ${v.runtimeType}',
-    );
-  }
+  List<int> decodeIntList(String key) => _decodeTestIntList(_requireKey(key));
 
   @override
-  List<double> decodeDoubleList(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is num) return e.toDouble();
-        throw CodableException(
-          'Expected double in list for key "$key", found $e',
-        );
-      }).toList();
-    }
-    throw CodableException(
-      'Expected List<double> for key "$key", found ${v.runtimeType}',
-    );
-  }
+  List<double> decodeDoubleList(String key) =>
+      _decodeTestDoubleList(_requireKey(key));
 
   @override
-  Float64List decodeFloat64List(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      final list = Float64List(v.length);
-      for (var i = 0; i < v.length; i++) {
-        final e = v[i];
-        if (e is num) {
-          list[i] = e.toDouble();
-        } else {
-          throw CodableException(
-            'Expected double in list for key "$key", found $e',
-          );
-        }
-      }
-      return list;
-    }
-    throw CodableException(
-      'Expected Float64List for key "$key", found ${v.runtimeType}',
-    );
-  }
+  Float64List decodeFloat64List(String key) =>
+      _decodeTestFloat64List(_requireKey(key));
 
   @override
-  List<String> decodeStringList(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is String) return e;
-        throw CodableException(
-          'Expected String in list for key "$key", found $e',
-        );
-      }).toList();
-    }
-    throw CodableException(
-      'Expected List<String> for key "$key", found ${v.runtimeType}',
-    );
-  }
+  List<String> decodeStringList(String key) =>
+      _decodeTestStringList(_requireKey(key));
 
   @override
-  List<bool> decodeBoolList(String key) {
-    if (!_map.containsKey(key)) {
-      throw CodableException('Missing required key "$key" in MappedDecoder');
-    }
-    final v = _map[key];
-    if (v is List<dynamic>) {
-      return v.map((e) {
-        if (e is bool) return e;
-        throw CodableException(
-          'Expected bool in list for key "$key", found $e',
-        );
-      }).toList();
-    }
-    throw CodableException(
-      'Expected List<bool> for key "$key", found ${v.runtimeType}',
-    );
-  }
+  List<bool> decodeBoolList(String key) =>
+      _decodeTestBoolList(_requireKey(key));
 }
 
-final class _TestUnkeyedDecoder implements UnkeyedDecoder {
+final class _TestUnkeyedDecoder
+    with _TestSequentialDecoderMixin, _TestListDecoderMixin
+    implements UnkeyedDecoder {
   final List<dynamic> _list;
+  @override
   final _TestDecoder _rootDecoder;
   int _index = 0;
 
@@ -612,156 +532,21 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   bool moveNext() => _index < _list.length;
 
   @override
-  ValueKind peekKind() {
+  bool get _canReadCurrent => moveNext();
+
+  @override
+  bool get _eofReturnsNullOnNullable => true;
+
+  @override
+  Object? _peekTestValue() {
     if (!moveNext()) {
       throw const CodableException('End of array in UnkeyedDecoder');
     }
-    return _testValueKind(_list[_index]);
+    return _list[_index];
   }
 
   @override
-  int readInt() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v is int) {
-      _index++;
-      return v;
-    }
-    throw CodableException('Expected int, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  int? readNullableInt() {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return readInt();
-  }
-
-  @override
-  double readDouble() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v is num) {
-      _index++;
-      return v.toDouble();
-    }
-    throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  double? readNullableDouble() {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return readDouble();
-  }
-
-  @override
-  num readNum() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v is num) {
-      _index++;
-      return v;
-    }
-    throw CodableException('Expected num, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  num? readNullableNum() {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return readNum();
-  }
-
-  @override
-  String readString() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v is String) {
-      _index++;
-      return v;
-    }
-    throw CodableException('Expected String, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  String? readNullableString() {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return readString();
-  }
-
-  @override
-  (int start, int end) readStringSpan() {
-    throw UnsupportedError(
-      'readStringSpan is not supported on _TestUnkeyedDecoder',
-    );
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() {
-    if (isNextNull()) return null;
-    return readStringSpan();
-  }
-
-  @override
-  bool readBool() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v is bool) {
-      _index++;
-      return v;
-    }
-    throw CodableException('Expected bool, found ${v.runtimeType}: $v');
-  }
-
-  @override
-  bool? readNullableBool() {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return readBool();
-  }
-
-  @override
-  bool isNextNull() {
-    if (!moveNext()) return false;
-    return _list[_index] == null;
-  }
-
-  @override
-  void readNull() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index];
-    if (v != null) {
-      throw CodableException('Expected null, found ${v.runtimeType}: $v');
-    }
+  void _commitTestValue() {
     _index++;
   }
 
@@ -771,22 +556,8 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
-  Decoder nestedDecoder() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    return _TestDecoder(v, userInfo: _rootDecoder.userInfo);
-  }
-
-  @override
-  T decodeElement<T>(Decodable<T> decodable) {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    return decodable.decode(_TestDecoder(v, userInfo: _rootDecoder.userInfo));
-  }
+  T decodeElement<T>(Decodable<T> decodable) =>
+      decodable.decode(nestedDecoder());
 
   @override
   T? decodeNullableElement<T>(Decodable<T> decodable) {
@@ -797,194 +568,35 @@ final class _TestUnkeyedDecoder implements UnkeyedDecoder {
     }
     return decodeElement(decodable);
   }
-
-  @override
-  List<int> decodeIntList() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    if (v is List<dynamic>) {
-      return v.map((e) => e as int).toList();
-    }
-    throw CodableException('Expected List<int>, found ${v.runtimeType}');
-  }
-
-  @override
-  List<double> decodeDoubleList() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    if (v is List<dynamic>) {
-      return v.map((e) => (e as num).toDouble()).toList();
-    }
-    throw CodableException('Expected List<double>, found ${v.runtimeType}');
-  }
-
-  @override
-  Float64List decodeFloat64List() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    if (v is List<dynamic>) {
-      final list = Float64List(v.length);
-      for (var i = 0; i < v.length; i++) {
-        list[i] = (v[i] as num).toDouble();
-      }
-      return list;
-    }
-    throw CodableException('Expected Float64List, found ${v.runtimeType}');
-  }
-
-  @override
-  List<String> decodeStringList() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    if (v is List<dynamic>) {
-      return v.map((e) => e as String).toList();
-    }
-    throw CodableException('Expected List<String>, found ${v.runtimeType}');
-  }
-
-  @override
-  List<bool> decodeBoolList() {
-    if (!moveNext()) {
-      throw const CodableException('End of array in UnkeyedDecoder');
-    }
-    final v = _list[_index++];
-    if (v is List<dynamic>) {
-      return v.map((e) => e as bool).toList();
-    }
-    throw CodableException('Expected List<bool>, found ${v.runtimeType}');
-  }
 }
 
-final class _TestSingleValueDecoder implements SingleValueDecoder {
+final class _TestSingleValueDecoder
+    with _TestSequentialDecoderMixin
+    implements SingleValueDecoder {
   final Object? _value;
+  @override
   final _TestDecoder _rootDecoder;
 
   _TestSingleValueDecoder(this._value, this._rootDecoder);
 
   @override
-  ValueKind peekKind() => _testValueKind(_value);
+  bool get _canReadCurrent => true;
 
   @override
-  int readInt() {
-    final v = _value;
-    if (v is int) return v;
-    throw CodableException(
-      'Expected int, found ${_value.runtimeType}: $_value',
-    );
-  }
+  Object? _peekTestValue() => _value;
 
   @override
-  int? readNullableInt() {
-    if (_value == null) return null;
-    return readInt();
-  }
-
-  @override
-  double readDouble() {
-    final v = _value;
-    if (v is num) return v.toDouble();
-    throw CodableException(
-      'Expected double/num, found ${_value.runtimeType}: $_value',
-    );
-  }
-
-  @override
-  double? readNullableDouble() {
-    if (_value == null) return null;
-    return readDouble();
-  }
-
-  @override
-  num readNum() {
-    final v = _value;
-    if (v is num) return v;
-    throw CodableException(
-      'Expected num, found ${_value.runtimeType}: $_value',
-    );
-  }
-
-  @override
-  num? readNullableNum() {
-    if (_value == null) return null;
-    return readNum();
-  }
-
-  @override
-  String readString() {
-    final v = _value;
-    if (v is String) return v;
-    throw CodableException(
-      'Expected String, found ${_value.runtimeType}: $_value',
-    );
-  }
-
-  @override
-  String? readNullableString() {
-    if (_value == null) return null;
-    return readString();
-  }
-
-  @override
-  (int start, int end) readStringSpan() {
-    throw UnsupportedError(
-      'readStringSpan is not supported on _TestSingleValueDecoder',
-    );
-  }
-
-  @override
-  (int start, int end)? readNullableStringSpan() {
-    if (isNull()) return null;
-    return readStringSpan();
-  }
-
-  @override
-  bool readBool() {
-    final v = _value;
-    if (v is bool) return v;
-    throw CodableException(
-      'Expected bool, found ${_value.runtimeType}: $_value',
-    );
-  }
-
-  @override
-  bool? readNullableBool() {
-    if (_value == null) return null;
-    return readBool();
-  }
+  void _commitTestValue() {}
 
   @override
   bool isNull() => _value == null;
 
   @override
-  Decoder nestedDecoder() =>
-      _TestDecoder(_value, userInfo: _rootDecoder.userInfo);
+  T decode<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
 
   @override
-  void readNull() {
-    if (_value != null) {
-      throw CodableException(
-        'Expected null, found ${_value.runtimeType}: $_value',
-      );
-    }
-  }
-
-  @override
-  T decode<T>(Decodable<T> decodable) =>
-      decodable.decode(_TestDecoder(_value, userInfo: _rootDecoder.userInfo));
-
-  @override
-  T? decodeNullable<T>(Decodable<T> decodable) {
-    if (_value == null) return null;
-    return decode(decodable);
-  }
+  T? decodeNullable<T>(Decodable<T> decodable) =>
+      _value == null ? null : decode(decodable);
 }
 
 final class _TestEncoder implements Encoder {
@@ -3060,6 +2672,97 @@ void main() {
             check(testDecoded.history[0]).isA<int>().equals(10);
             check(testDecoded.vehicle)
                 .equals(const Car(maxSpeed: 180, doors: 4));
+          });
+
+          test('decodeIntList rejects fractional floats across streaming, object-tree, and JS DOM drivers', () {
+            final pad = 'f' * padLen;
+            final raw = '{"nums": [1, 2.9, 3], "pad": "$pad"}';
+            final bytes = makeBytes(raw);
+
+            // 1. Streaming KeyedDecoder (JsonTokenReader throws FormatException)
+            check(() {
+              final k = JsonCodableDecoder.fromBytes(bytes).keyed();
+              while (k.moveNextKey()) {
+                if (k.nextKey() == 'nums') {
+                  k.decodeIntList();
+                } else {
+                  k.skipValue();
+                }
+              }
+            }).throws<Exception>();
+
+            // 2. Object-tree MappedDecoder & KeyedDecoder handoff
+            check(() {
+              JsonCodableDecoder.fromBytes(bytes)
+                  .mapped()
+                  .decodeIntList('nums');
+            }).throws<CodableException>();
+
+            check(() {
+              final d = JsonCodableDecoder.fromBytes(bytes);
+              d.mapped();
+              final k = d.keyed();
+              while (k.moveNextKey()) {
+                if (k.nextKey() == 'nums') {
+                  k.decodeIntList();
+                } else {
+                  k.skipValue();
+                }
+              }
+            }).throws<CodableException>();
+
+            // 3. Forced JS DOM path on web/wasm (streaming on VM)
+            check(() {
+              final k = JsonCodableDecoder.fromBytes(
+                bytes,
+                userInfo: const {#forceJsDom: true},
+              ).keyed();
+              while (k.moveNextKey()) {
+                if (k.nextKey() == 'nums') {
+                  k.decodeIntList();
+                } else {
+                  k.skipValue();
+                }
+              }
+            }).throws<Exception>();
+
+            // 4. TestJsonDriver oracle
+            check(() {
+              TestJsonDriver.decodeBytes(
+                bytes,
+                Decodable.fromFunction((d) => d.mapped().decodeIntList('nums')),
+              );
+            }).throws<CodableException>();
+          });
+
+          test('unconsumed nested mapped() buffer does not leak into sibling keyed() field', () {
+            final pad = 'b' * padLen;
+            final raw =
+                '{"first": {"tag": "stale", "pad": "$pad"}, "second": {"tag": "fresh"}}';
+            final bytes = makeBytes(raw);
+            final k = JsonCodableDecoder.fromBytes(bytes).keyed();
+            String? firstTag;
+            String? secondTag;
+            while (k.moveNextKey()) {
+              switch (k.nextKey()) {
+                case 'first':
+                  // Inspect via mapped() WITHOUT consuming via keyed()
+                  firstTag = k.nestedDecoder().mapped().readString('tag');
+                case 'second':
+                  final inner = k.nestedDecoder().keyed();
+                  while (inner.moveNextKey()) {
+                    if (inner.nextKey() == 'tag') {
+                      secondTag = inner.readString();
+                    } else {
+                      inner.skipValue();
+                    }
+                  }
+                default:
+                  k.skipValue();
+              }
+            }
+            check(firstTag).equals('stale');
+            check(secondTag).equals('fresh');
           });
         });
       }
