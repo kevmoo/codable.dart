@@ -12,15 +12,15 @@ import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 
 /// Maps an in-memory Dart object to a format-agnostic [ValueKind].
-ValueKind dartObjectToValueKind(Object? v) {
-  if (v == null) return ValueKind.nullValue;
-  if (v is bool) return ValueKind.boolean;
-  if (v is num) return ValueKind.number;
-  if (v is String) return ValueKind.string;
-  if (v is List) return ValueKind.list;
-  if (v is Map) return ValueKind.map;
-  throw CodableException('Unexpected value kind for $v');
-}
+ValueKind dartObjectToValueKind(Object? v) => switch (v) {
+  null => ValueKind.nullValue,
+  bool() => ValueKind.boolean,
+  num() => ValueKind.number,
+  String() => ValueKind.string,
+  List() => ValueKind.list,
+  Map() => ValueKind.map,
+  _ => throw CodableException('Unexpected value kind for $v'),
+};
 
 /// Parses a JSON object from [reader] into an in-memory `Map<String, Object?>`.
 Map<String, Object?> parseObjectFromReader(JsonTokenReader reader) {

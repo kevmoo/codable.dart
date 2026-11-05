@@ -23,15 +23,15 @@ part 'domain_models_test.g.dart';
 // Concrete Mock JSON Driver & Test Container Implementations
 // ============================================================================
 
-ValueKind _testValueKind(Object? v) {
-  if (v == null) return ValueKind.nullValue;
-  if (v is bool) return ValueKind.boolean;
-  if (v is num) return ValueKind.number;
-  if (v is String) return ValueKind.string;
-  if (v is List) return ValueKind.list;
-  if (v is Map) return ValueKind.map;
-  throw CodableException('Unexpected test value kind for $v');
-}
+ValueKind _testValueKind(Object? v) => switch (v) {
+  null => ValueKind.nullValue,
+  bool() => ValueKind.boolean,
+  num() => ValueKind.number,
+  String() => ValueKind.string,
+  List() => ValueKind.list,
+  Map() => ValueKind.map,
+  _ => throw CodableException('Unexpected test value kind for $v'),
+};
 
 final class _TestDecoder implements Decoder {
   final Object? _data;
