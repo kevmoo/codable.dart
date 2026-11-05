@@ -28,16 +28,43 @@ ValueKind _testValueKind(Object? v) => switch (v) {
   bool() => ValueKind.boolean,
   num() => ValueKind.number,
   String() => ValueKind.string,
+  Uint8List() => ValueKind.bytes,
   List() => ValueKind.list,
   Map() => ValueKind.map,
   _ => throw CodableException('Unexpected test value kind for $v'),
 };
+
+Uint8List _decodeTestBytes(Object? v) {
+  if (v is Uint8List) return v;
+  if (v is String) {
+    try {
+      return base64Decode(v);
+    } on FormatException catch (e) {
+      throw CodableException('Invalid base64 string for bytes: ${e.message}');
+    }
+  }
+  if (v is List<dynamic>) {
+    final out = Uint8List(v.length);
+    for (var i = 0; i < v.length; i++) {
+      final e = v[i];
+      if (e is! int || e < 0 || e > 255) {
+        throw CodableException('Expected byte 0..255 in list, found $e');
+      }
+      out[i] = e;
+    }
+    return out;
+  }
+  throw CodableException('Expected bytes, found ${v.runtimeType}: $v');
+}
 
 final class _TestDecoder implements Decoder {
   final Object? _data;
   @override
   final Map<Object, Object?> userInfo;
   _TestKeyedDecoder? _activeKeyed;
+
+  @override
+  bool get isHumanReadable => true;
 
   @override
   Uint8List? get payload => null;
@@ -74,6 +101,19 @@ final class _TestDecoder implements Decoder {
     }
     throw CodableException(
       'Expected JSON Object for mapped decoder, found ${_data.runtimeType}',
+    );
+  }
+
+  @override
+  MapDecoder map() {
+    final target = (_activeKeyed != null && _activeKeyed!._hasCurrent)
+        ? _activeKeyed!._currentValue
+        : _data;
+    if (target is Map<String, dynamic>) {
+      return _TestMapDecoder(target.entries.toList(), this);
+    }
+    throw CodableException(
+      'Expected JSON Object for map decoder, found ${target.runtimeType}',
     );
   }
 
@@ -168,6 +208,12 @@ mixin _TestSequentialDecoderMixin {
       return v;
     }
     throw CodableException('Expected bool, found ${v.runtimeType}: $v');
+  }
+
+  Uint8List readBytes() {
+    final bytes = _decodeTestBytes(_peekTestValue());
+    _commitTestValue();
+    return bytes;
   }
 
   Decoder nestedDecoder() =>
@@ -291,8 +337,130 @@ final class _TestMappedDecoder
   }
 
   @override
+  Uint8List readBytes(String key) => _decodeTestBytes(_requireKey(key));
+
+  @override
   Decoder nestedDecoder(String key) =>
       _TestDecoder(_requireKey(key), userInfo: _rootDecoder.userInfo);
+}
+
+final class _TestMapDecoder implements MapDecoder {
+  final List<MapEntry<String, dynamic>> _entries;
+  final _TestDecoder _rootDecoder;
+  int _index = -1;
+
+  _TestMapDecoder(this._entries, this._rootDecoder);
+
+  @override
+  int? get length => _entries.length;
+
+  @override
+  bool moveNextEntry() {
+    if (_index + 1 >= _entries.length) return false;
+    _index++;
+    return true;
+  }
+
+  @override
+  Decoder keyDecoder() {
+    if (_index < 0 || _index >= _entries.length) {
+      throw const CodableException('No active map entry');
+    }
+    return _TestMapKeyDecoder(_entries[_index].key, _rootDecoder.userInfo);
+  }
+
+  @override
+  Decoder valueDecoder() {
+    if (_index < 0 || _index >= _entries.length) {
+      throw const CodableException('No active map entry');
+    }
+    return _TestDecoder(
+      _entries[_index].value,
+      userInfo: _rootDecoder.userInfo,
+    );
+  }
+}
+
+final class _TestMapKeyDecoder
+    with BaseSingleValueDecoderMixin
+    implements Decoder, SingleValueDecoder {
+  final String _key;
+  @override
+  final Map<Object, Object?> userInfo;
+
+  _TestMapKeyDecoder(this._key, this.userInfo);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Uint8List? get payload => null;
+
+  @override
+  ValueKind peekKind() => ValueKind.string;
+
+  @override
+  SingleValueDecoder singleValue() => this;
+
+  @override
+  KeyedDecoder keyed({KeyOptions? options}) =>
+      throw const CodableException('JSON map keys cannot be keyed objects');
+
+  @override
+  MappedDecoder mapped() =>
+      throw const CodableException('JSON map keys cannot be mapped objects');
+
+  @override
+  MapDecoder map() =>
+      throw const CodableException('JSON map keys cannot be maps');
+
+  @override
+  UnkeyedDecoder unkeyed() =>
+      throw const CodableException('JSON map keys cannot be arrays');
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      null;
+
+  @override
+  bool isNull() => false;
+
+  @override
+  void readNull() =>
+      throw CodableException('Expected null map key, found "$_key"');
+
+  @override
+  int readInt() {
+    final v = int.tryParse(_key);
+    if (v != null) return v;
+    throw CodableException('Expected int map key, found "$_key"');
+  }
+
+  @override
+  double readDouble() {
+    final v = double.tryParse(_key);
+    if (v != null && v.isFinite) return v;
+    throw CodableException('Expected finite double map key, found "$_key"');
+  }
+
+  @override
+  num readNum() => int.tryParse(_key) ?? readDouble();
+
+  @override
+  String readString() => _key;
+
+  @override
+  bool readBool() {
+    if (_key == 'true') return true;
+    if (_key == 'false') return false;
+    throw CodableException('Expected bool map key, found "$_key"');
+  }
+
+  @override
+  Uint8List readBytes() => _decodeTestBytes(_key);
+
+  @override
+  Decoder nestedDecoder() => this;
 }
 
 final class _TestUnkeyedDecoder
@@ -363,6 +531,9 @@ final class _TestEncoder implements Encoder {
 
   _TestEncoder({this.userInfo = const {}, this.onOutput});
 
+  @override
+  bool get isHumanReadable => true;
+
   void _setOutput(Object? value) {
     output = value;
     onOutput?.call(value);
@@ -379,6 +550,13 @@ final class _TestEncoder implements Encoder {
   UnkeyedEncoder unkeyed({int? length}) {
     final enc = _TestUnkeyedEncoder(this);
     _setOutput(enc._list);
+    return enc;
+  }
+
+  @override
+  MapEncoder map({int? length}) {
+    final enc = _TestMapEncoder(this);
+    _setOutput(enc._map);
     return enc;
   }
 
@@ -414,6 +592,103 @@ final class _TestKeyedEncoder
     userInfo: _rootEncoder.userInfo,
     onOutput: (val) => _map[key] = val,
   );
+}
+
+final class _TestMapEncoder implements MapEncoder {
+  final _TestEncoder _rootEncoder;
+  final Map<String, dynamic> _map = {};
+  String? _pendingKey;
+
+  _TestMapEncoder(this._rootEncoder);
+
+  @override
+  Encoder keyEncoder() {
+    if (_pendingKey != null) {
+      throw const CodableException(
+        'Previous map key was not paired with value',
+      );
+    }
+    return _TestMapKeyEncoder(this);
+  }
+
+  @override
+  Encoder valueEncoder() {
+    final key = _pendingKey;
+    if (key == null) {
+      throw const CodableException('Map key must be encoded before value');
+    }
+    _pendingKey = null;
+    return _TestEncoder(
+      userInfo: _rootEncoder.userInfo,
+      onOutput: (val) => _map[key] = val,
+    );
+  }
+}
+
+final class _TestMapKeyEncoder
+    with BaseSingleValueEncoderMixin
+    implements Encoder, SingleValueEncoder {
+  final _TestMapEncoder _mapEncoder;
+
+  _TestMapKeyEncoder(this._mapEncoder);
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Map<Object, Object?> get userInfo => _mapEncoder._rootEncoder.userInfo;
+
+  @override
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
+      throw const CodableException('JSON map keys cannot be keyed objects');
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) =>
+      throw const CodableException('JSON map keys cannot be arrays');
+
+  @override
+  MapEncoder map({int? length}) =>
+      throw const CodableException('JSON map keys cannot be maps');
+
+  void _setKey(String key) {
+    if (_mapEncoder._pendingKey != null) {
+      throw const CodableException('Map key already set');
+    }
+    _mapEncoder._pendingKey = key;
+  }
+
+  @override
+  void encodeInt(int value) => _setKey(value.toString());
+
+  @override
+  void encodeDouble(double value) {
+    if (!value.isFinite) throw CodableException('Non-finite map key: $value');
+    _setKey(value.toString());
+  }
+
+  @override
+  void encodeString(String value) => _setKey(value);
+
+  @override
+  void encodeBool(bool value) => _setKey(value ? 'true' : 'false');
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      throw const CodableException('Bytes map key not allowed in JSON');
+
+  @override
+  void encodeNull() => throw const CodableException('Null map key');
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    encodable.encode(value, this);
+    if (_mapEncoder._pendingKey == null) {
+      throw const CodableException('Map key encoder did not write a key');
+    }
+  }
 }
 
 final class _TestUnkeyedEncoder
@@ -2442,66 +2717,471 @@ void main() {
     });
   });
 
-  _registerDriverFoundationsTests();
+  _registerStage2JsonDriverTests();
 }
 
-void _registerDriverFoundationsTests() {
-  group(
-    'Driver Foundations (KeyOptions, Base*Mixin, nestedEncoder, length)',
-    () {
-      test('length hints on UnkeyedDecoder match driver backing', () {
-        const isJs = identical(1, 1.0);
-        final listBytes = Uint8List.fromList(utf8.encode('[10, 20, 30]'));
+void _registerStage2JsonDriverTests() {
+  group('Stage 2 Contracts & JSON Drivers', () {
+    test('isHumanReadable is true across all JSON encoders and decoders', () {
+      final bytes = Uint8List.fromList(utf8.encode('{"a": 1}'));
+      check(JsonCodableDecoder.fromBytes(bytes).isHumanReadable).isTrue();
+      check(
+        JsonCodableDecoder.fromBytes(
+          bytes,
+          userInfo: const {#forceJsDom: true},
+        ).isHumanReadable,
+      ).isTrue();
 
-        // Streaming / default fromBytes: null on VM/Wasm, 3 on dart2js DOM
-        final streamList = JsonCodableDecoder.fromBytes(listBytes).unkeyed();
-        check(streamList.length).equals(isJs ? 3 : null);
+      final mappedChild = JsonCodableDecoder.fromBytes(bytes)
+          .mapped()
+          .nestedDecoder('a');
+      check(mappedChild.isHumanReadable).isTrue();
 
-        // DartObject handoff via mapped() and nested array: exact length
-        final handoffDec = JsonCodableDecoder.fromBytes(
-          Uint8List.fromList(utf8.encode('{"a": 1, "b": 2, "arr": [5, 6, 7]}')),
+      late bool encoderReadable;
+      JsonCodableEncoder.encode<int>(
+        1,
+        Encodable<int>.fromFunction((v, e) {
+          encoderReadable = e.isHumanReadable;
+          e.singleValue().encodeInt(v);
+        }),
+      );
+      check(encoderReadable).isTrue();
+
+      late bool testDecReadable;
+      TestJsonDriver.decodeString(
+        '{"a": 1}',
+        Decodable<int>.fromFunction((d) {
+          testDecReadable = d.isHumanReadable;
+          return 0;
+        }),
+      );
+      check(testDecReadable).isTrue();
+
+      late bool testEncReadable;
+      TestJsonDriver.encodeToString<int>(
+        1,
+        Encodable<int>.fromFunction((v, e) {
+          testEncReadable = e.isHumanReadable;
+          e.singleValue().encodeInt(v);
+        }),
+      );
+      check(testEncReadable).isTrue();
+    });
+
+    test('length hints on UnkeyedDecoder and MapDecoder match driver backing', () {
+      const isJs = identical(1, 1.0);
+      final listBytes = Uint8List.fromList(utf8.encode('[10, 20, 30]'));
+      final mapBytes = Uint8List.fromList(utf8.encode('{"a": 1, "b": 2}'));
+
+      // Streaming / default fromBytes: null on VM/Wasm, 3/2 on dart2js DOM
+      final streamList = JsonCodableDecoder.fromBytes(listBytes).unkeyed();
+      check(streamList.length).equals(isJs ? 3 : null);
+
+      final streamMap = JsonCodableDecoder.fromBytes(mapBytes).map();
+      check(streamMap.length).equals(isJs ? 2 : null);
+
+      // DartObject handoff via mapped() -> map() and nested array: exact length
+      final handoffDec = JsonCodableDecoder.fromBytes(
+        Uint8List.fromList(utf8.encode('{"a": 1, "b": 2, "arr": [5, 6, 7]}')),
+      );
+      final mapped = handoffDec.mapped();
+      check(mapped.nestedDecoder('arr').unkeyed().length).equals(3);
+      check(handoffDec.map().length).equals(3);
+
+      // TestJsonDriver: exact length
+      check(
+        TestJsonDriver.decodeString(
+          '[1, 2, 3, 4]',
+          Decodable.fromFunction((d) => d.unkeyed().length),
+        ),
+      ).equals(4);
+      check(
+        TestJsonDriver.decodeString(
+          '{"x": 1, "y": 2}',
+          Decodable.fromFunction((d) => d.map().length),
+        ),
+      ).equals(2);
+    });
+
+    test(
+      'Map<int, String>, Map<UserRole, int>, and Map<bool, double> roundtrip',
+      () {
+        _verifyScalarKeyMapsRoundtrip(useJsDom: false);
+        _verifyScalarKeyMapsRoundtrip(useJsDom: true);
+      },
+    );
+
+    test(
+      'MapDecoder buffered handoff via mapped() -> map() preserves entries',
+      () {
+        final bytes = Uint8List.fromList(
+          utf8.encode('{"200": "ok", "404": "missing"}'),
         );
-        final mapped = handoffDec.mapped();
-        check(mapped.nestedDecoder('arr').unkeyed().length).equals(3);
+        final d = JsonCodableDecoder.fromBytes(bytes);
+        check(d.mapped().readString('200')).equals('ok');
+        final decoded = _decodeIntStringMap(d);
+        check(decoded).deepEquals({200: 'ok', 404: 'missing'});
+      },
+    );
 
-        // TestJsonDriver: exact length
-        check(
-          TestJsonDriver.decodeString(
-            '[1, 2, 3, 4]',
-            Decodable.fromFunction((d) => d.unkeyed().length),
-          ),
-        ).equals(4);
-      });
+    test(
+      'JSON MapEncoder and MapDecoder reject composite, null, bytes, and NaN keys',
+      _verifyInvalidJsonMapKeysRejected,
+    );
 
-      test(
-        'nestedEncoder auto-closes multi-level containers before siblings and parent close',
-        _verifyNestedEncoderAutoClosing,
-      );
+    test(
+      'Uint8List Base64 roundtrips and nullable semantics across containers',
+      () {
+        _verifyBytesBase64Roundtrip(useJsDom: false);
+        _verifyBytesBase64Roundtrip(useJsDom: true);
+      },
+    );
 
-      test(
-        'KeyOptions.compiled<T> isolates distinct driver cache types on a shared instance',
-        _verifyKeyOptionsMultiTypeCompiledCache,
-      );
+    test('Uint8List [int] fallback accepts 0..255 and rejects -1, 256, floats, and bad Base64', () {
+      _verifyBytesFallbackAndRejections(useJsDom: false);
+      _verifyBytesFallbackAndRejections(useJsDom: true);
+    });
 
-      test(
-        'Base*Mixin defaults support minimal drivers across all 7 decoder and encoder mixins',
-        _verifyBaseMixinsDefaults,
-      );
-    },
+    test(
+      'nestedEncoder auto-closes multi-level containers before siblings and parent close',
+      _verifyNestedEncoderAutoClosing,
+    );
+
+    test(
+      'KeyOptions.compiled<T> isolates distinct driver cache types on a shared instance',
+      _verifyKeyOptionsMultiTypeCompiledCache,
+    );
+
+    test(
+      'Base*Mixin defaults support minimal drivers across all 7 decoder and encoder mixins',
+      _verifyBaseMixinsDefaults,
+    );
+  });
+}
+
+Map<int, String> _decodeIntStringMap(Decoder decoder) {
+  final m = decoder.map();
+  final result = <int, String>{};
+  while (m.moveNextEntry()) {
+    final k = m.keyDecoder().singleValue().readInt();
+    final v = m.valueDecoder().singleValue().readString();
+    result[k] = v;
+  }
+  return result;
+}
+
+void _encodeIntStringMap(Map<int, String> value, Encoder encoder) {
+  final m = encoder.map(length: value.length);
+  for (final entry in value.entries) {
+    m.keyEncoder().singleValue().encodeInt(entry.key);
+    m.valueEncoder().singleValue().encodeString(entry.value);
+  }
+}
+
+Map<UserRole, int> _decodeRoleIntMap(Decoder decoder) {
+  final m = decoder.map();
+  final result = <UserRole, int>{};
+  while (m.moveNextEntry()) {
+    final name = m.keyDecoder().singleValue().readString();
+    final role = UserRole.fromString(name);
+    result[role] = m.valueDecoder().singleValue().readInt();
+  }
+  return result;
+}
+
+void _encodeRoleIntMap(Map<UserRole, int> value, Encoder encoder) {
+  final m = encoder.map(length: value.length);
+  for (final entry in value.entries) {
+    m.keyEncoder().singleValue().encodeString(entry.key.name);
+    m.valueEncoder().singleValue().encodeInt(entry.value);
+  }
+}
+
+Map<bool, double> _decodeBoolDoubleMap(Decoder decoder) {
+  final m = decoder.map();
+  final result = <bool, double>{};
+  while (m.moveNextEntry()) {
+    final k = m.keyDecoder().singleValue().readBool();
+    result[k] = m.valueDecoder().singleValue().readDouble();
+  }
+  return result;
+}
+
+void _encodeBoolDoubleMap(Map<bool, double> value, Encoder encoder) {
+  final m = encoder.map(length: value.length);
+  for (final entry in value.entries) {
+    m.keyEncoder().singleValue().encodeBool(entry.key);
+    m.valueEncoder().singleValue().encodeDouble(entry.value);
+  }
+}
+
+void _verifyScalarKeyMapsRoundtrip({required bool useJsDom}) {
+  final info = useJsDom
+      ? const <Object, Object?>{#forceJsDom: true}
+      : const <Object, Object?>{};
+
+  final statusMap = <int, String>{200: 'ok', 404: 'not found', -1: 'err'};
+  final statusBytes = JsonCodableEncoder.toBytes(
+    statusMap,
+    const Encodable.fromFunction(_encodeIntStringMap),
   );
+  check(utf8.decode(statusBytes))
+      .equals('{"200":"ok","404":"not found","-1":"err"}');
+  final decodedStatus = _decodeIntStringMap(
+    JsonCodableDecoder.fromBytes(statusBytes, userInfo: info),
+  );
+  check(decodedStatus).deepEquals(statusMap);
+  check(
+    TestJsonDriver.decodeBytes(
+      statusBytes,
+      const Decodable.fromFunction(_decodeIntStringMap),
+    ),
+  ).deepEquals(statusMap);
+
+  final roleMap = <UserRole, int>{UserRole.admin: 1, UserRole.guest: 9};
+  final roleJson = JsonCodableEncoder.encode(
+    roleMap,
+    const Encodable.fromFunction(_encodeRoleIntMap),
+  );
+  check(
+    _decodeRoleIntMap(
+      JsonCodableDecoder.fromBytes(
+        Uint8List.fromList(utf8.encode(roleJson)),
+        userInfo: info,
+      ),
+    ),
+  ).deepEquals(roleMap);
+
+  final boolMap = <bool, double>{true: 1.5, false: -2.25};
+  final boolBytes = TestJsonDriver.encodeToBytes(
+    boolMap,
+    const Encodable.fromFunction(_encodeBoolDoubleMap),
+  );
+  check(
+    _decodeBoolDoubleMap(
+      JsonCodableDecoder.fromBytes(boolBytes, userInfo: info),
+    ),
+  ).deepEquals(boolMap);
+}
+
+void _verifyInvalidJsonMapKeysRejected() {
+  // Composite @Codable struct key rejected on JSON encode
+  check(() {
+    JsonCodableEncoder.encode<Coordinate>(
+      const Coordinate(latitude: 1.0, longitude: 2.0),
+      Encodable<Coordinate>.fromFunction((coord, encoder) {
+        final m = encoder.map(length: 1);
+        const CoordinateCodable().encode(coord, m.keyEncoder());
+        m.valueEncoder().singleValue().encodeString('origin');
+      }),
+    );
+  }).throws<CodableException>();
+
+  // Composite @Codable struct key rejected on TestJsonDriver encode
+  check(() {
+    TestJsonDriver.encodeToString<Coordinate>(
+      const Coordinate(latitude: 1.0, longitude: 2.0),
+      Encodable<Coordinate>.fromFunction((coord, encoder) {
+        final m = encoder.map(length: 1);
+        const CoordinateCodable().encode(coord, m.keyEncoder());
+        m.valueEncoder().singleValue().encodeString('origin');
+      }),
+    );
+  }).throws<CodableException>();
+
+  // Composite @Codable struct key rejected on JSON decode
+  check(() {
+    final m = JsonCodableDecoder.fromString('{"k": "v"}').map();
+    check(m.moveNextEntry()).isTrue();
+    const CoordinateCodable().decode(m.keyDecoder());
+  }).throws<CodableException>();
+
+  // Null, bytes, list, NaN, and Infinity map keys rejected on JSON encode
+  check(() {
+    JsonCodableEncoder.encode(
+      0,
+      Encodable.fromFunction((_, e) {
+        final m = e.map();
+        m.keyEncoder().singleValue().encodeNull();
+      }),
+    );
+  }).throws<CodableException>();
+
+  check(() {
+    JsonCodableEncoder.encode(
+      0,
+      Encodable.fromFunction((_, e) {
+        final m = e.map();
+        m.keyEncoder().singleValue().encodeBytes(Uint8List.fromList([1, 2]));
+      }),
+    );
+  }).throws<CodableException>();
+
+  check(() {
+    JsonCodableEncoder.encode(
+      0,
+      Encodable.fromFunction((_, e) {
+        final m = e.map();
+        m.keyEncoder().singleValue().encodeDouble(double.nan);
+      }),
+    );
+  }).throws<CodableException>();
+
+  check(() {
+    JsonCodableEncoder.encode(
+      0,
+      Encodable.fromFunction((_, e) {
+        final m = e.map();
+        m.keyEncoder().singleValue().encodeDouble(double.infinity);
+      }),
+    );
+  }).throws<CodableException>();
+
+  check(() {
+    JsonCodableEncoder.encode(
+      0,
+      Encodable.fromFunction((_, e) {
+        final m = e.map();
+        m.keyEncoder().unkeyed();
+      }),
+    );
+  }).throws<CodableException>();
+
+  // Non-integer string rejected by keyDecoder().singleValue().readInt()
+  check(() {
+    final m = JsonCodableDecoder.fromString('{"abc": 1}').map();
+    check(m.moveNextEntry()).isTrue();
+    m.keyDecoder().singleValue().readInt();
+  }).throws<CodableException>();
+}
+
+void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
+  final info = useJsDom
+      ? const <Object, Object?>{#forceJsDom: true}
+      : const <Object, Object?>{};
+  final sample = Uint8List.fromList([0, 1, 2, 127, 128, 255]);
+
+  final jsonStr = JsonCodableEncoder.encode<Uint8List>(
+    sample,
+    Encodable<Uint8List>.fromFunction((bytes, encoder) {
+      final k = encoder.keyed();
+      k.encodeBytes('raw', bytes);
+      k.encodeNullableBytes('omitted', null);
+      k.encodeNullableBytes('present', Uint8List.fromList([42]));
+      final u = k.nestedEncoder('arr').unkeyed(length: 2);
+      u.encodeBytes(Uint8List.fromList([9, 10]));
+      u.encodeNullableBytes(null);
+    }),
+  );
+
+  check(jsonStr).contains('"raw":"${base64Encode(sample)}"');
+  check(jsonStr.contains('"omitted"')).isFalse();
+  check(jsonStr).contains('"arr":["CQo=",null]');
+
+  final rawBytes = Uint8List.fromList(utf8.encode(jsonStr));
+  final k = JsonCodableDecoder.fromBytes(rawBytes, userInfo: info).keyed();
+  Uint8List? decodedRaw;
+  Uint8List? decodedPresent;
+  Uint8List? arrFirst;
+  Uint8List? arrSecond = Uint8List(0);
+  while (k.moveNextKey()) {
+    switch (k.nextKey()) {
+      case 'raw':
+        decodedRaw = k.readBytes();
+      case 'present':
+        decodedPresent = k.readNullableBytes();
+      case 'arr':
+        final u = k.nestedDecoder().unkeyed();
+        check(u.moveNext()).isTrue();
+        arrFirst = u.readBytes();
+        check(u.moveNext()).isTrue();
+        arrSecond = u.readNullableBytes();
+        check(u.moveNext()).isFalse();
+      default:
+        k.skipValue();
+    }
+  }
+  check(decodedRaw).isNotNull().deepEquals(sample);
+  check(decodedPresent).isNotNull().deepEquals([42]);
+  check(arrFirst).isNotNull().deepEquals([9, 10]);
+  check(arrSecond).isNull();
+
+  // MappedDecoder + SingleValueEncoder/SingleValueDecoder roundtrip
+  final mapped = JsonCodableDecoder.fromBytes(
+    rawBytes,
+    userInfo: info,
+  ).mapped();
+  check(mapped.readBytes('raw')).deepEquals(sample);
+  check(mapped.readNullableBytes('omitted')).isNull();
+
+  final svNull = JsonCodableEncoder.encode<Uint8List?>(
+    null,
+    Encodable.fromFunction((v, e) => e.singleValue().encodeNullableBytes(v)),
+  );
+  check(svNull).equals('null');
+  check(JsonCodableDecoder.fromString(svNull).singleValue().readNullableBytes())
+      .isNull();
+}
+
+void _verifyBytesFallbackAndRejections({required bool useJsDom}) {
+  final info = useJsDom
+      ? const <Object, Object?>{#forceJsDom: true}
+      : const <Object, Object?>{};
+
+  // Valid [int] 0..255 fallback
+  final okBytes = JsonCodableDecoder.fromBytes(
+    Uint8List.fromList(utf8.encode('[0, 1, 127, 255]')),
+    userInfo: info,
+  ).singleValue().readBytes();
+  check(okBytes).deepEquals([0, 1, 127, 255]);
+
+  // Mapped / DartObject [int] fallback
+  final mappedOk = JsonCodableDecoder.fromBytes(
+    Uint8List.fromList(utf8.encode('{"b": [10, 20, 255]}')),
+  ).mapped().readBytes('b');
+  check(mappedOk).deepEquals([10, 20, 255]);
+
+  // Rejections: 256, -1, fractional float 2.5, invalid Base64
+  for (final badJson in [
+    '[0, 256]',
+    '[-1, 5]',
+    '[1, 2.5]',
+    '"!!!not-base64!!!"',
+  ]) {
+    final encoded = Uint8List.fromList(utf8.encode('{"b": $badJson}'));
+    check(() {
+      final k = JsonCodableDecoder.fromBytes(encoded, userInfo: info).keyed();
+      check(k.moveNextKey()).isTrue();
+      check(k.nextKey()).equals('b');
+      k.readBytes();
+    }).throws<CodableException>();
+
+    check(() {
+      JsonCodableDecoder.fromBytes(encoded).mapped().readBytes('b');
+    }).throws<CodableException>();
+
+    check(() {
+      TestJsonDriver.decodeBytes(
+        encoded,
+        Decodable.fromFunction((d) => d.mapped().readBytes('b')),
+      );
+    }).throws<CodableException>();
+  }
 }
 
 void _verifyNestedEncoderAutoClosing() {
   void encodeComplex(int _, Encoder encoder) {
     final root = encoder.keyed(length: 3);
-    final nested = root.nestedEncoder('matrix').keyed(length: 2);
+    final map = root.nestedEncoder('matrix').map(length: 2);
 
-    final list1 = nested.nestedEncoder('1').unkeyed(length: 2);
+    map.keyEncoder().singleValue().encodeInt(1);
+    final list1 = map.valueEncoder().unkeyed(length: 2);
     final obj1 = list1.nestedEncoder().keyed(length: 1);
     obj1.encodeString('tag', 'a');
     list1.encodeInt(99);
 
-    final list2 = nested.nestedEncoder('2').unkeyed(length: 1);
+    map.keyEncoder().singleValue().encodeInt(2);
+    final list2 = map.valueEncoder().unkeyed(length: 1);
     list2.encodeInt(7);
 
     root.encodeBool('active', true);
@@ -2516,9 +3196,6 @@ void _verifyNestedEncoderAutoClosing() {
   const expected =
       '{"matrix":{"1":[{"tag":"a"},99],"2":[7]},"active":true,"tail":[{"done":1}]}';
   check(jsonOut).equals(expected);
-
-  final bytesOut = JsonCodableEncoder.toBytes(0, encodable);
-  check(utf8.decode(bytesOut)).equals(expected);
 
   final testOut = TestJsonDriver.encodeToString(0, encodable);
   check(testOut).equals(expected);
@@ -2623,6 +3300,9 @@ final class _MinimalDriverDecoder implements Decoder {
   });
 
   @override
+  bool get isHumanReadable => true;
+
+  @override
   Uint8List? get payload => null;
 
   @override
@@ -2641,6 +3321,9 @@ final class _MinimalDriverDecoder implements Decoder {
     reportUnkeyedLength,
     userInfo,
   );
+
+  @override
+  MapDecoder map() => throw UnsupportedError('unused in minimal mixin test');
 
   @override
   UnkeyedDecoder unkeyed() => _MinimalUnkeyedDecoder(
@@ -2853,6 +3536,9 @@ final class _MinimalDriverEncoder implements Encoder {
     this.userInfo = const {},
   }) : recordedUnkeyedLengths = recordedUnkeyedLengths ?? <int?>[];
 
+  @override
+  bool get isHumanReadable => true;
+
   void _emit(Object? v) {
     output = v;
     onOut?.call(v);
@@ -2872,6 +3558,10 @@ final class _MinimalDriverEncoder implements Encoder {
     _emit(list);
     return _MinimalUnkeyedEncoder(list, recordedUnkeyedLengths, userInfo);
   }
+
+  @override
+  MapEncoder map({int? length}) =>
+      throw UnsupportedError('unused in minimal mixin test');
 
   @override
   SingleValueEncoder singleValue() => _MinimalSingleValueEncoder(this);
@@ -2977,6 +3667,8 @@ void _verifyBaseMixinsDefaults() {
   kEnc.encodeNullableString('ps', 'role_a');
   kEnc.encodeNullableBool('nb', null);
   kEnc.encodeNullableBool('pb', true);
+  kEnc.encodeNullableBytes('nbytes', null);
+  kEnc.encodeNullableBytes('b64', Uint8List.fromList([1, 2, 255]));
   kEnc.encodeNullableValue('ncoord', null, const CoordinateCodable());
   kEnc.encodeNullableValue(
     'coord',
@@ -3002,10 +3694,12 @@ void _verifyBaseMixinsDefaults() {
   check(outMap.containsKey('nd')).isFalse();
   check(outMap.containsKey('ns')).isFalse();
   check(outMap.containsKey('nb')).isFalse();
+  check(outMap.containsKey('nbytes')).isFalse();
   check(outMap.containsKey('ncoord')).isFalse();
   check(enc.recordedUnkeyedLengths).deepEquals([null, 1, 2, 2, 2, 2]);
 
   outMap['nullField'] = null;
+  outMap['rawByteList'] = <Object?>[0, 128, 255];
 
   _verifyMinimalKeyedAndMappedDecode(outMap, reportLength: false);
   _verifyMinimalKeyedAndMappedDecode(outMap, reportLength: true);
@@ -3021,6 +3715,7 @@ void _verifyMinimalKeyedAndMappedDecode(
     'pd',
     'ps',
     'pb',
+    'b64',
     'coord',
     'lazyCoords',
     'sizedCoords',
@@ -3029,6 +3724,7 @@ void _verifyMinimalKeyedAndMappedDecode(
     'strings',
     'bools',
     'nullField',
+    'rawByteList',
   ]);
   final roleOpts = KeyOptions.of(['other', 'role_a']);
 
@@ -3049,28 +3745,32 @@ void _verifyMinimalKeyedAndMappedDecode(
   check(kd.selectKeyIndex(options)).equals(3);
   check(kd.readNullableBool()).equals(true);
   check(kd.selectKeyIndex(options)).equals(4);
+  check(kd.readNullableBytes()).isNotNull().deepEquals([1, 2, 255]);
+  check(kd.selectKeyIndex(options)).equals(5);
   check(kd.decodeNullableValue(const CoordinateCodable()))
       .equals(const Coordinate(latitude: 10.0, longitude: 20.0));
-  check(kd.selectKeyIndex(options)).equals(5);
+  check(kd.selectKeyIndex(options)).equals(6);
   check(kd.decodeNullableList(const CoordinateCodable()))
       .isNotNull()
       .deepEquals([const Coordinate(latitude: 1.0, longitude: 2.0)]);
-  check(kd.selectKeyIndex(options)).equals(6);
+  check(kd.selectKeyIndex(options)).equals(7);
   check(kd.decodeList(const CoordinateCodable()))
       .deepEquals([const Coordinate(latitude: 3.0, longitude: 4.0)]);
-  check(kd.selectKeyIndex(options)).equals(7);
-  check(kd.decodeIntList()).deepEquals([10, 20]);
   check(kd.selectKeyIndex(options)).equals(8);
-  check(kd.decodeFloat64List()).deepEquals([1.25, 2.5]);
+  check(kd.decodeIntList()).deepEquals([10, 20]);
   check(kd.selectKeyIndex(options)).equals(9);
-  check(kd.decodeStringList()).deepEquals(['x', 'y']);
+  check(kd.decodeFloat64List()).deepEquals([1.25, 2.5]);
   check(kd.selectKeyIndex(options)).equals(10);
-  check(kd.decodeBoolList()).deepEquals([true, false]);
+  check(kd.decodeStringList()).deepEquals(['x', 'y']);
   check(kd.selectKeyIndex(options)).equals(11);
+  check(kd.decodeBoolList()).deepEquals([true, false]);
+  check(kd.selectKeyIndex(options)).equals(12);
   check(kd.readNullableStringSpan()).isNull();
   check(kd.readNullableNum()).isNull();
   check(kd.decodeNullableValue(const CoordinateCodable())).isNull();
   check(kd.decodeNullableList(const CoordinateCodable())).isNull();
+  check(kd.selectKeyIndex(options)).equals(13);
+  check(kd.readBytes()).deepEquals([0, 128, 255]);
   check(kd.selectKeyIndex(options)).equals(-1);
 
   final md = _MinimalDriverDecoder(
@@ -3084,6 +3784,9 @@ void _verifyMinimalKeyedAndMappedDecode(
   check(md.readNullableNum('pi')).equals(7);
   check(md.readNullableString('ps')).equals('role_a');
   check(md.readNullableBool('pb')).equals(true);
+  check(md.readBytes('b64')).deepEquals([1, 2, 255]);
+  check(md.readBytes('rawByteList')).deepEquals([0, 128, 255]);
+  check(md.readNullableBytes('missing')).isNull();
   check(md.decodeNullableKey('missing', const CoordinateCodable())).isNull();
   check(md.decodeNullableKey('coord', const CoordinateCodable()))
       .equals(const Coordinate(latitude: 10.0, longitude: 20.0));
@@ -3104,6 +3807,8 @@ void _verifyMinimalUnkeyedAndSingleValueMixins() {
   u.encodeNullableDouble(null);
   u.encodeNullableString(null);
   u.encodeNullableBool(null);
+  u.encodeNullableBytes(null);
+  u.encodeBytes(Uint8List.fromList([4, 5]));
   u.encodeNullableElement(null, const CoordinateCodable());
   u.encodeNullableElement(
     const Coordinate(latitude: 5.0, longitude: 6.0),
@@ -3123,13 +3828,17 @@ void _verifyMinimalUnkeyedAndSingleValueMixins() {
   check(ud.moveNext()).isTrue();
   check(ud.readNullableBool()).isNull();
   check(ud.moveNext()).isTrue();
+  check(ud.readNullableBytes()).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.readBytes()).deepEquals([4, 5]);
+  check(ud.moveNext()).isTrue();
   check(ud.decodeNullableElement(const CoordinateCodable())).isNull();
   check(ud.moveNext()).isTrue();
   check(ud.decodeNullableElement(const CoordinateCodable()))
       .equals(const Coordinate(latitude: 5.0, longitude: 6.0));
   check(ud.moveNext()).isFalse();
 
-  // SingleValueEncoder & SingleValueDecoder nullable defaults
+  // SingleValueEncoder & SingleValueDecoder nullable + rejection defaults
   final svEnc = _MinimalDriverEncoder();
   svEnc.singleValue().encodeNullableInt(null);
   check(_MinimalDriverDecoder(svEnc.output).singleValue().readNullableInt())
@@ -3137,4 +3846,19 @@ void _verifyMinimalUnkeyedAndSingleValueMixins() {
   check(
     _MinimalDriverDecoder(svEnc.output).singleValue().readNullableStringSpan(),
   ).isNull();
+
+  svEnc.singleValue().encodeBytes(Uint8List.fromList([7, 8]));
+  check(_MinimalDriverDecoder(svEnc.output).singleValue().readBytes())
+      .deepEquals([7, 8]);
+
+  for (final invalidBytes in <Object?>[
+    [-1],
+    [256],
+    [1.5],
+    '***bad***',
+    true,
+  ]) {
+    check(() => _MinimalDriverDecoder(invalidBytes).singleValue().readBytes())
+        .throws<CodableException>();
+  }
 }

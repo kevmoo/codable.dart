@@ -17,6 +17,9 @@ enum ValueKind {
   /// A string value.
   string,
 
+  /// A raw binary byte sequence (`Uint8List`).
+  bytes,
+
   /// A sequential array / list container.
   list,
 
@@ -28,13 +31,18 @@ enum ValueKind {
 /// containers.
 ///
 /// **Ephemeral Cursor Lifetime**: A [Decoder] and any container opened from it
-/// ([KeyedDecoder], [UnkeyedDecoder], [SingleValueDecoder]) represent an
+/// ([KeyedDecoder], [MapDecoder], [UnkeyedDecoder], [SingleValueDecoder])
+/// represent an
 /// ephemeral, single-pass cursor over the underlying input stream. Decoders and
 /// containers must be consumed synchronously within [Decodable.decode] and must
 /// **never** be retained or accessed after `decode()` returns. Streaming chunked
 /// decoders may recycle or pool the backing byte buffer once `decode()`
 /// completes unless [payload] is accessed during decoding.
 abstract interface class Decoder {
+  /// Whether the underlying format is human-readable (such as JSON or YAML)
+  /// rather than a compact binary wire format (such as CBOR).
+  bool get isHumanReadable;
+
   /// Extensible context map for passing runtime dependency handles, options, or
   /// flags.
   Map<Object, Object?> get userInfo;
@@ -53,6 +61,9 @@ abstract interface class Decoder {
   /// Opens a random-access mapped container for keyed lookups.
   MappedDecoder mapped();
 
+  /// Opens a sequential map container for reading arbitrary key-value entries.
+  MapDecoder map();
+
   /// Opens a sequential unkeyed container for reading list/array elements.
   UnkeyedDecoder unkeyed();
 
@@ -63,6 +74,25 @@ abstract interface class Decoder {
   /// using [propertyAliases] for each field, or `null` if the underlying
   /// driver does not support vectorized/interop extraction.
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases);
+}
+
+/// Sequential streaming decoder for arbitrary key-value map containers.
+///
+/// Instances are ephemeral single-pass cursors scoped to the current map and
+/// must not be retained after [Decodable.decode] returns.
+abstract interface class MapDecoder {
+  /// Exact number of entries in this map when known upfront by the format, or
+  /// `null` for streaming delimiter-terminated formats.
+  int? get length;
+
+  /// Advances to the next key-value entry in the map.
+  bool moveNextEntry();
+
+  /// Returns a [Decoder] positioned at the current entry's key.
+  Decoder keyDecoder();
+
+  /// Returns a [Decoder] positioned at the current entry's value.
+  Decoder valueDecoder();
 }
 
 /// Sequential streaming decoder matching keys in incoming stream order.
@@ -145,6 +175,12 @@ abstract interface class KeyedDecoder {
   /// Reads a nullable boolean value.
   bool? readNullableBool();
 
+  /// Reads a non-nullable raw binary byte sequence.
+  Uint8List readBytes();
+
+  /// Reads a nullable raw binary byte sequence.
+  Uint8List? readNullableBytes();
+
   /// Creates a child [Decoder] positioned at the current field value for
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
@@ -217,6 +253,12 @@ abstract interface class MappedDecoder {
 
   /// Reads a nullable boolean value by [key].
   bool? readNullableBool(String key);
+
+  /// Reads a non-nullable raw binary byte sequence by [key].
+  Uint8List readBytes(String key);
+
+  /// Reads a nullable raw binary byte sequence by [key].
+  Uint8List? readNullableBytes(String key);
 
   /// Creates a child [Decoder] positioned at [key] for direct inlined decoding
   /// of nested models without closure allocation.
@@ -317,6 +359,12 @@ abstract interface class UnkeyedDecoder {
   /// Reads a nullable boolean element.
   bool? readNullableBool();
 
+  /// Reads a non-nullable raw binary byte sequence element.
+  Uint8List readBytes();
+
+  /// Reads a nullable raw binary byte sequence element.
+  Uint8List? readNullableBytes();
+
   /// Creates a child [Decoder] positioned at the current array element for
   /// direct inlined decoding of nested models without closure allocation.
   Decoder nestedDecoder();
@@ -401,6 +449,12 @@ abstract interface class SingleValueDecoder {
 
   /// Reads a nullable boolean value.
   bool? readNullableBool();
+
+  /// Reads a non-nullable raw binary byte sequence.
+  Uint8List readBytes();
+
+  /// Reads a nullable raw binary byte sequence.
+  Uint8List? readNullableBytes();
 
   /// Creates a child [Decoder] for direct inlined decoding of nested models
   /// without closure allocation.

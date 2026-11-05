@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:codable/codable.dart';
 import 'package:source_gen/source_gen.dart';
@@ -158,8 +157,8 @@ final class ModelVisitor {
       customEncoderCode: customEncoderCode,
     );
 
-    if (!ignore) {
-      _validateFieldClassification(
+    if (!ignore && classified.category == TypeCategory.custom) {
+      _validateCustomNativeFallback(
         param: param,
         classified: classified,
         createEncoder: createEncoder,
@@ -228,49 +227,6 @@ final class ModelVisitor {
       return customDecoderSpec!.code;
     }
     return null;
-  }
-
-  void _validateFieldClassification({
-    required FormalParameterElement param,
-    required TypeClassification classified,
-    required bool createEncoder,
-    required bool createDecoder,
-    required String? customEncoderCode,
-    required String? customDecoderCode,
-  }) {
-    if (classified.category == TypeCategory.custom) {
-      _validateCustomNativeFallback(
-        param: param,
-        classified: classified,
-        createEncoder: createEncoder,
-        createDecoder: createDecoder,
-        customEncoderCode: customEncoderCode,
-        customDecoderCode: customDecoderCode,
-      );
-    }
-    final needsNativeMap =
-        classified.category == TypeCategory.map ||
-        (classified.nativeCategory == TypeCategory.map &&
-            ((createEncoder && customEncoderCode == null) ||
-                (createDecoder && customDecoderCode == null)));
-    if (needsNativeMap) {
-      _validateStringMapKey(param, classified.mapKeyType);
-    }
-  }
-
-  void _validateStringMapKey(FormalParameterElement param, DartType? keyType) {
-    final isNonNullString =
-        keyType != null &&
-        keyType.isDartCoreString &&
-        keyType.nullabilitySuffix == NullabilitySuffix.none;
-    if (!isNonNullString) {
-      throw InvalidGenerationSourceError(
-        'Parameter "${param.name}" has unsupported Map key type '
-        '"${keyType?.getDisplayString() ?? 'dynamic'}". '
-        'Only non-nullable String Map keys are supported.',
-        element: param,
-      );
-    }
   }
 
   void _validateCustomNativeFallback({

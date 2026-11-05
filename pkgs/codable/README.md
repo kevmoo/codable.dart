@@ -71,26 +71,53 @@ abstract interface class Codable<T> implements Decodable<T>, Encodable<T> {
 ### Container Shapes (`Decoder` & `Encoder`)
 
 A `Decoder` or `Encoder` represents a single value position in the payload and
-opens one of four container shapes:
+opens one of five container shapes:
 
 - **`KeyedDecoder` / `KeyedEncoder` (`decoder.keyed({options})` /
-  `encoder.keyed({options})`)**: Sequential streaming over object key-value
-  pairs (`{ "id": 1, "name": "Ada" }`). Callers advance through fields in wire
-  order using `while (keyed.moveNextKey())`, match expected keys in
-  `O(key length)` via `keyed.selectKeyIndex(options)` (without allocating a
-  `String` per key), and call `keyed.skipValue()` on unknown fields.
-- **`MappedDecoder` (`decoder.mapped()`)**: Random-access key lookup
+  `encoder.keyed({options, length})`)**: Sequential streaming over string-keyed
+  object pairs (`{ "id": 1, "name": "Ada" }`). Callers advance through fields in
+  wire order using `while (keyed.moveNextKey())`, match expected keys via
+  `keyed.selectKeyIndex(options)` (backed by per-driver `KeyOptions.compiled<T>`
+  caches without allocating a `String` per key), and call `keyed.skipValue()` on
+  unknown fields.
+- **`MappedDecoder` (`decoder.mapped()`)**: Random-access string-key lookup
   (`mapped.containsKey('id')`, `mapped.readInt('id')`,
   `mapped.decodeKey('user', const UserCodable())`). Used when fields must be
-  inspected out of order or when backed by an in-memory object representation
-  such as browser `JSON.parse()` on Web JS.
+  inspected out of order (such as polymorphic `SuperDecodable` discriminators)
+  or when backed by an in-memory object representation.
+- **`MapDecoder` / `MapEncoder` (`decoder.map()` / `encoder.map({length})`)**:
+  Sequential streaming over arbitrary key-value entries (`Map<K, V>` where `K`
+  may be `int`, `bool`, an `enum`, or a composite struct/record). Formats with
+  typed keys (CBOR, YAML) preserve native key types, while JSON coerces scalar
+  string keys (`int`, `double`, `num`, `bool`, `String`).
 - **`UnkeyedDecoder` / `UnkeyedEncoder` (`decoder.unkeyed()` /
-  `encoder.unkeyed()`)**: Sequential iteration over arrays (`[1, 2, 3]`) using
-  `while (unkeyed.moveNext())`, plus bulk typed-list helpers (`decodeIntList()`,
-  `decodeDoubleList()`, `decodeFloat64List()`, `decodeStringList()`).
+  `encoder.unkeyed({length})`)**: Sequential iteration over arrays (`[1, 2, 3]`)
+  using `while (unkeyed.moveNext())`, exposing optional upfront `length` counts
+  plus bulk typed-list helpers (`decodeIntList()`, `decodeDoubleList()`,
+  `decodeFloat64List()`, `decodeStringList()`).
 - **`SingleValueDecoder` / `SingleValueEncoder` (`decoder.singleValue()` /
   `encoder.singleValue()`)**: Reads or writes a single scalar primitive (`int`,
-  `double`, `String`, `bool`, `null`) or delegates a custom wrapper type.
+  `double`, `String`, `bool`, `Uint8List` via `ValueKind.bytes`, `null`) or
+  delegates a custom wrapper type.
+
+### Multi-Format Capabilities & Authoring Drivers
+
+- **Format-adaptive codecs (`isHumanReadable`)**: `Decoder.isHumanReadable` and
+  `Encoder.isHumanReadable` let custom `Codable<T>` companions emit readable
+  representations (ISO-8601 timestamps, canonical UUID strings) on JSON and YAML
+  while emitting compact integers or raw `Uint8List` bytes on CBOR.
+- **First-class binary payloads (`ValueKind.bytes`)**: `readBytes()` and
+  `encodeBytes()` transfer raw `Uint8List` slices on binary drivers
+  (`package:codable_cbor`) and automatically Base64-encode/decode (with
+  `[0..255]` integer-list decode fallback) on text drivers.
+- **Driver base mixins (`Base*Mixin`)**: Custom format drivers (such as
+  `package:codable_yaml` and `package:codable_cbor`) mix in
+  `BaseKeyedDecoderMixin`, `BaseMappedDecoderMixin`, `BaseUnkeyedDecoderMixin`,
+  `BaseSingleValueDecoderMixin`, `BaseKeyedEncoderMixin`,
+  `BaseUnkeyedEncoderMixin`, and `BaseSingleValueEncoderMixin` to inherit
+  nullable, collection, and Base64 `Bytes` delegation from minimal primitive
+  implementations, and cache driver-specific key tables on shared schemas via
+  `options.compiled<T>(compile)`.
 
 ### Target-Aware Execution (VM / Wasm vs. Web JS)
 

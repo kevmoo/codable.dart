@@ -5,7 +5,6 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
@@ -149,7 +148,8 @@ final class EncoderGeneratorHelper {
 
   static String? _typedDataKeyedMethod(String? typeName) => switch (typeName) {
     'Float64List' || 'Float32List' => 'encodeDoubleList',
-    'Int64List' || 'Int32List' || 'Uint8List' => 'encodeIntList',
+    'Uint8List' => 'encodeBytes',
+    'Int64List' || 'Int32List' => 'encodeIntList',
     _ => null,
   };
 
@@ -265,14 +265,10 @@ final class EncoderGeneratorHelper {
     DartType? valType,
     _EncoderSlot slot,
   ) {
-    if (!_isStringMapKey(keyType)) {
-      throw InvalidGenerationSourceError(
-        'Only non-nullable String Map keys are supported, found '
-        'Map<${keyType?.getDisplayString() ?? 'dynamic'}, '
-        '${valType?.getDisplayString() ?? 'dynamic'}>.',
-      );
+    if (_isStringMapKey(keyType)) {
+      return _inlineStringMapEncodeCode(valType, slot);
     }
-    return _inlineStringMapEncodeCode(valType, slot);
+    return _inlineGenericMapEncodeCode(keyType, valType, slot);
   }
 
   static String _inlineStringMapEncodeCode(
@@ -398,11 +394,54 @@ final class EncoderGeneratorHelper {
     return null;
   }
 
+  static String _inlineGenericMapEncodeCode(
+    DartType? keyType,
+    DartType? valType,
+    _EncoderSlot slot,
+  ) {
+    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final mapVar = 'm$sfx';
+    final entryVar = 'entry$sfx';
+    final indent = slot.indent;
+    final innerIndent = '$indent    ';
+    final out = StringBuffer();
+    out.writeln('$indent{');
+    out.writeln(
+      '$indent  final $mapVar = '
+      '${slot.encoderExpr}.map(length: ${slot.itemAccess}.length);',
+    );
+    out.writeln(
+      '$indent  for (final $entryVar in ${slot.itemAccess}.entries) {',
+    );
+    out.write(
+      _encoderValueCode(keyType, (
+        itemAccess: '$entryVar.key',
+        encoderExpr: '$mapVar.keyEncoder()',
+        indent: innerIndent,
+        depth: slot.depth + 1,
+      )),
+    );
+    out.write(
+      _encoderValueCode(valType, (
+        itemAccess: '$entryVar.value',
+        encoderExpr: '$mapVar.valueEncoder()',
+        indent: innerIndent,
+        depth: slot.depth + 1,
+      )),
+    );
+    out.writeln('$indent  }');
+    out.writeln('$indent}');
+    return out.toString();
+  }
+
   static (String, String)? _scalarEncodeMethods(DartType type) {
     if (type.isDartCoreInt) return ('encodeInt', 'encodeNullableInt');
     if (type.isDartCoreDouble) return ('encodeDouble', 'encodeNullableDouble');
     if (type.isDartCoreString) return ('encodeString', 'encodeNullableString');
     if (type.isDartCoreBool) return ('encodeBool', 'encodeNullableBool');
+    if (type.element?.name == 'Uint8List') {
+      return ('encodeBytes', 'encodeNullableBytes');
+    }
     return null;
   }
 
@@ -481,7 +520,7 @@ final class EncoderGeneratorHelper {
 
   static String? _typedUnkeyedElementMethod(String? name) => switch (name) {
     'Float64List' || 'Float32List' => 'encodeDouble',
-    'Int64List' || 'Int32List' || 'Uint8List' => 'encodeInt',
+    'Int64List' || 'Int32List' => 'encodeInt',
     _ => null,
   };
 

@@ -25,3 +25,11 @@ jobs:
       target: test/fuzz/json_utf8_fuzz.dart
       mode: cgf
       max-total-time: ${{ inputs.max_total_time && fromJSON(inputs.max_total_time) || (github.event_name == 'schedule' && 300 || 30) }}
+
+  fuzz_cbor:
+    uses: kevmoo/fuzz.dart/.github/workflows/fuzz.yaml@main
+    with:
+      package-root: pkgs/codable_cbor
+      target: test/fuzz/cbor_fuzz.dart
+      mode: cgf
+      max-total-time: ${{ inputs.max_total_time && fromJSON(inputs.max_total_time) || (github.event_name == 'schedule' && 300 || 30) }}

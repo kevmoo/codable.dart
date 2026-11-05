@@ -57,6 +57,8 @@ void main() {
         'analyze',
         'pkgs/codable/lib',
         'pkgs/codable_benchmarks',
+        'pkgs/codable_yaml',
+        'pkgs/codable_cbor',
       ], workingDirectory: tempDir.path);
     }
   } finally {

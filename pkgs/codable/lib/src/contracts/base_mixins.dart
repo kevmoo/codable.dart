@@ -6,12 +6,37 @@
 /// [Encoder] container contracts.
 library;
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'codable.dart';
 import 'decoder.dart';
 import 'encoder.dart';
+import 'exceptions.dart';
 import 'static_key.dart';
+
+Uint8List _decodeBase64String(String encoded) {
+  try {
+    return base64Decode(encoded);
+  } on FormatException catch (e) {
+    throw CodableException(
+      'Invalid base64 string for bytes: ${e.message}',
+      underlyingError: e,
+    );
+  }
+}
+
+Uint8List _decodeByteList(UnkeyedDecoder u) {
+  final builder = BytesBuilder(copy: false);
+  while (u.moveNext()) {
+    final b = u.readNum();
+    if (b is! int || b < 0 || b > 255) {
+      throw CodableException('Expected byte in range 0..255, got $b');
+    }
+    builder.addByte(b);
+  }
+  return builder.takeBytes();
+}
 
 List<T> _decodeUnkeyedModelList<T>(UnkeyedDecoder u, Decodable<T> decodable) {
   final list = <T>[];
@@ -68,11 +93,10 @@ List<bool> _decodeUnkeyedBoolList(UnkeyedDecoder u) {
 
 /// Default implementations for [KeyedDecoder] container methods.
 ///
-/// Drivers only need to implement core cursor navigation, `peekKind`,
-/// `readNull`, non-nullable scalar readers (`readInt`, `readDouble`, `readNum`,
+/// Drivers only need to implement core cursor navigation, `peekKind`, `readNull`,
+/// non-nullable scalar readers (`readInt`, `readDouble`, `readNum`,
 /// `readString`, `readBool`), `skipValue`, and `nestedDecoder`, overriding
-/// specialized fast paths (such as `selectKeyIndex` or `readStringSpan`) as
-/// needed.
+/// specialized fast paths (such as `selectKeyIndex` or `readBytes`) as needed.
 mixin BaseKeyedDecoderMixin implements KeyedDecoder {
   @override
   String? peekKey() => null;
@@ -144,6 +168,24 @@ mixin BaseKeyedDecoderMixin implements KeyedDecoder {
       return null;
     }
     return readBool();
+  }
+
+  @override
+  Uint8List readBytes() => switch (peekKind()) {
+    ValueKind.string => _decodeBase64String(readString()),
+    ValueKind.list => _decodeByteList(nestedDecoder().unkeyed()),
+    final kind => throw CodableException(
+      'Expected base64 string or byte list, got $kind',
+    ),
+  };
+
+  @override
+  Uint8List? readNullableBytes() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readBytes();
   }
 
   @override
@@ -222,6 +264,14 @@ mixin BaseMappedDecoderMixin implements MappedDecoder {
   @override
   bool? readNullableBool(String key) =>
       _isMissingOrNull(key) ? null : readBool(key);
+
+  @override
+  Uint8List readBytes(String key) =>
+      nestedDecoder(key).singleValue().readBytes();
+
+  @override
+  Uint8List? readNullableBytes(String key) =>
+      _isMissingOrNull(key) ? null : readBytes(key);
 
   @override
   T decodeKey<T>(String key, Decodable<T> decodable) =>
@@ -328,6 +378,24 @@ mixin BaseUnkeyedDecoderMixin implements UnkeyedDecoder {
   }
 
   @override
+  Uint8List readBytes() => switch (peekKind()) {
+    ValueKind.string => _decodeBase64String(readString()),
+    ValueKind.list => _decodeByteList(nestedDecoder().unkeyed()),
+    final kind => throw CodableException(
+      'Expected base64 string or byte list, got $kind',
+    ),
+  };
+
+  @override
+  Uint8List? readNullableBytes() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readBytes();
+  }
+
+  @override
   T decodeElement<T>(Decodable<T> decodable) =>
       decodable.decode(nestedDecoder());
 
@@ -429,6 +497,24 @@ mixin BaseSingleValueDecoderMixin implements SingleValueDecoder {
   }
 
   @override
+  Uint8List readBytes() => switch (peekKind()) {
+    ValueKind.string => _decodeBase64String(readString()),
+    ValueKind.list => _decodeByteList(nestedDecoder().unkeyed()),
+    final kind => throw CodableException(
+      'Expected base64 string or byte list, got $kind',
+    ),
+  };
+
+  @override
+  Uint8List? readNullableBytes() {
+    if (isNull()) {
+      readNull();
+      return null;
+    }
+    return readBytes();
+  }
+
+  @override
   T decode<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
 
   @override
@@ -465,6 +551,15 @@ mixin BaseKeyedEncoderMixin implements KeyedEncoder {
   @override
   void encodeNullableBool(String key, bool? value) {
     if (value != null) encodeBool(key, value);
+  }
+
+  @override
+  void encodeBytes(String key, Uint8List value) =>
+      encodeString(key, base64Encode(value));
+
+  @override
+  void encodeNullableBytes(String key, Uint8List? value) {
+    if (value != null) encodeBytes(key, value);
   }
 
   @override
@@ -539,6 +634,13 @@ mixin BaseUnkeyedEncoderMixin implements UnkeyedEncoder {
       value == null ? encodeNull() : encodeBool(value);
 
   @override
+  void encodeBytes(Uint8List value) => encodeString(base64Encode(value));
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      value == null ? encodeNull() : encodeBytes(value);
+
+  @override
   void encodeElement<T>(T value, Encodable<T> encodable) =>
       encodable.encode(value, nestedEncoder());
 
@@ -575,6 +677,13 @@ mixin BaseSingleValueEncoderMixin implements SingleValueEncoder {
   @override
   void encodeNullableBool(bool? value) =>
       value == null ? encodeNull() : encodeBool(value);
+
+  @override
+  void encodeBytes(Uint8List value) => encodeString(base64Encode(value));
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      value == null ? encodeNull() : encodeBytes(value);
 
   @override
   void encodeNullable<T>(T? value, Encodable<T> encodable) =>
