@@ -71,18 +71,20 @@ final class EncoderGeneratorHelper {
     String keyExpr,
     String access, {
     required String indent,
+    TypeCategory? categoryOverride,
   }) {
-    switch (field.category) {
+    switch (categoryOverride ?? field.category) {
       case TypeCategory.primitiveInt:
         buffer.writeln('${indent}keyed.encodeInt($keyExpr, $access);');
       case TypeCategory.primitiveDouble:
         buffer.writeln('${indent}keyed.encodeDouble($keyExpr, $access);');
       case TypeCategory.primitiveNum:
-        buffer.writeln('${indent}if ($access is int) {');
-        buffer.writeln('$indent  keyed.encodeInt($keyExpr, $access as int);');
-        buffer.writeln('$indent} else {');
+        buffer.writeln('${indent}switch ($access) {');
+        buffer.writeln('$indent  case final int v:');
+        buffer.writeln('$indent    keyed.encodeInt($keyExpr, v);');
+        buffer.writeln('$indent  case final v:');
         buffer.writeln(
-          '$indent  keyed.encodeDouble($keyExpr, $access.toDouble());',
+          '$indent    keyed.encodeDouble($keyExpr, v.toDouble());',
         );
         buffer.writeln('$indent}');
       case TypeCategory.primitiveString:
@@ -92,10 +94,21 @@ final class EncoderGeneratorHelper {
       case TypeCategory.enumType:
         buffer.writeln('${indent}keyed.encodeString($keyExpr, $access.name);');
       case TypeCategory.custom:
-        final decoder = field.customDecoderCode;
-        buffer.writeln(
-          '${indent}keyed.encodeValue($keyExpr, $access, $decoder);',
-        );
+        final customEncoder = field.customEncoderCode;
+        if (customEncoder != null) {
+          buffer.writeln(
+            '${indent}keyed.encodeValue($keyExpr, $access, $customEncoder);',
+          );
+        } else {
+          _writeFieldEncode(
+            buffer,
+            field,
+            keyExpr,
+            access,
+            indent: indent,
+            categoryOverride: field.nativeCategory,
+          );
+        }
       case TypeCategory.tuple:
         buffer.writeln('${indent}keyed.encodeDoubleList($keyExpr, $access);');
       case TypeCategory.list:
@@ -141,11 +154,6 @@ final class EncoderGeneratorHelper {
       buffer.writeln('${indent}keyed.encodeIntList($keyExpr, $access);');
     } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
       buffer.writeln('${indent}keyed.encodeDoubleList($keyExpr, $access);');
-    } else if (elemType != null && elemType.isDartCoreNum && !isNullable) {
-      buffer.writeln(
-        '${indent}keyed.encodeDoubleList($keyExpr, '
-        '$access.map((e) => e.toDouble()).toList());',
-      );
     } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
       buffer.writeln('${indent}keyed.encodeStringList($keyExpr, $access);');
     } else if (elemType != null && elemType.isDartCoreBool && !isNullable) {
@@ -182,12 +190,9 @@ final class EncoderGeneratorHelper {
       buffer.writeln(
         '${indent}keyed.encodeIntList($keyExpr, $access.toList());',
       );
-    } else if (elemType != null &&
-        (elemType.isDartCoreDouble || elemType.isDartCoreNum) &&
-        !isNullable) {
+    } else if (elemType != null && elemType.isDartCoreDouble && !isNullable) {
       buffer.writeln(
-        '${indent}keyed.encodeDoubleList($keyExpr, '
-        '$access.map((e) => e.toDouble()).toList());',
+        '${indent}keyed.encodeDoubleList($keyExpr, $access.toList());',
       );
     } else if (elemType != null && elemType.isDartCoreString && !isNullable) {
       buffer.writeln(
@@ -244,61 +249,90 @@ final class EncoderGeneratorHelper {
       );
       return;
     }
-    final isNullable = type.isNullableType;
-    if (type.isDartCoreString) {
-      if (isNullable) {
-        buffer.writeln(
-          '${indent}k.encodeNullableString($keyAccess, $itemAccess);',
-        );
-      } else {
-        buffer.writeln('${indent}k.encodeString($keyAccess, $itemAccess);');
-      }
-    } else if (type.isDartCoreInt) {
-      if (isNullable) {
-        buffer.writeln(
-          '${indent}k.encodeNullableInt($keyAccess, $itemAccess);',
-        );
-      } else {
-        buffer.writeln('${indent}k.encodeInt($keyAccess, $itemAccess);');
-      }
-    } else if (type.isDartCoreDouble || type.isDartCoreNum) {
-      if (isNullable) {
-        buffer.writeln(
-          '${indent}k.encodeNullableDouble('
-          '$keyAccess, $itemAccess?.toDouble());',
-        );
-      } else {
-        buffer.writeln(
-          '${indent}k.encodeDouble($keyAccess, $itemAccess.toDouble());',
-        );
-      }
-    } else if (type.isDartCoreBool) {
-      if (isNullable) {
-        buffer.writeln(
-          '${indent}k.encodeNullableBool($keyAccess, $itemAccess);',
-        );
-      } else {
-        buffer.writeln('${indent}k.encodeBool($keyAccess, $itemAccess);');
-      }
-    } else if (type.element != null &&
+    if (_tryWritePrimitiveMapValueEncode(
+      buffer,
+      type,
+      keyAccess,
+      itemAccess,
+      indent: indent,
+    )) {
+      return;
+    }
+    if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       final nestedName = type.element!.name;
-      if (isNullable) {
-        buffer.writeln(
-          '${indent}k.encodeNullableValue('
-          '$keyAccess, $itemAccess, const ${nestedName}Codable());',
-        );
-      } else {
-        buffer.writeln(
-          '${indent}k.encodeValue('
-          '$keyAccess, $itemAccess, const ${nestedName}Codable());',
-        );
-      }
-    } else {
+      final method = type.isNullableType
+          ? 'encodeNullableValue'
+          : 'encodeValue';
       buffer.writeln(
-        '${indent}k.encodeString($keyAccess, $itemAccess.toString());',
+        '${indent}k.$method('
+        '$keyAccess, $itemAccess, const ${nestedName}Codable());',
       );
+      return;
     }
+    buffer.writeln(
+      '${indent}k.encodeString($keyAccess, $itemAccess.toString());',
+    );
+  }
+
+  bool _tryWritePrimitiveMapValueEncode(
+    StringBuffer buffer,
+    DartType type,
+    String keyAccess,
+    String itemAccess, {
+    required String indent,
+  }) {
+    final isNullable = type.isNullableType;
+    if (type.isDartCoreString) {
+      final method = isNullable ? 'encodeNullableString' : 'encodeString';
+      buffer.writeln('${indent}k.$method($keyAccess, $itemAccess);');
+      return true;
+    }
+    if (type.isDartCoreInt) {
+      final method = isNullable ? 'encodeNullableInt' : 'encodeInt';
+      buffer.writeln('${indent}k.$method($keyAccess, $itemAccess);');
+      return true;
+    }
+    if (type.isDartCoreDouble) {
+      final method = isNullable ? 'encodeNullableDouble' : 'encodeDouble';
+      buffer.writeln('${indent}k.$method($keyAccess, $itemAccess);');
+      return true;
+    }
+    if (type.isDartCoreNum) {
+      _writeNumMapValueEncode(
+        buffer,
+        keyAccess,
+        itemAccess,
+        isNullable: isNullable,
+        indent: indent,
+      );
+      return true;
+    }
+    if (type.isDartCoreBool) {
+      final method = isNullable ? 'encodeNullableBool' : 'encodeBool';
+      buffer.writeln('${indent}k.$method($keyAccess, $itemAccess);');
+      return true;
+    }
+    return false;
+  }
+
+  void _writeNumMapValueEncode(
+    StringBuffer buffer,
+    String keyAccess,
+    String itemAccess, {
+    required bool isNullable,
+    required String indent,
+  }) {
+    buffer.writeln('${indent}switch ($itemAccess) {');
+    if (isNullable) {
+      buffer.writeln('$indent  case null:');
+      buffer.writeln('$indent    break;');
+    }
+    buffer.writeln('$indent  case final int v:');
+    buffer.writeln('$indent    k.encodeInt($keyAccess, v);');
+    buffer.writeln('$indent  case final v:');
+    buffer.writeln('$indent    k.encodeDouble($keyAccess, v.toDouble());');
+    buffer.writeln('$indent}');
   }
 
   void _writeElementEncode(
@@ -336,12 +370,11 @@ final class EncoderGeneratorHelper {
     } else if (type.isDartCoreDouble) {
       buffer.writeln('${indent}e.singleValue().encodeDouble($itemAccess);');
     } else if (type.isDartCoreNum) {
-      buffer.writeln('${indent}if ($itemAccess is int) {');
-      buffer.writeln('$indent  e.singleValue().encodeInt($itemAccess as int);');
-      buffer.writeln('$indent} else {');
-      buffer.writeln(
-        '$indent  e.singleValue().encodeDouble($itemAccess.toDouble());',
-      );
+      buffer.writeln('${indent}switch ($itemAccess) {');
+      buffer.writeln('$indent  case final int v:');
+      buffer.writeln('$indent    e.singleValue().encodeInt(v);');
+      buffer.writeln('$indent  case final v:');
+      buffer.writeln('$indent    e.singleValue().encodeDouble(v.toDouble());');
       buffer.writeln('$indent}');
     } else if (type.isDartCoreString) {
       buffer.writeln('${indent}e.singleValue().encodeString($itemAccess);');

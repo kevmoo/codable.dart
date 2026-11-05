@@ -323,21 +323,19 @@ final class FlexibleDateTimeCodec implements Codable<DateTime> {
 
   @override
   DateTime decode(Decoder decoder) {
-    // Fast path when streaming JSON tokens: inspect the next token type directly.
-    if (decoder is JsonCodableDecoder) {
-      final token = decoder.reader.peek();
-      if (token == JsonTokenType.number) {
-        return DateTime.fromMillisecondsSinceEpoch(decoder.reader.readInt());
-      }
-      return DateTime.parse(decoder.reader.readString());
-    }
-
-    // Fallback for generic SingleValueDecoder drivers:
-    final raw = decoder.singleValue().readString();
-    final epochMs = int.tryParse(raw);
-    return epochMs != null
-        ? DateTime.fromMillisecondsSinceEpoch(epochMs)
-        : DateTime.parse(raw);
+    final sv = decoder.singleValue();
+    return switch (sv.peekKind()) {
+      ValueKind.number => DateTime.fromMillisecondsSinceEpoch(sv.readInt()),
+      ValueKind.string => switch (sv.readString()) {
+        final raw => switch (int.tryParse(raw)) {
+          final epochMs? => DateTime.fromMillisecondsSinceEpoch(epochMs),
+          null => DateTime.parse(raw),
+        },
+      },
+      final kind => throw CodableException(
+        'Expected number or string for DateTime, found $kind',
+      ),
+    };
   }
 
   @override
@@ -347,12 +345,13 @@ final class FlexibleDateTimeCodec implements Codable<DateTime> {
 }
 ```
 
-Attach the custom codec to any field with `@CodableKey(customDecoder: ...)`:
+Attach the custom codec to any field with `@CodableKey(codable: ...)` (or pass
+`customDecoder:` / `customEncoder:` for asymmetric codecs):
 
 ```dart
 @Codable()
 class Event {
-  @CodableKey(customDecoder: FlexibleDateTimeCodec())
+  @CodableKey(codable: FlexibleDateTimeCodec())
   final DateTime timestamp;
 
   const Event({required this.timestamp});

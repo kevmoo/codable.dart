@@ -453,6 +453,77 @@ void main() {
         check(decoded.nestedFloats[0][0]).equals(100.0);
         check(decoded.nestedFloats[1][1]).equals(400.0);
       });
+
+      test('NumericMeasurement preserves int vs double across fields and collections', () {
+        final model = NumericMeasurement(
+          score: 42,
+          optionalScore: 3.5,
+          samples: const [1, 2.5, 3],
+          nullableSamples: const [10, null, -4.25],
+          distinctValues: {7, 8.5},
+          metrics: const {'count': 99, 'rate': 0.125},
+          nullableMetrics: const {'ok': 1, 'skip': null, 'latency': 12.75},
+        );
+
+        final bytes = JsonCodableEncoder.toBytes(
+          model,
+          const NumericMeasurementCodable(),
+        );
+        final jsonStr = utf8.decode(bytes);
+        check(jsonStr).contains('"score":42');
+        check(jsonStr).contains('"samples":[1,2.5,3]');
+
+        final decoded = const NumericMeasurementCodable().decode(
+          JsonCodableDecoder.fromBytes(bytes),
+        );
+        check(decoded.score).isA<int>().equals(42);
+        check(decoded.optionalScore).isA<double>().equals(3.5);
+        check(decoded.samples[0]).isA<int>().equals(1);
+        check(decoded.samples[1]).isA<double>().equals(2.5);
+        check(decoded.samples[2]).isA<int>().equals(3);
+        check(decoded.nullableSamples[0]).isA<int>().equals(10);
+        check(decoded.nullableSamples[1]).isNull();
+        check(decoded.nullableSamples[2]).isA<double>().equals(-4.25);
+        check(decoded.distinctValues.first).isA<int>().equals(7);
+        check(decoded.metrics['count']).isA<int>().equals(99);
+        check(decoded.metrics['rate']).isA<double>().equals(0.125);
+        check(decoded.nullableMetrics['ok']).isA<int>().equals(1);
+        check(decoded.nullableMetrics['skip']).isNull();
+        check(decoded.nullableMetrics['latency']).isA<double>().equals(12.75);
+      });
+
+      test('CodableKeyVariantsModel executes codable, decode-only, encode-only, and paired codecs', () {
+        final inputBytes = Uint8List.fromList(
+          utf8.encode(
+            '{"zip": 90210, "decodeOnlyZip": 10001, "upperCode": "abc", "createdAt": "2026-08-17T12:00:00.000Z"}',
+          ),
+        );
+        final decoded = const CodableKeyVariantsModelCodable().decode(
+          JsonCodableDecoder.fromBytes(inputBytes),
+        );
+        check(decoded.zip).equals('90210');
+        check(decoded.decodeOnlyZip).equals('10001');
+        check(decoded.upperCode).equals('abc');
+        check(decoded.createdAt).equals(DateTime.utc(2026, 8, 17, 12));
+
+        final outBytes = JsonCodableEncoder.toBytes(
+          decoded,
+          const CodableKeyVariantsModelCodable(),
+        );
+        final outStr = utf8.decode(outBytes);
+        check(outStr).contains('"upperCode":"ABC"');
+        check(outStr).contains(
+          '"createdAt":${DateTime.utc(2026, 8, 17, 12).millisecondsSinceEpoch}',
+        );
+
+        final roundtripped = const CodableKeyVariantsModelCodable().decode(
+          JsonCodableDecoder.fromBytes(outBytes),
+        );
+        check(roundtripped.zip).equals('90210');
+        check(roundtripped.decodeOnlyZip).equals('10001');
+        check(roundtripped.upperCode).equals('ABC');
+        check(roundtripped.createdAt).equals(DateTime.utc(2026, 8, 17, 12));
+      });
     });
   });
 }

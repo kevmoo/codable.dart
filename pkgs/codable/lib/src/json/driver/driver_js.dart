@@ -185,10 +185,41 @@ Float64List _extractFloat64List(JSAny? val) {
   throw CodableException('Expected Float64List, found $val');
 }
 
+ValueKind _jsToValueKind(JSAny? val) {
+  if (val == null) return ValueKind.nullValue;
+  if (val.isA<JSBoolean>()) return ValueKind.boolean;
+  if (val.isA<JSNumber>()) return ValueKind.number;
+  if (val.isA<JSString>()) return ValueKind.string;
+  if (val.isA<JSArray>()) return ValueKind.list;
+  if (val.isA<JSObject>()) return ValueKind.map;
+  throw CodableException('Unexpected JS value kind: $val');
+}
+
+num _jsNumberToNum(JSNumber n) {
+  final d = n.toDartDouble;
+  if (d.isFinite &&
+      d.truncateToDouble() == d &&
+      d >= -9007199254740991.0 &&
+      d <= 9007199254740991.0) {
+    return d.toInt();
+  }
+  return d;
+}
+
+int? _tryJsInt(JSAny? val) {
+  if (val != null && val.isA<JSNumber>()) {
+    final d = (val as JSNumber).toDartDouble;
+    if (d.isFinite && d.truncateToDouble() == d) {
+      return d.toInt();
+    }
+  }
+  return null;
+}
+
 Object? _jsToDart(JSAny? value) {
   if (value == null) return null;
   if (value.isA<JSString>()) return (value as JSString).toDart;
-  if (value.isA<JSNumber>()) return (value as JSNumber).toDartDouble;
+  if (value.isA<JSNumber>()) return _jsNumberToNum(value as JSNumber);
   if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
   if (value.isA<JSArray>()) {
     final arr = value as JSArray;
@@ -225,6 +256,8 @@ final class JsonCodableDecoder implements Decoder {
   final JsonTokenReader? _reader;
   final Uint8List? _bytes;
   bool _payloadEscaped = false;
+  Map<String, Object?>? _bufferedObject;
+  JsonTokenReader? _cachedFallbackReader;
   @override
   final Map<Object, Object?> userInfo;
 
@@ -281,17 +314,35 @@ final class JsonCodableDecoder implements Decoder {
   JsonTokenReader get reader {
     _payloadEscaped = true;
     if (_reader != null) return _reader;
+    final cached = _cachedFallbackReader;
+    if (cached != null) return cached;
     final target = _activeValue ?? _decoded;
     final bytes = (target == _decoded && _bytes != null)
         ? _bytes
         : Uint8List.fromList(utf8.encode(jsonEncode(_jsToDart(target))));
     _activeValue = null;
-    return JsonTokenReader.fromBytes(bytes);
+    final fallback = JsonTokenReader.fromBytes(bytes);
+    _cachedFallbackReader = fallback;
+    return fallback;
+  }
+
+  @override
+  ValueKind peekKind() {
+    if (_reader != null) {
+      if (_bufferedObject != null) return ValueKind.map;
+      return streaming_driver.tokenTypeToValueKind(_reader.peek());
+    }
+    return _jsToValueKind(_activeValue ?? _decoded);
   }
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
     if (_reader != null) {
+      final buffered = _bufferedObject;
+      if (buffered != null) {
+        _bufferedObject = null;
+        return streaming_driver.createKeyedDecoderFromMap(buffered, userInfo);
+      }
       return _JsonCodableStreamingKeyedDecoder(_reader, this, options: options);
     }
     return _JsonCodableMappedKeyedDecoder(
@@ -304,7 +355,10 @@ final class JsonCodableDecoder implements Decoder {
   @override
   MappedDecoder mapped() {
     if (_reader != null) {
-      return streaming_driver.createMappedDecoderFromReader(_reader, userInfo);
+      final map = _bufferedObject ??= streaming_driver.readObjectFromReader(
+        _reader,
+      );
+      return streaming_driver.createMappedDecoderFromMap(map, userInfo);
     }
     return _JsonCodableMappedDecoder(
       this,
@@ -358,6 +412,11 @@ mixin _JsonPrimitiveDecoderMixin {
   JsonTokenReader get _reader;
   void _ensureStarted();
 
+  ValueKind peekKind() {
+    _ensureStarted();
+    return streaming_driver.tokenTypeToValueKind(_reader.peek());
+  }
+
   bool isNextNull() {
     _ensureStarted();
     return _reader.peek() == JsonTokenType.nullValue;
@@ -394,6 +453,20 @@ mixin _JsonPrimitiveDecoderMixin {
       return null;
     }
     return readDouble();
+  }
+
+  num readNum() {
+    _ensureStarted();
+    return _reader.readNum();
+  }
+
+  num? readNullableNum() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readNum();
   }
 
   String readString() {
@@ -472,6 +545,7 @@ final class _JsonCodableStreamingKeyedDecoder
   bool moveNextKey() {
     if (_ended) return false;
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final has = _reader.moveNext();
     if (!has) {
       _reader.endObject();
@@ -515,6 +589,7 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   void skipValue() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     _reader.skipValue();
   }
 
@@ -536,9 +611,11 @@ final class _JsonCodableStreamingKeyedDecoder
   @override
   List<T> decodeList<T>(Decodable<T> decodable) {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final list = <T>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
+      _rootDecoder._bufferedObject = null;
       list.add(decodable.decode(_rootDecoder));
     }
     _reader.endArray();
@@ -636,6 +713,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
   @override
   bool moveNext() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final has = _reader.moveNext();
     if (!has) {
       _reader.endArray();
@@ -646,6 +724,7 @@ final class _JsonCodableStreamingUnkeyedDecoder
   @override
   void skipElement() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     _reader.skipValue();
   }
 
@@ -792,6 +871,14 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   bool moveNextKey() => _hasActiveValue || _advanceToNextMatchingProperty();
+
+  @override
+  ValueKind peekKind() {
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys available in KeyedDecoder');
+    }
+    return _jsToValueKind(_activeValue);
+  }
 
   @override
   bool isNextNull() {
@@ -1019,25 +1106,44 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   int readInt() {
-    final val = _consumeValue();
-    if (val != null && val.isA<JSNumber>()) {
-      return (val as JSNumber).toDartDouble.toInt();
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    final asInt = _tryJsInt(val);
+    if (asInt != null) {
+      _consumeValue();
+      return asInt;
     }
     throw CodableException('Expected int, found $val');
   }
 
   @override
   int? readNullableInt() {
-    final val = _consumeValue();
-    if (val == null) return null;
-    if (val.isA<JSNumber>()) return (val as JSNumber).toDartDouble.toInt();
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val == null) {
+      _consumeValue();
+      return null;
+    }
+    final asInt = _tryJsInt(val);
+    if (asInt != null) {
+      _consumeValue();
+      return asInt;
+    }
     throw CodableException('Expected int?, found $val');
   }
 
   @override
   double readDouble() {
-    final val = _consumeValue();
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
     if (val != null && val.isA<JSNumber>()) {
+      _consumeValue();
       return (val as JSNumber).toDartDouble;
     }
     throw CodableException('Expected double, found $val');
@@ -1045,39 +1151,108 @@ final class _JsonCodableMappedKeyedDecoder implements KeyedDecoder {
 
   @override
   double? readNullableDouble() {
-    final val = _consumeValue();
-    if (val == null) return null;
-    if (val.isA<JSNumber>()) return (val as JSNumber).toDartDouble;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val == null) {
+      _consumeValue();
+      return null;
+    }
+    if (val.isA<JSNumber>()) {
+      _consumeValue();
+      return (val as JSNumber).toDartDouble;
+    }
     throw CodableException('Expected double?, found $val');
   }
 
   @override
+  num readNum() {
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val != null && val.isA<JSNumber>()) {
+      _consumeValue();
+      return _jsNumberToNum(val as JSNumber);
+    }
+    throw CodableException('Expected num, found $val');
+  }
+
+  @override
+  num? readNullableNum() {
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val == null) {
+      _consumeValue();
+      return null;
+    }
+    if (val.isA<JSNumber>()) {
+      _consumeValue();
+      return _jsNumberToNum(val as JSNumber);
+    }
+    throw CodableException('Expected num?, found $val');
+  }
+
+  @override
   String readString() {
-    final val = _consumeValue();
-    if (val != null && val.isA<JSString>()) return (val as JSString).toDart;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val != null && val.isA<JSString>()) {
+      _consumeValue();
+      return (val as JSString).toDart;
+    }
     throw CodableException('Expected String, found $val');
   }
 
   @override
   String? readNullableString() {
-    final val = _consumeValue();
-    if (val == null) return null;
-    if (val.isA<JSString>()) return (val as JSString).toDart;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val == null) {
+      _consumeValue();
+      return null;
+    }
+    if (val.isA<JSString>()) {
+      _consumeValue();
+      return (val as JSString).toDart;
+    }
     throw CodableException('Expected String?, found $val');
   }
 
   @override
   bool readBool() {
-    final val = _consumeValue();
-    if (val != null && val.isA<JSBoolean>()) return (val as JSBoolean).toDart;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val != null && val.isA<JSBoolean>()) {
+      _consumeValue();
+      return (val as JSBoolean).toDart;
+    }
     throw CodableException('Expected bool, found $val');
   }
 
   @override
   bool? readNullableBool() {
-    final val = _consumeValue();
-    if (val == null) return null;
-    if (val.isA<JSBoolean>()) return (val as JSBoolean).toDart;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final val = _activeValue;
+    if (val == null) {
+      _consumeValue();
+      return null;
+    }
+    if (val.isA<JSBoolean>()) {
+      _consumeValue();
+      return (val as JSBoolean).toDart;
+    }
     throw CodableException('Expected bool?, found $val');
   }
 }
@@ -1095,11 +1270,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   bool isNull(String key) => _map.getProperty<JSAny?>(key.toJS) == null;
 
   @override
+  ValueKind peekKind(String key) =>
+      _jsToValueKind(_map.getProperty<JSAny?>(key.toJS));
+
+  @override
   int readInt(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
-    if (v != null && v.isA<JSNumber>()) {
-      return (v as JSNumber).toDartDouble.toInt();
-    }
+    final asInt = _tryJsInt(v);
+    if (asInt != null) return asInt;
     throw CodableException('Expected int for $key, found $v');
   }
 
@@ -1107,9 +1285,8 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   int? readNullableInt(String key) {
     final v = _map.getProperty<JSAny?>(key.toJS);
     if (v == null) return null;
-    if (v.isA<JSNumber>()) {
-      return (v as JSNumber).toDartDouble.toInt();
-    }
+    final asInt = _tryJsInt(v);
+    if (asInt != null) return asInt;
     throw CodableException('Expected int for $key, found $v');
   }
 
@@ -1128,6 +1305,21 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
       return (v as JSNumber).toDartDouble;
     }
     throw CodableException('Expected double for $key, found $v');
+  }
+
+  @override
+  num readNum(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v != null && v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
+    throw CodableException('Expected num for $key, found $v');
+  }
+
+  @override
+  num? readNullableNum(String key) {
+    final v = _map.getProperty<JSAny?>(key.toJS);
+    if (v == null) return null;
+    if (v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
+    throw CodableException('Expected num for $key, found $v');
   }
 
   @override
@@ -1308,6 +1500,14 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
   bool moveNext() => _currentIndex < _list.length;
 
   @override
+  ValueKind peekKind() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
+    return _jsToValueKind(_list.getProperty<JSAny?>(_currentIndex.toJS));
+  }
+
+  @override
   bool isNextNull() {
     if (!moveNext()) return false;
     return _list.getProperty<JSAny?>(_currentIndex.toJS) == null;
@@ -1315,6 +1515,13 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   void readNull() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    if (v != null) {
+      throw CodableException('Expected null, found $v');
+    }
     _currentIndex++;
   }
 
@@ -1446,71 +1653,153 @@ final class _JsonCodableUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool readBool() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
+    if (v != null && v.isA<JSBoolean>()) {
+      _currentIndex++;
+      return (v as JSBoolean).toDart;
+    }
     throw CodableException('Expected bool, found $v');
   }
 
   @override
   bool? readNullableBool() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v == null) return null;
-    if (v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
+    if (v == null) {
+      _currentIndex++;
+      return null;
+    }
+    if (v.isA<JSBoolean>()) {
+      _currentIndex++;
+      return (v as JSBoolean).toDart;
+    }
     throw CodableException('Expected bool?, found $v');
   }
 
   @override
   double readDouble() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
+    if (v != null && v.isA<JSNumber>()) {
+      _currentIndex++;
+      return (v as JSNumber).toDartDouble;
+    }
     throw CodableException('Expected double, found $v');
   }
 
   @override
   double? readNullableDouble() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v == null) return null;
-    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
+    if (v == null) {
+      _currentIndex++;
+      return null;
+    }
+    if (v.isA<JSNumber>()) {
+      _currentIndex++;
+      return (v as JSNumber).toDartDouble;
+    }
     throw CodableException('Expected double?, found $v');
   }
 
   @override
-  int readInt() {
+  num readNum() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
     if (v != null && v.isA<JSNumber>()) {
-      return (v as JSNumber).toDartDouble.toInt();
+      _currentIndex++;
+      return _jsNumberToNum(v as JSNumber);
+    }
+    throw CodableException('Expected num, found $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    if (v == null) {
+      _currentIndex++;
+      return null;
+    }
+    if (v.isA<JSNumber>()) {
+      _currentIndex++;
+      return _jsNumberToNum(v as JSNumber);
+    }
+    throw CodableException('Expected num?, found $v');
+  }
+
+  @override
+  int readInt() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
+    final asInt = _tryJsInt(v);
+    if (asInt != null) {
+      _currentIndex++;
+      return asInt;
     }
     throw CodableException('Expected int, found $v');
   }
 
   @override
   int? readNullableInt() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v == null) return null;
-    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble.toInt();
+    if (v == null) {
+      _currentIndex++;
+      return null;
+    }
+    final asInt = _tryJsInt(v);
+    if (asInt != null) {
+      _currentIndex++;
+      return asInt;
+    }
     throw CodableException('Expected int?, found $v');
   }
 
   @override
   String readString() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
+    if (v != null && v.isA<JSString>()) {
+      _currentIndex++;
+      return (v as JSString).toDart;
+    }
     throw CodableException('Expected String, found $v');
   }
 
   @override
   String? readNullableString() {
+    if (!moveNext()) {
+      throw const CodableException('No more elements in array');
+    }
     final v = _list.getProperty<JSAny?>(_currentIndex.toJS);
-    _currentIndex++;
-    if (v == null) return null;
-    if (v.isA<JSString>()) return (v as JSString).toDart;
+    if (v == null) {
+      _currentIndex++;
+      return null;
+    }
+    if (v.isA<JSString>()) {
+      _currentIndex++;
+      return (v as JSString).toDart;
+    }
     throw CodableException('Expected String?, found $v');
   }
 }
@@ -1522,7 +1811,14 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   _JsonCodableSingleValueDecoder(this._rootDecoder, this._val);
 
   @override
-  void readNull() {}
+  ValueKind peekKind() => _jsToValueKind(_val);
+
+  @override
+  void readNull() {
+    if (_val != null) {
+      throw CodableException('Expected null, found $_val');
+    }
+  }
 
   @override
   (int start, int end) readStringSpan() =>
@@ -1563,11 +1859,25 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   }
 
   @override
+  num readNum() {
+    final v = _val;
+    if (v != null && v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
+    throw CodableException('Expected num, found $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    final v = _val;
+    if (v == null) return null;
+    if (v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
+    throw CodableException('Expected num?, found $v');
+  }
+
+  @override
   int readInt() {
     final v = _val;
-    if (v != null && v.isA<JSNumber>()) {
-      return (v as JSNumber).toDartDouble.toInt();
-    }
+    final asInt = _tryJsInt(v);
+    if (asInt != null) return asInt;
     throw CodableException('Expected int, found $v');
   }
 
@@ -1575,7 +1885,8 @@ final class _JsonCodableSingleValueDecoder implements SingleValueDecoder {
   int? readNullableInt() {
     final v = _val;
     if (v == null) return null;
-    if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble.toInt();
+    final asInt = _tryJsInt(v);
+    if (asInt != null) return asInt;
     throw CodableException('Expected int?, found $v');
   }
 

@@ -72,21 +72,76 @@ final class ZipCodeDecoder implements Codable<String> {
   @override
   String decode(Decoder decoder) {
     final sv = decoder.singleValue();
-    if (sv.isNull()) {
-      sv.readNull();
-      return '';
-    }
-    try {
-      return sv.readString();
-    } catch (_) {
-      return sv.readInt().toString();
-    }
+    return switch (sv.peekKind()) {
+      ValueKind.nullValue => () {
+        sv.readNull();
+        return '';
+      }(),
+      ValueKind.string => sv.readString(),
+      ValueKind.number => sv.readInt().toString(),
+      final kind => throw CodableException(
+        'Expected string or int for zip code, found $kind',
+      ),
+    };
   }
 
   @override
   void encode(String value, Encoder encoder) {
     encoder.singleValue().encodeString(value);
   }
+}
+
+final class ZipDecodeOnly implements Decodable<String> {
+  const ZipDecodeOnly();
+
+  @override
+  String decode(Decoder decoder) {
+    final sv = decoder.singleValue();
+    return switch (sv.peekKind()) {
+      ValueKind.string => sv.readString(),
+      ValueKind.number => sv.readInt().toString(),
+      final kind => throw CodableException('Expected string or int, got $kind'),
+    };
+  }
+}
+
+final class UpperCaseStringEncoder implements Encodable<String> {
+  const UpperCaseStringEncoder();
+
+  @override
+  void encode(String value, Encoder encoder) {
+    encoder.singleValue().encodeString(value.toUpperCase());
+  }
+}
+
+final class EpochMsDateTimeDecoder implements Decodable<DateTime> {
+  const EpochMsDateTimeDecoder();
+
+  @override
+  DateTime decode(Decoder decoder) {
+    final sv = decoder.singleValue();
+    return switch (sv.peekKind()) {
+      ValueKind.number => DateTime.fromMillisecondsSinceEpoch(
+        sv.readInt(),
+        isUtc: true,
+      ),
+      ValueKind.string => DateTime.parse(sv.readString()).toUtc(),
+      final kind => throw CodableException('Expected timestamp, got $kind'),
+    };
+  }
+}
+
+final class EpochMsDateTimeEncoder implements Encodable<DateTime> {
+  const EpochMsDateTimeEncoder();
+
+  @override
+  void encode(DateTime value, Encoder encoder) {
+    encoder.singleValue().encodeInt(value.toUtc().millisecondsSinceEpoch);
+  }
+}
+
+final class NotACodec {
+  const NotACodec();
 }
 
 @Codable()
@@ -96,6 +151,81 @@ final class UserProfileCustom {
   final String zip;
 
   const UserProfileCustom({required this.id, required this.zip});
+}
+
+@Codable()
+final class CodableKeyVariantsModel {
+  @CodableKey(codable: ZipCodeDecoder())
+  final String zip;
+  @CodableKey(customDecoder: ZipDecodeOnly())
+  final String decodeOnlyZip;
+  @CodableKey(customEncoder: UpperCaseStringEncoder())
+  final String upperCode;
+  @CodableKey(
+    customDecoder: EpochMsDateTimeDecoder(),
+    customEncoder: EpochMsDateTimeEncoder(),
+  )
+  final DateTime createdAt;
+
+  const CodableKeyVariantsModel({
+    required this.zip,
+    required this.decodeOnlyZip,
+    required this.upperCode,
+    required this.createdAt,
+  });
+}
+
+@Codable()
+final class NumericMeasurement {
+  final num score;
+  final num? optionalScore;
+  final List<num> samples;
+  final List<num?> nullableSamples;
+  final Set<num> distinctValues;
+  final Map<String, num> metrics;
+  final Map<String, num?> nullableMetrics;
+
+  const NumericMeasurement({
+    required this.score,
+    this.optionalScore,
+    this.samples = const [],
+    this.nullableSamples = const [],
+    this.distinctValues = const {},
+    this.metrics = const {},
+    this.nullableMetrics = const {},
+  });
+}
+
+@Codable()
+final class InvalidCodableMissingEncoder {
+  @CodableKey(codable: ZipDecodeOnly())
+  final String zip;
+
+  const InvalidCodableMissingEncoder({required this.zip});
+}
+
+@Codable()
+final class InvalidCustomDecoderNotDecodable {
+  @CodableKey(customDecoder: NotACodec())
+  final String zip;
+
+  const InvalidCustomDecoderNotDecodable({required this.zip});
+}
+
+@Codable()
+final class InvalidCustomEncoderNotEncodable {
+  @CodableKey(customEncoder: NotACodec())
+  final String zip;
+
+  const InvalidCustomEncoderNotEncodable({required this.zip});
+}
+
+@Codable()
+final class InvalidDecodeOnlyNonNativeType {
+  @CodableKey(customDecoder: EpochMsDateTimeDecoder())
+  final DateTime createdAt;
+
+  const InvalidDecodeOnlyNonNativeType({required this.createdAt});
 }
 
 @Codable()

@@ -28,104 +28,16 @@ final class ModelVisitor {
 
     final constructor = _selectConstructor(element);
 
-    final rawFields = <_RawFieldData>[];
-
-    for (final param in constructor.formalParameters) {
-      final paramName = param.name ?? '';
-
-      // Check annotations on parameter first, then on property (field/getter)
-      final paramKeyAnnotation = codableKeyTypeChecker.firstAnnotationOf(param);
-      final fieldKeyAnnotation = firstAnnotationOnProperty(
-        element,
-        paramName,
-        codableKeyTypeChecker,
-      );
-      final keyAnnotation = paramKeyAnnotation ?? fieldKeyAnnotation;
-      final keyReader = keyAnnotation != null
-          ? ConstantReader(keyAnnotation)
-          : null;
-
-      final paramTupleAnnotation = codableTupleTypeChecker.firstAnnotationOf(
-        param,
-      );
-      final fieldTupleAnnotation = firstAnnotationOnProperty(
-        element,
-        paramName,
-        codableTupleTypeChecker,
-      );
-      final tupleAnnotation = paramTupleAnnotation ?? fieldTupleAnnotation;
-      final tupleReader = tupleAnnotation != null
-          ? ConstantReader(tupleAnnotation)
-          : null;
-
-      final customName = keyReader?.peek('name')?.stringValue;
-      final aliases =
-          keyReader
-              ?.peek('aliases')
-              ?.listValue
-              .map((o) => o.toStringValue())
-              .whereType<String>()
-              .toList() ??
-          const <String>[];
-      final ignore = keyReader?.peek('ignore')?.boolValue ?? false;
-      final customDecoderCode = _extractCustomDecoder(keyReader);
-      final customDefaultValue = keyReader
-          ?.peek('defaultValue')
-          ?.literalValue
-          ?.toString();
-      final tupleLength = tupleReader?.peek('length')?.intValue;
-
-      final defaultValueCode = param.hasDefaultValue
-          ? param.defaultValueCode
-          : customDefaultValue;
-      final hasDefaultValue =
-          param.hasDefaultValue || customDefaultValue != null;
-      final isRequired = param.isRequired;
-
-      // P1.4 Ignored Required Field Validation
-      if (ignore && isRequired && !hasDefaultValue) {
-        throw InvalidGenerationSourceError(
-          'The parameter "${param.name}" is required but marked with '
-          '@CodableKey(ignore: true). Ignored parameters must have a default '
-          'value or be optional.',
-          element: param,
-        );
-      }
-
-      final wireName =
-          customName ?? applyFieldRename(param.name ?? '', fieldRename);
-      final isNullable = param.type.isNullableType;
-
-      final classified = _typeClassifier.classify(
-        param.type,
-        tupleLength: tupleLength,
-        customDecoderCode: customDecoderCode,
-      );
-
-      rawFields.add(
-        _RawFieldData(
-          param: param,
-          name: param.name ?? '',
-          wireName: wireName,
-          aliases: aliases,
-          type: param.type,
-          category: classified.category,
-          isPositional: param.isPositional,
-          isNamed: param.isNamed,
-          isRequired: isRequired,
-          isNullable: isNullable,
-          hasDefaultValue: hasDefaultValue,
-          defaultValueCode: defaultValueCode,
-          ignore: ignore,
-          customDecoderCode: customDecoderCode,
-          tupleLength: tupleLength,
-          elementType: classified.elementType,
-          mapKeyType: classified.mapKeyType,
-          mapValueType: classified.mapValueType,
-          enumConstants: classified.enumConstants,
+    final rawFields = [
+      for (final param in constructor.formalParameters)
+        _visitParameter(
+          element,
+          param,
+          createEncoder: createEncoder,
+          createDecoder: createDecoder,
+          fieldRename: fieldRename,
         ),
-      );
-    }
+    ];
 
     // Required fields participating in golden mask (P0.1)
     final requiredFields = rawFields
@@ -142,80 +54,16 @@ final class ModelVisitor {
     }
 
     // Assign reqBitIndex strictly to required fields without defaults
-    final reqBitMap = <String, int>{};
-    for (var i = 0; i < requiredFields.length; i++) {
-      reqBitMap[requiredFields[i].name] = i;
-    }
+    final reqBitMap = <String, int>{
+      for (var i = 0; i < requiredFields.length; i++) requiredFields[i].name: i,
+    };
 
-    // Build options keys list and assign indices
     final allOptionsKeys = <String>[];
-    final processedFields = <FieldDescriptor>[];
-
-    for (final raw in rawFields) {
-      if (raw.ignore) {
-        processedFields.add(
-          FieldDescriptor(
-            name: raw.name,
-            wireName: raw.wireName,
-            aliases: raw.aliases,
-            type: raw.type,
-            category: raw.category,
-            isPositional: raw.isPositional,
-            isNamed: raw.isNamed,
-            isRequired: raw.isRequired,
-            isNullable: raw.isNullable,
-            hasDefaultValue: raw.hasDefaultValue,
-            defaultValueCode: raw.defaultValueCode,
-            ignore: true,
-            customDecoderCode: raw.customDecoderCode,
-            tupleLength: raw.tupleLength,
-            elementType: raw.elementType,
-            mapKeyType: raw.mapKeyType,
-            mapValueType: raw.mapValueType,
-            enumConstants: raw.enumConstants,
-            reqBitIndex: null,
-            keyIndex: -1,
-            aliasIndices: const [],
-          ),
-        );
-        continue;
-      }
-
-      final keyIndex = allOptionsKeys.length;
-      allOptionsKeys.add(raw.wireName);
-
-      final aliasIndices = <int>[];
-      for (final alias in raw.aliases) {
-        aliasIndices.add(allOptionsKeys.length);
-        allOptionsKeys.add(alias);
-      }
-
-      processedFields.add(
-        FieldDescriptor(
-          name: raw.name,
-          wireName: raw.wireName,
-          aliases: raw.aliases,
-          type: raw.type,
-          category: raw.category,
-          isPositional: raw.isPositional,
-          isNamed: raw.isNamed,
-          isRequired: raw.isRequired,
-          isNullable: raw.isNullable,
-          hasDefaultValue: raw.hasDefaultValue,
-          defaultValueCode: raw.defaultValueCode,
-          ignore: false,
-          customDecoderCode: raw.customDecoderCode,
-          tupleLength: raw.tupleLength,
-          elementType: raw.elementType,
-          mapKeyType: raw.mapKeyType,
-          mapValueType: raw.mapValueType,
-          enumConstants: raw.enumConstants,
-          reqBitIndex: reqBitMap[raw.name],
-          keyIndex: keyIndex,
-          aliasIndices: aliasIndices,
-        ),
-      );
-    }
+    final processedFields = _buildFieldDescriptors(
+      rawFields,
+      reqBitMap,
+      allOptionsKeys,
+    );
 
     final processedRequiredFields = processedFields
         .where((f) => f.participatesInGoldenMask)
@@ -232,6 +80,240 @@ final class ModelVisitor {
       requiredFields: processedRequiredFields,
       allOptionsKeys: allOptionsKeys,
     );
+  }
+
+  _RawFieldData _visitParameter(
+    ClassElement element,
+    FormalParameterElement param, {
+    required bool createEncoder,
+    required bool createDecoder,
+    required FieldRename fieldRename,
+  }) {
+    final paramName = param.name ?? '';
+    final keyReader = _readParameterAnnotation(
+      element,
+      param,
+      paramName,
+      codableKeyTypeChecker,
+    );
+    final tupleReader = _readParameterAnnotation(
+      element,
+      param,
+      paramName,
+      codableTupleTypeChecker,
+    );
+
+    final customName = keyReader?.peek('name')?.stringValue;
+    final aliases = _extractAliases(keyReader);
+    final ignore = keyReader?.peek('ignore')?.boolValue ?? false;
+    final codableSpec = _extractCodecSpec(keyReader, 'codable');
+    final customDecoderSpec = _extractCodecSpec(keyReader, 'customDecoder');
+    final customEncoderSpec = _extractCodecSpec(keyReader, 'customEncoder');
+    final customDefaultValue = keyReader
+        ?.peek('defaultValue')
+        ?.literalValue
+        ?.toString();
+    final tupleLength = tupleReader?.peek('length')?.intValue;
+
+    if (!ignore) {
+      _validateCodecSpecs(
+        param: param,
+        createDecoder: createDecoder,
+        createEncoder: createEncoder,
+        codableSpec: codableSpec,
+        customDecoderSpec: customDecoderSpec,
+        customEncoderSpec: customEncoderSpec,
+      );
+    }
+
+    final customDecoderCode = customDecoderSpec?.code ?? codableSpec?.code;
+    final customEncoderCode = _resolveCustomEncoderCode(
+      codableSpec: codableSpec,
+      customDecoderSpec: customDecoderSpec,
+      customEncoderSpec: customEncoderSpec,
+    );
+
+    final defaultValueCode = param.hasDefaultValue
+        ? param.defaultValueCode
+        : customDefaultValue;
+    final hasDefaultValue = param.hasDefaultValue || customDefaultValue != null;
+    final isRequired = param.isRequired;
+
+    // P1.4 Ignored Required Field Validation
+    if (ignore && isRequired && !hasDefaultValue) {
+      throw InvalidGenerationSourceError(
+        'The parameter "${param.name}" is required but marked with '
+        '@CodableKey(ignore: true). Ignored parameters must have a default '
+        'value or be optional.',
+        element: param,
+      );
+    }
+
+    final classified = _typeClassifier.classify(
+      param.type,
+      tupleLength: tupleLength,
+      customDecoderCode: customDecoderCode,
+      customEncoderCode: customEncoderCode,
+    );
+
+    if (!ignore && classified.category == TypeCategory.custom) {
+      _validateCustomNativeFallback(
+        param: param,
+        classified: classified,
+        createEncoder: createEncoder,
+        createDecoder: createDecoder,
+        customEncoderCode: customEncoderCode,
+        customDecoderCode: customDecoderCode,
+      );
+    }
+
+    return _RawFieldData(
+      param: param,
+      name: paramName,
+      wireName: customName ?? applyFieldRename(paramName, fieldRename),
+      aliases: aliases,
+      type: param.type,
+      category: classified.category,
+      nativeCategory: classified.nativeCategory,
+      isPositional: param.isPositional,
+      isNamed: param.isNamed,
+      isRequired: isRequired,
+      isNullable: param.type.isNullableType,
+      hasDefaultValue: hasDefaultValue,
+      defaultValueCode: defaultValueCode,
+      ignore: ignore,
+      customDecoderCode: customDecoderCode,
+      customEncoderCode: customEncoderCode,
+      tupleLength: tupleLength,
+      elementType: classified.elementType,
+      mapKeyType: classified.mapKeyType,
+      mapValueType: classified.mapValueType,
+      enumConstants: classified.enumConstants,
+    );
+  }
+
+  ConstantReader? _readParameterAnnotation(
+    ClassElement element,
+    FormalParameterElement param,
+    String paramName,
+    TypeChecker checker,
+  ) {
+    final annotation =
+        checker.firstAnnotationOf(param) ??
+        firstAnnotationOnProperty(element, paramName, checker);
+    return annotation != null ? ConstantReader(annotation) : null;
+  }
+
+  List<String> _extractAliases(ConstantReader? keyReader) =>
+      keyReader
+          ?.peek('aliases')
+          ?.listValue
+          .map((o) => o.toStringValue())
+          .whereType<String>()
+          .toList() ??
+      const <String>[];
+
+  String? _resolveCustomEncoderCode({
+    required ({String code, DartType? type})? codableSpec,
+    required ({String code, DartType? type})? customDecoderSpec,
+    required ({String code, DartType? type})? customEncoderSpec,
+  }) {
+    if (customEncoderSpec != null) return customEncoderSpec.code;
+    if (codableSpec != null) return codableSpec.code;
+    final decoderType = customDecoderSpec?.type;
+    if (decoderType != null &&
+        encodableTypeChecker.isAssignableFromType(decoderType)) {
+      return customDecoderSpec!.code;
+    }
+    return null;
+  }
+
+  void _validateCustomNativeFallback({
+    required FormalParameterElement param,
+    required TypeClassification classified,
+    required bool createEncoder,
+    required bool createDecoder,
+    required String? customEncoderCode,
+    required String? customDecoderCode,
+  }) {
+    if (classified.nativeCategory != TypeCategory.unknown) return;
+    if (createEncoder && customEncoderCode == null) {
+      throw InvalidGenerationSourceError(
+        'Parameter "${param.name}" of type '
+        '"${param.type.getDisplayString()}" has a decode-only '
+        '@CodableKey(customDecoder: ...) on a class with '
+        'createEncoder: true, and "${param.type.getDisplayString()}" is '
+        'not natively encodable. Implement Codable/Encodable, pass '
+        'customEncoder:, or set @Codable(createEncoder: false).',
+        element: param,
+      );
+    }
+    if (createDecoder && customDecoderCode == null) {
+      throw InvalidGenerationSourceError(
+        'Parameter "${param.name}" of type '
+        '"${param.type.getDisplayString()}" has an encode-only '
+        '@CodableKey(customEncoder: ...) on a class with '
+        'createDecoder: true, and "${param.type.getDisplayString()}" is '
+        'not natively decodable. Implement Codable/Decodable, pass '
+        'customDecoder:, or set @Codable(createDecoder: false).',
+        element: param,
+      );
+    }
+  }
+
+  List<FieldDescriptor> _buildFieldDescriptors(
+    List<_RawFieldData> rawFields,
+    Map<String, int> reqBitMap,
+    List<String> allOptionsKeys,
+  ) {
+    final processedFields = <FieldDescriptor>[];
+    for (final raw in rawFields) {
+      var keyIndex = -1;
+      var aliasIndices = const <int>[];
+      int? reqBitIndex;
+      if (!raw.ignore) {
+        keyIndex = allOptionsKeys.length;
+        allOptionsKeys.add(raw.wireName);
+        aliasIndices = [
+          for (final alias in raw.aliases) _addOptionKey(allOptionsKeys, alias),
+        ];
+        reqBitIndex = reqBitMap[raw.name];
+      }
+      processedFields.add(
+        FieldDescriptor(
+          name: raw.name,
+          wireName: raw.wireName,
+          aliases: raw.aliases,
+          type: raw.type,
+          category: raw.category,
+          nativeCategory: raw.nativeCategory,
+          isPositional: raw.isPositional,
+          isNamed: raw.isNamed,
+          isRequired: raw.isRequired,
+          isNullable: raw.isNullable,
+          hasDefaultValue: raw.hasDefaultValue,
+          defaultValueCode: raw.defaultValueCode,
+          ignore: raw.ignore,
+          customDecoderCode: raw.customDecoderCode,
+          customEncoderCode: raw.customEncoderCode,
+          tupleLength: raw.tupleLength,
+          elementType: raw.elementType,
+          mapKeyType: raw.mapKeyType,
+          mapValueType: raw.mapValueType,
+          enumConstants: raw.enumConstants,
+          reqBitIndex: reqBitIndex,
+          keyIndex: keyIndex,
+          aliasIndices: aliasIndices,
+        ),
+      );
+    }
+    return processedFields;
+  }
+
+  int _addOptionKey(List<String> allOptionsKeys, String key) {
+    final index = allOptionsKeys.length;
+    allOptionsKeys.add(key);
+    return index;
   }
 
   ConstructorElement _selectConstructor(ClassElement element) {
@@ -259,26 +341,84 @@ final class ModelVisitor {
     return FieldRename.none;
   }
 
-  String? _extractCustomDecoder(ConstantReader? reader) {
-    if (reader == null) return null;
-    final customDecoderReader = reader.peek('customDecoder');
-    if (customDecoderReader == null || customDecoderReader.isNull) return null;
+  void _validateCodecSpecs({
+    required FormalParameterElement param,
+    required bool createDecoder,
+    required bool createEncoder,
+    required ({String code, DartType? type})? codableSpec,
+    required ({String code, DartType? type})? customDecoderSpec,
+    required ({String code, DartType? type})? customEncoderSpec,
+  }) {
+    if (codableSpec != null && codableSpec.type != null) {
+      final type = codableSpec.type!;
+      if (createDecoder && !decodableTypeChecker.isAssignableFromType(type)) {
+        throw InvalidGenerationSourceError(
+          'The @CodableKey(codable: ...) on "${param.name}" '
+          '(${type.getDisplayString()}) must implement Decodable.',
+          element: param,
+        );
+      }
+      if (createEncoder && !encodableTypeChecker.isAssignableFromType(type)) {
+        throw InvalidGenerationSourceError(
+          'The @CodableKey(codable: ...) on "${param.name}" '
+          '(${type.getDisplayString()}) must implement Encodable.',
+          element: param,
+        );
+      }
+    }
+    if (customDecoderSpec != null &&
+        customDecoderSpec.type != null &&
+        createDecoder &&
+        !decodableTypeChecker.isAssignableFromType(customDecoderSpec.type!)) {
+      throw InvalidGenerationSourceError(
+        'The @CodableKey(customDecoder: ...) on "${param.name}" '
+        '(${customDecoderSpec.type!.getDisplayString()}) must implement '
+        'Decodable.',
+        element: param,
+      );
+    }
+    if (customEncoderSpec != null &&
+        customEncoderSpec.type != null &&
+        createEncoder &&
+        !encodableTypeChecker.isAssignableFromType(customEncoderSpec.type!)) {
+      throw InvalidGenerationSourceError(
+        'The @CodableKey(customEncoder: ...) on "${param.name}" '
+        '(${customEncoderSpec.type!.getDisplayString()}) must implement '
+        'Encodable.',
+        element: param,
+      );
+    }
+  }
 
-    if (customDecoderReader.isType) {
-      return 'const ${customDecoderReader.typeValue.getDisplayString()}()';
+  ({String code, DartType? type})? _extractCodecSpec(
+    ConstantReader? reader,
+    String fieldName,
+  ) {
+    if (reader == null) return null;
+    final argReader = reader.peek(fieldName);
+    if (argReader == null || argReader.isNull) return null;
+
+    if (argReader.isType) {
+      final type = argReader.typeValue;
+      return (code: 'const ${type.getDisplayString()}()', type: type);
     }
 
-    final revivable = customDecoderReader.revive();
-    final typeName = customDecoderReader.objectValue.type?.getDisplayString();
+    final objType = argReader.objectValue.type;
+    final revivable = argReader.revive();
+    if (revivable.source.fragment.isEmpty && revivable.accessor.isNotEmpty) {
+      return (code: revivable.accessor, type: objType);
+    }
+
+    final typeName = objType?.getDisplayString();
     if (typeName != null) {
       final accessor = revivable.accessor.isEmpty
           ? ''
           : '.${revivable.accessor}';
-      return 'const $typeName$accessor()';
+      return (code: 'const $typeName$accessor()', type: objType);
     }
 
     if (revivable.accessor.isNotEmpty) {
-      return revivable.accessor;
+      return (code: revivable.accessor, type: objType);
     }
     return null;
   }
@@ -291,6 +431,7 @@ final class _RawFieldData {
   final List<String> aliases;
   final DartType type;
   final TypeCategory category;
+  final TypeCategory nativeCategory;
   final bool isPositional;
   final bool isNamed;
   final bool isRequired;
@@ -299,6 +440,7 @@ final class _RawFieldData {
   final String? defaultValueCode;
   final bool ignore;
   final String? customDecoderCode;
+  final String? customEncoderCode;
   final int? tupleLength;
   final DartType? elementType;
   final DartType? mapKeyType;
@@ -312,6 +454,7 @@ final class _RawFieldData {
     required this.aliases,
     required this.type,
     required this.category,
+    required this.nativeCategory,
     required this.isPositional,
     required this.isNamed,
 
@@ -321,6 +464,7 @@ final class _RawFieldData {
     this.defaultValueCode,
     required this.ignore,
     this.customDecoderCode,
+    this.customEncoderCode,
     this.tupleLength,
     this.elementType,
     this.mapKeyType,

@@ -657,13 +657,24 @@ final class _MockJsonTokenReader implements JsonTokenReader {
 
   @override
   String readString() {
-    _beforeReadingValue();
-    final (start, end) = _scanStringSpan();
-    _afterReadingValue();
-    return _decodeCachedString(start, end);
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _scanStringSpan();
+      final decoded = _decodeCachedString(start, end);
+      _afterReadingValue();
+      return decoded;
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
+    }
   }
 
-  (int, int) _scanValueSpan() {
+  (int, int) _peekValueSpan() {
     _skipWs();
     final start = _offset;
     var i = start;
@@ -674,51 +685,108 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       }
       i++;
     }
-    _offset = i;
     return (start, i);
   }
 
   @override
   int readInt() {
-    _beforeReadingValue();
-    final (start, end) = _scanValueSpan();
-    _afterReadingValue();
-    return parseIntUtf8(_bytes, start, end);
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _peekValueSpan();
+      final result = parseIntUtf8(_bytes, start, end);
+      _offset = end;
+      _afterReadingValue();
+      return result;
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
+    }
   }
 
   @override
   double readDouble() {
-    _beforeReadingValue();
-    final (start, end) = _scanValueSpan();
-    _afterReadingValue();
-    return parseDoubleUtf8(_bytes, start, end);
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _peekValueSpan();
+      final result = parseDoubleUtf8(_bytes, start, end);
+      _offset = end;
+      _afterReadingValue();
+      return result;
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
+    }
   }
 
   @override
   num readNum() {
-    _beforeReadingValue();
-    final (start, end) = _scanValueSpan();
-    _afterReadingValue();
-    final asInt = tryParseIntUtf8(_bytes, start, end);
-    if (asInt != null) return asInt;
-    return parseDoubleUtf8(_bytes, start, end);
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _peekValueSpan();
+      final asInt = tryParseIntUtf8(_bytes, start, end);
+      final result = asInt ?? parseDoubleUtf8(_bytes, start, end);
+      _offset = end;
+      _afterReadingValue();
+      return result;
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
+    }
   }
 
   @override
   bool readBool() {
-    _beforeReadingValue();
-    final (start, end) = _scanValueSpan();
-    _afterReadingValue();
-    return parseBoolUtf8(_bytes, start, end);
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _peekValueSpan();
+      final result = parseBoolUtf8(_bytes, start, end);
+      _offset = end;
+      _afterReadingValue();
+      return result;
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
+    }
   }
 
   @override
   void readNull() {
-    _beforeReadingValue();
-    final (start, end) = _scanValueSpan();
-    _afterReadingValue();
-    if (!isNullUtf8(_bytes, start, end)) {
-      throw FormatException('Expected null at offset $start');
+    final initialOffset = _offset;
+    final initialTopState = _topState;
+    final hadReadRoot = _hasReadRoot;
+    try {
+      _beforeReadingValue();
+      final (start, end) = _peekValueSpan();
+      if (!isNullUtf8(_bytes, start, end)) {
+        throw FormatException('Expected null at offset $start');
+      }
+      _offset = end;
+      _afterReadingValue();
+    } catch (_) {
+      _offset = initialOffset;
+      _topState = initialTopState;
+      _hasReadRoot = hadReadRoot;
+      rethrow;
     }
   }
 
@@ -762,7 +830,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
       _afterReadingValue();
     } else {
       _beforeReadingValue();
-      final (start, end) = _scanValueSpan();
+      final (start, end) = _peekValueSpan();
       if (start == end) {
         throw FormatException(
           'Unexpected token at offset $start',
@@ -780,6 +848,7 @@ final class _MockJsonTokenReader implements JsonTokenReader {
           start,
         );
       }
+      _offset = end;
       _afterReadingValue();
     }
   }
@@ -791,6 +860,8 @@ final class _MockJsonTokenReader implements JsonTokenReader {
     if (p == JsonTokenType.string) {
       return _scanStringSpan();
     }
-    return _scanValueSpan();
+    final (start, end) = _peekValueSpan();
+    _offset = end;
+    return (start, end);
   }
 }

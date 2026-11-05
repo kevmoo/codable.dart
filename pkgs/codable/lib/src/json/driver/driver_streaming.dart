@@ -15,12 +15,37 @@ import '../substrate/substrate.dart';
 import 'adaptive_writer.dart';
 import 'scratch_byte_accumulator.dart';
 
+/// Maps a [JsonTokenType] from a pull reader to a format-agnostic [ValueKind].
+ValueKind tokenTypeToValueKind(JsonTokenType type) {
+  return switch (type) {
+    JsonTokenType.nullValue => ValueKind.nullValue,
+    JsonTokenType.boolean => ValueKind.boolean,
+    JsonTokenType.number => ValueKind.number,
+    JsonTokenType.string => ValueKind.string,
+    JsonTokenType.beginArray => ValueKind.list,
+    JsonTokenType.beginObject => ValueKind.map,
+    _ => throw CodableException('Unexpected JSON token type: $type'),
+  };
+}
+
+/// Maps an in-memory Dart object to a format-agnostic [ValueKind].
+ValueKind objectToValueKind(Object? v) {
+  if (v == null) return ValueKind.nullValue;
+  if (v is bool) return ValueKind.boolean;
+  if (v is num) return ValueKind.number;
+  if (v is String) return ValueKind.string;
+  if (v is List) return ValueKind.list;
+  if (v is Map) return ValueKind.map;
+  throw CodableException('Unexpected value kind for $v');
+}
+
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
 final class JsonCodableDecoder implements Decoder {
   final JsonTokenReader _reader;
   final Uint8List? _bytes;
   bool _payloadEscaped = false;
+  Map<String, Object?>? _bufferedObject;
 
   @override
   final Map<Object, Object?> userInfo;
@@ -74,11 +99,26 @@ final class JsonCodableDecoder implements Decoder {
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
 
   @override
-  KeyedDecoder keyed({KeyOptions? options}) =>
-      _JsonCodableKeyedDecoder(_reader, this, options: options);
+  ValueKind peekKind() {
+    if (_bufferedObject != null) return ValueKind.map;
+    return tokenTypeToValueKind(_reader.peek());
+  }
 
   @override
-  MappedDecoder mapped() => createMappedDecoderFromReader(_reader, userInfo);
+  KeyedDecoder keyed({KeyOptions? options}) {
+    final buffered = _bufferedObject;
+    if (buffered != null) {
+      _bufferedObject = null;
+      return _DartObjectKeyedDecoder(buffered, userInfo);
+    }
+    return _JsonCodableKeyedDecoder(_reader, this, options: options);
+  }
+
+  @override
+  MappedDecoder mapped() {
+    final map = _bufferedObject ??= readObjectFromReader(_reader);
+    return _DartObjectMappedDecoder(map, userInfo);
+  }
 
   @override
   UnkeyedDecoder unkeyed() => _JsonCodableUnkeyedDecoder(_reader, this);
@@ -202,6 +242,12 @@ mixin _JsonPrimitiveDecoderMixin {
   void _ensureStarted();
 
   @pragma('vm:prefer-inline')
+  ValueKind peekKind() {
+    _ensureStarted();
+    return tokenTypeToValueKind(_reader.peek());
+  }
+
+  @pragma('vm:prefer-inline')
   bool isNextNull() {
     _ensureStarted();
     return _reader.peek() == JsonTokenType.nullValue;
@@ -243,6 +289,22 @@ mixin _JsonPrimitiveDecoderMixin {
       return null;
     }
     return readDouble();
+  }
+
+  @pragma('vm:prefer-inline')
+  num readNum() {
+    _ensureStarted();
+    return _reader.readNum();
+  }
+
+  @pragma('vm:prefer-inline')
+  num? readNullableNum() {
+    _ensureStarted();
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readNum();
   }
 
   @pragma('vm:prefer-inline')
@@ -329,6 +391,7 @@ final class _JsonCodableKeyedDecoder
   bool moveNextKey() {
     if (_ended) return false;
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final has = _reader.moveNext();
     if (!has) {
       _reader.endObject();
@@ -374,6 +437,7 @@ final class _JsonCodableKeyedDecoder
   @override
   void skipValue() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     _reader.skipValue();
   }
 
@@ -398,9 +462,11 @@ final class _JsonCodableKeyedDecoder
   @override
   List<T> decodeList<T>(Decodable<T> decodable) {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final list = <T>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
+      _rootDecoder._bufferedObject = null;
       list.add(decodable.decode(_rootDecoder));
     }
     _reader.endArray();
@@ -483,10 +549,27 @@ MappedDecoder createMappedDecoderFromReader(
   JsonTokenReader reader,
   Map<Object, Object?> userInfo,
 ) {
-  return _DartObjectMappedDecoder(_readObjectFromReader(reader), userInfo);
+  return _DartObjectMappedDecoder(readObjectFromReader(reader), userInfo);
 }
 
-Map<String, Object?> _readObjectFromReader(JsonTokenReader reader) {
+/// Wraps an already-parsed object [map] in a [MappedDecoder].
+MappedDecoder createMappedDecoderFromMap(
+  Map<String, Object?> map,
+  Map<Object, Object?> userInfo,
+) {
+  return _DartObjectMappedDecoder(map, userInfo);
+}
+
+/// Wraps an already-parsed object [map] in a [KeyedDecoder].
+KeyedDecoder createKeyedDecoderFromMap(
+  Map<String, Object?> map,
+  Map<Object, Object?> userInfo,
+) {
+  return _DartObjectKeyedDecoder(map, userInfo);
+}
+
+/// Parses a JSON object from [reader] into an in-memory `Map<String, Object?>`.
+Map<String, Object?> readObjectFromReader(JsonTokenReader reader) {
   reader.beginObject();
   final map = <String, Object?>{};
   while (reader.moveNext()) {
@@ -510,7 +593,7 @@ Object? _readValueFromReader(JsonTokenReader reader) {
     case JsonTokenType.string:
       return reader.readString();
     case JsonTokenType.beginObject:
-      return _readObjectFromReader(reader);
+      return readObjectFromReader(reader);
     case JsonTokenType.beginArray:
       reader.beginArray();
       final list = <Object?>[];
@@ -534,6 +617,9 @@ final class _DartObjectDecoder implements Decoder {
 
   @override
   Uint8List? get payload => null;
+
+  @override
+  ValueKind peekKind() => objectToValueKind(_value);
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -584,10 +670,12 @@ final class _DartObjectMappedDecoder implements MappedDecoder {
   bool isNull(String key) => _map[key] == null;
 
   @override
+  ValueKind peekKind(String key) => objectToValueKind(_map[key]);
+
+  @override
   int readInt(String key) {
     final v = _map[key];
     if (v is int) return v;
-    if (v is num) return v.toInt();
     throw CodableException('Expected int for $key, found $v');
   }
 
@@ -604,6 +692,16 @@ final class _DartObjectMappedDecoder implements MappedDecoder {
   @override
   double? readNullableDouble(String key) =>
       _map[key] == null ? null : readDouble(key);
+
+  @override
+  num readNum(String key) {
+    final v = _map[key];
+    if (v is num) return v;
+    throw CodableException('Expected num for $key, found $v');
+  }
+
+  @override
+  num? readNullableNum(String key) => _map[key] == null ? null : readNum(key);
 
   @override
   String readString(String key) {
@@ -795,21 +893,37 @@ final class _DartObjectKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  ValueKind peekKind() {
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    return objectToValueKind(_activeValue);
+  }
+
+  @override
   bool isNextNull() => moveNextKey() && _activeValue == null;
 
   @override
   void readNull() {
-    final v = _consumeValue();
-    if (v != null) {
-      throw CodableException('Expected null, found $v');
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
     }
+    if (_activeValue != null) {
+      throw CodableException('Expected null, found $_activeValue');
+    }
+    _consumeValue();
   }
 
   @override
   int readInt() {
-    final v = _consumeValue();
-    if (v is int) return v;
-    if (v is num) return v.toInt();
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final v = _activeValue;
+    if (v is int) {
+      _consumeValue();
+      return v;
+    }
     throw CodableException('Expected int, found $v');
   }
 
@@ -824,8 +938,14 @@ final class _DartObjectKeyedDecoder implements KeyedDecoder {
 
   @override
   double readDouble() {
-    final v = _consumeValue();
-    if (v is num) return v.toDouble();
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final v = _activeValue;
+    if (v is num) {
+      _consumeValue();
+      return v.toDouble();
+    }
     throw CodableException('Expected double, found $v');
   }
 
@@ -839,9 +959,37 @@ final class _DartObjectKeyedDecoder implements KeyedDecoder {
   }
 
   @override
+  num readNum() {
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final v = _activeValue;
+    if (v is num) {
+      _consumeValue();
+      return v;
+    }
+    throw CodableException('Expected num, found $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readNum();
+  }
+
+  @override
   String readString() {
-    final v = _consumeValue();
-    if (v is String) return v;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final v = _activeValue;
+    if (v is String) {
+      _consumeValue();
+      return v;
+    }
     throw CodableException('Expected String, found $v');
   }
 
@@ -864,8 +1012,14 @@ final class _DartObjectKeyedDecoder implements KeyedDecoder {
 
   @override
   bool readBool() {
-    final v = _consumeValue();
-    if (v is bool) return v;
+    if (!moveNextKey()) {
+      throw const CodableException('No more keys in object');
+    }
+    final v = _activeValue;
+    if (v is bool) {
+      _consumeValue();
+      return v;
+    }
     throw CodableException('Expected bool, found $v');
   }
 
@@ -995,21 +1149,38 @@ final class _DartObjectUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  ValueKind peekKind() {
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    return objectToValueKind(_list[_index]);
+  }
+
+  @override
   bool isNextNull() => _index < _list.length && _list[_index] == null;
 
   @override
   void readNull() {
-    final v = _consumeElement();
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
     if (v != null) {
       throw CodableException('Expected null, found $v');
     }
+    _index++;
   }
 
   @override
   int readInt() {
-    final v = _consumeElement();
-    if (v is int) return v;
-    if (v is num) return v.toInt();
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
+    if (v is int) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected int, found $v');
   }
 
@@ -1024,8 +1195,14 @@ final class _DartObjectUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   double readDouble() {
-    final v = _consumeElement();
-    if (v is num) return v.toDouble();
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
+    if (v is num) {
+      _index++;
+      return v.toDouble();
+    }
     throw CodableException('Expected double, found $v');
   }
 
@@ -1039,9 +1216,37 @@ final class _DartObjectUnkeyedDecoder implements UnkeyedDecoder {
   }
 
   @override
+  num readNum() {
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
+    if (v is num) {
+      _index++;
+      return v;
+    }
+    throw CodableException('Expected num, found $v');
+  }
+
+  @override
+  num? readNullableNum() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readNum();
+  }
+
+  @override
   String readString() {
-    final v = _consumeElement();
-    if (v is String) return v;
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
+    if (v is String) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected String, found $v');
   }
 
@@ -1064,8 +1269,14 @@ final class _DartObjectUnkeyedDecoder implements UnkeyedDecoder {
 
   @override
   bool readBool() {
-    final v = _consumeElement();
-    if (v is bool) return v;
+    if (_index >= _list.length) {
+      throw const CodableException('No more elements in array');
+    }
+    final v = _list[_index];
+    if (v is bool) {
+      _index++;
+      return v;
+    }
     throw CodableException('Expected bool, found $v');
   }
 
@@ -1168,6 +1379,9 @@ final class _DartObjectSingleValueDecoder implements SingleValueDecoder {
   _DartObjectSingleValueDecoder(this._value, this._userInfo);
 
   @override
+  ValueKind peekKind() => objectToValueKind(_value);
+
+  @override
   bool isNull() => _value == null;
 
   @override
@@ -1181,7 +1395,6 @@ final class _DartObjectSingleValueDecoder implements SingleValueDecoder {
   int readInt() {
     final v = _value;
     if (v is int) return v;
-    if (v is num) return v.toInt();
     throw CodableException('Expected int, found $v');
   }
 
@@ -1197,6 +1410,16 @@ final class _DartObjectSingleValueDecoder implements SingleValueDecoder {
 
   @override
   double? readNullableDouble() => _value == null ? null : readDouble();
+
+  @override
+  num readNum() {
+    final v = _value;
+    if (v is num) return v;
+    throw CodableException('Expected num, found $v');
+  }
+
+  @override
+  num? readNullableNum() => _value == null ? null : readNum();
 
   @override
   String readString() {
@@ -1259,6 +1482,7 @@ final class _JsonCodableUnkeyedDecoder
   @override
   bool moveNext() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     final has = _reader.moveNext();
     if (!has) {
       _reader.endArray();
@@ -1269,6 +1493,7 @@ final class _JsonCodableUnkeyedDecoder
   @override
   void skipElement() {
     _ensureStarted();
+    _rootDecoder._bufferedObject = null;
     _reader.skipValue();
   }
 
