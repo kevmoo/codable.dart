@@ -233,7 +233,7 @@ final class UserCodable implements Codable<User> {
 
   @override
   void encode(User instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$UserSchema.nameId, instance.id);
     keyed.encodeString(_$UserSchema.nameEmail, instance.email);
   }

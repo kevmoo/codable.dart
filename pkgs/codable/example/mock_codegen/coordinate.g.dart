@@ -143,7 +143,7 @@ final class CoordinateCodable implements Codable<Coordinate> {
 
   @override
   void encode(Coordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
     keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }

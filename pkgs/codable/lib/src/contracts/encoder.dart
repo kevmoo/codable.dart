@@ -12,10 +12,10 @@ abstract interface class Encoder {
   Map<Object, Object?> get userInfo;
 
   /// Opens a keyed container for writing object key-value pairs.
-  KeyedEncoder keyed({KeyOptions? options});
+  KeyedEncoder keyed({KeyOptions? options, int? length});
 
   /// Opens an unkeyed container for writing sequential elements into an array.
-  UnkeyedEncoder unkeyed();
+  UnkeyedEncoder unkeyed({int? length});
 
   /// Opens a single-value container for writing a standalone scalar value.
   SingleValueEncoder singleValue();
@@ -49,6 +49,10 @@ abstract interface class KeyedEncoder {
 
   /// Encodes an explicit null value for [key].
   void encodeNull(String key);
+
+  /// Opens a child [Encoder] positioned at [key] for direct inlined encoding
+  /// without closure allocation.
+  Encoder nestedEncoder(String key);
 
   /// Encodes a nested value [value] for [key] using [encodable].
   void encodeValue<T>(String key, T value, Encodable<T> encodable);
@@ -100,6 +104,10 @@ abstract interface class UnkeyedEncoder {
 
   /// Encodes an explicit null element.
   void encodeNull();
+
+  /// Opens a child [Encoder] positioned at the next array element for direct
+  /// inlined encoding without closure allocation.
+  Encoder nestedEncoder();
 
   /// Encodes a custom element [value] using [encodable].
   void encodeElement<T>(T value, Encodable<T> encodable);

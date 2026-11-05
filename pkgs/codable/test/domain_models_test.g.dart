@@ -143,7 +143,7 @@ final class CoordinateCodable implements Codable<Coordinate> {
 
   @override
   void encode(Coordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
     keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }
@@ -311,7 +311,7 @@ final class UserProfileCodable implements Codable<UserProfile> {
 
   @override
   void encode(UserProfile instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 5);
     keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
     keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
     keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
@@ -424,7 +424,7 @@ final class CarCodable implements Codable<Car> {
 
   @override
   void encode(Car instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
     keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
@@ -532,7 +532,7 @@ final class BicycleCodable implements Codable<Bicycle> {
 
   @override
   void encode(Bicycle instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
     keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
@@ -794,21 +794,19 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
         }
       }),
     );
-    keyed.encodeValue(
-      _$TelemetryPacketSchema.nameCounters,
-      instance.counters,
-      Encodable.fromFunction((Map<String, num> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          switch (entry.value) {
-            case final int v:
-              k.encodeInt(entry.key, v);
-            case final v:
-              k.encodeDouble(entry.key, v.toDouble());
-          }
+    {
+      final k = keyed
+          .nestedEncoder(_$TelemetryPacketSchema.nameCounters)
+          .keyed(length: instance.counters.length);
+      for (final entry in instance.counters.entries) {
+        switch (entry.value) {
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
         }
-      }),
-    );
+      }
+    }
     keyed.encodeValue(
       _$TelemetryPacketSchema.nameVehicle,
       instance.vehicle,
@@ -926,7 +924,7 @@ final class UserWithLocationCodable implements Codable<UserWithLocation> {
 
   @override
   void encode(UserWithLocation instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeValue(
       _$UserWithLocationSchema.nameProfile,
       instance.profile,

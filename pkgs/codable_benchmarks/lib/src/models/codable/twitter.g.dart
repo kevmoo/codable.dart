@@ -4,6 +4,10 @@
 
 part of 'twitter.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -74,7 +78,7 @@ final class TwitterMetadataCodable implements Codable<TwitterMetadata> {
 
   @override
   void encode(TwitterMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeString(
       _$TwitterMetadataSchema.nameResultType,
       instance.resultType,
@@ -241,7 +245,7 @@ final class TwitterUserMentionCodable implements Codable<TwitterUserMention> {
 
   @override
   void encode(TwitterUserMention instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 5);
     keyed.encodeString(
       _$TwitterUserMentionSchema.nameScreenName,
       instance.screenName,
@@ -390,7 +394,7 @@ final class TwitterUrlCodable implements Codable<TwitterUrl> {
 
   @override
   void encode(TwitterUrl instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 4);
     keyed.encodeString(_$TwitterUrlSchema.nameUrl, instance.url);
     keyed.encodeString(
       _$TwitterUrlSchema.nameExpandedUrl,
@@ -465,7 +469,7 @@ final class TwitterEntitiesUrlsCodable implements Codable<TwitterEntitiesUrls> {
 
   @override
   void encode(TwitterEntitiesUrls instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 1);
     keyed.encodeList(
       _$TwitterEntitiesUrlsSchema.nameUrls,
       instance.urls,
@@ -646,7 +650,7 @@ final class TwitterEntitiesCodable implements Codable<TwitterEntities> {
 
   @override
   void encode(TwitterEntities instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeList(
       _$TwitterEntitiesSchema.nameUrls,
       instance.urls,
@@ -1891,7 +1895,7 @@ final class TwitterSearchMetadataCodable
 
   @override
   void encode(TwitterSearchMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 9);
     keyed.encodeDouble(
       _$TwitterSearchMetadataSchema.nameCompletedIn,
       instance.completedIn,
@@ -2022,7 +2026,7 @@ final class TwitterResponseCodable implements Codable<TwitterResponse> {
 
   @override
   void encode(TwitterResponse instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeList(
       _$TwitterResponseSchema.nameStatuses,
       instance.statuses,

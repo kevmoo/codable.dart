@@ -957,6 +957,9 @@ final class _JsonCodableUnkeyedDecoder
   _JsonCodableUnkeyedDecoder(this._rootDecoder, this._list);
 
   @override
+  int? get length => _list.length;
+
+  @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
   bool moveNext() => _currentIndex < _list.length;
@@ -1045,10 +1048,21 @@ external JSString _jsonStringify(JSAny? value);
 /// `JSON.stringify`.
 final class JsonCodableEncoder implements Encoder {
   JSAny? _root;
+  final void Function(JSAny?)? _onRoot;
+  _JsonCodableJsSingleValueEncoder? _singleValue;
   @override
   final Map<Object, Object?> userInfo;
 
-  JsonCodableEncoder({this.userInfo = const {}});
+  JsonCodableEncoder({this.userInfo = const {}}) : _onRoot = null;
+
+  JsonCodableEncoder._nested(this.userInfo, this._onRoot);
+
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _setRoot(JSAny? value) {
+    _root = value;
+    _onRoot?.call(value);
+  }
 
   /// Encodes [value] to a JSON String using [encodable].
   static String encode<T>(
@@ -1105,21 +1119,26 @@ final class JsonCodableEncoder implements Encoder {
   }
 
   @override
-  KeyedEncoder keyed({KeyOptions? options}) {
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
     final obj = JSObject();
-    _root = obj;
+    _setRoot(obj);
     return _JsonCodableJsKeyedEncoder(this, obj);
   }
 
   @override
-  UnkeyedEncoder unkeyed() {
-    final array = JSArray<JSAny?>();
-    _root = array;
+  UnkeyedEncoder unkeyed({int? length}) {
+    final array = length != null
+        ? JSArray<JSAny?>.withLength(length)
+        : JSArray<JSAny?>();
+    _setRoot(array);
     return _JsonCodableJsUnkeyedEncoder(this, array);
   }
 
   @override
-  SingleValueEncoder singleValue() => _JsonCodableJsSingleValueEncoder(this);
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  SingleValueEncoder singleValue() =>
+      _singleValue ??= _JsonCodableJsSingleValueEncoder(this);
 }
 
 final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
@@ -1162,6 +1181,12 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
 
   @override
   void encodeNull(String key) => _object[key] = null;
+
+  @override
+  Encoder nestedEncoder(String key) => JsonCodableEncoder._nested(
+    _rootEncoder.userInfo,
+    (val) => _object[key] = val,
+  );
 
   @override
   void encodeValue<T>(String key, T value, Encodable<T> encodable) {
@@ -1228,47 +1253,57 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
 final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   final JsonCodableEncoder _rootEncoder;
   final JSArray<JSAny?> _array;
+  int _index = 0;
 
   _JsonCodableJsUnkeyedEncoder(this._rootEncoder, this._array);
 
   @override
-  void encodeInt(int value) => _array.add(value.toJS);
+  void encodeInt(int value) => _array[_index++] = value.toJS;
 
   @override
-  void encodeNullableInt(int? value) => _array.add(value?.toJS);
+  void encodeNullableInt(int? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeDouble(double value) => _array.add(value.toJS);
+  void encodeDouble(double value) => _array[_index++] = value.toJS;
 
   @override
-  void encodeNullableDouble(double? value) => _array.add(value?.toJS);
+  void encodeNullableDouble(double? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeString(String value) => _array.add(value.toJS);
+  void encodeString(String value) => _array[_index++] = value.toJS;
 
   @override
-  void encodeNullableString(String? value) => _array.add(value?.toJS);
+  void encodeNullableString(String? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeBool(bool value) => _array.add(value.toJS);
+  void encodeBool(bool value) => _array[_index++] = value.toJS;
 
   @override
-  void encodeNullableBool(bool? value) => _array.add(value?.toJS);
+  void encodeNullableBool(bool? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeNull() => _array.add(null);
+  void encodeNull() => _array[_index++] = null;
+
+  @override
+  Encoder nestedEncoder() {
+    final slot = _index++;
+    return JsonCodableEncoder._nested(
+      _rootEncoder.userInfo,
+      (val) => _array[slot] = val,
+    );
+  }
 
   @override
   void encodeElement<T>(T value, Encodable<T> encodable) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encodable.encode(value, child);
-    _array.add(child._root);
+    _array[_index++] = child._root;
   }
 
   @override
   void encodeNullableElement<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
-      _array.add(null);
+      _array[_index++] = null;
     } else {
       encodeElement(value, encodable);
     }
@@ -1288,47 +1323,49 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
   _JsonCodableJsSingleValueEncoder(this._rootEncoder);
 
   @override
-  void encodeInt(int value) => _rootEncoder._root = value.toJS;
+  void encodeInt(int value) => _rootEncoder._setRoot(value.toJS);
 
   @override
-  void encodeNullableInt(int? value) => _rootEncoder._root = value?.toJS;
+  void encodeNullableInt(int? value) => _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeDouble(double value) => _rootEncoder._root = value.toJS;
+  void encodeDouble(double value) => _rootEncoder._setRoot(value.toJS);
 
   @override
-  void encodeNullableDouble(double? value) => _rootEncoder._root = value?.toJS;
+  void encodeNullableDouble(double? value) =>
+      _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeString(String value) => _rootEncoder._root = value.toJS;
+  void encodeString(String value) => _rootEncoder._setRoot(value.toJS);
 
   @override
-  void encodeNullableString(String? value) => _rootEncoder._root = value?.toJS;
+  void encodeNullableString(String? value) =>
+      _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeBool(bool value) => _rootEncoder._root = value.toJS;
+  void encodeBool(bool value) => _rootEncoder._setRoot(value.toJS);
 
   @override
-  void encodeNullableBool(bool? value) => _rootEncoder._root = value?.toJS;
+  void encodeNullableBool(bool? value) => _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeNull() => _rootEncoder._root = null;
+  void encodeNull() => _rootEncoder._setRoot(null);
 
   @override
   void encode<T>(T value, Encodable<T> encodable) {
     final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
     encodable.encode(value, child);
-    _rootEncoder._root = child._root;
+    _rootEncoder._setRoot(child._root);
   }
 
   @override
   void encodeNullable<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
-      _rootEncoder._root = null;
+      _rootEncoder._setRoot(null);
     } else {
       final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
       encodable.encode(value, child);
-      _rootEncoder._root = child._root;
+      _rootEncoder._setRoot(child._root);
     }
   }
 }

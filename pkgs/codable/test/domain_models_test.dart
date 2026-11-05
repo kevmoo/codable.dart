@@ -101,82 +101,9 @@ final class _TestDecoder implements Decoder {
       null;
 }
 
-List<T> _decodeTestModelList<T>(
-  Object? v,
-  Decodable<T> decodable,
-  Map<Object, Object?> userInfo,
-) {
-  if (v is List<dynamic>) {
-    return [
-      for (final e in v) decodable.decode(_TestDecoder(e, userInfo: userInfo)),
-    ];
-  }
-  throw CodableException('Expected List, found ${v.runtimeType}: $v');
-}
-
-List<int> _decodeTestIntList(Object? v) {
-  if (v is List<dynamic>) {
-    return [
-      for (final e in v)
-        e is int
-            ? e
-            : throw CodableException(
-                'Expected int element, found ${e.runtimeType}: $e',
-              ),
-    ];
-  }
-  throw CodableException('Expected List<int>, found ${v.runtimeType}: $v');
-}
-
-List<double> _decodeTestDoubleList(Object? v) {
-  if (v is List<dynamic>) {
-    return [
-      for (final e in v)
-        e is num
-            ? e.toDouble()
-            : throw CodableException(
-                'Expected double element, found ${e.runtimeType}: $e',
-              ),
-    ];
-  }
-  throw CodableException('Expected List<double>, found ${v.runtimeType}: $v');
-}
-
-Float64List _decodeTestFloat64List(Object? v) =>
-    Float64List.fromList(_decodeTestDoubleList(v));
-
-List<String> _decodeTestStringList(Object? v) {
-  if (v is List<dynamic>) {
-    return [
-      for (final e in v)
-        e is String
-            ? e
-            : throw CodableException(
-                'Expected String element, found ${e.runtimeType}: $e',
-              ),
-    ];
-  }
-  throw CodableException('Expected List<String>, found ${v.runtimeType}: $v');
-}
-
-List<bool> _decodeTestBoolList(Object? v) {
-  if (v is List<dynamic>) {
-    return [
-      for (final e in v)
-        e is bool
-            ? e
-            : throw CodableException(
-                'Expected bool element, found ${e.runtimeType}: $e',
-              ),
-    ];
-  }
-  throw CodableException('Expected List<bool>, found ${v.runtimeType}: $v');
-}
-
 mixin _TestSequentialDecoderMixin {
   _TestDecoder get _rootDecoder;
   bool get _canReadCurrent;
-  bool get _eofReturnsNullOnNullable => false;
   Object? _peekTestValue();
   void _commitTestValue();
 
@@ -207,15 +134,6 @@ mixin _TestSequentialDecoderMixin {
     throw CodableException('Expected int, found ${v.runtimeType}: $v');
   }
 
-  int? readNullableInt() {
-    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
-    if (_peekTestValue() == null) {
-      _commitTestValue();
-      return null;
-    }
-    return readInt();
-  }
-
   double readDouble() {
     final v = _peekTestValue();
     if (v is num) {
@@ -223,15 +141,6 @@ mixin _TestSequentialDecoderMixin {
       return v.toDouble();
     }
     throw CodableException('Expected double/num, found ${v.runtimeType}: $v');
-  }
-
-  double? readNullableDouble() {
-    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
-    if (_peekTestValue() == null) {
-      _commitTestValue();
-      return null;
-    }
-    return readDouble();
   }
 
   num readNum() {
@@ -243,15 +152,6 @@ mixin _TestSequentialDecoderMixin {
     throw CodableException('Expected num, found ${v.runtimeType}: $v');
   }
 
-  num? readNullableNum() {
-    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
-    if (_peekTestValue() == null) {
-      _commitTestValue();
-      return null;
-    }
-    return readNum();
-  }
-
   String readString() {
     final v = _peekTestValue();
     if (v is String) {
@@ -259,27 +159,6 @@ mixin _TestSequentialDecoderMixin {
       return v;
     }
     throw CodableException('Expected String, found ${v.runtimeType}: $v');
-  }
-
-  String? readNullableString() {
-    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
-    if (_peekTestValue() == null) {
-      _commitTestValue();
-      return null;
-    }
-    return readString();
-  }
-
-  (int start, int end) readStringSpan() {
-    throw UnsupportedError('readStringSpan is not supported on $runtimeType');
-  }
-
-  (int start, int end)? readNullableStringSpan() {
-    if (isNextNull()) {
-      _commitTestValue();
-      return null;
-    }
-    return readStringSpan();
   }
 
   bool readBool() {
@@ -291,33 +170,12 @@ mixin _TestSequentialDecoderMixin {
     throw CodableException('Expected bool, found ${v.runtimeType}: $v');
   }
 
-  bool? readNullableBool() {
-    if (!_canReadCurrent && _eofReturnsNullOnNullable) return null;
-    if (_peekTestValue() == null) {
-      _commitTestValue();
-      return null;
-    }
-    return readBool();
-  }
-
   Decoder nestedDecoder() =>
       _TestDecoder(_takeTestValue(), userInfo: _rootDecoder.userInfo);
 }
 
-mixin _TestListDecoderMixin on _TestSequentialDecoderMixin {
-  List<int> decodeIntList() => _decodeTestIntList(_takeTestValue());
-
-  List<double> decodeDoubleList() => _decodeTestDoubleList(_takeTestValue());
-
-  Float64List decodeFloat64List() => _decodeTestFloat64List(_takeTestValue());
-
-  List<String> decodeStringList() => _decodeTestStringList(_takeTestValue());
-
-  List<bool> decodeBoolList() => _decodeTestBoolList(_takeTestValue());
-}
-
 final class _TestKeyedDecoder
-    with _TestSequentialDecoderMixin, _TestListDecoderMixin
+    with BaseKeyedDecoderMixin, _TestSequentialDecoderMixin
     implements KeyedDecoder {
   final List<MapEntry<String, dynamic>> _entries;
   @override
@@ -360,39 +218,12 @@ final class _TestKeyedDecoder
   String? peekKey() => moveNextKey() ? _entries[_currentIndex + 1].key : null;
 
   @override
-  int selectKeyIndex(KeyOptions options) {
-    if (!moveNextKey()) return -1;
-    _currentIndex++;
-    return options.indexOf(_entries[_currentIndex].key);
-  }
-
-  @override
-  int selectStringIndex(KeyOptions options) => options.indexOf(readString());
-
-  @override
   void skipValue() {}
-
-  @override
-  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullableValue<T>(Decodable<T> decodable) {
-    if (_currentValue == null) return null;
-    return decodeValue(decodable);
-  }
-
-  @override
-  List<T> decodeList<T>(Decodable<T> decodable) =>
-      _decodeTestModelList(_currentValue, decodable, _rootDecoder.userInfo);
-
-  @override
-  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
-    if (_currentValue == null) return null;
-    return decodeList(decodable);
-  }
 }
 
-final class _TestMappedDecoder implements MappedDecoder {
+final class _TestMappedDecoder
+    with BaseMappedDecoderMixin
+    implements MappedDecoder {
   final Map<String, dynamic> _map;
   final _TestDecoder _rootDecoder;
 
@@ -409,6 +240,9 @@ final class _TestMappedDecoder implements MappedDecoder {
   bool containsKey(String key) => _map.containsKey(key);
 
   @override
+  bool isNull(String key) => _map[key] == null;
+
+  @override
   ValueKind peekKind(String key) => _testValueKind(_map[key]);
 
   @override
@@ -421,10 +255,6 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  int? readNullableInt(String key) =>
-      (!_map.containsKey(key) || _map[key] == null) ? null : readInt(key);
-
-  @override
   double readDouble(String key) {
     final v = _requireKey(key);
     if (v is num) return v.toDouble();
@@ -432,10 +262,6 @@ final class _TestMappedDecoder implements MappedDecoder {
       'Expected double for key "$key", found ${v.runtimeType}: $v',
     );
   }
-
-  @override
-  double? readNullableDouble(String key) =>
-      (!_map.containsKey(key) || _map[key] == null) ? null : readDouble(key);
 
   @override
   num readNum(String key) {
@@ -447,10 +273,6 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  num? readNullableNum(String key) =>
-      (!_map.containsKey(key) || _map[key] == null) ? null : readNum(key);
-
-  @override
   String readString(String key) {
     final v = _requireKey(key);
     if (v is String) return v;
@@ -458,10 +280,6 @@ final class _TestMappedDecoder implements MappedDecoder {
       'Expected String for key "$key", found ${v.runtimeType}: $v',
     );
   }
-
-  @override
-  String? readNullableString(String key) =>
-      (!_map.containsKey(key) || _map[key] == null) ? null : readString(key);
 
   @override
   bool readBool(String key) {
@@ -473,53 +291,12 @@ final class _TestMappedDecoder implements MappedDecoder {
   }
 
   @override
-  bool? readNullableBool(String key) =>
-      (!_map.containsKey(key) || _map[key] == null) ? null : readBool(key);
-
-  @override
-  bool isNull(String key) => _map[key] == null;
-
-  @override
   Decoder nestedDecoder(String key) =>
-      _TestDecoder(_map[key], userInfo: _rootDecoder.userInfo);
-
-  @override
-  T decodeKey<T>(String key, Decodable<T> decodable) => decodable.decode(
-    _TestDecoder(_requireKey(key), userInfo: _rootDecoder.userInfo),
-  );
-
-  @override
-  T? decodeNullableKey<T>(String key, Decodable<T> decodable) =>
-      (!_map.containsKey(key) || _map[key] == null)
-      ? null
-      : decodeKey(key, decodable);
-
-  @override
-  List<T> decodeListKey<T>(String key, Decodable<T> decodable) =>
-      _decodeTestModelList(_requireKey(key), decodable, _rootDecoder.userInfo);
-
-  @override
-  List<int> decodeIntList(String key) => _decodeTestIntList(_requireKey(key));
-
-  @override
-  List<double> decodeDoubleList(String key) =>
-      _decodeTestDoubleList(_requireKey(key));
-
-  @override
-  Float64List decodeFloat64List(String key) =>
-      _decodeTestFloat64List(_requireKey(key));
-
-  @override
-  List<String> decodeStringList(String key) =>
-      _decodeTestStringList(_requireKey(key));
-
-  @override
-  List<bool> decodeBoolList(String key) =>
-      _decodeTestBoolList(_requireKey(key));
+      _TestDecoder(_requireKey(key), userInfo: _rootDecoder.userInfo);
 }
 
 final class _TestUnkeyedDecoder
-    with _TestSequentialDecoderMixin, _TestListDecoderMixin
+    with BaseUnkeyedDecoderMixin, _TestSequentialDecoderMixin
     implements UnkeyedDecoder {
   final List<dynamic> _list;
   @override
@@ -529,13 +306,13 @@ final class _TestUnkeyedDecoder
   _TestUnkeyedDecoder(this._list, this._rootDecoder);
 
   @override
+  int? get length => _list.length;
+
+  @override
   bool moveNext() => _index < _list.length;
 
   @override
   bool get _canReadCurrent => moveNext();
-
-  @override
-  bool get _eofReturnsNullOnNullable => true;
 
   @override
   Object? _peekTestValue() {
@@ -554,24 +331,10 @@ final class _TestUnkeyedDecoder
   void skipElement() {
     if (moveNext()) _index++;
   }
-
-  @override
-  T decodeElement<T>(Decodable<T> decodable) =>
-      decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullableElement<T>(Decodable<T> decodable) {
-    if (!moveNext()) return null;
-    if (_list[_index] == null) {
-      _index++;
-      return null;
-    }
-    return decodeElement(decodable);
-  }
 }
 
 final class _TestSingleValueDecoder
-    with _TestSequentialDecoderMixin
+    with BaseSingleValueDecoderMixin, _TestSequentialDecoderMixin
     implements SingleValueDecoder {
   final Object? _value;
   @override
@@ -590,33 +353,32 @@ final class _TestSingleValueDecoder
 
   @override
   bool isNull() => _value == null;
-
-  @override
-  T decode<T>(Decodable<T> decodable) => decodable.decode(nestedDecoder());
-
-  @override
-  T? decodeNullable<T>(Decodable<T> decodable) =>
-      _value == null ? null : decode(decodable);
 }
 
 final class _TestEncoder implements Encoder {
   @override
   final Map<Object, Object?> userInfo;
+  final void Function(Object?)? onOutput;
   Object? output;
 
-  _TestEncoder({this.userInfo = const {}});
+  _TestEncoder({this.userInfo = const {}, this.onOutput});
+
+  void _setOutput(Object? value) {
+    output = value;
+    onOutput?.call(value);
+  }
 
   @override
-  KeyedEncoder keyed({KeyOptions? options}) {
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
     final enc = _TestKeyedEncoder(this);
-    output = enc._map;
+    _setOutput(enc._map);
     return enc;
   }
 
   @override
-  UnkeyedEncoder unkeyed() {
+  UnkeyedEncoder unkeyed({int? length}) {
     final enc = _TestUnkeyedEncoder(this);
-    output = enc._list;
+    _setOutput(enc._list);
     return enc;
   }
 
@@ -624,7 +386,9 @@ final class _TestEncoder implements Encoder {
   SingleValueEncoder singleValue() => _TestSingleValueEncoder(this);
 }
 
-final class _TestKeyedEncoder implements KeyedEncoder {
+final class _TestKeyedEncoder
+    with BaseKeyedEncoderMixin
+    implements KeyedEncoder {
   final _TestEncoder _rootEncoder;
   final Map<String, dynamic> _map = {};
 
@@ -634,74 +398,27 @@ final class _TestKeyedEncoder implements KeyedEncoder {
   void encodeInt(String key, int value) => _map[key] = value;
 
   @override
-  void encodeNullableInt(String key, int? value) => _map[key] = value;
-
-  @override
   void encodeDouble(String key, double value) => _map[key] = value;
-
-  @override
-  void encodeNullableDouble(String key, double? value) => _map[key] = value;
 
   @override
   void encodeString(String key, String value) => _map[key] = value;
 
   @override
-  void encodeNullableString(String key, String? value) => _map[key] = value;
-
-  @override
   void encodeBool(String key, bool value) => _map[key] = value;
-
-  @override
-  void encodeNullableBool(String key, bool? value) => _map[key] = value;
 
   @override
   void encodeNull(String key) => _map[key] = null;
 
   @override
-  void encodeValue<T>(String key, T value, Encodable<T> encodable) {
-    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    encodable.encode(value, child);
-    _map[key] = child.output;
-  }
-
-  @override
-  void encodeNullableValue<T>(String key, T? value, Encodable<T> encodable) {
-    if (value == null) {
-      encodeNull(key);
-    } else {
-      encodeValue(key, value, encodable);
-    }
-  }
-
-  @override
-  void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable) {
-    final list = <dynamic>[];
-    for (final el in elements) {
-      final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-      encodable.encode(el, child);
-      list.add(child.output);
-    }
-    _map[key] = list;
-  }
-
-  @override
-  void encodeIntList(String key, List<int> values) =>
-      _map[key] = List<int>.from(values);
-
-  @override
-  void encodeDoubleList(String key, List<double> values) =>
-      _map[key] = List<double>.from(values);
-
-  @override
-  void encodeStringList(String key, List<String> values) =>
-      _map[key] = List<String>.from(values);
-
-  @override
-  void encodeBoolList(String key, List<bool> values) =>
-      _map[key] = List<bool>.from(values);
+  Encoder nestedEncoder(String key) => _TestEncoder(
+    userInfo: _rootEncoder.userInfo,
+    onOutput: (val) => _map[key] = val,
+  );
 }
 
-final class _TestUnkeyedEncoder implements UnkeyedEncoder {
+final class _TestUnkeyedEncoder
+    with BaseUnkeyedEncoderMixin
+    implements UnkeyedEncoder {
   final _TestEncoder _rootEncoder;
   final List<dynamic> _list = [];
 
@@ -711,99 +428,55 @@ final class _TestUnkeyedEncoder implements UnkeyedEncoder {
   void encodeInt(int value) => _list.add(value);
 
   @override
-  void encodeNullableInt(int? value) => _list.add(value);
-
-  @override
   void encodeDouble(double value) => _list.add(value);
-
-  @override
-  void encodeNullableDouble(double? value) => _list.add(value);
 
   @override
   void encodeString(String value) => _list.add(value);
 
   @override
-  void encodeNullableString(String? value) => _list.add(value);
-
-  @override
   void encodeBool(bool value) => _list.add(value);
-
-  @override
-  void encodeNullableBool(bool? value) => _list.add(value);
 
   @override
   void encodeNull() => _list.add(null);
 
   @override
-  void encodeElement<T>(T value, Encodable<T> encodable) {
-    final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
-    encodable.encode(value, child);
-    _list.add(child.output);
-  }
-
-  @override
-  void encodeNullableElement<T>(T? value, Encodable<T> encodable) {
-    if (value == null) {
-      encodeNull();
-    } else {
-      encodeElement(value, encodable);
-    }
-  }
-
-  @override
-  void encodeList<T>(Iterable<T> elements, Encodable<T> encodable) {
-    for (final el in elements) {
-      encodeElement(el, encodable);
-    }
+  Encoder nestedEncoder() {
+    final slot = _list.length;
+    _list.add(null);
+    return _TestEncoder(
+      userInfo: _rootEncoder.userInfo,
+      onOutput: (val) => _list[slot] = val,
+    );
   }
 }
 
-final class _TestSingleValueEncoder implements SingleValueEncoder {
+final class _TestSingleValueEncoder
+    with BaseSingleValueEncoderMixin
+    implements SingleValueEncoder {
   final _TestEncoder _rootEncoder;
 
   _TestSingleValueEncoder(this._rootEncoder);
 
   @override
-  void encodeInt(int value) => _rootEncoder.output = value;
+  void encodeInt(int value) => _rootEncoder._setOutput(value);
 
   @override
-  void encodeNullableInt(int? value) => _rootEncoder.output = value;
+  void encodeDouble(double value) => _rootEncoder._setOutput(value);
 
   @override
-  void encodeDouble(double value) => _rootEncoder.output = value;
+  void encodeString(String value) => _rootEncoder._setOutput(value);
 
   @override
-  void encodeNullableDouble(double? value) => _rootEncoder.output = value;
+  void encodeBool(bool value) => _rootEncoder._setOutput(value);
 
   @override
-  void encodeString(String value) => _rootEncoder.output = value;
-
-  @override
-  void encodeNullableString(String? value) => _rootEncoder.output = value;
-
-  @override
-  void encodeBool(bool value) => _rootEncoder.output = value;
-
-  @override
-  void encodeNullableBool(bool? value) => _rootEncoder.output = value;
-
-  @override
-  void encodeNull() => _rootEncoder.output = null;
+  void encodeNull() => _rootEncoder._setOutput(null);
 
   @override
   void encode<T>(T value, Encodable<T> encodable) {
     final child = _TestEncoder(userInfo: _rootEncoder.userInfo);
     encodable.encode(value, child);
-    _rootEncoder.output = child.output;
-  }
-
-  @override
-  void encodeNullable<T>(T? value, Encodable<T> encodable) {
-    if (value == null) {
-      encodeNull();
-    } else {
-      encode(value, encodable);
-    }
+    _rootEncoder._setOutput(child.output);
   }
 }
 
@@ -2768,4 +2441,700 @@ void main() {
       }
     });
   });
+
+  _registerDriverFoundationsTests();
+}
+
+void _registerDriverFoundationsTests() {
+  group(
+    'Driver Foundations (KeyOptions, Base*Mixin, nestedEncoder, length)',
+    () {
+      test('length hints on UnkeyedDecoder match driver backing', () {
+        const isJs = identical(1, 1.0);
+        final listBytes = Uint8List.fromList(utf8.encode('[10, 20, 30]'));
+
+        // Streaming / default fromBytes: null on VM/Wasm, 3 on dart2js DOM
+        final streamList = JsonCodableDecoder.fromBytes(listBytes).unkeyed();
+        check(streamList.length).equals(isJs ? 3 : null);
+
+        // DartObject handoff via mapped() and nested array: exact length
+        final handoffDec = JsonCodableDecoder.fromBytes(
+          Uint8List.fromList(utf8.encode('{"a": 1, "b": 2, "arr": [5, 6, 7]}')),
+        );
+        final mapped = handoffDec.mapped();
+        check(mapped.nestedDecoder('arr').unkeyed().length).equals(3);
+
+        // TestJsonDriver: exact length
+        check(
+          TestJsonDriver.decodeString(
+            '[1, 2, 3, 4]',
+            Decodable.fromFunction((d) => d.unkeyed().length),
+          ),
+        ).equals(4);
+      });
+
+      test(
+        'nestedEncoder auto-closes multi-level containers before siblings and parent close',
+        _verifyNestedEncoderAutoClosing,
+      );
+
+      test(
+        'KeyOptions.compiled<T> isolates distinct driver cache types on a shared instance',
+        _verifyKeyOptionsMultiTypeCompiledCache,
+      );
+
+      test(
+        'Base*Mixin defaults support minimal drivers across all 7 decoder and encoder mixins',
+        _verifyBaseMixinsDefaults,
+      );
+    },
+  );
+}
+
+void _verifyNestedEncoderAutoClosing() {
+  void encodeComplex(int _, Encoder encoder) {
+    final root = encoder.keyed(length: 3);
+    final nested = root.nestedEncoder('matrix').keyed(length: 2);
+
+    final list1 = nested.nestedEncoder('1').unkeyed(length: 2);
+    final obj1 = list1.nestedEncoder().keyed(length: 1);
+    obj1.encodeString('tag', 'a');
+    list1.encodeInt(99);
+
+    final list2 = nested.nestedEncoder('2').unkeyed(length: 1);
+    list2.encodeInt(7);
+
+    root.encodeBool('active', true);
+
+    final tail = root.nestedEncoder('tail').unkeyed(length: 1);
+    final tailObj = tail.nestedEncoder().keyed(length: 1);
+    tailObj.encodeInt('done', 1);
+  }
+
+  final encodable = Encodable.fromFunction(encodeComplex);
+  final jsonOut = JsonCodableEncoder.encode(0, encodable);
+  const expected =
+      '{"matrix":{"1":[{"tag":"a"},99],"2":[7]},"active":true,"tail":[{"done":1}]}';
+  check(jsonOut).equals(expected);
+
+  final bytesOut = JsonCodableEncoder.toBytes(0, encodable);
+  check(utf8.decode(bytesOut)).equals(expected);
+
+  final testOut = TestJsonDriver.encodeToString(0, encodable);
+  check(testOut).equals(expected);
+}
+
+final class _FakeDriverCompiledA {
+  final List<int> lengths;
+  _FakeDriverCompiledA(List<String> keys)
+    : lengths = [for (final k in keys) k.length];
+}
+
+final class _FakeDriverCompiledB {
+  final String joined;
+  _FakeDriverCompiledB(List<String> keys) : joined = keys.join('|');
+}
+
+final class _FakeDriverCompiledC {
+  final Map<String, String> upper;
+  _FakeDriverCompiledC(List<String> keys)
+    : upper = {for (final k in keys) k: k.toUpperCase()};
+}
+
+void _verifyKeyOptionsMultiTypeCompiledCache() {
+  final options = KeyOptions.of(['alpha', 'beta', 'gamma']);
+  var countA = 0;
+  var countB = 0;
+  var countC = 0;
+
+  final a1 = options.compiled<_FakeDriverCompiledA>((keys) {
+    countA++;
+    return _FakeDriverCompiledA(keys);
+  });
+  check(countA).equals(1);
+  check(a1.lengths).deepEquals([5, 4, 5]);
+
+  // Repeated primary-slot hit does not re-run compile callback.
+  final a2 = options.compiled<_FakeDriverCompiledA>((keys) {
+    countA++;
+    return _FakeDriverCompiledA(keys);
+  });
+  check(identical(a1, a2)).isTrue();
+  check(countA).equals(1);
+
+  // Distinct driver types populate secondary storage without clobbering A.
+  final b1 = options.compiled<_FakeDriverCompiledB>((keys) {
+    countB++;
+    return _FakeDriverCompiledB(keys);
+  });
+  final c1 = options.compiled<_FakeDriverCompiledC>((keys) {
+    countC++;
+    return _FakeDriverCompiledC(keys);
+  });
+  check(countB).equals(1);
+  check(countC).equals(1);
+  check(b1.joined).equals('alpha|beta|gamma');
+  check(c1.upper['beta']).equals('BETA');
+
+  // Interleaved JSON streaming decode on the exact same KeyOptions instance.
+  final jsonBytes = Uint8List.fromList(
+    utf8.encode('{"beta": 42, "gamma": "ok"}'),
+  );
+  final keyed = JsonCodableDecoder.fromBytes(jsonBytes).keyed(options: options);
+  check(keyed.moveNextKey()).isTrue();
+  check(keyed.selectKeyIndex(options)).equals(1);
+  check(keyed.readInt()).equals(42);
+  check(keyed.moveNextKey()).isTrue();
+  check(keyed.selectKeyIndex(options)).equals(2);
+  check(keyed.selectStringIndex(KeyOptions.of(['no', 'ok']))).equals(1);
+  check(keyed.moveNextKey()).isFalse();
+
+  // All previously cached representations remain intact and identical.
+  check(
+    identical(
+      a1,
+      options.compiled<_FakeDriverCompiledA>((_) => throw StateError('cached')),
+    ),
+  ).isTrue();
+  check(
+    identical(
+      b1,
+      options.compiled<_FakeDriverCompiledB>((_) => throw StateError('cached')),
+    ),
+  ).isTrue();
+  check(
+    identical(
+      c1,
+      options.compiled<_FakeDriverCompiledC>((_) => throw StateError('cached')),
+    ),
+  ).isTrue();
+}
+
+final class _MinimalDriverDecoder implements Decoder {
+  final Object? _node;
+  final bool reportUnkeyedLength;
+  @override
+  final Map<Object, Object?> userInfo;
+
+  _MinimalDriverDecoder(
+    this._node, {
+    this.reportUnkeyedLength = false,
+    this.userInfo = const {},
+  });
+
+  @override
+  Uint8List? get payload => null;
+
+  @override
+  ValueKind peekKind() => _testValueKind(_node);
+
+  @override
+  KeyedDecoder keyed({KeyOptions? options}) => _MinimalKeyedDecoder(
+    (_node as Map<String, Object?>).entries.toList(),
+    reportUnkeyedLength,
+    userInfo,
+  );
+
+  @override
+  MappedDecoder mapped() => _MinimalMappedDecoder(
+    _node as Map<String, Object?>,
+    reportUnkeyedLength,
+    userInfo,
+  );
+
+  @override
+  UnkeyedDecoder unkeyed() => _MinimalUnkeyedDecoder(
+    _node as List<Object?>,
+    reportUnkeyedLength,
+    userInfo,
+  );
+
+  @override
+  SingleValueDecoder singleValue() =>
+      _MinimalSingleValueDecoder(_node, reportUnkeyedLength, userInfo);
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      null;
+}
+
+final class _MinimalKeyedDecoder with BaseKeyedDecoderMixin {
+  final List<MapEntry<String, Object?>> _entries;
+  final bool _reportUnkeyedLength;
+  final Map<Object, Object?> _userInfo;
+  int _idx = -1;
+
+  _MinimalKeyedDecoder(
+    this._entries,
+    this._reportUnkeyedLength,
+    this._userInfo,
+  );
+
+  Object? get _val => _entries[_idx].value;
+
+  @override
+  bool moveNextKey() => _idx + 1 < _entries.length;
+
+  @override
+  String nextKey() => _entries[++_idx].key;
+
+  @override
+  ValueKind peekKind() => _testValueKind(_val);
+
+  @override
+  void skipValue() {}
+
+  @override
+  void readNull() {
+    if (_val != null) throw const CodableException('Expected null');
+  }
+
+  @override
+  int readInt() => _val as int;
+
+  @override
+  double readDouble() => (_val as num).toDouble();
+
+  @override
+  num readNum() => _val as num;
+
+  @override
+  String readString() => _val as String;
+
+  @override
+  bool readBool() => _val as bool;
+
+  @override
+  Decoder nestedDecoder() => _MinimalDriverDecoder(
+    _val,
+    reportUnkeyedLength: _reportUnkeyedLength,
+    userInfo: _userInfo,
+  );
+}
+
+final class _MinimalMappedDecoder with BaseMappedDecoderMixin {
+  final Map<String, Object?> _map;
+  final bool _reportUnkeyedLength;
+  final Map<Object, Object?> _userInfo;
+
+  _MinimalMappedDecoder(this._map, this._reportUnkeyedLength, this._userInfo);
+
+  @override
+  bool containsKey(String key) => _map.containsKey(key);
+
+  @override
+  ValueKind peekKind(String key) => _testValueKind(_map[key]);
+
+  @override
+  int readInt(String key) => _map[key] as int;
+
+  @override
+  double readDouble(String key) => (_map[key] as num).toDouble();
+
+  @override
+  num readNum(String key) => _map[key] as num;
+
+  @override
+  String readString(String key) => _map[key] as String;
+
+  @override
+  bool readBool(String key) => _map[key] as bool;
+
+  @override
+  Decoder nestedDecoder(String key) => _MinimalDriverDecoder(
+    _map[key],
+    reportUnkeyedLength: _reportUnkeyedLength,
+    userInfo: _userInfo,
+  );
+}
+
+final class _MinimalUnkeyedDecoder with BaseUnkeyedDecoderMixin {
+  final List<Object?> _items;
+  final bool _reportLength;
+  final Map<Object, Object?> _userInfo;
+  int _idx = -1;
+
+  _MinimalUnkeyedDecoder(this._items, this._reportLength, this._userInfo);
+
+  @override
+  int? get length => _reportLength ? _items.length : super.length;
+
+  Object? get _val => _items[_idx];
+
+  @override
+  bool moveNext() {
+    if (_idx + 1 >= _items.length) return false;
+    _idx++;
+    return true;
+  }
+
+  @override
+  ValueKind peekKind() => _testValueKind(_val);
+
+  @override
+  void readNull() {
+    if (_val != null) throw const CodableException('Expected null');
+  }
+
+  @override
+  void skipElement() {}
+
+  @override
+  int readInt() => _val as int;
+
+  @override
+  double readDouble() => (_val as num).toDouble();
+
+  @override
+  num readNum() => _val as num;
+
+  @override
+  String readString() => _val as String;
+
+  @override
+  bool readBool() => _val as bool;
+
+  @override
+  Decoder nestedDecoder() => _MinimalDriverDecoder(
+    _val,
+    reportUnkeyedLength: _reportLength,
+    userInfo: _userInfo,
+  );
+}
+
+final class _MinimalSingleValueDecoder with BaseSingleValueDecoderMixin {
+  final Object? _val;
+  final bool _reportLength;
+  final Map<Object, Object?> _userInfo;
+
+  _MinimalSingleValueDecoder(this._val, this._reportLength, this._userInfo);
+
+  @override
+  ValueKind peekKind() => _testValueKind(_val);
+
+  @override
+  void readNull() {
+    if (_val != null) throw const CodableException('Expected null');
+  }
+
+  @override
+  int readInt() => _val as int;
+
+  @override
+  double readDouble() => (_val as num).toDouble();
+
+  @override
+  num readNum() => _val as num;
+
+  @override
+  String readString() => _val as String;
+
+  @override
+  bool readBool() => _val as bool;
+
+  @override
+  Decoder nestedDecoder() => _MinimalDriverDecoder(
+    _val,
+    reportUnkeyedLength: _reportLength,
+    userInfo: _userInfo,
+  );
+}
+
+final class _MinimalDriverEncoder implements Encoder {
+  final void Function(Object?)? onOut;
+  final List<int?> recordedUnkeyedLengths;
+  Object? output;
+  @override
+  final Map<Object, Object?> userInfo;
+
+  _MinimalDriverEncoder({
+    this.onOut,
+    List<int?>? recordedUnkeyedLengths,
+    this.userInfo = const {},
+  }) : recordedUnkeyedLengths = recordedUnkeyedLengths ?? <int?>[];
+
+  void _emit(Object? v) {
+    output = v;
+    onOut?.call(v);
+  }
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    final map = <String, Object?>{};
+    _emit(map);
+    return _MinimalKeyedEncoder(map, recordedUnkeyedLengths, userInfo);
+  }
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) {
+    recordedUnkeyedLengths.add(length);
+    final list = <Object?>[];
+    _emit(list);
+    return _MinimalUnkeyedEncoder(list, recordedUnkeyedLengths, userInfo);
+  }
+
+  @override
+  SingleValueEncoder singleValue() => _MinimalSingleValueEncoder(this);
+}
+
+final class _MinimalKeyedEncoder with BaseKeyedEncoderMixin {
+  final Map<String, Object?> _map;
+  final List<int?> _lengths;
+  final Map<Object, Object?> _userInfo;
+
+  _MinimalKeyedEncoder(this._map, this._lengths, this._userInfo);
+
+  @override
+  void encodeInt(String key, int value) => _map[key] = value;
+
+  @override
+  void encodeDouble(String key, double value) => _map[key] = value;
+
+  @override
+  void encodeString(String key, String value) => _map[key] = value;
+
+  @override
+  void encodeBool(String key, bool value) => _map[key] = value;
+
+  @override
+  void encodeNull(String key) => _map[key] = null;
+
+  @override
+  Encoder nestedEncoder(String key) => _MinimalDriverEncoder(
+    onOut: (v) => _map[key] = v,
+    recordedUnkeyedLengths: _lengths,
+    userInfo: _userInfo,
+  );
+}
+
+final class _MinimalUnkeyedEncoder with BaseUnkeyedEncoderMixin {
+  final List<Object?> _list;
+  final List<int?> _lengths;
+  final Map<Object, Object?> _userInfo;
+
+  _MinimalUnkeyedEncoder(this._list, this._lengths, this._userInfo);
+
+  @override
+  void encodeInt(int value) => _list.add(value);
+
+  @override
+  void encodeDouble(double value) => _list.add(value);
+
+  @override
+  void encodeString(String value) => _list.add(value);
+
+  @override
+  void encodeBool(bool value) => _list.add(value);
+
+  @override
+  void encodeNull() => _list.add(null);
+
+  @override
+  Encoder nestedEncoder() {
+    final slot = _list.length;
+    _list.add(null);
+    return _MinimalDriverEncoder(
+      onOut: (v) => _list[slot] = v,
+      recordedUnkeyedLengths: _lengths,
+      userInfo: _userInfo,
+    );
+  }
+}
+
+final class _MinimalSingleValueEncoder with BaseSingleValueEncoderMixin {
+  final _MinimalDriverEncoder _parent;
+
+  _MinimalSingleValueEncoder(this._parent);
+
+  @override
+  void encodeInt(int value) => _parent._emit(value);
+
+  @override
+  void encodeDouble(double value) => _parent._emit(value);
+
+  @override
+  void encodeString(String value) => _parent._emit(value);
+
+  @override
+  void encodeBool(bool value) => _parent._emit(value);
+
+  @override
+  void encodeNull() => _parent._emit(null);
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) =>
+      encodable.encode(value, _parent);
+}
+
+void _verifyBaseMixinsDefaults() {
+  final enc = _MinimalDriverEncoder();
+  final kEnc = enc.keyed();
+  kEnc.encodeNullableInt('ni', null);
+  kEnc.encodeNullableInt('pi', 7);
+  kEnc.encodeNullableDouble('nd', null);
+  kEnc.encodeNullableDouble('pd', 3.5);
+  kEnc.encodeNullableString('ns', null);
+  kEnc.encodeNullableString('ps', 'role_a');
+  kEnc.encodeNullableBool('nb', null);
+  kEnc.encodeNullableBool('pb', true);
+  kEnc.encodeNullableValue('ncoord', null, const CoordinateCodable());
+  kEnc.encodeNullableValue(
+    'coord',
+    const Coordinate(latitude: 10.0, longitude: 20.0),
+    const CoordinateCodable(),
+  );
+  kEnc.encodeList(
+    'lazyCoords',
+    [const Coordinate(latitude: 1.0, longitude: 2.0)].where((_) => true),
+    const CoordinateCodable(),
+  );
+  kEnc.encodeList('sizedCoords', const [
+    Coordinate(latitude: 3.0, longitude: 4.0),
+  ], const CoordinateCodable());
+  kEnc.encodeIntList('ints', [10, 20]);
+  kEnc.encodeDoubleList('doubles', [1.25, 2.5]);
+  kEnc.encodeStringList('strings', ['x', 'y']);
+  kEnc.encodeBoolList('bools', [true, false]);
+
+  final outMap = enc.output as Map<String, Object?>;
+  // BaseKeyedEncoderMixin omits null keys and passes length hints appropriately.
+  check(outMap.containsKey('ni')).isFalse();
+  check(outMap.containsKey('nd')).isFalse();
+  check(outMap.containsKey('ns')).isFalse();
+  check(outMap.containsKey('nb')).isFalse();
+  check(outMap.containsKey('ncoord')).isFalse();
+  check(enc.recordedUnkeyedLengths).deepEquals([null, 1, 2, 2, 2, 2]);
+
+  outMap['nullField'] = null;
+
+  _verifyMinimalKeyedAndMappedDecode(outMap, reportLength: false);
+  _verifyMinimalKeyedAndMappedDecode(outMap, reportLength: true);
+  _verifyMinimalUnkeyedAndSingleValueMixins();
+}
+
+void _verifyMinimalKeyedAndMappedDecode(
+  Map<String, Object?> source, {
+  required bool reportLength,
+}) {
+  final options = KeyOptions.of([
+    'pi',
+    'pd',
+    'ps',
+    'pb',
+    'coord',
+    'lazyCoords',
+    'sizedCoords',
+    'ints',
+    'doubles',
+    'strings',
+    'bools',
+    'nullField',
+  ]);
+  final roleOpts = KeyOptions.of(['other', 'role_a']);
+
+  final kd = _MinimalDriverDecoder(
+    source,
+    reportUnkeyedLength: reportLength,
+  ).keyed(options: options);
+  check(kd.peekKey()).isNull();
+
+  check(kd.selectKeyIndex(options)).equals(0);
+  check(kd.readNullableInt()).equals(7);
+  check(kd.selectKeyIndex(options)).equals(1);
+  check(kd.readNullableDouble()).equals(3.5);
+  check(kd.selectKeyIndex(options)).equals(2);
+  check(kd.readStringSpan).throws<UnsupportedError>();
+  check(kd.readNullableStringSpan).throws<UnsupportedError>();
+  check(kd.selectStringIndex(roleOpts)).equals(1);
+  check(kd.selectKeyIndex(options)).equals(3);
+  check(kd.readNullableBool()).equals(true);
+  check(kd.selectKeyIndex(options)).equals(4);
+  check(kd.decodeNullableValue(const CoordinateCodable()))
+      .equals(const Coordinate(latitude: 10.0, longitude: 20.0));
+  check(kd.selectKeyIndex(options)).equals(5);
+  check(kd.decodeNullableList(const CoordinateCodable()))
+      .isNotNull()
+      .deepEquals([const Coordinate(latitude: 1.0, longitude: 2.0)]);
+  check(kd.selectKeyIndex(options)).equals(6);
+  check(kd.decodeList(const CoordinateCodable()))
+      .deepEquals([const Coordinate(latitude: 3.0, longitude: 4.0)]);
+  check(kd.selectKeyIndex(options)).equals(7);
+  check(kd.decodeIntList()).deepEquals([10, 20]);
+  check(kd.selectKeyIndex(options)).equals(8);
+  check(kd.decodeFloat64List()).deepEquals([1.25, 2.5]);
+  check(kd.selectKeyIndex(options)).equals(9);
+  check(kd.decodeStringList()).deepEquals(['x', 'y']);
+  check(kd.selectKeyIndex(options)).equals(10);
+  check(kd.decodeBoolList()).deepEquals([true, false]);
+  check(kd.selectKeyIndex(options)).equals(11);
+  check(kd.readNullableStringSpan()).isNull();
+  check(kd.readNullableNum()).isNull();
+  check(kd.decodeNullableValue(const CoordinateCodable())).isNull();
+  check(kd.decodeNullableList(const CoordinateCodable())).isNull();
+  check(kd.selectKeyIndex(options)).equals(-1);
+
+  final md = _MinimalDriverDecoder(
+    source,
+    reportUnkeyedLength: reportLength,
+  ).mapped();
+  check(md.isNull('missing')).isTrue();
+  check(md.isNull('nullField')).isTrue();
+  check(md.readNullableInt('missing')).isNull();
+  check(md.readNullableDouble('nullField')).isNull();
+  check(md.readNullableNum('pi')).equals(7);
+  check(md.readNullableString('ps')).equals('role_a');
+  check(md.readNullableBool('pb')).equals(true);
+  check(md.decodeNullableKey('missing', const CoordinateCodable())).isNull();
+  check(md.decodeNullableKey('coord', const CoordinateCodable()))
+      .equals(const Coordinate(latitude: 10.0, longitude: 20.0));
+  check(md.decodeListKey('sizedCoords', const CoordinateCodable()))
+      .deepEquals([const Coordinate(latitude: 3.0, longitude: 4.0)]);
+  check(md.decodeIntList('ints')).deepEquals([10, 20]);
+  check(md.decodeDoubleList('doubles')).deepEquals([1.25, 2.5]);
+  check(md.decodeFloat64List('doubles')).deepEquals([1.25, 2.5]);
+  check(md.decodeStringList('strings')).deepEquals(['x', 'y']);
+  check(md.decodeBoolList('bools')).deepEquals([true, false]);
+}
+
+void _verifyMinimalUnkeyedAndSingleValueMixins() {
+  final uEnc = _MinimalDriverEncoder();
+  final u = uEnc.unkeyed();
+  u.encodeNullableInt(null);
+  u.encodeNullableInt(3);
+  u.encodeNullableDouble(null);
+  u.encodeNullableString(null);
+  u.encodeNullableBool(null);
+  u.encodeNullableElement(null, const CoordinateCodable());
+  u.encodeNullableElement(
+    const Coordinate(latitude: 5.0, longitude: 6.0),
+    const CoordinateCodable(),
+  );
+
+  final ud = _MinimalDriverDecoder(uEnc.output).unkeyed();
+  check(ud.length).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.readNullableInt()).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.readNullableInt()).equals(3);
+  check(ud.moveNext()).isTrue();
+  check(ud.readNullableDouble()).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.readNullableString()).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.readNullableBool()).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.decodeNullableElement(const CoordinateCodable())).isNull();
+  check(ud.moveNext()).isTrue();
+  check(ud.decodeNullableElement(const CoordinateCodable()))
+      .equals(const Coordinate(latitude: 5.0, longitude: 6.0));
+  check(ud.moveNext()).isFalse();
+
+  // SingleValueEncoder & SingleValueDecoder nullable defaults
+  final svEnc = _MinimalDriverEncoder();
+  svEnc.singleValue().encodeNullableInt(null);
+  check(_MinimalDriverDecoder(svEnc.output).singleValue().readNullableInt())
+      .isNull();
+  check(
+    _MinimalDriverDecoder(svEnc.output).singleValue().readNullableStringSpan(),
+  ).isNull();
 }

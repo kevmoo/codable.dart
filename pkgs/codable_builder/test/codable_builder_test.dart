@@ -8,6 +8,8 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/file_system/overlay_file_system.dart';
+import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:checks/checks.dart';
 import 'package:codable_builder/codable_builder.dart';
 import 'package:source_gen/source_gen.dart';
@@ -110,9 +112,9 @@ void main() {
         // Positional constructor call
         check(output).contains('return Point(\n      x!,\n      y!,\n    );');
 
-        // Verify universal encoder
+        // Verify universal encoder with constant length hint
         check(output).contains('void encode(Point instance, Encoder encoder)');
-        check(output).contains('final keyed = encoder.keyed();');
+        check(output).contains('final keyed = encoder.keyed(length: 2);');
         check(output)
             .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
         check(output)
@@ -181,8 +183,13 @@ void main() {
       );
       // Set of string
       check(output).contains('categories = keyed.decodeStringList().toSet();');
-      // Map of string to int
+      // Map<String, int> via 1-hop KeyedDecoder + zero-closure KeyedEncoder
       check(output).contains('final k = keyed.nestedDecoder().keyed();');
+      check(output).contains('m[key] = k.readInt();');
+      check(output).contains(
+        'final k = keyed.nestedEncoder(_\$EnterpriseSchema.nameHeadcountByDept).keyed(length: instance.headcountByDept.length);',
+      );
+      check(output).contains('k.encodeInt(entry.key, entry.value);');
       // Nested encoder call
       check(output).contains(
         'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, const AddressCodable());',
@@ -208,6 +215,10 @@ void main() {
             .contains('UserRole.values.byName(d.singleValue().readString())');
         check(output).contains('nullableTags = keyed.decodeList<String?>');
         check(output).contains('final k = keyed.nestedDecoder().keyed();');
+        check(output).contains(
+          'final k = keyed.nestedEncoder(_\$TeamSchema.nameScores).keyed(length: instance.scores.length);',
+        );
+        check(output).contains('k.encodeNull(entry.key);');
         check(output).contains(
           'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, Encodable.fromFunction((UserRole item, e) {',
         );
@@ -292,6 +303,75 @@ void main() {
       check(output).contains(
         'keyed.encodeValue(_\$CodableKeyVariantsModelSchema.nameCreatedAt, instance.createdAt, const EpochMsDateTimeEncoder());',
       );
+    });
+
+    test('keeps Uint8List mapped to IntList and omits length hint when nullable fields exist', () async {
+      final primOutput = runGeneratorFor('PrimitiveCollectionsModel');
+      check(primOutput).contains('final keyed = encoder.keyed(length: 7);');
+      check(primOutput).contains(
+        'keyed.encodeList(_\$PrimitiveCollectionsModelSchema.nameMatrix, instance.matrix',
+      );
+
+      final overlay = OverlayResourceProvider(
+        PhysicalResourceProvider.INSTANCE,
+      );
+      final virtualPath = File(fixturePath).parent.uri
+          .resolve('_virtual_uint8.dart')
+          .toFilePath();
+      overlay.setOverlay(
+        virtualPath,
+        content: '''
+import 'dart:typed_data';
+import 'package:codable/codable.dart';
+
+@Codable()
+final class TypedBufferBox {
+  final Uint8List data;
+  final Uint8List? optionalData;
+  const TypedBufferBox({required this.data, this.optionalData});
+}
+''',
+        modificationStamp: 0,
+      );
+      final virtualCollection = AnalysisContextCollection(
+        includedPaths: [virtualPath],
+        resourceProvider: overlay,
+      );
+      final resolved =
+          await virtualCollection
+                  .contextFor(virtualPath)
+                  .currentSession
+                  .getResolvedUnit(virtualPath)
+              as ResolvedUnitResult;
+      final decl = resolved.unit.declarations
+          .whereType<ClassDeclaration>()
+          .first;
+      final elem = decl.declaredFragment!.element;
+      final ann = codableTypeChecker.firstAnnotationOf(elem)!;
+      final model = const ModelVisitor().visitClass(elem, ConstantReader(ann));
+      final output = const CodableGenerator().generateForModel(model);
+      check(output).contains('final keyed = encoder.keyed();');
+      check(output).contains(
+        'keyed.encodeIntList(_\$TypedBufferBoxSchema.nameData, instance.data);',
+      );
+      check(output).contains(
+        'keyed.encodeIntList(_\$TypedBufferBoxSchema.nameOptionalData, instance.optionalData!);',
+      );
+    });
+
+    test('rejects non-String Map keys with InvalidGenerationSourceError and emits length: 0 on empty models', () {
+      check(() => runGeneratorFor('CompositeKeyMapModel'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('Only non-nullable String Map keys are supported');
+
+      final emptyOutput = runGeneratorFor('EmptyRecord');
+      check(emptyOutput).contains('encoder.keyed(length: 0);');
+      check(emptyOutput).contains('return const EmptyRecord();');
+
+      // UserAccount has nullable `location`, so no length hint
+      final userOutput = runGeneratorFor('UserAccount');
+      check(userOutput).contains('final keyed = encoder.keyed();');
     });
   });
 }

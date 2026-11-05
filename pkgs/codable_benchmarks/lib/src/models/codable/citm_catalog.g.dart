@@ -4,6 +4,10 @@
 
 part of 'citm_catalog.dart';
 
+// **************************************************************************
+// CodableGenerator
+// **************************************************************************
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CitmCatalog
 // =============================================================================
@@ -228,112 +232,95 @@ final class CitmCatalogCodable implements Codable<CitmCatalog> {
 
   @override
   void encode(CitmCatalog instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameAreaNames,
-      instance.areaNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameAudienceSubCategoryNames,
-      instance.audienceSubCategoryNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameBlockNames,
-      instance.blockNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameEvents,
-      instance.events,
-      Encodable.fromFunction((Map<String, CitmEvent> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeValue(entry.key, entry.value, const CitmEventCodable());
-        }
-      }),
-    );
+    final keyed = encoder.keyed(length: 11);
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameAreaNames)
+          .keyed(length: instance.areaNames.length);
+      for (final entry in instance.areaNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameAudienceSubCategoryNames)
+          .keyed(length: instance.audienceSubCategoryNames.length);
+      for (final entry in instance.audienceSubCategoryNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameBlockNames)
+          .keyed(length: instance.blockNames.length);
+      for (final entry in instance.blockNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameEvents)
+          .keyed(length: instance.events.length);
+      for (final entry in instance.events.entries) {
+        const CitmEventCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
     keyed.encodeList(
       _$CitmCatalogSchema.namePerformances,
       instance.performances,
       const CitmPerformanceCodable(),
     );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameSeatCategoryNames,
-      instance.seatCategoryNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameSubTopicNames,
-      instance.subTopicNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameSubjectNames,
-      instance.subjectNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameTopicNames,
-      instance.topicNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameTopicSynced,
-      instance.topicSynced,
-      Encodable.fromFunction((Map<String, bool> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeBool(entry.key, entry.value);
-        }
-      }),
-    );
-    keyed.encodeValue(
-      _$CitmCatalogSchema.nameVenueNames,
-      instance.venueNames,
-      Encodable.fromFunction((Map<String, String> map, e) {
-        final k = e.keyed();
-        for (final entry in map.entries) {
-          k.encodeString(entry.key, entry.value);
-        }
-      }),
-    );
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSeatCategoryNames)
+          .keyed(length: instance.seatCategoryNames.length);
+      for (final entry in instance.seatCategoryNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSubTopicNames)
+          .keyed(length: instance.subTopicNames.length);
+      for (final entry in instance.subTopicNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSubjectNames)
+          .keyed(length: instance.subjectNames.length);
+      for (final entry in instance.subjectNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameTopicNames)
+          .keyed(length: instance.topicNames.length);
+      for (final entry in instance.topicNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameTopicSynced)
+          .keyed(length: instance.topicSynced.length);
+      for (final entry in instance.topicSynced.entries) {
+        k.encodeBool(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameVenueNames)
+          .keyed(length: instance.venueNames.length);
+      for (final entry in instance.venueNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
   }
 }
 
@@ -879,7 +866,7 @@ final class CitmPriceCodable implements Codable<CitmPrice> {
 
   @override
   void encode(CitmPrice instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 3);
     keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
     keyed.encodeInt(
       _$CitmPriceSchema.nameAudienceSubCategoryId,
@@ -987,7 +974,7 @@ final class CitmSeatCategoryCodable implements Codable<CitmSeatCategory> {
 
   @override
   void encode(CitmSeatCategory instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeList(
       _$CitmSeatCategorySchema.nameAreas,
       instance.areas,
@@ -1091,7 +1078,7 @@ final class CitmAreaCodable implements Codable<CitmArea> {
 
   @override
   void encode(CitmArea instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    final keyed = encoder.keyed(length: 2);
     keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
     keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
   }

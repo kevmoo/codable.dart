@@ -257,6 +257,20 @@ mixin _JsonListDecoderMixin on _JsonPrimitiveDecoderMixin {
   }
 }
 
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+@pragma('dart2js:prefer-inline')
+JsonKeyOptions _compileJsonKeyOptions(KeyOptions options) {
+  final primary = options.primaryCompiled;
+  if (primary is JsonKeyOptions) return primary;
+  return _compileJsonKeyOptionsSlow(options);
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+JsonKeyOptions _compileJsonKeyOptionsSlow(KeyOptions options) =>
+    options.compiled<JsonKeyOptions>(JsonKeyOptions.of);
+
 /// Pull-based [KeyedDecoder] cursor over a [JsonTokenReader], shared across
 /// native streaming and Wasm/JS reader drivers.
 final class StreamingKeyedDecoder
@@ -272,10 +286,9 @@ final class StreamingKeyedDecoder
 
   StreamingKeyedDecoder(this._reader, this._rootDecoder, {KeyOptions? options})
     : _options = options,
-      _compiledOptions = options != null
-          ? ((options.compiled ??= JsonKeyOptions.of(options.keys))
-                as JsonKeyOptions)
-          : null;
+      _compiledOptions = options == null
+          ? null
+          : _compileJsonKeyOptions(options);
 
   @override
   @pragma('vm:prefer-inline')
@@ -321,8 +334,7 @@ final class StreamingKeyedDecoder
   JsonKeyOptions _resolveOptions(KeyOptions options) =>
       identical(options, _options)
       ? _compiledOptions!
-      : ((options.compiled ??= JsonKeyOptions.of(options.keys))
-            as JsonKeyOptions);
+      : _compileJsonKeyOptions(options);
 
   @override
   @pragma('vm:prefer-inline')
@@ -400,6 +412,9 @@ final class StreamingUnkeyedDecoder
   bool _started = false;
 
   StreamingUnkeyedDecoder(this._reader, this._rootDecoder);
+
+  @override
+  int? get length => null;
 
   @override
   @pragma('vm:prefer-inline')
@@ -486,6 +501,11 @@ final class StreamingSingleValueDecoder
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  T? decodeNullable<T>(Decodable<T> decodable) =>
-      isNull() ? null : decode(decodable);
+  T? decodeNullable<T>(Decodable<T> decodable) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decode(decodable);
+  }
 }

@@ -948,6 +948,12 @@ final class DecoderGeneratorHelper {
   }
 
   void _writeDecoderReturn(StringBuffer buffer) {
+    if (model.fields.isEmpty) {
+      final constPrefix = model.isConstConstructor ? 'const ' : '';
+      buffer.writeln('  return $constPrefix${model.className}();');
+      buffer.writeln('}');
+      return;
+    }
     buffer.writeln('  return ${model.className}(');
     for (final field in model.fields) {
       final isNullableOrHasDefault = field.isNullable || field.hasDefaultValue;

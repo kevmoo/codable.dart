@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main, sdk-integration, 'feat/**' ]
   pull_request:
-    branches: [ main, sdk-integration ]
 
 jobs:
   build:
