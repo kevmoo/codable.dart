@@ -59,6 +59,7 @@ void main() {
         'pkgs/codable_benchmarks',
         'pkgs/codable_yaml',
         'pkgs/codable_cbor',
+        'pkgs/codable_msgpack',
       ], workingDirectory: tempDir.path);
     }
   } finally {

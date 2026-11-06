@@ -88,8 +88,8 @@ opens one of five container shapes:
 - **`MapDecoder` / `MapEncoder` (`decoder.map()` / `encoder.map({length})`)**:
   Sequential streaming over arbitrary key-value entries (`Map<K, V>` where `K`
   may be `int`, `bool`, an `enum`, or a composite struct/record). Formats with
-  typed keys (CBOR, YAML) preserve native key types, while JSON coerces scalar
-  string keys (`int`, `double`, `num`, `bool`, `String`).
+  typed keys (CBOR, MessagePack, YAML) preserve native key types, while JSON
+  coerces scalar string keys (`int`, `double`, `num`, `bool`, `String`).
 - **`UnkeyedDecoder` / `UnkeyedEncoder` (`decoder.unkeyed()` /
   `encoder.unkeyed({length})`)**: Sequential iteration over arrays (`[1, 2, 3]`)
   using `while (unkeyed.moveNext())`, exposing optional upfront `length` counts
@@ -105,18 +105,21 @@ opens one of five container shapes:
 - **Format-adaptive codecs (`isHumanReadable`)**: `Decoder.isHumanReadable` and
   `Encoder.isHumanReadable` let custom `Codable<T>` companions emit readable
   representations (ISO-8601 timestamps, canonical UUID strings) on JSON and YAML
-  while emitting compact integers or raw `Uint8List` bytes on CBOR.
+  while emitting compact integers or raw `Uint8List` bytes on CBOR and
+  MessagePack.
 - **First-class binary payloads (`ValueKind.bytes`)**: `readBytes()` and
   `encodeBytes()` transfer raw `Uint8List` slices on binary drivers
-  (`package:codable_cbor`) and automatically Base64-encode/decode (with
-  `[0..255]` integer-list decode fallback) on text drivers.
+  (`package:codable_cbor`, `package:codable_msgpack`) and automatically
+  Base64-encode/decode (with `[0..255]` integer-list decode fallback) on text
+  drivers.
 - **Driver base mixins (`Base*Mixin`)**: Custom format drivers (such as
-  `package:codable_yaml` and `package:codable_cbor`) mix in
-  `BaseKeyedDecoderMixin`, `BaseMappedDecoderMixin`, `BaseUnkeyedDecoderMixin`,
-  `BaseSingleValueDecoderMixin`, `BaseKeyedEncoderMixin`,
-  `BaseUnkeyedEncoderMixin`, and `BaseSingleValueEncoderMixin` to inherit
-  nullable, collection, and Base64 `Bytes` delegation from minimal primitive
-  implementations, and cache driver-specific key tables on shared schemas via
+  `package:codable_yaml`, `package:codable_cbor`, and `package:codable_msgpack`)
+  mix in `BaseKeyedDecoderMixin`, `BaseMappedDecoderMixin`,
+  `BaseUnkeyedDecoderMixin`, `BaseSingleValueDecoderMixin`,
+  `BaseKeyedEncoderMixin`, `BaseUnkeyedEncoderMixin`, and
+  `BaseSingleValueEncoderMixin` to inherit nullable, collection, and Base64
+  `Bytes` delegation from minimal primitive implementations, and cache
+  driver-specific key tables on shared schemas via
   `options.compiled<T>(compile)`.
 
 ### Target-Aware Execution (VM / Wasm vs. Web JS)
