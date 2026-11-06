@@ -317,6 +317,59 @@ final class StringKeyedNestedMapModel {
 }
 
 @Codable()
+final class NullableGetterTelemetry {
+  final String id;
+  final String? _rawTag;
+  final int? _rawScore;
+  final Address? _rawLocation;
+  final void Function(String field)? onRead;
+
+  const NullableGetterTelemetry({
+    required this.id,
+    String? tag,
+    int? score,
+    Address? location,
+    @CodableKey(ignore: true) this.onRead,
+  }) : _rawTag = tag,
+       _rawScore = score,
+       _rawLocation = location;
+
+  String? get tag {
+    onRead?.call('tag');
+    return _rawTag;
+  }
+
+  int? get score {
+    onRead?.call('score');
+    return _rawScore;
+  }
+
+  Address? get location {
+    onRead?.call('location');
+    return _rawLocation;
+  }
+}
+
+@Codable()
+final class AllNullableModel {
+  final int? a;
+  final String? b;
+  final List<int>? items;
+  final Set<UserRole>? roles;
+  final Map<String, int>? labels;
+  final Map<int, String>? codes;
+
+  const AllNullableModel({
+    this.a,
+    this.b,
+    this.items,
+    this.roles,
+    this.labels,
+    this.codes,
+  });
+}
+
+@Codable()
 final class EmptyRecord {
   const EmptyRecord();
 }

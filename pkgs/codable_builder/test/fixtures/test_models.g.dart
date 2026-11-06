@@ -302,7 +302,10 @@ final class UserAccountCodable implements Codable<UserAccount> {
 
   @override
   void encode(UserAccount instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 4;
+    final v$Location = instance.location;
+    if (v$Location != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
     keyed.encodeString(
       _$UserAccountSchema.nameEmailAddress,
@@ -310,11 +313,8 @@ final class UserAccountCodable implements Codable<UserAccount> {
     );
     keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
     keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
-    if (instance.location != null) {
-      keyed.encodeDoubleList(
-        _$UserAccountSchema.nameLocation,
-        instance.location!,
-      );
+    if (v$Location != null) {
+      keyed.encodeDoubleList(_$UserAccountSchema.nameLocation, v$Location);
     }
   }
 }
@@ -1052,15 +1052,18 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
 
   @override
   void encode(NumericMeasurement instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 6;
+    final v$OptionalScore = instance.optionalScore;
+    if (v$OptionalScore != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     switch (instance.score) {
       case final int v:
         keyed.encodeInt(_$NumericMeasurementSchema.nameScore, v);
       case final v:
         keyed.encodeDouble(_$NumericMeasurementSchema.nameScore, v.toDouble());
     }
-    if (instance.optionalScore != null) {
-      switch (instance.optionalScore!) {
+    if (v$OptionalScore != null) {
+      switch (v$OptionalScore) {
         case final int v:
           keyed.encodeInt(_$NumericMeasurementSchema.nameOptionalScore, v);
         case final v:
@@ -1649,13 +1652,13 @@ final class BinaryPayloadModelCodable implements Codable<BinaryPayloadModel> {
 
   @override
   void encode(BinaryPayloadModel instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 4;
+    final v$Signature = instance.signature;
+    if (v$Signature != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeBytes(_$BinaryPayloadModelSchema.namePayload, instance.payload);
-    if (instance.signature != null) {
-      keyed.encodeBytes(
-        _$BinaryPayloadModelSchema.nameSignature,
-        instance.signature!,
-      );
+    if (v$Signature != null) {
+      keyed.encodeBytes(_$BinaryPayloadModelSchema.nameSignature, v$Signature);
     }
     keyed.encodeList(
       _$BinaryPayloadModelSchema.nameChunks,
@@ -2105,6 +2108,377 @@ final class StringKeyedNestedMapModelCodable
           for (final entry1 in entry.value.entries) {
             k1.encodeInt(entry1.key, entry1.value);
           }
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for NullableGetterTelemetry
+// =============================================================================
+extension type const _$NullableGetterTelemetrySchema(int _value) {
+  // String Name Constants
+  static const String nameId = 'id';
+  static const String nameTag = 'tag';
+  static const String nameScore = 'score';
+  static const String nameLocation = 'location';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyId = 0;
+  static const int keyTag = 1;
+  static const int keyScore = 2;
+  static const int keyLocation = 3;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$NullableGetterTelemetrySchema.nameId,
+    _$NullableGetterTelemetrySchema.nameTag,
+    _$NullableGetterTelemetrySchema.nameScore,
+    _$NullableGetterTelemetrySchema.nameLocation,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$NullableGetterTelemetrySchema none =
+      _$NullableGetterTelemetrySchema(0);
+  static const int _idBit = 1 << 0;
+  static const _$NullableGetterTelemetrySchema id =
+      _$NullableGetterTelemetrySchema(_idBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$NullableGetterTelemetrySchema golden =
+      _$NullableGetterTelemetrySchema(_idBit);
+
+  @pragma('vm:prefer-inline')
+  _$NullableGetterTelemetrySchema operator |(
+    _$NullableGetterTelemetrySchema other,
+  ) => _$NullableGetterTelemetrySchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _idBit) == 0) {
+      missing.add(nameId);
+    }
+    throw CodableException(
+      'Missing required fields for NullableGetterTelemetry: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for NullableGetterTelemetry
+// =============================================================================
+final class NullableGetterTelemetryCodable
+    implements Codable<NullableGetterTelemetry> {
+  const NullableGetterTelemetryCodable();
+
+  @override
+  NullableGetterTelemetry decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$NullableGetterTelemetrySchema.keyOptions,
+    );
+
+    String? id;
+    String? tag;
+    int? score;
+    Address? location;
+    void Function(String)? onRead;
+    var seen = _$NullableGetterTelemetrySchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$NullableGetterTelemetrySchema.keyOptions,
+      )) {
+        case _$NullableGetterTelemetrySchema.keyId:
+          if ((seen._value & _$NullableGetterTelemetrySchema.id._value) != 0) {
+            throw const CodableException('Duplicate field "id"');
+          }
+          id = keyed.readString();
+          seen |= _$NullableGetterTelemetrySchema.id;
+          break;
+        case _$NullableGetterTelemetrySchema.keyTag:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            tag = null;
+          } else {
+            tag = keyed.readString();
+          }
+          break;
+        case _$NullableGetterTelemetrySchema.keyScore:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            score = null;
+          } else {
+            score = keyed.readInt();
+          }
+          break;
+        case _$NullableGetterTelemetrySchema.keyLocation:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            location = null;
+          } else {
+            location = const AddressCodable().decode(keyed.nestedDecoder());
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return NullableGetterTelemetry(
+      id: id!,
+      tag: tag,
+      score: score,
+      location: location,
+      onRead: onRead,
+    );
+  }
+
+  @override
+  void encode(NullableGetterTelemetry instance, Encoder encoder) {
+    var count$ = 1;
+    final v$Tag = instance.tag;
+    if (v$Tag != null) count$++;
+    final v$Score = instance.score;
+    if (v$Score != null) count$++;
+    final v$Location = instance.location;
+    if (v$Location != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeString(_$NullableGetterTelemetrySchema.nameId, instance.id);
+    if (v$Tag != null) {
+      keyed.encodeString(_$NullableGetterTelemetrySchema.nameTag, v$Tag);
+    }
+    if (v$Score != null) {
+      keyed.encodeInt(_$NullableGetterTelemetrySchema.nameScore, v$Score);
+    }
+    if (v$Location != null) {
+      keyed.encodeValue(
+        _$NullableGetterTelemetrySchema.nameLocation,
+        v$Location,
+        const AddressCodable(),
+      );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for AllNullableModel
+// =============================================================================
+extension type const _$AllNullableModelSchema(int _value) {
+  // String Name Constants
+  static const String nameA = 'a';
+  static const String nameB = 'b';
+  static const String nameItems = 'items';
+  static const String nameRoles = 'roles';
+  static const String nameLabels = 'labels';
+  static const String nameCodes = 'codes';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyA = 0;
+  static const int keyB = 1;
+  static const int keyItems = 2;
+  static const int keyRoles = 3;
+  static const int keyLabels = 4;
+  static const int keyCodes = 5;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$AllNullableModelSchema.nameA,
+    _$AllNullableModelSchema.nameB,
+    _$AllNullableModelSchema.nameItems,
+    _$AllNullableModelSchema.nameRoles,
+    _$AllNullableModelSchema.nameLabels,
+    _$AllNullableModelSchema.nameCodes,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$AllNullableModelSchema none = _$AllNullableModelSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$AllNullableModelSchema operator |(_$AllNullableModelSchema other) =>
+      _$AllNullableModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for AllNullableModel
+// =============================================================================
+final class AllNullableModelCodable implements Codable<AllNullableModel> {
+  const AllNullableModelCodable();
+
+  @override
+  AllNullableModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$AllNullableModelSchema.keyOptions);
+
+    int? a;
+    String? b;
+    List<int>? items;
+    Set<UserRole>? roles;
+    Map<String, int>? labels;
+    Map<int, String>? codes;
+    var seen = _$AllNullableModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$AllNullableModelSchema.keyOptions)) {
+        case _$AllNullableModelSchema.keyA:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            a = null;
+          } else {
+            a = keyed.readInt();
+          }
+          break;
+        case _$AllNullableModelSchema.keyB:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            b = null;
+          } else {
+            b = keyed.readString();
+          }
+          break;
+        case _$AllNullableModelSchema.keyItems:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            items = null;
+          } else {
+            items = keyed.decodeIntList();
+          }
+          break;
+        case _$AllNullableModelSchema.keyRoles:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            roles = null;
+          } else {
+            roles = keyed
+                .decodeList(
+                  Decodable.fromFunction(
+                    (d) => UserRole.values.byName(d.singleValue().readString()),
+                  ),
+                )
+                .toSet();
+          }
+          break;
+        case _$AllNullableModelSchema.keyLabels:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            labels = null;
+          } else {
+            {
+              final k = keyed.nestedDecoder().keyed();
+              final m = <String, int>{};
+              while (k.moveNextKey()) {
+                final key = k.nextKey();
+                m[key] = k.readInt();
+              }
+              labels = m;
+            }
+          }
+          break;
+        case _$AllNullableModelSchema.keyCodes:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            codes = null;
+          } else {
+            {
+              final mDecoder = keyed.nestedDecoder().map();
+              final m = <int, String>{};
+              while (mDecoder.moveNextEntry()) {
+                final key = mDecoder.keyDecoder().singleValue().readInt();
+                m[key] = mDecoder.valueDecoder().singleValue().readString();
+              }
+              codes = m;
+            }
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return AllNullableModel(
+      a: a,
+      b: b,
+      items: items,
+      roles: roles,
+      labels: labels,
+      codes: codes,
+    );
+  }
+
+  @override
+  void encode(AllNullableModel instance, Encoder encoder) {
+    var count$ = 0;
+    final v$A = instance.a;
+    if (v$A != null) count$++;
+    final v$B = instance.b;
+    if (v$B != null) count$++;
+    final v$Items = instance.items;
+    if (v$Items != null) count$++;
+    final v$Roles = instance.roles;
+    if (v$Roles != null) count$++;
+    final v$Labels = instance.labels;
+    if (v$Labels != null) count$++;
+    final v$Codes = instance.codes;
+    if (v$Codes != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$A != null) {
+      keyed.encodeInt(_$AllNullableModelSchema.nameA, v$A);
+    }
+    if (v$B != null) {
+      keyed.encodeString(_$AllNullableModelSchema.nameB, v$B);
+    }
+    if (v$Items != null) {
+      keyed.encodeIntList(_$AllNullableModelSchema.nameItems, v$Items);
+    }
+    if (v$Roles != null) {
+      keyed.encodeList(
+        _$AllNullableModelSchema.nameRoles,
+        v$Roles,
+        Encodable.fromFunction((UserRole item, e) {
+          e.singleValue().encodeString(item.name);
+        }),
+      );
+    }
+    if (v$Labels != null) {
+      {
+        final k = keyed
+            .nestedEncoder(_$AllNullableModelSchema.nameLabels)
+            .keyed(length: v$Labels.length);
+        for (final entry in v$Labels.entries) {
+          k.encodeInt(entry.key, entry.value);
+        }
+      }
+    }
+    if (v$Codes != null) {
+      {
+        final m = keyed
+            .nestedEncoder(_$AllNullableModelSchema.nameCodes)
+            .map(length: v$Codes.length);
+        for (final entry in v$Codes.entries) {
+          m.keyEncoder().singleValue().encodeInt(entry.key);
+          m.valueEncoder().singleValue().encodeString(entry.value);
         }
       }
     }

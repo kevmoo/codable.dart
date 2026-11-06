@@ -366,7 +366,14 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
 
   @override
   void encode(ServiceSpec instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 8;
+    final v$SampleRate = instance.sampleRate;
+    if (v$SampleRate != null) count$++;
+    final v$TlsCertDer = instance.tlsCertDer;
+    if (v$TlsCertDer != null) count$++;
+    final v$Bounds = instance.bounds;
+    if (v$Bounds != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(
       _$ServiceSpecSchema.nameServiceName,
       instance.serviceName,
@@ -376,20 +383,14 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
       instance.logLevel.name,
     );
     keyed.encodeInt(_$ServiceSpecSchema.nameMaxRetries, instance.maxRetries);
-    if (instance.sampleRate != null) {
-      keyed.encodeDouble(
-        _$ServiceSpecSchema.nameSampleRate,
-        instance.sampleRate!,
-      );
+    if (v$SampleRate != null) {
+      keyed.encodeDouble(_$ServiceSpecSchema.nameSampleRate, v$SampleRate);
     }
-    if (instance.tlsCertDer != null) {
-      keyed.encodeBytes(
-        _$ServiceSpecSchema.nameTlsCertDer,
-        instance.tlsCertDer!,
-      );
+    if (v$TlsCertDer != null) {
+      keyed.encodeBytes(_$ServiceSpecSchema.nameTlsCertDer, v$TlsCertDer);
     }
-    if (instance.bounds != null) {
-      keyed.encodeDoubleList(_$ServiceSpecSchema.nameBounds, instance.bounds!);
+    if (v$Bounds != null) {
+      keyed.encodeDoubleList(_$ServiceSpecSchema.nameBounds, v$Bounds);
     }
     keyed.encodeStringList(_$ServiceSpecSchema.nameTags, instance.tags);
     {

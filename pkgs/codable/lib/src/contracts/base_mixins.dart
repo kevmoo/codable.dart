@@ -573,8 +573,11 @@ mixin BaseKeyedEncoderMixin implements KeyedEncoder {
 
   @override
   void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable) {
-    final u = nestedEncoder(key)
-        .unkeyed(length: elements is List ? elements.length : null);
+    final u = nestedEncoder(key).unkeyed(
+      length: elements is List
+          ? elements.length
+          : (elements is Set ? elements.length : null),
+    );
     u.encodeList(elements, encodable);
   }
 
