@@ -1,5 +1,5 @@
 High-performance, zero-intermediate-tree serialization framework and streaming
-format drivers (JSON, YAML, and CBOR) for Dart.
+format drivers (JSON, YAML, CBOR, and MessagePack) for Dart.
 
 ## Packages
 
@@ -9,6 +9,7 @@ format drivers (JSON, YAML, and CBOR) for Dart.
 | [`package:codable_builder`](pkgs/codable_builder/README.md)                 | `build_runner` code generator synthesizing single-pass streaming companion `*Codable` classes and pre-compiled `KeyOptions` schemas for `@Codable()` classes.                                          |
 | [`package:codable_yaml`](pkgs/codable_yaml/README.md)                       | `SourceSpan`-preserving YAML serialization driver (`YamlCodableDecoder`, `YamlCodableEncoder`, `YamlCodableException`) with `checked_yaml`-grade diagnostics.                                          |
 | [`package:codable_cbor`](pkgs/codable_cbor/README.md)                       | Zero-dependency definite-length RFC 8949 CBOR serialization driver (`CborCodableDecoder`, `CborCodableEncoder`) with zero-copy `Uint8List` slices and typed map keys.                                  |
+| [`package:codable_msgpack`](pkgs/codable_msgpack/README.md)                 | Zero-dependency single-pass MessagePack serialization driver (`MsgPackCodableDecoder`, `MsgPackCodableEncoder`) with zero-copy `Uint8List` slices and typed map keys.                                  |
 | [`package:codable_benchmarks`](pkgs/codable_benchmarks/BENCHMARK_REPORT.md) | Multi-runtime benchmark suite (`AOT`, `JS`, `Wasm`) comparing `package:codable` and `json_serializable` across canonical JSON datasets.                                                                |
 
 ## Quick Links
