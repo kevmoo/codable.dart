@@ -168,7 +168,12 @@ final class PersonCodable implements Codable<Person> {
 
   @override
   void encode(Person instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 4;
+    final v$MiddleName = instance.middleName;
+    if (v$MiddleName != null) count$++;
+    final v$LastOrder = instance.lastOrder;
+    if (v$LastOrder != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
     keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
     keyed.encodeValue(
@@ -176,13 +181,13 @@ final class PersonCodable implements Codable<Person> {
       instance.dateOfBirth,
       const DateTimeIsoDecoder(),
     );
-    if (instance.middleName != null) {
-      keyed.encodeString(_$PersonSchema.nameMiddleName, instance.middleName!);
+    if (v$MiddleName != null) {
+      keyed.encodeString(_$PersonSchema.nameMiddleName, v$MiddleName);
     }
-    if (instance.lastOrder != null) {
+    if (v$LastOrder != null) {
       keyed.encodeValue(
         _$PersonSchema.nameLastOrder,
-        instance.lastOrder!,
+        v$LastOrder,
         const DateTimeIsoDecoder(),
       );
     }
@@ -345,26 +350,33 @@ final class OrderCodable implements Codable<Order> {
 
   @override
   void encode(Order instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 1;
+    final v$Count = instance.count;
+    if (v$Count != null) count$++;
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) count$++;
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) count$++;
+    final v$Item = instance.item;
+    if (v$Item != null) count$++;
+    final v$PrepTimeMs = instance.prepTimeMs;
+    if (v$PrepTimeMs != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
-    if (instance.count != null) {
-      keyed.encodeInt(_$OrderSchema.nameCount, instance.count!);
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderSchema.nameCount, v$Count);
     }
-    if (instance.itemNumber != null) {
-      keyed.encodeInt(_$OrderSchema.nameItemNumber, instance.itemNumber!);
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$OrderSchema.nameItemNumber, v$ItemNumber);
     }
-    if (instance.isRushed != null) {
-      keyed.encodeBool(_$OrderSchema.nameIsRushed, instance.isRushed!);
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$OrderSchema.nameIsRushed, v$IsRushed);
     }
-    if (instance.item != null) {
-      keyed.encodeValue(
-        _$OrderSchema.nameItem,
-        instance.item!,
-        const ItemCodable(),
-      );
+    if (v$Item != null) {
+      keyed.encodeValue(_$OrderSchema.nameItem, v$Item, const ItemCodable());
     }
-    if (instance.prepTimeMs != null) {
-      keyed.encodeInt(_$OrderSchema.namePrepTimeMs, instance.prepTimeMs!);
+    if (v$PrepTimeMs != null) {
+      keyed.encodeInt(_$OrderSchema.namePrepTimeMs, v$PrepTimeMs);
     }
   }
 }
@@ -458,15 +470,22 @@ final class ItemCodable implements Codable<Item> {
 
   @override
   void encode(Item instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.count != null) {
-      keyed.encodeInt(_$ItemSchema.nameCount, instance.count!);
+    var count$ = 0;
+    final v$Count = instance.count;
+    if (v$Count != null) count$++;
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) count$++;
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Count != null) {
+      keyed.encodeInt(_$ItemSchema.nameCount, v$Count);
     }
-    if (instance.itemNumber != null) {
-      keyed.encodeInt(_$ItemSchema.nameItemNumber, instance.itemNumber!);
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$ItemSchema.nameItemNumber, v$ItemNumber);
     }
-    if (instance.isRushed != null) {
-      keyed.encodeBool(_$ItemSchema.nameIsRushed, instance.isRushed!);
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$ItemSchema.nameIsRushed, v$IsRushed);
     }
   }
 }

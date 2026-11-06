@@ -563,18 +563,23 @@ final class TwitterUserEntitiesCodable implements Codable<TwitterUserEntities> {
 
   @override
   void encode(TwitterUserEntities instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.url != null) {
+    var count$ = 0;
+    final v$Url = instance.url;
+    if (v$Url != null) count$++;
+    final v$Description = instance.description;
+    if (v$Description != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Url != null) {
       keyed.encodeValue(
         _$TwitterUserEntitiesSchema.nameUrl,
-        instance.url!,
+        v$Url,
         const TwitterEntitiesUrlsCodable(),
       );
     }
-    if (instance.description != null) {
+    if (v$Description != null) {
       keyed.encodeValue(
         _$TwitterUserEntitiesSchema.nameDescription,
-        instance.description!,
+        v$Description,
         const TwitterEntitiesUrlsCodable(),
       );
     }
@@ -1136,7 +1141,18 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
 
   @override
   void encode(TwitterUser instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 35;
+    final v$Url = instance.url;
+    if (v$Url != null) count$++;
+    final v$Entities = instance.entities;
+    if (v$Entities != null) count$++;
+    final v$UtcOffset = instance.utcOffset;
+    if (v$UtcOffset != null) count$++;
+    final v$TimeZone = instance.timeZone;
+    if (v$TimeZone != null) count$++;
+    final v$ProfileBannerUrl = instance.profileBannerUrl;
+    if (v$ProfileBannerUrl != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$TwitterUserSchema.nameId, instance.id);
     keyed.encodeString(_$TwitterUserSchema.nameIdStr, instance.idStr);
     keyed.encodeString(_$TwitterUserSchema.nameName, instance.name);
@@ -1146,13 +1162,13 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
       _$TwitterUserSchema.nameDescription,
       instance.description,
     );
-    if (instance.url != null) {
-      keyed.encodeString(_$TwitterUserSchema.nameUrl, instance.url!);
+    if (v$Url != null) {
+      keyed.encodeString(_$TwitterUserSchema.nameUrl, v$Url);
     }
-    if (instance.entities != null) {
+    if (v$Entities != null) {
       keyed.encodeValue(
         _$TwitterUserSchema.nameEntities,
-        instance.entities!,
+        v$Entities,
         const TwitterUserEntitiesCodable(),
       );
     }
@@ -1171,11 +1187,11 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
       _$TwitterUserSchema.nameFavouritesCount,
       instance.favouritesCount,
     );
-    if (instance.utcOffset != null) {
-      keyed.encodeInt(_$TwitterUserSchema.nameUtcOffset, instance.utcOffset!);
+    if (v$UtcOffset != null) {
+      keyed.encodeInt(_$TwitterUserSchema.nameUtcOffset, v$UtcOffset);
     }
-    if (instance.timeZone != null) {
-      keyed.encodeString(_$TwitterUserSchema.nameTimeZone, instance.timeZone!);
+    if (v$TimeZone != null) {
+      keyed.encodeString(_$TwitterUserSchema.nameTimeZone, v$TimeZone);
     }
     keyed.encodeBool(_$TwitterUserSchema.nameGeoEnabled, instance.geoEnabled);
     keyed.encodeBool(_$TwitterUserSchema.nameVerified, instance.verified);
@@ -1220,10 +1236,10 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
       _$TwitterUserSchema.nameProfileImageUrlHttps,
       instance.profileImageUrlHttps,
     );
-    if (instance.profileBannerUrl != null) {
+    if (v$ProfileBannerUrl != null) {
       keyed.encodeString(
         _$TwitterUserSchema.nameProfileBannerUrl,
-        instance.profileBannerUrl!,
+        v$ProfileBannerUrl,
       );
     }
     keyed.encodeString(
@@ -1608,11 +1624,32 @@ final class TwitterStatusCodable implements Codable<TwitterStatus> {
 
   @override
   void encode(TwitterStatus instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.metadata != null) {
+    var count$ = 11;
+    final v$Metadata = instance.metadata;
+    if (v$Metadata != null) count$++;
+    final v$InReplyToStatusId = instance.inReplyToStatusId;
+    if (v$InReplyToStatusId != null) count$++;
+    final v$InReplyToStatusIdStr = instance.inReplyToStatusIdStr;
+    if (v$InReplyToStatusIdStr != null) count$++;
+    final v$InReplyToUserId = instance.inReplyToUserId;
+    if (v$InReplyToUserId != null) count$++;
+    final v$InReplyToUserIdStr = instance.inReplyToUserIdStr;
+    if (v$InReplyToUserIdStr != null) count$++;
+    final v$InReplyToScreenName = instance.inReplyToScreenName;
+    if (v$InReplyToScreenName != null) count$++;
+    final v$User = instance.user;
+    if (v$User != null) count$++;
+    final v$Entities = instance.entities;
+    if (v$Entities != null) count$++;
+    final v$PossiblySensitive = instance.possiblySensitive;
+    if (v$PossiblySensitive != null) count$++;
+    final v$RetweetedStatus = instance.retweetedStatus;
+    if (v$RetweetedStatus != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Metadata != null) {
       keyed.encodeValue(
         _$TwitterStatusSchema.nameMetadata,
-        instance.metadata!,
+        v$Metadata,
         const TwitterMetadataCodable(),
       );
     }
@@ -1622,40 +1659,40 @@ final class TwitterStatusCodable implements Codable<TwitterStatus> {
     keyed.encodeString(_$TwitterStatusSchema.nameText, instance.text);
     keyed.encodeString(_$TwitterStatusSchema.nameSource, instance.source);
     keyed.encodeBool(_$TwitterStatusSchema.nameTruncated, instance.truncated);
-    if (instance.inReplyToStatusId != null) {
+    if (v$InReplyToStatusId != null) {
       keyed.encodeInt(
         _$TwitterStatusSchema.nameInReplyToStatusId,
-        instance.inReplyToStatusId!,
+        v$InReplyToStatusId,
       );
     }
-    if (instance.inReplyToStatusIdStr != null) {
+    if (v$InReplyToStatusIdStr != null) {
       keyed.encodeString(
         _$TwitterStatusSchema.nameInReplyToStatusIdStr,
-        instance.inReplyToStatusIdStr!,
+        v$InReplyToStatusIdStr,
       );
     }
-    if (instance.inReplyToUserId != null) {
+    if (v$InReplyToUserId != null) {
       keyed.encodeInt(
         _$TwitterStatusSchema.nameInReplyToUserId,
-        instance.inReplyToUserId!,
+        v$InReplyToUserId,
       );
     }
-    if (instance.inReplyToUserIdStr != null) {
+    if (v$InReplyToUserIdStr != null) {
       keyed.encodeString(
         _$TwitterStatusSchema.nameInReplyToUserIdStr,
-        instance.inReplyToUserIdStr!,
+        v$InReplyToUserIdStr,
       );
     }
-    if (instance.inReplyToScreenName != null) {
+    if (v$InReplyToScreenName != null) {
       keyed.encodeString(
         _$TwitterStatusSchema.nameInReplyToScreenName,
-        instance.inReplyToScreenName!,
+        v$InReplyToScreenName,
       );
     }
-    if (instance.user != null) {
+    if (v$User != null) {
       keyed.encodeValue(
         _$TwitterStatusSchema.nameUser,
-        instance.user!,
+        v$User,
         const TwitterUserCodable(),
       );
     }
@@ -1667,26 +1704,26 @@ final class TwitterStatusCodable implements Codable<TwitterStatus> {
       _$TwitterStatusSchema.nameFavoriteCount,
       instance.favoriteCount,
     );
-    if (instance.entities != null) {
+    if (v$Entities != null) {
       keyed.encodeValue(
         _$TwitterStatusSchema.nameEntities,
-        instance.entities!,
+        v$Entities,
         const TwitterEntitiesCodable(),
       );
     }
     keyed.encodeBool(_$TwitterStatusSchema.nameFavorited, instance.favorited);
     keyed.encodeBool(_$TwitterStatusSchema.nameRetweeted, instance.retweeted);
-    if (instance.possiblySensitive != null) {
+    if (v$PossiblySensitive != null) {
       keyed.encodeBool(
         _$TwitterStatusSchema.namePossiblySensitive,
-        instance.possiblySensitive!,
+        v$PossiblySensitive,
       );
     }
     keyed.encodeString(_$TwitterStatusSchema.nameLang, instance.lang);
-    if (instance.retweetedStatus != null) {
+    if (v$RetweetedStatus != null) {
       keyed.encodeValue(
         _$TwitterStatusSchema.nameRetweetedStatus,
-        instance.retweetedStatus!,
+        v$RetweetedStatus,
         const TwitterStatusCodable(),
       );
     }

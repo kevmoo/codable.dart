@@ -149,8 +149,9 @@ void main() {
       );
       // Tuple decode & encode
       check(output).contains('location = keyed.decodeFloat64List();');
+      check(output).contains('final v\$Location = instance.location;');
       check(output).contains(
-        'keyed.encodeDoubleList(_\$UserAccountSchema.nameLocation, instance.location!);',
+        'keyed.encodeDoubleList(_\$UserAccountSchema.nameLocation, v\$Location);',
       );
       // Ignored field internalId not in schema options
       check(output).not((s) => s.contains('nameInternalId'));
@@ -313,15 +314,18 @@ void main() {
       () {
         final output = runGeneratorFor('BinaryPayloadModel');
 
-        // Nullable field present (`signature`), so omit constant length hint
-        check(output).contains('final keyed = encoder.keyed();');
+        // Nullable field present (`signature`), so pre-count into `count$`
+        check(output).contains('var count\$ = 4;');
+        check(output).contains('final v\$Signature = instance.signature;');
+        check(output).contains('if (v\$Signature != null) count\$++;');
+        check(output).contains('final keyed = encoder.keyed(length: count\$);');
         // Top-level Uint8List decode & encode
         check(output).contains('payload = keyed.readBytes();');
         check(output).contains(
           'keyed.encodeBytes(_\$BinaryPayloadModelSchema.namePayload, instance.payload);',
         );
         check(output).contains(
-          'keyed.encodeBytes(_\$BinaryPayloadModelSchema.nameSignature, instance.signature!);',
+          'keyed.encodeBytes(_\$BinaryPayloadModelSchema.nameSignature, v\$Signature);',
         );
         // List<Uint8List> & List<Uint8List?>
         check(output).contains('l.add(u.readBytes());');
@@ -439,10 +443,49 @@ void main() {
         check(emptyOutput).contains('encoder.keyed(length: 0);');
         check(emptyOutput).contains('return const EmptyRecord();');
 
-        // UserAccount has nullable `location`, so no length hint
+        // UserAccount has 4 fixed fields + nullable `location` (+ 1 ignored)
         final userOutput = runGeneratorFor('UserAccount');
-        check(userOutput).contains('final keyed = encoder.keyed();');
+        check(userOutput).contains('var count\$ = 4;');
+        check(userOutput).contains('if (v\$Location != null) count\$++;');
+        check(userOutput)
+            .contains('final keyed = encoder.keyed(length: count\$);');
       },
     );
+
+    test('pre-counts nullable fields with single-read promoted locals and zero ! in encode', () {
+      final telemetryOutput = runGeneratorFor('NullableGetterTelemetry');
+      final encodeSection = telemetryOutput.substring(
+        telemetryOutput.indexOf('void encode('),
+      );
+
+      check(encodeSection).contains('var count\$ = 1;');
+      check(encodeSection).contains('final v\$Tag = instance.tag;');
+      check(encodeSection).contains('if (v\$Tag != null) count\$++;');
+      check(encodeSection).contains('final v\$Score = instance.score;');
+      check(encodeSection).contains('if (v\$Score != null) count\$++;');
+      check(encodeSection).contains('final v\$Location = instance.location;');
+      check(encodeSection).contains('if (v\$Location != null) count\$++;');
+      check(encodeSection)
+          .contains('final keyed = encoder.keyed(length: count\$);');
+      check(encodeSection).not((s) => s.contains('encoder.keyed()'));
+
+      // Each nullable getter is read from `instance.` exactly once in encode
+      check('instance.tag'.allMatches(encodeSection).length).equals(1);
+      check('instance.score'.allMatches(encodeSection).length).equals(1);
+      check('instance.location'.allMatches(encodeSection).length).equals(1);
+      // Promoted locals eliminate `!` null-assertions inside encode
+      check(encodeSection).not((s) => s.contains('!;'));
+      check(encodeSection).not((s) => s.contains('!,'));
+      check(encodeSection).not((s) => s.contains('!)'));
+
+      // All-nullable model starts fixedNonNullCount at 0
+      final allNullOutput = runGeneratorFor('AllNullableModel');
+      final allNullEncode = allNullOutput.substring(
+        allNullOutput.indexOf('void encode('),
+      );
+      check(allNullEncode).contains('var count\$ = 0;');
+      check(allNullEncode)
+          .contains('final keyed = encoder.keyed(length: count\$);');
+    });
   });
 }

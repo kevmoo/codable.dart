@@ -120,13 +120,16 @@ final class ArticleCodable implements Codable<Article> {
 
   @override
   void encode(Article instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 2;
+    final v$Author = instance.author;
+    if (v$Author != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$ArticleSchema.nameId, instance.id);
     keyed.encodeString(_$ArticleSchema.nameTitle, instance.title);
-    if (instance.author != null) {
+    if (v$Author != null) {
       keyed.encodeValue(
         _$ArticleSchema.nameAuthor,
-        instance.author!,
+        v$Author,
         const UserCodable(),
       );
     }

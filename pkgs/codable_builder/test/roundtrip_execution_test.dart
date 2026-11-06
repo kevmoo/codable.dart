@@ -621,7 +621,7 @@ void main() {
             .contains('Unknown UserRole value');
       });
 
-      test('passes exact compile-time length hints to Encoder.keyed when all fields are non-nullable', () {
+      test('passes exact compile-time and pre-counted length hints to Encoder.keyed', () {
         int? captureKeyedLength<T>(T value, Encodable<T> codec) {
           int? captured;
           JsonCodableEncoder.toBytes<T>(
@@ -656,7 +656,211 @@ void main() {
             ),
             const UserAccountCodable(),
           ),
-        ).isNull();
+        ).equals(4);
+        check(
+          captureKeyedLength(
+            UserAccount(
+              id: 'u1',
+              emailAddress: 'a@b.c',
+              role: UserRole.admin,
+              location: Float64List.fromList([37.7, -122.4]),
+            ),
+            const UserAccountCodable(),
+          ),
+        ).equals(5);
+      });
+
+      test('evaluates nullable getter fields exactly once per encode', () {
+        for (final (model, expectedLengths) in [
+          (const NullableGetterTelemetry(id: 't0'), <int>[1]),
+          (
+            const NullableGetterTelemetry(
+              id: 't1',
+              tag: 'canary',
+              location: Address(city: 'Seattle', street: 'Pine St'),
+            ),
+            <int>[3, 2],
+          ),
+          (
+            const NullableGetterTelemetry(
+              id: 't2',
+              tag: 'prod',
+              score: 99,
+              location: Address(city: 'MTV', street: 'Shoreline'),
+            ),
+            <int>[4, 2],
+          ),
+        ]) {
+          final reads = <String>[];
+          final traced = NullableGetterTelemetry(
+            id: model.id,
+            tag: model.tag,
+            score: model.score,
+            location: model.location,
+            onRead: reads.add,
+          );
+          final spy = _StrictKnownLengthSpyEncoder();
+          const NullableGetterTelemetryCodable().encode(traced, spy);
+
+          check(reads).deepEquals(['tag', 'score', 'location']);
+          spy.verifyAllCountsMatch();
+          check(
+            spy.containers
+                .where((c) => c.kind == 'keyed')
+                .map((c) => c.declaredLength)
+                .toList(),
+          ).deepEquals(expectedLengths);
+        }
+      });
+
+      test('strict single-pass spy Encoder succeeds with 0 null lengths across all model shapes', () {
+        void verifyStrictEncode<T>(T value, Encodable<T> codec) {
+          final spy = _StrictKnownLengthSpyEncoder();
+          codec.encode(value, spy);
+          check(spy.containers).isNotEmpty();
+          spy.verifyAllCountsMatch();
+        }
+
+        // Empty & all-non-nullable models
+        verifyStrictEncode(const EmptyRecord(), const EmptyRecordCodable());
+        verifyStrictEncode(const Point(3.5, -7.25), const PointCodable());
+
+        // All-null, partial-null, and all-present nullable models (with List, Set, Map)
+        verifyStrictEncode(
+          const AllNullableModel(),
+          const AllNullableModelCodable(),
+        );
+        verifyStrictEncode(
+          const AllNullableModel(b: 'partial', roles: {UserRole.admin}),
+          const AllNullableModelCodable(),
+        );
+        verifyStrictEncode(
+          const AllNullableModel(
+            a: 42,
+            b: 'full',
+            items: [1, 2, 3],
+            roles: {UserRole.admin, UserRole.guest},
+            labels: {'x': 1, 'y': 2},
+            codes: {200: 'ok', 404: 'missing'},
+          ),
+          const AllNullableModelCodable(),
+        );
+
+        // Nested models, Lists, Sets, Maps, Tuples, Bytes, and Numeric collections
+        verifyStrictEncode(
+          const Enterprise(
+            name: 'Acme',
+            headquarter: Address(city: 'Austin', street: 'Congress Ave'),
+            branches: [Address(city: 'Boston', street: 'Beacon St')],
+            categories: {'cloud', 'ai'},
+            headcountByDept: {'eng': 120},
+          ),
+          const EnterpriseCodable(),
+        );
+        verifyStrictEncode(
+          const Team(
+            name: 'Platform',
+            roles: [UserRole.admin, UserRole.member],
+            nullableTags: {'a', null, 'b'},
+            scores: {'p50': 12, 'p99': null},
+          ),
+          const TeamCodable(),
+        );
+        verifyStrictEncode(
+          PrimitiveCollectionsModel(
+            ints: [1, 2],
+            doubles: [3.5],
+            strings: ['s'],
+            bools: [true, false],
+            float64s: Float64List.fromList([1.0, 2.0]),
+            matrix: [
+              [1.0, 2.0],
+              [3.0],
+            ],
+            nestedFloats: [
+              Float64List.fromList([9.0]),
+            ],
+          ),
+          const PrimitiveCollectionsModelCodable(),
+        );
+        verifyStrictEncode(
+          NumericMeasurement(
+            score: 10,
+            optionalScore: 2.5,
+            samples: const [1, 2.5],
+            nullableSamples: const [null, 4],
+            distinctValues: {1, 2.5},
+            metrics: const {'a': 1},
+            nullableMetrics: const {'b': null, 'c': 3.5},
+          ),
+          const NumericMeasurementCodable(),
+        );
+        verifyStrictEncode(
+          BinaryPayloadModel(
+            payload: Uint8List.fromList([1, 2]),
+            signature: Uint8List.fromList([9]),
+            chunks: [
+              Uint8List.fromList([3]),
+            ],
+            nullableChunks: [
+              null,
+              Uint8List.fromList([4, 5]),
+            ],
+            namedBlobs: {
+              'k': Uint8List.fromList([6]),
+            },
+          ),
+          const BinaryPayloadModelCodable(),
+        );
+        verifyStrictEncode(
+          const TypedKeyMapModel(
+            statusMessages: {200: 'ok'},
+            roleCounts: {UserRole.admin: 3},
+            flagWeights: {true: 1.0},
+            buckets: {
+              'lat': [5, 10],
+            },
+          ),
+          const TypedKeyMapModelCodable(),
+        );
+        verifyStrictEncode(
+          const CompositeKeyMapModel(
+            labelsByPoint: {Point(0, 0): 'origin', Point(1, 2): 'target'},
+          ),
+          const CompositeKeyMapModelCodable(),
+        );
+        verifyStrictEncode(
+          const StringKeyedNestedMapModel(
+            rolesByUser: {'u': UserRole.guest},
+            officesByCode: {
+              'hq': Address(city: 'NYC', street: '8th Ave'),
+              'none': null,
+            },
+            nestedCounts: {
+              'r': {'c': 1},
+            },
+          ),
+          const StringKeyedNestedMapModelCodable(),
+        );
+
+        // Top-level EncodableListExtension on both List and Set
+        final listSpy = _StrictKnownLengthSpyEncoder();
+        const PointCodable().encodeList(const [
+          Point(1, 2),
+          Point(3, 4),
+        ], listSpy);
+        listSpy.verifyAllCountsMatch();
+
+        final setSpy = _StrictKnownLengthSpyEncoder();
+        const PointCodable().encodeList({const Point(5, 6)}, setSpy);
+        setSpy.verifyAllCountsMatch();
+
+        // Guardrail proof: spy actually rejects null container lengths
+        check(() => _StrictKnownLengthSpyEncoder().keyed())
+            .throws<StateError>();
+        check(() => _StrictKnownLengthSpyEncoder().unkeyed())
+            .throws<StateError>();
+        check(() => _StrictKnownLengthSpyEncoder().map()).throws<StateError>();
       });
 
       test('StringKeyedNestedMapModel roundtrips enum, nullable @Codable, and nested String maps via keyed() only', () {
@@ -996,4 +1200,200 @@ final class _RoutingSpyKeyedDecoder
   @override
   Decoder nestedDecoder() =>
       _RoutingSpyDecoder(_inner.nestedDecoder(), _events);
+}
+
+final class _ContainerAudit {
+  final String kind;
+  final int declaredLength;
+  int actualCount = 0;
+
+  _ContainerAudit(this.kind, this.declaredLength);
+}
+
+int _requireKnownLength(String kind, int? length) {
+  if (length == null || length < 0) {
+    throw StateError(
+      'Expected non-negative known length for $kind, got $length',
+    );
+  }
+  return length;
+}
+
+final class _StrictKnownLengthSpyEncoder implements Encoder {
+  final List<_ContainerAudit> containers;
+  @override
+  final Map<Object, Object?> userInfo;
+
+  _StrictKnownLengthSpyEncoder({
+    List<_ContainerAudit>? containers,
+    this.userInfo = const {},
+  }) : containers = containers ?? <_ContainerAudit>[];
+
+  @override
+  bool get isHumanReadable => false;
+
+  void verifyAllCountsMatch() {
+    for (final c in containers) {
+      check(c.actualCount).equals(c.declaredLength);
+    }
+  }
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) {
+    final audit = _ContainerAudit(
+      'keyed',
+      _requireKnownLength('keyed', length),
+    );
+    containers.add(audit);
+    return _StrictSpyKeyedEncoder(audit, containers, userInfo);
+  }
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) {
+    final audit = _ContainerAudit(
+      'unkeyed',
+      _requireKnownLength('unkeyed', length),
+    );
+    containers.add(audit);
+    return _StrictSpyUnkeyedEncoder(audit, containers, userInfo);
+  }
+
+  @override
+  MapEncoder map({int? length}) {
+    final audit = _ContainerAudit('map', _requireKnownLength('map', length));
+    containers.add(audit);
+    return _StrictSpyMapEncoder(audit, containers, userInfo);
+  }
+
+  @override
+  SingleValueEncoder singleValue() => _StrictSpySingleValueEncoder(this);
+}
+
+final class _StrictSpyKeyedEncoder
+    with BaseKeyedEncoderMixin
+    implements KeyedEncoder {
+  final _ContainerAudit _audit;
+  final List<_ContainerAudit> _containers;
+  final Map<Object, Object?> _userInfo;
+
+  _StrictSpyKeyedEncoder(this._audit, this._containers, this._userInfo);
+
+  @override
+  void encodeInt(String key, int value) => _audit.actualCount++;
+
+  @override
+  void encodeDouble(String key, double value) => _audit.actualCount++;
+
+  @override
+  void encodeString(String key, String value) => _audit.actualCount++;
+
+  @override
+  void encodeBool(String key, bool value) => _audit.actualCount++;
+
+  @override
+  void encodeNull(String key) => _audit.actualCount++;
+
+  @override
+  Encoder nestedEncoder(String key) {
+    _audit.actualCount++;
+    return _StrictKnownLengthSpyEncoder(
+      containers: _containers,
+      userInfo: _userInfo,
+    );
+  }
+}
+
+final class _StrictSpyUnkeyedEncoder
+    with BaseUnkeyedEncoderMixin
+    implements UnkeyedEncoder {
+  final _ContainerAudit _audit;
+  final List<_ContainerAudit> _containers;
+  final Map<Object, Object?> _userInfo;
+
+  _StrictSpyUnkeyedEncoder(this._audit, this._containers, this._userInfo);
+
+  @override
+  void encodeInt(int value) => _audit.actualCount++;
+
+  @override
+  void encodeDouble(double value) => _audit.actualCount++;
+
+  @override
+  void encodeString(String value) => _audit.actualCount++;
+
+  @override
+  void encodeBool(bool value) => _audit.actualCount++;
+
+  @override
+  void encodeNull() => _audit.actualCount++;
+
+  @override
+  Encoder nestedEncoder() {
+    _audit.actualCount++;
+    return _StrictKnownLengthSpyEncoder(
+      containers: _containers,
+      userInfo: _userInfo,
+    );
+  }
+}
+
+final class _StrictSpyMapEncoder implements MapEncoder {
+  final _ContainerAudit _audit;
+  final List<_ContainerAudit> _containers;
+  final Map<Object, Object?> _userInfo;
+  bool _expectingValue = false;
+
+  _StrictSpyMapEncoder(this._audit, this._containers, this._userInfo);
+
+  @override
+  Encoder keyEncoder() {
+    if (_expectingValue) {
+      throw StateError('keyEncoder() called twice before valueEncoder()');
+    }
+    _expectingValue = true;
+    _audit.actualCount++;
+    return _StrictKnownLengthSpyEncoder(
+      containers: _containers,
+      userInfo: _userInfo,
+    );
+  }
+
+  @override
+  Encoder valueEncoder() {
+    if (!_expectingValue) {
+      throw StateError('valueEncoder() called before keyEncoder()');
+    }
+    _expectingValue = false;
+    return _StrictKnownLengthSpyEncoder(
+      containers: _containers,
+      userInfo: _userInfo,
+    );
+  }
+}
+
+final class _StrictSpySingleValueEncoder
+    with BaseSingleValueEncoderMixin
+    implements SingleValueEncoder {
+  final _StrictKnownLengthSpyEncoder _parent;
+
+  _StrictSpySingleValueEncoder(this._parent);
+
+  @override
+  void encodeInt(int value) {}
+
+  @override
+  void encodeDouble(double value) {}
+
+  @override
+  void encodeString(String value) {}
+
+  @override
+  void encodeBool(bool value) {}
+
+  @override
+  void encodeNull() {}
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) =>
+      encodable.encode(value, _parent);
 }

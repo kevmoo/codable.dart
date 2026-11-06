@@ -3698,6 +3698,24 @@ void _verifyBaseMixinsDefaults() {
   check(outMap.containsKey('ncoord')).isFalse();
   check(enc.recordedUnkeyedLengths).deepEquals([null, 1, 2, 2, 2, 2]);
 
+  // Set and EncodableListExtension also forward O(1) lengths without eager copy.
+  final setLengthsEnc = _MinimalDriverEncoder();
+  setLengthsEnc.keyed().encodeList('setCoords', {
+    const Coordinate(latitude: 5.0, longitude: 6.0),
+  }, const CoordinateCodable());
+  const CoordinateCodable().encodeList(const [
+    Coordinate(latitude: 7.0, longitude: 8.0),
+    Coordinate(latitude: 9.0, longitude: 10.0),
+  ], setLengthsEnc);
+  const CoordinateCodable().encodeList({
+    const Coordinate(latitude: 11.0, longitude: 12.0),
+  }, setLengthsEnc);
+  const CoordinateCodable().encodeList(
+    [const Coordinate(latitude: 1.0, longitude: 2.0)].where((_) => true),
+    setLengthsEnc,
+  );
+  check(setLengthsEnc.recordedUnkeyedLengths).deepEquals([1, 2, 1, null]);
+
   outMap['nullField'] = null;
   outMap['rawByteList'] = <Object?>[0, 128, 255];
 

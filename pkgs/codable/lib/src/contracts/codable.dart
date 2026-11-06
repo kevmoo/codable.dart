@@ -107,7 +107,13 @@ extension DecodableListExtension<T> on Decodable<T> {
 extension EncodableListExtension<T> on Encodable<T> {
   /// Encodes [elements] as an unkeyed array into [encoder].
   void encodeList(Iterable<T> elements, Encoder encoder) {
-    encoder.unkeyed().encodeList(elements, this);
+    encoder
+        .unkeyed(
+          length: elements is List
+              ? elements.length
+              : (elements is Set ? elements.length : null),
+        )
+        .encodeList(elements, this);
   }
 
   /// Returns an [Encodable] that encodes an `Iterable<T>`.

@@ -34,31 +34,43 @@ final class EncoderGeneratorHelper {
     final raw = StringBuffer();
     final schemaName = '_\$${model.className}Schema';
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
-    final allNonNullable = nonIgnoredFields.every((f) => !f.isNullable);
+    final nullableFields = nonIgnoredFields.where((f) => f.isNullable).toList();
 
     raw.writeln('@override');
     raw.writeln('void encode(${model.className} instance, Encoder encoder) {');
     if (nonIgnoredFields.isEmpty) {
       raw.writeln('  encoder.keyed(length: 0);');
-    } else if (allNonNullable) {
+    } else if (nullableFields.isEmpty) {
       raw.writeln(
         '  final keyed = encoder.keyed(length: ${nonIgnoredFields.length});',
       );
     } else {
-      raw.writeln('  final keyed = encoder.keyed();');
+      final fixedNonNullCount = nonIgnoredFields.length - nullableFields.length;
+      raw.writeln('  var count\$ = $fixedNonNullCount;');
+      for (final field in nullableFields) {
+        final suffix = toSafeIdentifierSuffix(field.name);
+        raw.writeln('  final v\$$suffix = instance.${field.name};');
+        raw.writeln('  if (v\$$suffix != null) count\$++;');
+      }
+      raw.writeln('  final keyed = encoder.keyed(length: count\$);');
     }
 
     for (final field in nonIgnoredFields) {
       final suffix = toSafeIdentifierSuffix(field.name);
-      final fieldAccess = 'instance.${field.name}';
       final keyExpr = '$schemaName.name$suffix';
 
       if (field.isNullable) {
-        raw.writeln('  if ($fieldAccess != null) {');
-        _writeFieldEncode(raw, field, keyExpr, '$fieldAccess!', indent: '    ');
+        raw.writeln('  if (v\$$suffix != null) {');
+        _writeFieldEncode(raw, field, keyExpr, 'v\$$suffix', indent: '    ');
         raw.writeln('  }');
       } else {
-        _writeFieldEncode(raw, field, keyExpr, fieldAccess, indent: '  ');
+        _writeFieldEncode(
+          raw,
+          field,
+          keyExpr,
+          'instance.${field.name}',
+          indent: '  ',
+        );
       }
     }
 
@@ -162,6 +174,15 @@ final class EncoderGeneratorHelper {
     return null;
   }
 
+  static String? _nonNullCodableElementName(DartType? elemType) {
+    if (elemType == null || elemType.isNullableType) return null;
+    final element = elemType.element;
+    if (element != null && const TypeClassifier().isCodableElement(element)) {
+      return element.name;
+    }
+    return null;
+  }
+
   void _writeListEncode(
     StringBuffer buffer,
     FieldDescriptor field,
@@ -182,11 +203,8 @@ final class EncoderGeneratorHelper {
       return;
     }
 
-    if (elemType != null &&
-        !elemType.isNullableType &&
-        elemType.element != null &&
-        const TypeClassifier().isCodableElement(elemType.element!)) {
-      final nestedName = elemType.element!.name;
+    final nestedName = _nonNullCodableElementName(elemType);
+    if (nestedName != null) {
       buffer.writeln(
         '${indent}keyed.encodeList('
         '$keyExpr, $access, const ${nestedName}Codable());',
@@ -220,6 +238,15 @@ final class EncoderGeneratorHelper {
     final primMethod = _primitiveKeyedListMethod(elemType);
     if (primMethod != null) {
       buffer.writeln('${indent}keyed.$primMethod($keyExpr, $access.toList());');
+      return;
+    }
+
+    final nestedName = _nonNullCodableElementName(elemType);
+    if (nestedName != null) {
+      buffer.writeln(
+        '${indent}keyed.encodeList('
+        '$keyExpr, $access, const ${nestedName}Codable());',
+      );
       return;
     }
 

@@ -73,12 +73,12 @@ final class CoordinatePairCodable implements Codable<CoordinatePair> {
 
   @override
   void encode(CoordinatePair instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.location != null) {
-      keyed.encodeDoubleList(
-        _$CoordinatePairSchema.nameLocation,
-        instance.location!,
-      );
+    var count$ = 0;
+    final v$Location = instance.location;
+    if (v$Location != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Location != null) {
+      keyed.encodeDoubleList(_$CoordinatePairSchema.nameLocation, v$Location);
     }
   }
 }

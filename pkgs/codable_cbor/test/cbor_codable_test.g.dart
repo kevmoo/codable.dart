@@ -173,15 +173,18 @@ final class CborEnvelopeCodable implements Codable<CborEnvelope> {
 
   @override
   void encode(CborEnvelope instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 5;
+    final v$Digest = instance.digest;
+    if (v$Digest != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$CborEnvelopeSchema.nameId, instance.id);
     keyed.encodeString(
       _$CborEnvelopeSchema.namePriority,
       instance.priority.name,
     );
     keyed.encodeBytes(_$CborEnvelopeSchema.nameBody, instance.body);
-    if (instance.digest != null) {
-      keyed.encodeBytes(_$CborEnvelopeSchema.nameDigest, instance.digest!);
+    if (v$Digest != null) {
+      keyed.encodeBytes(_$CborEnvelopeSchema.nameDigest, v$Digest);
     }
     {
       final m = keyed

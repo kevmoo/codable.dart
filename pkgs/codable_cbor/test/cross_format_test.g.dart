@@ -97,15 +97,22 @@ final class OrderItemCodable implements Codable<OrderItem> {
 
   @override
   void encode(OrderItem instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.count != null) {
-      keyed.encodeInt(_$OrderItemSchema.nameCount, instance.count!);
+    var count$ = 0;
+    final v$Count = instance.count;
+    if (v$Count != null) count$++;
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) count$++;
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderItemSchema.nameCount, v$Count);
     }
-    if (instance.itemNumber != null) {
-      keyed.encodeInt(_$OrderItemSchema.nameItemNumber, instance.itemNumber!);
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$OrderItemSchema.nameItemNumber, v$ItemNumber);
     }
-    if (instance.isRushed != null) {
-      keyed.encodeBool(_$OrderItemSchema.nameIsRushed, instance.isRushed!);
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$OrderItemSchema.nameIsRushed, v$IsRushed);
     }
   }
 }
@@ -218,15 +225,20 @@ final class OrderCodable implements Codable<Order> {
 
   @override
   void encode(Order instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 1;
+    final v$Count = instance.count;
+    if (v$Count != null) count$++;
+    final v$Item = instance.item;
+    if (v$Item != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
-    if (instance.count != null) {
-      keyed.encodeInt(_$OrderSchema.nameCount, instance.count!);
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderSchema.nameCount, v$Count);
     }
-    if (instance.item != null) {
+    if (v$Item != null) {
       keyed.encodeValue(
         _$OrderSchema.nameItem,
-        instance.item!,
+        v$Item,
         const OrderItemCodable(),
       );
     }
@@ -380,7 +392,10 @@ final class PersonCodable implements Codable<Person> {
 
   @override
   void encode(Person instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 4;
+    final v$MiddleName = instance.middleName;
+    if (v$MiddleName != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
     keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
     keyed.encodeValue(
@@ -388,8 +403,8 @@ final class PersonCodable implements Codable<Person> {
       instance.dateOfBirth,
       const DateTimeIsoCodec(),
     );
-    if (instance.middleName != null) {
-      keyed.encodeString(_$PersonSchema.nameMiddleName, instance.middleName!);
+    if (v$MiddleName != null) {
+      keyed.encodeString(_$PersonSchema.nameMiddleName, v$MiddleName);
     }
     keyed.encodeList(
       _$PersonSchema.nameOrders,
@@ -721,7 +736,10 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
 
   @override
   void encode(OpenApiSpecModel instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 6;
+    final v$Signature = instance.signature;
+    if (v$Signature != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(_$OpenApiSpecModelSchema.namePath, instance.path);
     keyed.encodeString(
       _$OpenApiSpecModelSchema.nameMethod,
@@ -731,11 +749,8 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
       _$OpenApiSpecModelSchema.nameSchemaHash,
       instance.schemaHash,
     );
-    if (instance.signature != null) {
-      keyed.encodeBytes(
-        _$OpenApiSpecModelSchema.nameSignature,
-        instance.signature!,
-      );
+    if (v$Signature != null) {
+      keyed.encodeBytes(_$OpenApiSpecModelSchema.nameSignature, v$Signature);
     }
     {
       final m = keyed

@@ -495,27 +495,33 @@ final class CitmEventCodable implements Codable<CitmEvent> {
 
   @override
   void encode(CitmEvent instance, Encoder encoder) {
-    final keyed = encoder.keyed();
-    if (instance.description != null) {
-      keyed.encodeString(
-        _$CitmEventSchema.nameDescription,
-        instance.description!,
-      );
+    var count$ = 4;
+    final v$Description = instance.description;
+    if (v$Description != null) count$++;
+    final v$Logo = instance.logo;
+    if (v$Logo != null) count$++;
+    final v$SubjectCode = instance.subjectCode;
+    if (v$SubjectCode != null) count$++;
+    final v$Subtitle = instance.subtitle;
+    if (v$Subtitle != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Description != null) {
+      keyed.encodeString(_$CitmEventSchema.nameDescription, v$Description);
     }
     keyed.encodeInt(_$CitmEventSchema.nameId, instance.id);
-    if (instance.logo != null) {
-      keyed.encodeString(_$CitmEventSchema.nameLogo, instance.logo!);
+    if (v$Logo != null) {
+      keyed.encodeString(_$CitmEventSchema.nameLogo, v$Logo);
     }
     keyed.encodeString(_$CitmEventSchema.nameName, instance.name);
     keyed.encodeIntList(
       _$CitmEventSchema.nameSubTopicIds,
       instance.subTopicIds,
     );
-    if (instance.subjectCode != null) {
-      keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, instance.subjectCode!);
+    if (v$SubjectCode != null) {
+      keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, v$SubjectCode);
     }
-    if (instance.subtitle != null) {
-      keyed.encodeString(_$CitmEventSchema.nameSubtitle, instance.subtitle!);
+    if (v$Subtitle != null) {
+      keyed.encodeString(_$CitmEventSchema.nameSubtitle, v$Subtitle);
     }
     keyed.encodeIntList(_$CitmEventSchema.nameTopicIds, instance.topicIds);
   }
@@ -710,14 +716,19 @@ final class CitmPerformanceCodable implements Codable<CitmPerformance> {
 
   @override
   void encode(CitmPerformance instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 6;
+    final v$Logo = instance.logo;
+    if (v$Logo != null) count$++;
+    final v$Name = instance.name;
+    if (v$Name != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeInt(_$CitmPerformanceSchema.nameEventId, instance.eventId);
     keyed.encodeInt(_$CitmPerformanceSchema.nameId, instance.id);
-    if (instance.logo != null) {
-      keyed.encodeString(_$CitmPerformanceSchema.nameLogo, instance.logo!);
+    if (v$Logo != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameLogo, v$Logo);
     }
-    if (instance.name != null) {
-      keyed.encodeString(_$CitmPerformanceSchema.nameName, instance.name!);
+    if (v$Name != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameName, v$Name);
     }
     keyed.encodeList(
       _$CitmPerformanceSchema.namePrices,

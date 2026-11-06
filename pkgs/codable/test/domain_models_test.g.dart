@@ -756,7 +756,12 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
 
   @override
   void encode(TelemetryPacket instance, Encoder encoder) {
-    final keyed = encoder.keyed();
+    var count$ = 7;
+    final v$Delta = instance.delta;
+    if (v$Delta != null) count$++;
+    final v$Notes = instance.notes;
+    if (v$Notes != null) count$++;
+    final keyed = encoder.keyed(length: count$);
     keyed.encodeString(_$TelemetryPacketSchema.namePacketId, instance.packetId);
     keyed.encodeValue(
       _$TelemetryPacketSchema.nameRegionZip,
@@ -774,8 +779,8 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
       case final v:
         keyed.encodeDouble(_$TelemetryPacketSchema.nameReading, v.toDouble());
     }
-    if (instance.delta != null) {
-      switch (instance.delta!) {
+    if (v$Delta != null) {
+      switch (v$Delta) {
         case final int v:
           keyed.encodeInt(_$TelemetryPacketSchema.nameDelta, v);
         case final v:
@@ -812,8 +817,8 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
       instance.vehicle,
       const VehicleCodable(),
     );
-    if (instance.notes != null) {
-      keyed.encodeString(_$TelemetryPacketSchema.nameNotes, instance.notes!);
+    if (v$Notes != null) {
+      keyed.encodeString(_$TelemetryPacketSchema.nameNotes, v$Notes);
     }
   }
 }
