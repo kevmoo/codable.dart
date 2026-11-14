@@ -7,6 +7,7 @@ import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
+import '../../contracts/base_mixins.dart';
 import '../../contracts/codable.dart';
 import '../../contracts/decoder.dart';
 import '../../contracts/encoder.dart';
@@ -1035,7 +1036,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
 final class _JsonCodableJsMapDecoder implements MapDecoder {
   final JSObject _map;
   final List<String> _keys;
-  final JsonMapKeyDecoder _keyDecoder;
+  final StringMapKeyDecoder _keyDecoder;
   final _JsonCodableJsMapValueDecoder _valueDecoder;
   int _index = 0;
   bool _hasCurrent = false;
@@ -1043,7 +1044,7 @@ final class _JsonCodableJsMapDecoder implements MapDecoder {
   _JsonCodableJsMapDecoder(JsonCodableDecoder rootDecoder, JSObject map)
     : _map = map,
       _keys = _getKeys(map),
-      _keyDecoder = JsonMapKeyDecoder(rootDecoder.userInfo),
+      _keyDecoder = StringMapKeyDecoder(rootDecoder.userInfo),
       _valueDecoder = _JsonCodableJsMapValueDecoder(rootDecoder);
 
   @override
@@ -1226,6 +1227,17 @@ final class _JsonCodableUnkeyedDecoder
     return decodable.decode(
       JsonCodableDecoder._(value, null, userInfo: _rootDecoder.userInfo),
     );
+  }
+
+  @override
+  List<T> decodeList<T>(Decodable<T> decodable) =>
+      _decodeJsModelList(_takeJsValue(), decodable, _rootDecoder.userInfo);
+
+  @override
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
+    final value = _takeJsValue();
+    if (value == null) return null;
+    return _decodeJsModelList(value, decodable, _rootDecoder.userInfo);
   }
 }
 
@@ -1539,7 +1551,9 @@ final class _JsonCodableJsMapEncoder implements MapEncoder {
   }
 }
 
-final class _JsonCodableJsMapKeyEncoder implements Encoder, SingleValueEncoder {
+final class _JsonCodableJsMapKeyEncoder
+    with BaseStringMapKeyEncoderMixin
+    implements Encoder, SingleValueEncoder {
   @override
   final Map<Object, Object?> userInfo;
   String? _pendingKey;
@@ -1547,125 +1561,22 @@ final class _JsonCodableJsMapKeyEncoder implements Encoder, SingleValueEncoder {
   _JsonCodableJsMapKeyEncoder(this.userInfo);
 
   @override
-  bool get isHumanReadable => true;
+  String get formatName => 'JSON';
 
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  SingleValueEncoder singleValue() => this;
-
-  @override
-  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
-      throw const CodableException(
-        'JSON map keys must be scalar values, not keyed objects',
-      );
-
-  @override
-  UnkeyedEncoder unkeyed({int? length}) => throw const CodableException(
-    'JSON map keys must be scalar values, not arrays',
-  );
-
-  @override
-  MapEncoder map({int? length}) => throw const CodableException(
-    'JSON map keys must be scalar values, not maps',
-  );
+  bool get hasWrittenKey => _pendingKey != null;
 
   static Never _throwDuplicateKey() =>
       throw const CodableException('Map key already encoded for current entry');
 
+  @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void _setKey(String key) {
+  void writeKeyString(String key) {
     if (_pendingKey != null) _throwDuplicateKey();
     _pendingKey = key;
-  }
-
-  @override
-  @pragma('dart2js:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeInt(int value) => _setKey(value.toString());
-
-  @override
-  void encodeNullableInt(int? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeInt(value);
-  }
-
-  @override
-  @pragma('dart2js:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeDouble(double value) {
-    if (!value.isFinite) {
-      throw CodableException(
-        'JSON map keys must be finite numbers, got $value',
-      );
-    }
-    _setKey(value.toString());
-  }
-
-  @override
-  void encodeNullableDouble(double? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeDouble(value);
-  }
-
-  @override
-  @pragma('dart2js:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeString(String value) => _setKey(value);
-
-  @override
-  void encodeNullableString(String? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeString(value);
-  }
-
-  @override
-  @pragma('dart2js:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeBool(bool value) => _setKey(value ? 'true' : 'false');
-
-  @override
-  void encodeNullableBool(bool? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeBool(value);
-  }
-
-  @override
-  void encodeBytes(Uint8List value) =>
-      throw const CodableException('JSON map keys cannot be binary bytes');
-
-  @override
-  void encodeNullableBytes(Uint8List? value) => throw const CodableException(
-    'JSON map keys cannot be binary bytes or null',
-  );
-
-  @override
-  void encodeNull() =>
-      throw const CodableException('JSON map keys cannot be null');
-
-  @override
-  void encode<T>(T value, Encodable<T> encodable) {
-    encodable.encode(value, this);
-    if (_pendingKey == null) {
-      throw const CodableException('Map key encoder did not write a key');
-    }
-  }
-
-  @override
-  void encodeNullable<T>(T? value, Encodable<T> encodable) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encode(value, encodable);
   }
 }
 

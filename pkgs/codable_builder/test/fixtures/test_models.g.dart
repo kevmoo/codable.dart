@@ -2540,3 +2540,192 @@ final class EmptyRecordCodable implements Codable<EmptyRecord> {
     encoder.keyed(length: 0);
   }
 }
+
+// =============================================================================
+// 1. Unified Schema Descriptor for NestedModelGrid
+// =============================================================================
+extension type const _$NestedModelGridSchema(int _value) {
+  // String Name Constants
+  static const String nameRows = 'rows';
+  static const String nameNullableRows = 'nullableRows';
+  static const String nameSparseRows = 'sparseRows';
+  static const String nameCube = 'cube';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyRows = 0;
+  static const int keyNullableRows = 1;
+  static const int keySparseRows = 2;
+  static const int keyCube = 3;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$NestedModelGridSchema.nameRows,
+    _$NestedModelGridSchema.nameNullableRows,
+    _$NestedModelGridSchema.nameSparseRows,
+    _$NestedModelGridSchema.nameCube,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$NestedModelGridSchema none = _$NestedModelGridSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$NestedModelGridSchema operator |(_$NestedModelGridSchema other) =>
+      _$NestedModelGridSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for NestedModelGrid
+// =============================================================================
+final class NestedModelGridCodable implements Codable<NestedModelGrid> {
+  const NestedModelGridCodable();
+
+  @override
+  NestedModelGrid decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$NestedModelGridSchema.keyOptions);
+
+    var rows = const <List<Point>>[];
+    var nullableRows = const <List<Point>?>[];
+    var sparseRows = const <List<Point?>>[];
+    var cube = const <List<List<Point>>>[];
+    var seen = _$NestedModelGridSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$NestedModelGridSchema.keyOptions)) {
+        case _$NestedModelGridSchema.keyRows:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<Point>>[];
+            while (u.moveNext()) {
+              l.add(u.decodeList(const PointCodable()));
+            }
+            rows = l;
+          }
+          break;
+        case _$NestedModelGridSchema.keyNullableRows:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<Point>?>[];
+            while (u.moveNext()) {
+              l.add(u.decodeNullableList(const PointCodable()));
+            }
+            nullableRows = l;
+          }
+          break;
+        case _$NestedModelGridSchema.keySparseRows:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<Point?>>[];
+            while (u.moveNext()) {
+              l.add(
+                u.decodeList(
+                  Decodable.fromFunction((d) {
+                    if (d.singleValue().isNull()) {
+                      d.singleValue().readNull();
+                      return null;
+                    }
+                    return const PointCodable().decode(d);
+                  }),
+                ),
+              );
+            }
+            sparseRows = l;
+          }
+          break;
+        case _$NestedModelGridSchema.keyCube:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<List<Point>>>[];
+            while (u.moveNext()) {
+              l.add(u.decodeList((const PointCodable()).list));
+            }
+            cube = l;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return NestedModelGrid(
+      rows: rows,
+      nullableRows: nullableRows,
+      sparseRows: sparseRows,
+      cube: cube,
+    );
+  }
+
+  @override
+  void encode(NestedModelGrid instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 4);
+    keyed.encodeList(
+      _$NestedModelGridSchema.nameRows,
+      instance.rows,
+      Encodable.fromFunction((List<Point> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            const PointCodable().encode(elem, u.nestedEncoder());
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedModelGridSchema.nameNullableRows,
+      instance.nullableRows,
+      Encodable.fromFunction((List<Point>? item, e) {
+        if (item case final val0?) {
+          {
+            final u1 = e.unkeyed(length: val0.length);
+            for (final elem1 in val0) {
+              const PointCodable().encode(elem1, u1.nestedEncoder());
+            }
+          }
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedModelGridSchema.nameSparseRows,
+      instance.sparseRows,
+      Encodable.fromFunction((List<Point?> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            if (elem case final val1?) {
+              const PointCodable().encode(val1, u.nestedEncoder());
+            } else {
+              u.nestedEncoder().singleValue().encodeNull();
+            }
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedModelGridSchema.nameCube,
+      instance.cube,
+      Encodable.fromFunction((List<List<Point>> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            {
+              final u1 = u.nestedEncoder().unkeyed(length: elem.length);
+              for (final elem1 in elem) {
+                const PointCodable().encode(elem1, u1.nestedEncoder());
+              }
+            }
+          }
+        }
+      }),
+    );
+  }
+}

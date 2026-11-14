@@ -145,7 +145,7 @@ abstract interface class UnkeyedEncoder {
   /// Encodes a nullable custom element [value] using [encodable].
   void encodeNullableElement<T>(T? value, Encodable<T> encodable);
 
-  /// Encodes a nested list of [elements] using [encodable].
+  /// Encodes [elements] sequentially into this array using [encodable].
   void encodeList<T>(Iterable<T> elements, Encodable<T> encodable);
 }
 

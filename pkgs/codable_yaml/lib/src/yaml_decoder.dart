@@ -43,9 +43,19 @@ ValueKind _yamlNodeKind(YamlNode node) => switch (node) {
 
 Object? _scalarValue(YamlNode node) => node is YamlScalar ? node.value : node;
 
+final RegExp _yamlPlainHexPrefix = RegExp(r'^[+-]?0[xX]');
+
+bool _isPlainYamlFloatOnJs(YamlNode node) {
+  if (!identical(1.0, 1) || node is! YamlScalar) return false;
+  if (node.style != ScalarStyle.PLAIN) return false;
+  final text = node.span.text;
+  if (_yamlPlainHexPrefix.hasMatch(text)) return false;
+  return text.contains('.') || text.contains('e') || text.contains('E');
+}
+
 int _readYamlInt(YamlNode node, {bool coerceString = false}) {
   final v = _scalarValue(node);
-  if (v is int) return v;
+  if (v is int && !_isPlainYamlFloatOnJs(node)) return v;
   if (coerceString && v is String) {
     final parsed = int.tryParse(v);
     if (parsed != null) return parsed;

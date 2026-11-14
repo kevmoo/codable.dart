@@ -375,6 +375,12 @@ abstract interface class UnkeyedDecoder {
   /// Decodes a nullable element using [decodable].
   T? decodeNullableElement<T>(Decodable<T> decodable);
 
+  /// Decodes a nested list of items using the element [decodable].
+  List<T> decodeList<T>(Decodable<T> decodable);
+
+  /// Decodes a nullable nested list of items using the element [decodable].
+  List<T>? decodeNullableList<T>(Decodable<T> decodable);
+
   /// Decodes a nested contiguous list of integers.
   List<int> decodeIntList();
 

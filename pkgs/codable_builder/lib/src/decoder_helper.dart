@@ -533,8 +533,7 @@ final class DecoderGeneratorHelper {
         _tryWriteNonNullFastListRead(buffer, field, elemType, indent: indent)) {
       return;
     }
-    if (!isNullable &&
-        (elemType.isDartCoreList || elemType.element?.name == 'List')) {
+    if (elemType.isDartCoreList || elemType.element?.name == 'List') {
       _writeNestedListRead(buffer, field, elemType, indent: indent);
       return;
     }
@@ -665,19 +664,31 @@ final class DecoderGeneratorHelper {
     final inner = elemType is InterfaceType && elemType.typeArguments.isNotEmpty
         ? elemType.typeArguments.first
         : null;
-    final fastSpec = inner != null ? _nestedFastListSpec(inner) : null;
-    if (fastSpec != null) {
-      _writeUnkeyedLoopListRead(
-        buffer,
-        field.name,
-        fastSpec.$1,
-        fastSpec.$2,
-        indent: indent,
-      );
-      return;
+    if (!elemType.isNullableType) {
+      final fastSpec = inner != null ? _nestedFastListSpec(inner) : null;
+      if (fastSpec != null) {
+        _writeUnkeyedLoopListRead(
+          buffer,
+          field.name,
+          fastSpec.$1,
+          fastSpec.$2,
+          indent: indent,
+        );
+        return;
+      }
     }
-    buffer.writeln(
-      '$indent${field.name} = keyed.decodeList(${_generateUnkeyedElementExpr(elemType)});',
+    final innerExpr = inner == null
+        ? 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)'
+        : _generateUnkeyedElementExpr(inner);
+    final decodeExpr = elemType.isNullableType
+        ? 'u.decodeNullableList($innerExpr)'
+        : 'u.decodeList($innerExpr)';
+    _writeUnkeyedLoopListRead(
+      buffer,
+      field.name,
+      elemType.getDisplayString(),
+      decodeExpr,
+      indent: indent,
     );
   }
 
@@ -823,25 +834,13 @@ final class DecoderGeneratorHelper {
     final inner = type is InterfaceType && type.typeArguments.isNotEmpty
         ? type.typeArguments.first
         : null;
+    final innerExpr = inner == null
+        ? 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)'
+        : _generateUnkeyedElementExpr(inner);
     if (type.isNullableType) {
-      final innerExpr = inner == null
-          ? 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)'
-          : _generateUnkeyedElementExpr(inner);
-      return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return d.unkeyed().decodeList($innerExpr); })';
+      return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return ($innerExpr).decodeList(d); })';
     }
-    if (inner == null) {
-      return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)))';
-    }
-    final fastCall = _unkeyedFastInnerListCall(inner);
-    if (fastCall != null) {
-      return 'Decodable.fromFunction((d) => d.unkeyed().$fastCall)';
-    }
-    return 'Decodable.fromFunction((d) => d.unkeyed().decodeList(${_generateUnkeyedElementExpr(inner)}))';
-  }
-
-  static String? _unkeyedFastInnerListCall(DartType inner) {
-    if (inner.element?.name == 'Float64List') return 'decodeFloat64List()';
-    return _fastPrimitiveListCall(inner);
+    return '($innerExpr).list';
   }
 
   static String? _tryGenerateTypedDataElementExpr(DartType type) {

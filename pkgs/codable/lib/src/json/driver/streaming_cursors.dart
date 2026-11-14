@@ -4,6 +4,7 @@
 
 import 'dart:typed_data';
 
+import '../../contracts/base_mixins.dart';
 import '../../contracts/codable.dart';
 import '../../contracts/decoder.dart';
 import '../../contracts/exceptions.dart';
@@ -327,7 +328,7 @@ final class StreamingKeyedDecoder
 
   StreamingKeyedDecoder(this._reader, this._rootDecoder, {KeyOptions? options})
     : _options = options,
-      _compiledOptions = options == null
+      _compiledOptions = (options == null || options.length == 0)
           ? null
           : _compileJsonKeyOptions(options);
 
@@ -372,23 +373,33 @@ final class StreamingKeyedDecoder
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  JsonKeyOptions _resolveOptions(KeyOptions options) =>
-      identical(options, _options)
-      ? _compiledOptions!
-      : _compileJsonKeyOptions(options);
+  JsonKeyOptions? _resolveOptions(KeyOptions options) {
+    if (identical(options, _options)) return _compiledOptions;
+    return options.length == 0 ? null : _compileJsonKeyOptions(options);
+  }
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   int selectKeyIndex(KeyOptions options) {
     _ensureStarted();
-    return _reader.selectName(_resolveOptions(options));
+    final compiled = _resolveOptions(options);
+    if (compiled == null) {
+      _reader.nextName();
+      return -1;
+    }
+    return _reader.selectName(compiled);
   }
 
   @override
   int selectStringIndex(KeyOptions options) {
     _ensureStarted();
-    return _reader.selectString(_resolveOptions(options));
+    final compiled = _resolveOptions(options);
+    if (compiled == null) {
+      _reader.readString();
+      return -1;
+    }
+    return _reader.selectString(compiled);
   }
 
   @override
@@ -447,7 +458,7 @@ final class StreamingKeyedDecoder
 final class StreamingMapDecoder implements MapDecoder {
   final JsonTokenReader _reader;
   final Decoder _rootDecoder;
-  final JsonMapKeyDecoder _keyDecoder;
+  final StringMapKeyDecoder _keyDecoder;
   final _StreamingMapValueDecoder _valueDecoder;
   bool _started = false;
   bool _ended = false;
@@ -456,7 +467,7 @@ final class StreamingMapDecoder implements MapDecoder {
   StreamingMapDecoder(JsonTokenReader reader, Decoder rootDecoder)
     : _reader = reader,
       _rootDecoder = rootDecoder,
-      _keyDecoder = JsonMapKeyDecoder(rootDecoder.userInfo),
+      _keyDecoder = StringMapKeyDecoder(rootDecoder.userInfo),
       _valueDecoder = _StreamingMapValueDecoder(reader, rootDecoder);
 
   @override
@@ -663,6 +674,29 @@ final class StreamingUnkeyedDecoder
       return null;
     }
     return decodeElement(decodable);
+  }
+
+  @override
+  List<T> decodeList<T>(Decodable<T> decodable) {
+    _ensureStarted();
+    clearStreamingBufferedObject(_rootDecoder);
+    final list = <T>[];
+    _reader.beginArray();
+    while (_reader.moveNext()) {
+      clearStreamingBufferedObject(_rootDecoder);
+      list.add(decodable.decode(_rootDecoder));
+    }
+    _reader.endArray();
+    return list;
+  }
+
+  @override
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decodeList(decodable);
   }
 }
 

@@ -5,6 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../contracts/base_mixins.dart';
 import '../../contracts/codable.dart';
 import '../../contracts/decoder.dart';
 import '../../contracts/encoder.dart';
@@ -634,7 +635,9 @@ final class _JsonCodableMapEncoder implements MapEncoder, _StreamingClosable {
   }
 }
 
-final class _JsonMapKeyEncoder implements Encoder, SingleValueEncoder {
+final class _JsonMapKeyEncoder
+    with BaseStringMapKeyEncoderMixin
+    implements Encoder, SingleValueEncoder {
   final JsonTokenWriter _writer;
   @override
   final Map<Object, Object?> userInfo;
@@ -643,126 +646,23 @@ final class _JsonMapKeyEncoder implements Encoder, SingleValueEncoder {
   _JsonMapKeyEncoder(this._writer, this.userInfo);
 
   @override
-  bool get isHumanReadable => true;
+  String get formatName => 'JSON';
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  SingleValueEncoder singleValue() => this;
-
-  @override
-  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
-      throw const CodableException(
-        'JSON map keys must be scalar values, not keyed objects',
-      );
-
-  @override
-  UnkeyedEncoder unkeyed({int? length}) => throw const CodableException(
-    'JSON map keys must be scalar values, not arrays',
-  );
-
-  @override
-  MapEncoder map({int? length}) => throw const CodableException(
-    'JSON map keys must be scalar values, not maps',
-  );
+  bool get hasWrittenKey => _hasKey;
 
   static Never _throwDuplicateKey() =>
       throw const CodableException('Map key already encoded for current entry');
 
+  @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void _writeKey(String key) {
+  void writeKeyString(String key) {
     if (_hasKey) _throwDuplicateKey();
     _writer.writeName(key);
     _hasKey = true;
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeInt(int value) => _writeKey(value.toString());
-
-  @override
-  void encodeNullableInt(int? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeInt(value);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeDouble(double value) {
-    if (!value.isFinite) {
-      throw CodableException(
-        'JSON map keys must be finite numbers, got $value',
-      );
-    }
-    _writeKey(value.toString());
-  }
-
-  @override
-  void encodeNullableDouble(double? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeDouble(value);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeString(String value) => _writeKey(value);
-
-  @override
-  void encodeNullableString(String? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeString(value);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  void encodeBool(bool value) => _writeKey(value ? 'true' : 'false');
-
-  @override
-  void encodeNullableBool(bool? value) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encodeBool(value);
-  }
-
-  @override
-  void encodeBytes(Uint8List value) =>
-      throw const CodableException('JSON map keys cannot be binary bytes');
-
-  @override
-  void encodeNullableBytes(Uint8List? value) => throw const CodableException(
-    'JSON map keys cannot be binary bytes or null',
-  );
-
-  @override
-  void encodeNull() =>
-      throw const CodableException('JSON map keys cannot be null');
-
-  @override
-  void encode<T>(T value, Encodable<T> encodable) {
-    encodable.encode(value, this);
-    if (!_hasKey) {
-      throw const CodableException('Map key encoder did not write a key');
-    }
-  }
-
-  @override
-  void encodeNullable<T>(T? value, Encodable<T> encodable) {
-    if (value == null) {
-      throw const CodableException('JSON map keys cannot be null');
-    }
-    encode(value, encodable);
   }
 }
 

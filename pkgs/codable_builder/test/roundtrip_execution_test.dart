@@ -987,6 +987,64 @@ void main() {
         ).throws<CodableException>();
         check(compositeEvents).deepEquals(['keyed:1', 'map:1', 'keyed:2']);
       });
+
+      test('roundtrips NestedModelGrid (2D/3D @Codable lists) and EmptyRecord in JSON', () {
+        const grid = NestedModelGrid(
+          rows: [
+            [Point(1, 2), Point(3, 4)],
+            [],
+          ],
+          nullableRows: [
+            [Point(5, 6)],
+            null,
+          ],
+          sparseRows: [
+            [Point(7, 8), null],
+          ],
+          cube: [
+            [
+              [Point(9, 10)],
+            ],
+          ],
+        );
+        final gridJson = JsonCodableEncoder.encode(
+          grid,
+          const NestedModelGridCodable(),
+        );
+        final decodedGrid = const NestedModelGridCodable().decode(
+          JsonCodableDecoder.fromString(gridJson),
+        );
+        check(decodedGrid.rows.length).equals(2);
+        check(decodedGrid.rows[0].map((p) => (p.x, p.y)).toList())
+            .deepEquals(const [(1.0, 2.0), (3.0, 4.0)]);
+        check(decodedGrid.rows[1]).isEmpty();
+        check(decodedGrid.nullableRows.length).equals(2);
+        check(decodedGrid.nullableRows[0]!.single.x).equals(5.0);
+        check(decodedGrid.nullableRows[0]!.single.y).equals(6.0);
+        check(decodedGrid.nullableRows[1]).isNull();
+        check(decodedGrid.sparseRows.single.length).equals(2);
+        check(decodedGrid.sparseRows.single[0]!.x).equals(7.0);
+        check(decodedGrid.sparseRows.single[0]!.y).equals(8.0);
+        check(decodedGrid.sparseRows.single[1]).isNull();
+        check(decodedGrid.cube.single.single.single.x).equals(9.0);
+        check(decodedGrid.cube.single.single.single.y).equals(10.0);
+
+        final emptyJson = JsonCodableEncoder.encode(
+          const EmptyRecord(),
+          const EmptyRecordCodable(),
+        );
+        check(emptyJson).equals('{}');
+        check(
+          const EmptyRecordCodable().decode(
+            JsonCodableDecoder.fromString('{}'),
+          ),
+        ).isA<EmptyRecord>();
+        check(
+          const EmptyRecordCodable().decode(
+            JsonCodableDecoder.fromString('{"ignored": [1, 2], "extra": "ok"}'),
+          ),
+        ).isA<EmptyRecord>();
+      });
     });
   });
 }

@@ -1496,3 +1496,278 @@ final class AdaptiveAuditEventCodable implements Codable<AdaptiveAuditEvent> {
     keyed.encodeBytes(_$AdaptiveAuditEventSchema.nameTraceId, instance.traceId);
   }
 }
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EmptyMarker
+// =============================================================================
+extension type const _$EmptyMarkerSchema(int _value) {
+  // String Name Constants
+
+  // Key Indices for selectKeyIndex()
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const []);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$EmptyMarkerSchema none = _$EmptyMarkerSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$EmptyMarkerSchema operator |(_$EmptyMarkerSchema other) =>
+      _$EmptyMarkerSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for EmptyMarker
+// =============================================================================
+final class EmptyMarkerCodable implements Codable<EmptyMarker> {
+  const EmptyMarkerCodable();
+
+  @override
+  EmptyMarker decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$EmptyMarkerSchema.keyOptions);
+
+    var seen = _$EmptyMarkerSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$EmptyMarkerSchema.keyOptions)) {
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return const EmptyMarker();
+  }
+
+  @override
+  void encode(EmptyMarker instance, Encoder encoder) {
+    encoder.keyed(length: 0);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for MatrixCell
+// =============================================================================
+extension type const _$MatrixCellSchema(int _value) {
+  // String Name Constants
+  static const String nameX = 'x';
+  static const String nameY = 'y';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyX = 0;
+  static const int keyY = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$MatrixCellSchema.nameX,
+    _$MatrixCellSchema.nameY,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$MatrixCellSchema none = _$MatrixCellSchema(0);
+  static const int _xBit = 1 << 0;
+  static const _$MatrixCellSchema x = _$MatrixCellSchema(_xBit);
+  static const int _yBit = 1 << 1;
+  static const _$MatrixCellSchema y = _$MatrixCellSchema(_yBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$MatrixCellSchema golden = _$MatrixCellSchema(_xBit | _yBit);
+
+  @pragma('vm:prefer-inline')
+  _$MatrixCellSchema operator |(_$MatrixCellSchema other) =>
+      _$MatrixCellSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _xBit) == 0) {
+      missing.add(nameX);
+    }
+    if ((_value & _yBit) == 0) {
+      missing.add(nameY);
+    }
+    throw CodableException(
+      'Missing required fields for MatrixCell: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for MatrixCell
+// =============================================================================
+final class MatrixCellCodable implements Codable<MatrixCell> {
+  const MatrixCellCodable();
+
+  @override
+  MatrixCell decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$MatrixCellSchema.keyOptions);
+
+    int? x;
+    int? y;
+    var seen = _$MatrixCellSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$MatrixCellSchema.keyOptions)) {
+        case _$MatrixCellSchema.keyX:
+          if ((seen._value & _$MatrixCellSchema.x._value) != 0) {
+            throw const CodableException('Duplicate field "x"');
+          }
+          x = keyed.readInt();
+          seen |= _$MatrixCellSchema.x;
+          break;
+        case _$MatrixCellSchema.keyY:
+          if ((seen._value & _$MatrixCellSchema.y._value) != 0) {
+            throw const CodableException('Duplicate field "y"');
+          }
+          y = keyed.readInt();
+          seen |= _$MatrixCellSchema.y;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return MatrixCell(x!, y!);
+  }
+
+  @override
+  void encode(MatrixCell instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 2);
+    keyed.encodeInt(_$MatrixCellSchema.nameX, instance.x);
+    keyed.encodeInt(_$MatrixCellSchema.nameY, instance.y);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for MatrixBoard
+// =============================================================================
+extension type const _$MatrixBoardSchema(int _value) {
+  // String Name Constants
+  static const String nameCells = 'cells';
+  static const String nameNullableRows = 'nullableRows';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyCells = 0;
+  static const int keyNullableRows = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$MatrixBoardSchema.nameCells,
+    _$MatrixBoardSchema.nameNullableRows,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$MatrixBoardSchema none = _$MatrixBoardSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$MatrixBoardSchema operator |(_$MatrixBoardSchema other) =>
+      _$MatrixBoardSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for MatrixBoard
+// =============================================================================
+final class MatrixBoardCodable implements Codable<MatrixBoard> {
+  const MatrixBoardCodable();
+
+  @override
+  MatrixBoard decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$MatrixBoardSchema.keyOptions);
+
+    var cells = const <List<MatrixCell>>[];
+    var nullableRows = const <List<MatrixCell>?>[];
+    var seen = _$MatrixBoardSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$MatrixBoardSchema.keyOptions)) {
+        case _$MatrixBoardSchema.keyCells:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<MatrixCell>>[];
+            while (u.moveNext()) {
+              l.add(u.decodeList(const MatrixCellCodable()));
+            }
+            cells = l;
+          }
+          break;
+        case _$MatrixBoardSchema.keyNullableRows:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<MatrixCell>?>[];
+            while (u.moveNext()) {
+              l.add(u.decodeNullableList(const MatrixCellCodable()));
+            }
+            nullableRows = l;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return MatrixBoard(cells: cells, nullableRows: nullableRows);
+  }
+
+  @override
+  void encode(MatrixBoard instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 2);
+    keyed.encodeList(
+      _$MatrixBoardSchema.nameCells,
+      instance.cells,
+      Encodable.fromFunction((List<MatrixCell> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            const MatrixCellCodable().encode(elem, u.nestedEncoder());
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$MatrixBoardSchema.nameNullableRows,
+      instance.nullableRows,
+      Encodable.fromFunction((List<MatrixCell>? item, e) {
+        if (item case final val0?) {
+          {
+            final u1 = e.unkeyed(length: val0.length);
+            for (final elem1 in val0) {
+              const MatrixCellCodable().encode(elem1, u1.nestedEncoder());
+            }
+          }
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+  }
+}

@@ -506,3 +506,18 @@ final class HugeModel63 {
     required this.f62,
   });
 }
+
+@Codable()
+final class NestedModelGrid {
+  final List<List<Point>> rows;
+  final List<List<Point>?> nullableRows;
+  final List<List<Point?>> sparseRows;
+  final List<List<List<Point>>> cube;
+
+  const NestedModelGrid({
+    this.rows = const [],
+    this.nullableRows = const [],
+    this.sparseRows = const [],
+    this.cube = const [],
+  });
+}

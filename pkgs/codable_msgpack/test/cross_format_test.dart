@@ -341,6 +341,7 @@ void main() {
   _registerZeroCopyBinarySizesTests();
   _registerPolymorphicAndAdaptiveTests();
   _registerHandWrittenKnownLengthTests();
+  _registerContractBugfixFourWayTests();
 }
 
 void _registerNullableAndMap16BoundaryTests() {
@@ -770,4 +771,146 @@ void _registerHandWrittenKnownLengthTests() {
           .equals(17);
     });
   });
+}
+
+@Codable()
+final class EmptyMarker {
+  const EmptyMarker();
+}
+
+@Codable()
+final class MatrixCell {
+  final int x;
+  final int y;
+
+  const MatrixCell(this.x, this.y);
+
+  @override
+  bool operator ==(Object other) =>
+      other is MatrixCell && other.x == x && other.y == y;
+
+  @override
+  int get hashCode => Object.hash(x, y);
+}
+
+@Codable()
+final class MatrixBoard {
+  final List<List<MatrixCell>> cells;
+  final List<List<MatrixCell>?> nullableRows;
+
+  const MatrixBoard({this.cells = const [], this.nullableRows = const []});
+}
+
+void _registerContractBugfixFourWayTests() {
+  group(
+    '4-way contract bugfixes (2D @Codable lists, EmptyMarker, float bytes)',
+    () {
+      test('roundtrips 2D List<List<@Codable>> and List<List<@Codable>?> across 4 formats', () {
+        const board = MatrixBoard(
+          cells: [
+            [MatrixCell(1, 2), MatrixCell(3, 4)],
+            [],
+          ],
+          nullableRows: [
+            [MatrixCell(5, 6)],
+            null,
+          ],
+        );
+
+        for (final r in _roundtripAllFourFormats(
+          board,
+          const MatrixBoardCodable(),
+        )) {
+          check(r.cells.length).equals(2);
+          check(r.cells[0])
+              .deepEquals(const [MatrixCell(1, 2), MatrixCell(3, 4)]);
+          check(r.cells[1]).isEmpty();
+          check(r.nullableRows.length).equals(2);
+          check(r.nullableRows[0])
+              .isNotNull()
+              .deepEquals(const [MatrixCell(5, 6)]);
+          check(r.nullableRows[1]).isNull();
+        }
+      });
+
+      test('roundtrips zero-field EmptyMarker on {} and skips unknown fields across 4 formats', () {
+        final results = _roundtripAllFourFormats(
+          const EmptyMarker(),
+          const EmptyMarkerCodable(),
+        );
+        check(results.length).equals(4);
+
+        final unknownCodec = Encodable<int>.fromFunction((_, encoder) {
+          final k = encoder.keyed(length: 2);
+          k.encodeIntList('ignored', const [1, 2]);
+          k.encodeString('extra', 'ok');
+        });
+
+        check(
+          const EmptyMarkerCodable().decode(
+            JsonCodableDecoder.fromString(
+              JsonCodableEncoder.encode(0, unknownCodec),
+            ),
+          ),
+        ).isA<EmptyMarker>();
+        check(
+          YamlCodableDecoder.decode(
+            YamlCodableEncoder.encode(0, unknownCodec),
+            const EmptyMarkerCodable(),
+          ),
+        ).isA<EmptyMarker>();
+        check(
+          CborCodableDecoder.decode(
+            CborCodableEncoder.encode(0, unknownCodec),
+            const EmptyMarkerCodable(),
+          ),
+        ).isA<EmptyMarker>();
+        check(
+          MsgPackCodableDecoder.decode(
+            MsgPackCodableEncoder.encode(
+              0,
+              unknownCodec,
+              requireKnownLength: true,
+            ),
+            const EmptyMarkerCodable(),
+          ),
+        ).isA<EmptyMarker>();
+      });
+
+      test('rejects [1.0, 2.0] float arrays in readBytes() across YAML, CBOR, and MsgPack', () {
+        final floatListEncoder = Encodable<List<double>>.fromFunction((
+          vals,
+          e,
+        ) {
+          final u = e.unkeyed(length: vals.length);
+          for (final v in vals) {
+            u.encodeDouble(v);
+          }
+        });
+        final bytesDecoder = Decodable<Uint8List>.fromFunction(
+          (d) => d.singleValue().readBytes(),
+        );
+        const floats = <double>[1.0, 2.0];
+
+        check(() => YamlCodableDecoder.decode('[1.0, 2.0]', bytesDecoder))
+            .throws<CodableException>();
+        check(
+          () => CborCodableDecoder.decode(
+            CborCodableEncoder.encode(floats, floatListEncoder),
+            bytesDecoder,
+          ),
+        ).throws<CodableException>();
+        check(
+          () => MsgPackCodableDecoder.decode(
+            MsgPackCodableEncoder.encode(
+              floats,
+              floatListEncoder,
+              requireKnownLength: true,
+            ),
+            bytesDecoder,
+          ),
+        ).throws<CodableException>();
+      });
+    },
+  );
 }
