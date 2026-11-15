@@ -7,10 +7,9 @@ import 'dart:typed_data';
 
 import 'package:codable/codable.dart';
 import 'package:codable_toml/codable_toml.dart';
-import 'package:codable_toml/src/toml_types.dart' show TomlNativeDateTimeSource;
 
 void main() {
-  for (final sample in _smokeCorpus()) {
+  for (final sample in tomlFuzzSmokeCorpus()) {
     fuzzTarget(sample);
   }
 }
@@ -18,8 +17,8 @@ void main() {
 /// Coverage-guided fuzz target for [TomlCodableDecoder] and the TOML v1.0
 /// parser.
 ///
-/// Catches only [CodableException] and [FormatException]; any leaked
-/// [RangeError], [StateError], or [TypeError] fails immediately.
+/// Catches only [CodableException]; any leaked [FormatException], [RangeError],
+/// [StateError], or [TypeError] fails immediately.
 void fuzzTarget(Uint8List bytes) {
   _fuzzGenericTreeAndKeyedParity(bytes);
   _fuzzKeyedSchemaDecode(bytes);
@@ -43,8 +42,6 @@ void _fuzzGenericTreeAndKeyedParity(Uint8List bytes) {
     mapTree = _readGenericNode(decoder);
   } on CodableException {
     return;
-  } on FormatException {
-    return;
   }
 
   final text = utf8.decode(bytes);
@@ -59,8 +56,8 @@ void _fuzzGenericTreeAndKeyedParity(Uint8List bytes) {
 
 Object? _readGenericNode(Decoder decoder) {
   final sv = decoder.singleValue();
-  if (sv is TomlNativeDateTimeSource) {
-    final dt = (sv as TomlNativeDateTimeSource).tryReadTomlDateTime();
+  if (sv case final TomlNativeDateTimeSource source) {
+    final dt = source.tryReadTomlDateTime();
     if (dt != null) return dt;
   }
   return switch (decoder.peekKind()) {
@@ -106,8 +103,8 @@ Object? _readGenericNodeViaKeyed(Decoder decoder) =>
     };
 
 Object? _readGenericScalarViaSingleValue(SingleValueDecoder sv) {
-  if (sv is TomlNativeDateTimeSource) {
-    final dt = (sv as TomlNativeDateTimeSource).tryReadTomlDateTime();
+  if (sv case final TomlNativeDateTimeSource source) {
+    final dt = source.tryReadTomlDateTime();
     if (dt != null) return dt;
   }
   return switch (sv.peekKind()) {
@@ -175,8 +172,6 @@ void _fuzzKeyedSchemaDecode(Uint8List bytes) {
     );
   } on CodableException {
     // Expected on malformed or schema-mismatched TOML inputs.
-  } on FormatException {
-    // Expected when TomlDateTimeCodec parses an invalid ISO string.
   }
 }
 
@@ -227,8 +222,6 @@ void _fuzzMappedAndMapKeyCoercion(Uint8List bytes) {
     }
   } on CodableException {
     // Expected on malformed or non-coercible keys/values.
-  } on FormatException {
-    // Expected on malformed inputs.
   }
 }
 
@@ -246,12 +239,15 @@ void _probeKeyCoercions(SingleValueDecoder keySv) {
   }
 }
 
-List<Uint8List> _smokeCorpus() {
+/// Deterministic smoke corpus covering valid TOML v1.0 constructs, malformed
+/// syntax, invalid UTF-8 sequences, and PRNG byte slices.
+List<Uint8List> tomlFuzzSmokeCorpus() {
   final textSamples = <String>[
     '',
     '# comment only\n',
     '\ufeffid = 42\nname = "hello\\nworld"\nactive = true\nratio = 3.14\n',
     'data = "AQIDBA=="\nnums = [1, 2, 3,]\nts = 1979-05-27T07:32:00Z\n',
+    'ts = "not-a-date"\n',
     'hex = 0xdead_beef\noct = 0o755\nbin = 0b1010_0101\n',
     'pos_inf = +inf\nneg_inf = -inf\nnan_val = nan\n',
     'odt = 1979-05-27 07:32:00-07:00\nldt = 1979-05-27T00:32:00.999999\n',

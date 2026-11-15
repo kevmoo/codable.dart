@@ -8,7 +8,6 @@ import 'dart:typed_data';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
 import 'package:codable_toml/codable_toml.dart';
-import 'package:codable_toml/src/toml_types.dart' show TomlNativeDateTimeSink;
 import 'package:test/test.dart';
 
 final class _TlsConfig {
@@ -788,6 +787,22 @@ void _registerBoundaryExceptionTests() {
           }),
         ),
       ).throws<TomlCodableException>();
+
+      // Unwritten map key encoder fails fast when valueEncoder() is requested
+      check(
+        () => TomlCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) {
+            final m = e.keyed().nestedEncoder('labels').map(length: 1);
+            m.keyEncoder();
+            m.valueEncoder();
+          }),
+        ),
+      ).throws<TomlCodableException>().which(
+        (it) => it
+          ..has((e) => e.path, 'path').deepEquals(['labels', 0])
+          ..has((e) => e.message, 'message').contains('did not write a key'),
+      );
 
       // Duplicate stringified keys in MapEncoder (`1` and `'1'`)
       check(

@@ -46,7 +46,7 @@ final class _TomlTable extends _TomlNode {
 }
 
 final class _TomlMap extends _TomlNode {
-  final List<(String?, TomlCodableEncoder)> entries = [];
+  final List<(String, TomlCodableEncoder)> entries = [];
   _TomlMapKeyEncoder? pendingKey;
 }
 
@@ -221,21 +221,7 @@ _ResolvedTable _resolveMapEntries(_TomlMap mapNode, List<Object> tablePath) {
       path: tablePath,
     );
   }
-  final seenKeys = <String>{};
-  final resolved = <(String, _ResolvedNode)>[];
-  for (var i = 0; i < mapNode.entries.length; i++) {
-    final (keyText, valEnc) = mapNode.entries[i];
-    if (keyText == null) {
-      throw TomlCodableException(
-        'TOML map keys must be finite scalar values '
-        '(String, int, double, or bool)',
-        path: [...tablePath, i],
-      );
-    }
-    _validateTableKey(keyText, tablePath, seenKeys);
-    resolved.add((keyText, _resolveNode(valEnc)));
-  }
-  return _ResolvedTable(resolved);
+  return _resolveTableEntries(mapNode.entries, tablePath);
 }
 
 void _validateTableKey(
@@ -656,8 +642,13 @@ final class _TomlMapEncoder implements MapEncoder {
     }
     _map.pendingKey = null;
     final keyText = keyEnc._key;
-    final segment = keyText ?? _map.entries.length;
-    final valEnc = _owner._spawnChild(segment);
+    if (keyText == null) {
+      throw TomlCodableException(
+        'TOML map key encoder did not write a key',
+        path: keyEnc._path,
+      );
+    }
+    final valEnc = _owner._spawnChild(keyText);
     _map.entries.add((keyText, valEnc));
     return valEnc;
   }
@@ -665,7 +656,7 @@ final class _TomlMapEncoder implements MapEncoder {
 
 final class _TomlMapKeyEncoder
     with BaseStringMapKeyEncoderMixin
-    implements Encoder, SingleValueEncoder, TomlNativeDateTimeSink {
+    implements Encoder, SingleValueEncoder {
   @override
   final Map<Object, Object?> userInfo;
   final List<Object> _path;
@@ -691,6 +682,9 @@ final class _TomlMapKeyEncoder
   }
 
   @override
+  void encodeInt(int value) => writeKeyString(_formatTomlInt(value, _path));
+
+  @override
   void encodeDouble(double value) {
     if (!value.isFinite) {
       throw TomlCodableException(
@@ -699,12 +693,6 @@ final class _TomlMapKeyEncoder
       );
     }
     writeKeyString(_formatTomlDouble(value));
-  }
-
-  @override
-  void writeTomlDateTime(TomlDateTime value) {
-    _validateRawDateTime(value.raw, _path);
-    writeKeyString(value.raw);
   }
 }
 

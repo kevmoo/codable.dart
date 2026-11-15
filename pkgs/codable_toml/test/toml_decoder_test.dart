@@ -7,8 +7,8 @@ import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
+import 'package:codable/codable_json.dart';
 import 'package:codable_toml/codable_toml.dart';
-import 'package:codable_toml/src/toml_types.dart' show TomlNativeDateTimeSource;
 import 'package:test/test.dart';
 
 import 'fuzz/toml_fuzz.dart';
@@ -180,10 +180,13 @@ void _registerStringAndCommentTests() {
             'Violets are \\\r\n'
             '    \n'
             '  blue ""\\"end""""\n'
+            'ml_empty = """"""\n'
+            'ml_five = """a"""""\n'
             "lit = 'C:\\Users\\nodejs\\templates'\n"
             "ml_lit = '''\n"
             'The first newline is\n'
-            "trimmed in ''raw'' strings.''''\n";
+            "trimmed in ''raw'' strings.''''\n"
+            "ml_lit_five = '''a'''''\n";
 
         final values = TomlCodableDecoder.decode<Map<String, String>>(
           toml,
@@ -200,9 +203,12 @@ void _registerStringAndCommentTests() {
         check(values['basic']).equals('line1\nline2\t"quoted"\\A🚀');
         check(values['ml_basic'])
             .equals('Roses are red\nViolets are blue """end"');
+        check(values['ml_empty']).equals('');
+        check(values['ml_five']).equals('a""');
         check(values['lit']).equals(r'C:\Users\nodejs\templates');
         check(values['ml_lit'])
             .equals("The first newline is\ntrimmed in ''raw'' strings.'");
+        check(values['ml_lit_five']).equals("a''");
       },
     );
 
@@ -244,6 +250,8 @@ site."google.com" = true
           'x = "raw\x00null"',
           'x = "del\x7fchar"',
           'x = "single \\\n line"',
+          'x = """a""""""',
+          "x = '''a''''''",
           'x = """"""""""too_many"""',
           'a = 1 # bad \x08 comment',
           'a = 1\rb = 2',
@@ -417,7 +425,7 @@ void _registerDateTimeTests() {
 
       final ld = _decodeNativeDateTimeField('dt = 2000-02-29')!;
       check(ld.kind).equals(TomlDateTimeKind.localDate);
-      check(ld.dateTime).equals(DateTime(2000, 2, 29));
+      check(ld.dateTime).equals(DateTime.utc(2000, 2, 29));
 
       final lt = _decodeNativeDateTimeField('dt = 07:32:00.5')!;
       check(lt.kind).equals(TomlDateTimeKind.localTime);
@@ -431,45 +439,73 @@ void _registerDateTimeTests() {
       check(m.readString('dt')).equals('1979-05-27T07:32:00Z');
     });
 
-    test(
-      'TomlDateTimeCodec decodes native Date-Times and quoted ISO strings',
-      () {
-        const codec = TomlDateTimeCodec();
-        final nativeDt = _decodeField(
-          'ts = 2026-11-14T02:30:00+02:00',
-          (k) => k.decodeValue(codec),
-        );
-        check(nativeDt).equals(DateTime.utc(2026, 11, 14, 0, 30));
+    test('TomlDateTimeCodec decodes native Date-Times and quoted ISO strings', () {
+      const codec = TomlDateTimeCodec();
+      final nativeDt = _decodeField(
+        'ts = 2026-11-14T02:30:00+02:00',
+        (k) => k.decodeValue(codec),
+      );
+      check(nativeDt).equals(DateTime.utc(2026, 11, 14, 0, 30));
 
-        final quotedIso = _decodeField(
-          'ts = "2026-11-14T00:30:00Z"',
-          (k) => k.decodeValue(codec),
-        );
-        check(quotedIso).equals(DateTime.utc(2026, 11, 14, 0, 30));
+      final quotedIso = _decodeField(
+        'ts = "2026-11-14T00:30:00Z"',
+        (k) => k.decodeValue(codec),
+      );
+      check(quotedIso).equals(DateTime.utc(2026, 11, 14, 0, 30));
 
-        // Quoted ISO string returns null from tryReadTomlDateTime()
-        check(_decodeNativeDateTimeField('ts = "2026-11-14T00:30:00Z"'))
-            .isNull();
+      // Quoted ISO string returns null from tryReadTomlDateTime()
+      check(_decodeNativeDateTimeField('ts = "2026-11-14T00:30:00Z"')).isNull();
 
-        // Local Time has no calendar date and throws TomlCodableException with
-        // enriched line, column, and hierarchical path from decoder._trace.
-        final ltErr = _expectTomlError(
-          () => TomlCodableDecoder.decode<DateTime>(
-            '[event]\noffsetInstant = 07:32:00\n',
-            Decodable.fromFunction(
-              (d) => d
-                  .mapped()
-                  .nestedDecoder('event')
-                  .mapped()
-                  .decodeKey('offsetInstant', codec),
-            ),
+      // Malformed quoted ISO string throws CodableException (not bare
+      // FormatException) across both TomlCodableDecoder.fromString and JSON.
+      check(
+        () =>
+            TomlCodableDecoder.fromString('ts = "not-a-date"\n')
+                .mapped()
+                .decodeKey('ts', codec),
+      ).throws<CodableException>();
+      check(() => codec.decode(JsonCodableDecoder.fromString('"not-a-date"')))
+          .throws<CodableException>();
+
+      // TomlDateTimeCodable decodes native literals and rejects quoted strings
+      // on TOML while roundtripping literal strings on JSON.
+      const valueCodec = TomlDateTimeCodable();
+      final ltVal = _decodeField(
+        't = 07:32:00.5',
+        (k) => k.decodeValue(valueCodec),
+      );
+      check(ltVal).equals(
+        const TomlDateTime(kind: TomlDateTimeKind.localTime, raw: '07:32:00.5'),
+      );
+      check(
+        () =>
+            _decodeField('t = "07:32:00.5"', (k) => k.decodeValue(valueCodec)),
+      ).throws<TomlCodableException>();
+      final jsonRoundtrip = valueCodec.decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(ltVal, valueCodec),
+        ),
+      );
+      check(jsonRoundtrip).equals(ltVal);
+
+      // Local Time has no calendar date and throws TomlCodableException with
+      // enriched line, column, and hierarchical path from decoder._trace.
+      final ltErr = _expectTomlError(
+        () => TomlCodableDecoder.decode<DateTime>(
+          '[event]\noffsetInstant = 07:32:00\n',
+          Decodable.fromFunction(
+            (d) => d
+                .mapped()
+                .nestedDecoder('event')
+                .mapped()
+                .decodeKey('offsetInstant', codec),
           ),
-        );
-        check(ltErr.line).equals(2);
-        check(ltErr.column).equals(17);
-        check(ltErr.path).deepEquals(<Object>['event', 'offsetInstant']);
-      },
-    );
+        ),
+      );
+      check(ltErr.line).equals(2);
+      check(ltErr.column).equals(17);
+      check(ltErr.path).deepEquals(<Object>['event', 'offsetInstant']);
+    });
 
     test('rejects invalid calendar dates, leap years, and time ranges', () {
       final invalidDates = <String>[
@@ -501,6 +537,8 @@ void _registerTableAndArrayStructureTests() {
         'resolves out-of-order [a.b] before [a] and dotted-key subtables',
         () {
           const toml = '''
+[empty.sub]
+
 [a.b]
 x = 10
 
@@ -512,6 +550,14 @@ nested.z = 30
 w = 40
 ''';
           final root = TomlCodableDecoder.fromString(toml).mapped();
+          check(
+            root
+                .nestedDecoder('empty')
+                .mapped()
+                .nestedDecoder('sub')
+                .map()
+                .length,
+          ).equals(0);
           final a = root.nestedDecoder('a').mapped();
           check(a.readInt('y')).equals(20);
           check(a.nestedDecoder('b').mapped().readInt('x')).equals(10);
@@ -607,6 +653,8 @@ inside inline""" },
           'arr = [1, 2]\n[[arr]]\nx = 1',
           '[[arr]]\nx = 1\n[arr]\ny = 2',
           'arr = [{ x = 1 }]\n[arr.sub]\ny = 2',
+          'a.b = 1\na.b.c = 2',
+          'a.b.c = 1\na.b = 2',
         ];
         for (final bad in structuralViolations) {
           check(() => TomlCodableDecoder.fromString(bad))
@@ -654,6 +702,21 @@ void _registerDecoderContainerAndPolymorphicTests() {
         check(keyed.selectKeyIndex(opts)).equals(4);
         check(keyed.decodeStringList()).deepEquals(<String>['a', 'b']);
         check(keyed.moveNextKey()).isFalse();
+
+        // Non-consuming peekKind() and isNextNull() after moveNextKey() must
+        // preserve the active key for nextKey() and selectKeyIndex().
+        final peekDec = TomlCodableDecoder.fromString('a = 1\nb = "two"\n')
+            .keyed();
+        check(peekDec.moveNextKey()).isTrue();
+        check(peekDec.peekKind()).equals(ValueKind.number);
+        check(peekDec.isNextNull()).isFalse();
+        check(peekDec.nextKey()).equals('a');
+        check(peekDec.readInt()).equals(1);
+        check(peekDec.moveNextKey()).isTrue();
+        check(peekDec.peekKind()).equals(ValueKind.string);
+        check(peekDec.selectKeyIndex(KeyOptions.of(const ['a', 'b'])))
+            .equals(1);
+        check(peekDec.readString()).equals('two');
       },
     );
 
@@ -877,6 +940,25 @@ ports = [80, "bad_port", 443]
           check(keyErr.line).equals(3);
           check(keyErr.column).equals(1);
           check(keyErr.path).deepEquals(<Object>['scores', 'oops']);
+
+          // Repeated adjacent path segments (e.g. matrix[0][0] or node.node)
+          // must not be truncated during exception path merging.
+          final nestedArrErr = _expectTomlError(
+            () => TomlCodableDecoder.decode<void>(
+              'matrix = [[1]]\n',
+              Decodable.fromFunction((d) {
+                final outer = d.mapped().nestedDecoder('matrix').unkeyed();
+                outer.moveNext();
+                outer.decodeElement(
+                  Decodable.fromFunction(
+                    (_) =>
+                        throw const CodableException('Inner fail', path: [0]),
+                  ),
+                );
+              }),
+            ),
+          );
+          check(nestedArrErr.path).deepEquals(<Object>['matrix', 0, 0]);
         },
       );
 
@@ -894,12 +976,9 @@ ports = [80, "bad_port", 443]
       });
 
       test('passes fuzzTarget smoke corpus without unhandled exceptions', () {
-        fuzzTarget(Uint8List(0));
-        fuzzTarget(
-          Uint8List.fromList(
-            utf8.encode('[a]\nid = 1\nname = "x"\nts = 1979-05-27\n'),
-          ),
-        );
+        for (final sample in tomlFuzzSmokeCorpus()) {
+          fuzzTarget(sample);
+        }
       });
     },
   );

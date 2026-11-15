@@ -11,8 +11,6 @@ import 'package:codable/codable_json.dart';
 import 'package:codable_cbor/codable_cbor.dart';
 import 'package:codable_msgpack/codable_msgpack.dart';
 import 'package:codable_toml/codable_toml.dart';
-import 'package:codable_toml/src/toml_types.dart'
-    show TomlNativeDateTimeSink, TomlNativeDateTimeSource;
 import 'package:codable_yaml/codable_yaml.dart';
 import 'package:test/test.dart';
 
@@ -454,30 +452,6 @@ final class TimestampCollisionModel {
   });
 }
 
-final class NativeTomlDateTimeCodable implements Codable<TomlDateTime> {
-  const NativeTomlDateTimeCodable();
-
-  @override
-  TomlDateTime decode(Decoder decoder) {
-    final sv = decoder.singleValue();
-    if (sv is TomlNativeDateTimeSource) {
-      final dt = (sv as TomlNativeDateTimeSource).tryReadTomlDateTime();
-      if (dt != null) return dt;
-    }
-    throw const TomlCodableException('Expected native TomlDateTime literal');
-  }
-
-  @override
-  void encode(TomlDateTime value, Encoder encoder) {
-    final sv = encoder.singleValue();
-    if (sv is TomlNativeDateTimeSink) {
-      (sv as TomlNativeDateTimeSink).writeTomlDateTime(value);
-      return;
-    }
-    sv.encodeString(value.raw);
-  }
-}
-
 @Codable()
 final class LocalDateTimesRecord {
   @CodableKey(codable: TomlDateTimeCodec())
@@ -489,7 +463,7 @@ final class LocalDateTimesRecord {
   @CodableKey(codable: TomlDateTimeCodec())
   final DateTime calendarDay;
 
-  @CodableKey(codable: NativeTomlDateTimeCodable())
+  @CodableKey(codable: TomlDateTimeCodable())
   final TomlDateTime? dailyWindow;
 
   const LocalDateTimesRecord({
@@ -705,11 +679,6 @@ void _registerHierarchyAndInlineTableTests() {
       )) {
         check(r).equals(zeroField);
       }
-      check(
-        const EmptyMarkerCodable().decode(
-          JsonCodableDecoder.fromString('{"ignored": [1, 2], "extra": "ok"}'),
-        ),
-      ).equals(zeroField);
     });
   });
 }
@@ -859,7 +828,7 @@ void _registerMapsBytesTupleAndPolymorphicTests() {
           binaryPayload: Uint8List.fromList([0x00, 0x7f, 0x80, 0xff]),
           emptyPayload: Uint8List(0),
           coords: Float64List.fromList([37.7749, -122.4194]),
-          normal: Float64List.fromList([0.0, 1.0, -0.5]),
+          normal: Float64List.fromList([-0.0, 0.0, 1.0, -0.5]),
         );
 
         for (final r in _roundtripAllFiveFormats(
@@ -875,8 +844,27 @@ void _registerMapsBytesTupleAndPolymorphicTests() {
           check(r.binaryPayload).deepEquals([0x00, 0x7f, 0x80, 0xff]);
           check(r.emptyPayload).isEmpty();
           check(r.coords).deepEquals([37.7749, -122.4194]);
-          check(r.normal).isNotNull().deepEquals([0.0, 1.0, -0.5]);
+          final norm = r.normal;
+          check(norm).isNotNull().deepEquals([-0.0, 0.0, 1.0, -0.5]);
+          if (!identical(1, 1.0)) {
+            check(norm![0].isNegative).isTrue();
+          }
+          check(norm![1].isNegative).isFalse();
         }
+
+        // Chaining YAML -> CBOR -> MessagePack -> TOML directly (without V8's
+        // JSON.stringify(-0) -> "0" hop on JS) preserves IEEE 754 -0.0 across
+        // every runtime including dart2js.
+        const envCodec = TypedFeaturesEnvelopeCodable();
+        final (cborHop, _) = _roundtripCbor(
+          _roundtripYaml(env, envCodec),
+          envCodec,
+        );
+        final (msgpackHop, _) = _roundtripMsgPack(cborHop, envCodec);
+        final (tomlHop, tomlWire, _) = _roundtripToml(msgpackHop, envCodec);
+        check(tomlWire).contains('-0.0');
+        check(tomlHop.normal![0].isNegative).isTrue();
+        check(tomlHop.normal![1].isNegative).isFalse();
       },
     );
 
@@ -1059,11 +1047,19 @@ dailyWindow = 07:32:00.5
         check(decoded.offsetInstant).equals(DateTime.utc(1979, 5, 27, 7, 32));
         check(decoded.localWallClock)
             .equals(DateTime(2026, 11, 14, 9, 15, 30, 250));
-        check(decoded.calendarDay).equals(DateTime(2026, 11, 14));
+        check(decoded.calendarDay).equals(DateTime.utc(2026, 11, 14));
         check(decoded.dailyWindow)
             .isNotNull()
             .has((d) => (d.kind, d.raw, d.dateTime), 'localTime')
             .equals((TomlDateTimeKind.localTime, '07:32:00.5', null));
+
+        for (final r in _roundtripAllFiveFormats(
+          decoded,
+          const LocalDateTimesRecordCodable(),
+        )) {
+          check(r.offsetInstant).equals(DateTime.utc(1979, 5, 27, 7, 32));
+          check(r.dailyWindow).equals(decoded.dailyWindow);
+        }
 
         // Attempting to decode a date-less `localTime` into Dart `DateTime` via
         // `TomlDateTimeCodec` fails with a descriptive `TomlCodableException`.

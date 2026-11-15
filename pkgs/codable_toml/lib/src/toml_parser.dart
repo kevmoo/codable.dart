@@ -36,7 +36,7 @@ final BigInt _minSafeJs = BigInt.from(-9007199254740991);
 }
 
 /// How a [TomlTable] was introduced in the TOML document.
-enum TomlTableOrigin {
+enum _TomlTableOrigin {
   /// Top-level document table.
   root,
 
@@ -125,16 +125,11 @@ final class TomlEntry {
 /// Ordered TOML table mapping string keys to [TomlEntry] records.
 final class TomlTable extends TomlNode {
   final Map<String, TomlEntry> entries = <String, TomlEntry>{};
-  TomlTableOrigin origin;
+  _TomlTableOrigin _origin;
   int scopeId;
-  bool isSealed;
+  bool isSealed = false;
 
-  TomlTable({
-    required super.offset,
-    required this.origin,
-    required this.scopeId,
-    this.isSealed = false,
-  });
+  TomlTable._(this._origin, {required super.offset, required this.scopeId});
 }
 
 final class _KeySegment {
@@ -162,6 +157,18 @@ final class _ParsedTime {
 
 /// Parses a complete TOML v1.0 [source] string into its root [TomlTable].
 TomlTable parseTomlDocument(String source) => _TomlParser(source).parse();
+
+/// Parses an unquoted TOML v1.0 date/time literal (`offsetDateTime`,
+/// `localDateTime`, `localDate`, or `localTime`) or throws
+/// [TomlCodableException].
+TomlDateTime parseTomlDateTimeLiteral(String raw) {
+  final parser = _TomlParser(raw);
+  if (_looksLikeLocalTime(raw)) return parser._parseLocalTime(0, raw).value;
+  if (_looksLikeDatePrefix(raw)) {
+    return parser._parseDateOrDateTime(0, raw).value;
+  }
+  throw TomlCodableException('Invalid TOML date-time literal "$raw"');
+}
 
 final class _TomlParser {
   final String _source;
@@ -247,7 +254,7 @@ final class _TomlParser {
   TomlTable parse() {
     // Strip optional leading UTF-8 BOM (U+FEFF) if present in a raw string.
     if (_peek() == 0xfeff) _offset++;
-    final root = TomlTable(offset: 0, origin: TomlTableOrigin.root, scopeId: 0);
+    final root = TomlTable._(_TomlTableOrigin.root, offset: 0, scopeId: 0);
     var activeTable = root;
     var activeScope = 0;
 
@@ -312,9 +319,9 @@ final class _TomlParser {
     int nextScope,
   ) {
     if (existing == null) {
-      final created = TomlTable(
+      final created = TomlTable._(
+        _TomlTableOrigin.implicitHeader,
         offset: seg.offset,
-        origin: TomlTableOrigin.implicitHeader,
         scopeId: nextScope,
       );
       curr.entries[seg.name] = TomlEntry(
@@ -346,9 +353,9 @@ final class _TomlParser {
     final last = path.last;
     final existing = parent.entries[last.name]?.value;
     if (existing == null) {
-      final table = TomlTable(
+      final table = TomlTable._(
+        _TomlTableOrigin.explicitHeader,
         offset: headerOffset,
-        origin: TomlTableOrigin.explicitHeader,
         scopeId: nextScope,
       );
       parent.entries[last.name] = TomlEntry(
@@ -360,9 +367,9 @@ final class _TomlParser {
     }
     if (existing is TomlTable &&
         !existing.isSealed &&
-        existing.origin == TomlTableOrigin.implicitHeader) {
+        existing._origin == _TomlTableOrigin.implicitHeader) {
       existing
-        ..origin = TomlTableOrigin.explicitHeader
+        .._origin = _TomlTableOrigin.explicitHeader
         ..scopeId = nextScope;
       return existing;
     }
@@ -396,9 +403,9 @@ final class _TomlParser {
         last.offset,
       );
     }
-    final element = TomlTable(
+    final element = TomlTable._(
+      _TomlTableOrigin.explicitHeader,
       offset: headerOffset,
-      origin: TomlTableOrigin.explicitHeader,
       scopeId: nextScope,
     );
     array.items.add(element);
@@ -433,9 +440,9 @@ final class _TomlParser {
       final seg = path[i];
       final existing = curr.entries[seg.name]?.value;
       if (existing == null) {
-        final sub = TomlTable(
+        final sub = TomlTable._(
+          _TomlTableOrigin.dottedKey,
           offset: seg.offset,
-          origin: TomlTableOrigin.dottedKey,
           scopeId: scopeId,
         );
         curr.entries[seg.name] = TomlEntry(
@@ -446,7 +453,7 @@ final class _TomlParser {
         curr = sub;
       } else if (existing is TomlTable &&
           !existing.isSealed &&
-          existing.origin == TomlTableOrigin.dottedKey &&
+          existing._origin == _TomlTableOrigin.dottedKey &&
           existing.scopeId == scopeId) {
         curr = existing;
       } else {
@@ -567,9 +574,9 @@ final class _TomlParser {
     final start = _offset;
     final inlineScope = ++_scopeCounter;
     _offset++; // '{'
-    final table = TomlTable(
+    final table = TomlTable._(
+      _TomlTableOrigin.inline,
       offset: start,
-      origin: TomlTableOrigin.inline,
       scopeId: inlineScope,
     );
     _skipInlineWhitespace();
@@ -917,7 +924,7 @@ final class _TomlParser {
         TomlDateTime(
           kind: TomlDateTimeKind.localDate,
           raw: raw,
-          dateTime: DateTime(year, month, day),
+          dateTime: DateTime.utc(year, month, day),
         ),
         offset: start,
       );

@@ -28,9 +28,10 @@ final class TomlDateTime {
   /// Canonical unquoted TOML v1.0 literal text (e.g. `1979-05-27T07:32:00Z`).
   final String raw;
 
-  /// Parsed UTC/offset [DateTime] when [kind] is [TomlDateTimeKind.offsetDateTime],
-  /// or local [DateTime] for [TomlDateTimeKind.localDateTime] / [TomlDateTimeKind.localDate],
-  /// or `null` for [TomlDateTimeKind.localTime].
+  /// Parsed UTC [DateTime] when [kind] is [TomlDateTimeKind.offsetDateTime] or
+  /// [TomlDateTimeKind.localDate], local [DateTime] when [kind] is
+  /// [TomlDateTimeKind.localDateTime], or `null` when [kind] is
+  /// [TomlDateTimeKind.localTime].
   final DateTime? dateTime;
 
   /// Creates a [TomlDateTime] value.
@@ -57,21 +58,32 @@ final class TomlDateTime {
   String toString() => raw;
 }
 
-/// Internal driver hook implemented by `TomlCodableEncoder`'s
-/// `SingleValueEncoder` / `Encoder` so [TomlDateTimeCodec] can emit unquoted
-/// TOML date/time literals while remaining compatible with non-TOML drivers.
+/// Driver hook implemented by `TomlCodableEncoder`'s `SingleValueEncoder` so
+/// [TomlDateTimeCodec] and [TomlDateTime] codecs can emit unquoted TOML
+/// date/time literals while remaining compatible with non-TOML drivers.
 abstract interface class TomlNativeDateTimeSink {
   /// Writes an unquoted native TOML date/time literal.
   void writeTomlDateTime(TomlDateTime value);
 }
 
-/// Internal driver hook implemented by `TomlCodableDecoder`'s
-/// `SingleValueDecoder` / `Decoder` so [TomlDateTimeCodec] can read parsed
-/// [TomlDateTime] metadata directly when decoding from TOML.
+/// Driver hook implemented by `TomlCodableDecoder` and its
+/// `SingleValueDecoder` so [TomlDateTimeCodec] and [TomlDateTime] codecs can
+/// read parsed [TomlDateTime] metadata directly when decoding from TOML.
 abstract interface class TomlNativeDateTimeSource {
   /// Reads a native [TomlDateTime] if the upcoming value is a TOML date/time,
   /// or `null` if it is another kind (such as a quoted ISO-8601 string).
   TomlDateTime? tryReadTomlDateTime();
+}
+
+DateTime _parseIsoDateTimeString(String raw) {
+  try {
+    return DateTime.parse(raw);
+  } on FormatException catch (e) {
+    throw CodableException(
+      'Invalid ISO-8601 DateTime "$raw": ${e.message}',
+      underlyingError: e,
+    );
+  }
 }
 
 /// Format-adaptive [Codable] companion for [DateTime] that emits native
@@ -85,8 +97,8 @@ final class TomlDateTimeCodec implements Codable<DateTime> {
   @override
   DateTime decode(Decoder decoder) {
     final sv = decoder.singleValue();
-    if (sv is TomlNativeDateTimeSource) {
-      final nativeDt = (sv as TomlNativeDateTimeSource).tryReadTomlDateTime();
+    if (sv case final TomlNativeDateTimeSource source) {
+      final nativeDt = source.tryReadTomlDateTime();
       if (nativeDt != null) {
         final dt = nativeDt.dateTime;
         if (dt != null) return dt;
@@ -100,7 +112,7 @@ final class TomlDateTimeCodec implements Codable<DateTime> {
         sv.readInt(),
         isUtc: true,
       ),
-      ValueKind.string => DateTime.parse(sv.readString()),
+      ValueKind.string => _parseIsoDateTimeString(sv.readString()),
       final kind => throw CodableException(
         'Expected DateTime literal, string, or epoch integer, got $kind',
       ),
@@ -110,10 +122,8 @@ final class TomlDateTimeCodec implements Codable<DateTime> {
   @override
   void encode(DateTime value, Encoder encoder) {
     final sv = encoder.singleValue();
-    if (sv is TomlNativeDateTimeSink) {
-      (sv as TomlNativeDateTimeSink).writeTomlDateTime(
-        TomlDateTime.fromDateTime(value),
-      );
+    if (sv case final TomlNativeDateTimeSink sink) {
+      sink.writeTomlDateTime(TomlDateTime.fromDateTime(value));
       return;
     }
     if (encoder.isHumanReadable) {

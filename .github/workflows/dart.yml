@@ -42,3 +42,8 @@ jobs:
       # otherwise only ever be analyzed, never executed.
       - name: Run tests (JS)
         run: dart test -p node pkgs/codable pkgs/codable_yaml pkgs/codable_cbor pkgs/codable_msgpack pkgs/codable_toml
+
+      - name: Verify Wasm compilation
+        run: |
+          dart compile wasm pkgs/codable_toml/example/codable_toml_example.dart -o /tmp/codable_toml_example.wasm
+          dart compile wasm pkgs/codable_toml/test/fuzz/toml_fuzz.dart -o /tmp/toml_fuzz.wasm

@@ -27,9 +27,6 @@ List<Object> _mergePaths(List<Object> prefix, List<Object> suffix) {
   if (prefix.isEmpty || _startsWithPath(suffix, prefix)) {
     return List<Object>.unmodifiable(suffix);
   }
-  if (prefix.last == suffix.first) {
-    return List<Object>.unmodifiable(<Object>[...prefix, ...suffix.skip(1)]);
-  }
   return List<Object>.unmodifiable(<Object>[...prefix, ...suffix]);
 }
 
@@ -492,7 +489,6 @@ final class _TomlKeyedDecoder
     if (_phase == 0 && !moveNextKey()) {
       _trace.fail('No more keys in TOML table', atOffset: _table.offset);
     }
-    _phase = 2;
     final node = _activeEntry!.value;
     _trace.set(node.offset, _activePath);
     return node;
@@ -779,4 +775,38 @@ final class _TomlSingleValueDecoder
 
   @override
   void _consumeCurrent() {}
+}
+
+/// Lossless [Codable] companion for [TomlDateTime] across all four TOML v1.0
+/// date/time wire kinds (`offsetDateTime`, `localDateTime`, `localDate`, and
+/// `localTime`).
+///
+/// Emits unquoted native TOML literals on `TomlCodableEncoder` and canonical
+/// TOML literal strings on non-TOML drivers.
+final class TomlDateTimeCodable implements Codable<TomlDateTime> {
+  /// Creates a `const` [TomlDateTimeCodable].
+  const TomlDateTimeCodable();
+
+  @override
+  TomlDateTime decode(Decoder decoder) {
+    final sv = decoder.singleValue();
+    if (sv case final TomlNativeDateTimeSource source) {
+      final dt = source.tryReadTomlDateTime();
+      if (dt != null) return dt;
+      throw TomlCodableException(
+        'Expected native TOML date-time literal, got ${sv.peekKind()}',
+      );
+    }
+    return parseTomlDateTimeLiteral(sv.readString());
+  }
+
+  @override
+  void encode(TomlDateTime value, Encoder encoder) {
+    final sv = encoder.singleValue();
+    if (sv case final TomlNativeDateTimeSink sink) {
+      sink.writeTomlDateTime(value);
+      return;
+    }
+    sv.encodeString(value.raw);
+  }
 }

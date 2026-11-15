@@ -5,11 +5,13 @@
 /// Zero-dependency TOML v1.0 serialization driver for `package:codable`.
 library;
 
-export 'src/toml_decoder.dart' show TomlCodableDecoder;
+export 'src/toml_decoder.dart' show TomlCodableDecoder, TomlDateTimeCodable;
 export 'src/toml_encoder.dart' show TomlCodableEncoder;
 export 'src/toml_types.dart'
     show
         TomlCodableException,
         TomlDateTime,
         TomlDateTimeCodec,
-        TomlDateTimeKind;
+        TomlDateTimeKind,
+        TomlNativeDateTimeSink,
+        TomlNativeDateTimeSource;

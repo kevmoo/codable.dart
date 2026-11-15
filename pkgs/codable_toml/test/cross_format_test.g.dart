@@ -2872,7 +2872,7 @@ final class LocalDateTimesRecordCodable
             keyed.readNull();
             dailyWindow = null;
           } else {
-            dailyWindow = keyed.decodeValue(const NativeTomlDateTimeCodable());
+            dailyWindow = keyed.decodeValue(const TomlDateTimeCodable());
           }
           break;
         default:
@@ -2917,7 +2917,7 @@ final class LocalDateTimesRecordCodable
       keyed.encodeValue(
         _$LocalDateTimesRecordSchema.nameDailyWindow,
         v$DailyWindow,
-        const NativeTomlDateTimeCodable(),
+        const TomlDateTimeCodable(),
       );
     }
   }
