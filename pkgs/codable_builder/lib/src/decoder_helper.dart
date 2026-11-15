@@ -213,26 +213,49 @@ final class DecoderGeneratorHelper {
     final found = <EnumElement>[];
     final seenNames = <String>{};
     for (final field in nonIgnoredFields) {
-      _collectMapEnumsFromType(field.type, found, seenNames, inMap: false);
+      _collectNestedEnumsFromType(
+        field.type,
+        found,
+        seenNames,
+        needsSchemaOptions: false,
+        depth: 0,
+        parentIsSet: false,
+      );
     }
     return found;
   }
 
-  static void _collectMapEnumsFromType(
+  static void _collectNestedEnumsFromType(
     DartType? type,
     List<EnumElement> found,
     Set<String> seenNames, {
-    required bool inMap,
+    required bool needsSchemaOptions,
+    required int depth,
+    required bool parentIsSet,
   }) {
     if (type == null) return;
     final el = type.element;
-    if (inMap && el is EnumElement && el.name != null) {
+    if (needsSchemaOptions && el is EnumElement && el.name != null) {
       if (seenNames.add(el.name!)) found.add(el);
     }
     if (type is! InterfaceType) return;
-    final nextInMap = inMap || type.isDartCoreMap || el?.name == 'Map';
+    final isMap = type.isDartCoreMap || el?.name == 'Map';
+    final isSet = type.isDartCoreSet || el?.name == 'Set';
+    final isList = type.isDartCoreList || el?.name == 'List';
+    final nextNeeds =
+        needsSchemaOptions ||
+        isMap ||
+        (depth >= 1 && isSet) ||
+        (parentIsSet && isList);
     for (final arg in type.typeArguments) {
-      _collectMapEnumsFromType(arg, found, seenNames, inMap: nextInMap);
+      _collectNestedEnumsFromType(
+        arg,
+        found,
+        seenNames,
+        needsSchemaOptions: nextNeeds,
+        depth: depth + 1,
+        parentIsSet: isSet,
+      );
     }
   }
 
@@ -537,7 +560,7 @@ final class DecoderGeneratorHelper {
       _writeNestedListRead(buffer, field, elemType, indent: indent);
       return;
     }
-    if (elemType.isDartCoreMap || elemType.element?.name == 'Map') {
+    if (_isMapOrSetType(elemType)) {
       buffer.write(
         _inlineCollectionDecodeCode(elemType, (
           target: field.name,
@@ -693,15 +716,31 @@ final class DecoderGeneratorHelper {
   }
 
   static (String, String)? _nestedFastListSpec(DartType inner) {
-    if (inner.element?.name == 'Float64List') {
-      return ('Float64List', 'u.decodeFloat64List()');
-    }
     final fastCall = _fastPrimitiveListCall(inner);
     if (fastCall != null) {
       return ('List<${inner.getDisplayString()}>', 'u.$fastCall');
     }
     return null;
   }
+
+  static bool _isMapOrSetType(DartType type) =>
+      type.isDartCoreMap ||
+      type.isDartCoreSet ||
+      type.element?.name == 'Map' ||
+      type.element?.name == 'Set';
+
+  static bool _isMapSetOrTypedList(DartType type) =>
+      _isMapOrSetType(type) ||
+      switch (type.element?.name) {
+        'Float64List' || 'Float32List' || 'Int64List' || 'Int32List' => true,
+        _ => false,
+      };
+
+  static bool _isNestedSetElementCollection(DartType type) =>
+      _isMapSetOrTypedList(type) ||
+      type.isDartCoreList ||
+      type.element?.name == 'List' ||
+      type.element?.name == 'Uint8List';
 
   void _writeUnkeyedLoopListRead(
     StringBuffer buffer,
@@ -812,13 +851,21 @@ final class DecoderGeneratorHelper {
     if (type.isDartCoreList || type.element?.name == 'List') {
       return _generateUnkeyedListElementExpr(type);
     }
-    final typedData = _tryGenerateTypedDataElementExpr(type);
-    if (typedData != null) return typedData;
+    if (_isMapSetOrTypedList(type)) {
+      final body = _decoderValueCode(type, (
+        target: 'res',
+        declareType: type.getDisplayString(),
+        decoderExpr: 'd',
+        indent: '  ',
+        depth: 0,
+      ));
+      return 'Decodable.fromFunction((d) {\n$body  return res;\n})';
+    }
     if (type.element != null &&
         const TypeClassifier().isCodableElement(type.element!)) {
       final nestedName = type.element!.name;
       return type.isNullableType
-          ? 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return const ${nestedName}Codable().decode(d); })'
+          ? 'Decodable.fromFunction((d) { final sv = d.singleValue(); if (sv.isNull()) { sv.readNull(); return null; } return const ${nestedName}Codable().decode(d); })'
           : 'const ${nestedName}Codable()';
     }
     if (type.element is EnumElement) {
@@ -838,27 +885,9 @@ final class DecoderGeneratorHelper {
         ? 'Decodable.fromFunction((d) => d.singleValue().readString() as dynamic)'
         : _generateUnkeyedElementExpr(inner);
     if (type.isNullableType) {
-      return 'Decodable.fromFunction((d) { if (d.singleValue().isNull()) { d.singleValue().readNull(); return null; } return ($innerExpr).decodeList(d); })';
+      return 'Decodable.fromFunction((d) { final sv = d.singleValue(); if (sv.isNull()) { sv.readNull(); return null; } return ($innerExpr).decodeList(d); })';
     }
     return '($innerExpr).list';
-  }
-
-  static String? _tryGenerateTypedDataElementExpr(DartType type) {
-    switch (type.element?.name) {
-      case 'Float64List':
-        return 'Decodable.fromFunction((d) => d.unkeyed().decodeFloat64List())';
-      case 'Int64List':
-        return 'Decodable.fromFunction((d) => Int64List.fromList(d.unkeyed().decodeIntList()))';
-      case 'Int32List':
-        return 'Decodable.fromFunction((d) => Int32List.fromList(d.unkeyed().decodeIntList()))';
-      case 'Uint8List':
-        final method = type.isNullableType ? 'readNullableBytes' : 'readBytes';
-        return 'Decodable.fromFunction((d) => d.singleValue().$method())';
-      case 'Float32List':
-        return 'Decodable.fromFunction((d) => Float32List.fromList(d.unkeyed().decodeDoubleList()))';
-      default:
-        return null;
-    }
   }
 
   static String _generatePrimitiveUnkeyedElementExpr(DartType type) {
@@ -897,6 +926,18 @@ final class DecoderGeneratorHelper {
       final fastSet = _tryFastOrPrimitiveSetLine(field.name, elemType, indent);
       if (fastSet != null) {
         buffer.writeln(fastSet);
+        return;
+      }
+      if (_isNestedSetElementCollection(elemType)) {
+        buffer.write(
+          _inlineCollectionDecodeCode(elemType, (
+            target: field.name,
+            declareType: null,
+            decoderExpr: 'keyed.nestedDecoder()',
+            indent: indent,
+            depth: 0,
+          ), isSet: true),
+        );
         return;
       }
       if (elemType.element is EnumElement) {

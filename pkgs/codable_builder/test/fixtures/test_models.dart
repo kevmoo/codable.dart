@@ -521,3 +521,20 @@ final class NestedModelGrid {
     this.cube = const [],
   });
 }
+
+@Codable()
+final class NestedCollectionMatrix {
+  final List<List<Float64List>> tensor3d;
+  final List<Set<Point>> pointSets;
+  final Set<List<int>> intRowsSet;
+  final List<List<Map<String, int>>> mapGrid;
+  final List<Set<UserRole>> roleSets;
+
+  const NestedCollectionMatrix({
+    this.tensor3d = const [],
+    this.pointSets = const [],
+    this.intRowsSet = const {},
+    this.mapGrid = const [],
+    this.roleSets = const [],
+  });
+}

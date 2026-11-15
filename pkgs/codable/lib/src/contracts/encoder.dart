@@ -146,6 +146,10 @@ abstract interface class UnkeyedEncoder {
   void encodeNullableElement<T>(T? value, Encodable<T> encodable);
 
   /// Encodes [elements] sequentially into this array using [encodable].
+  ///
+  /// Note: this appends flat elements to the current array rather than opening
+  /// a nested child array; to encode a nested 2D array element matching
+  /// `UnkeyedDecoder.decodeList`, open `nestedEncoder().unkeyed()`.
   void encodeList<T>(Iterable<T> elements, Encodable<T> encodable);
 }
 

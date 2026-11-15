@@ -93,9 +93,6 @@ Uint8List _decodeByteListFromObjects(List<Object?> v) {
   return out;
 }
 
-/// Reusable scalar [Decoder] view over a JSON object property name [String].
-typedef JsonMapKeyDecoder = StringMapKeyDecoder;
-
 /// In-memory object-tree [Decoder] used when buffering JSON objects for
 /// random-access `mapped()` inspection and `SuperDecodable` handoff.
 final class DartObjectDecoder implements Decoder {

@@ -2624,8 +2624,9 @@ final class NestedModelGridCodable implements Codable<NestedModelGrid> {
               l.add(
                 u.decodeList(
                   Decodable.fromFunction((d) {
-                    if (d.singleValue().isNull()) {
-                      d.singleValue().readNull();
+                    final sv = d.singleValue();
+                    if (sv.isNull()) {
+                      sv.readNull();
                       return null;
                     }
                     return const PointCodable().decode(d);
@@ -2723,6 +2724,280 @@ final class NestedModelGridCodable implements Codable<NestedModelGrid> {
                 const PointCodable().encode(elem1, u1.nestedEncoder());
               }
             }
+          }
+        }
+      }),
+    );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for NestedCollectionMatrix
+// =============================================================================
+extension type const _$NestedCollectionMatrixSchema(int _value) {
+  // String Name Constants
+  static const String nameTensor3d = 'tensor3d';
+  static const String namePointSets = 'pointSets';
+  static const String nameIntRowsSet = 'intRowsSet';
+  static const String nameMapGrid = 'mapGrid';
+  static const String nameRoleSets = 'roleSets';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyTensor3d = 0;
+  static const int keyPointSets = 1;
+  static const int keyIntRowsSet = 2;
+  static const int keyMapGrid = 3;
+  static const int keyRoleSets = 4;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$NestedCollectionMatrixSchema.nameTensor3d,
+    _$NestedCollectionMatrixSchema.namePointSets,
+    _$NestedCollectionMatrixSchema.nameIntRowsSet,
+    _$NestedCollectionMatrixSchema.nameMapGrid,
+    _$NestedCollectionMatrixSchema.nameRoleSets,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$NestedCollectionMatrixSchema none =
+      _$NestedCollectionMatrixSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$NestedCollectionMatrixSchema operator |(
+    _$NestedCollectionMatrixSchema other,
+  ) => _$NestedCollectionMatrixSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for NestedCollectionMatrix
+// =============================================================================
+final class NestedCollectionMatrixCodable
+    implements Codable<NestedCollectionMatrix> {
+  const NestedCollectionMatrixCodable();
+
+  @override
+  NestedCollectionMatrix decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$NestedCollectionMatrixSchema.keyOptions,
+    );
+
+    var tensor3d = const <List<Float64List>>[];
+    var pointSets = const <Set<Point>>[];
+    var intRowsSet = const <List<int>>{};
+    var mapGrid = const <List<Map<String, int>>>[];
+    var roleSets = const <Set<UserRole>>[];
+    var seen = _$NestedCollectionMatrixSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$NestedCollectionMatrixSchema.keyOptions)) {
+        case _$NestedCollectionMatrixSchema.keyTensor3d:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<Float64List>>[];
+            while (u.moveNext()) {
+              l.add(
+                u.decodeList(
+                  Decodable.fromFunction((d) {
+                    Float64List res;
+                    {
+                      final u = d.unkeyed();
+                      final l = <double>[];
+                      while (u.moveNext()) {
+                        l.add(u.readDouble());
+                      }
+                      res = Float64List.fromList(l);
+                    }
+                    return res;
+                  }),
+                ),
+              );
+            }
+            tensor3d = l;
+          }
+          break;
+        case _$NestedCollectionMatrixSchema.keyPointSets:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Set<Point>>[];
+            while (u.moveNext()) {
+              final item = const PointCodable()
+                  .decodeList(u.nestedDecoder())
+                  .toSet();
+              l.add(item);
+            }
+            pointSets = l;
+          }
+          break;
+        case _$NestedCollectionMatrixSchema.keyIntRowsSet:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final s = <List<int>>{};
+            while (u.moveNext()) {
+              List<int> item;
+              {
+                final u1 = u.nestedDecoder().unkeyed();
+                final l1 = <int>[];
+                while (u1.moveNext()) {
+                  l1.add(u1.readInt());
+                }
+                item = l1;
+              }
+              s.add(item);
+            }
+            intRowsSet = s;
+          }
+          break;
+        case _$NestedCollectionMatrixSchema.keyMapGrid:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<Map<String, int>>>[];
+            while (u.moveNext()) {
+              l.add(
+                u.decodeList(
+                  Decodable.fromFunction((d) {
+                    Map<String, int> res;
+                    {
+                      final k = d.keyed();
+                      final m = <String, int>{};
+                      while (k.moveNextKey()) {
+                        final key = k.nextKey();
+                        m[key] = k.readInt();
+                      }
+                      res = m;
+                    }
+                    return res;
+                  }),
+                ),
+              );
+            }
+            mapGrid = l;
+          }
+          break;
+        case _$NestedCollectionMatrixSchema.keyRoleSets:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Set<UserRole>>[];
+            while (u.moveNext()) {
+              Set<UserRole> item;
+              {
+                final u1 = u.nestedDecoder().unkeyed();
+                final s1 = <UserRole>{};
+                while (u1.moveNext()) {
+                  final enumIdx2 = _$NestedCollectionMatrixSchema
+                      .enumUserRoleKeyOptions
+                      .indexOf(u1.nestedDecoder().singleValue().readString());
+                  if (enumIdx2 < 0) {
+                    throw const CodableException('Unknown UserRole value');
+                  }
+                  final item1 = UserRole.values[enumIdx2];
+                  s1.add(item1);
+                }
+                item = s1;
+              }
+              l.add(item);
+            }
+            roleSets = l;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return NestedCollectionMatrix(
+      tensor3d: tensor3d,
+      pointSets: pointSets,
+      intRowsSet: intRowsSet,
+      mapGrid: mapGrid,
+      roleSets: roleSets,
+    );
+  }
+
+  @override
+  void encode(NestedCollectionMatrix instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 5);
+    keyed.encodeList(
+      _$NestedCollectionMatrixSchema.nameTensor3d,
+      instance.tensor3d,
+      Encodable.fromFunction((List<Float64List> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            {
+              final u1 = u.nestedEncoder().unkeyed(length: elem.length);
+              for (final elem1 in elem) {
+                u1.encodeDouble(elem1);
+              }
+            }
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedCollectionMatrixSchema.namePointSets,
+      instance.pointSets,
+      Encodable.fromFunction((Set<Point> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            const PointCodable().encode(elem, u.nestedEncoder());
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedCollectionMatrixSchema.nameIntRowsSet,
+      instance.intRowsSet,
+      Encodable.fromFunction((List<int> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedCollectionMatrixSchema.nameMapGrid,
+      instance.mapGrid,
+      Encodable.fromFunction((List<Map<String, int>> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            {
+              final k1 = u.nestedEncoder().keyed(length: elem.length);
+              for (final entry1 in elem.entries) {
+                k1.encodeInt(entry1.key, entry1.value);
+              }
+            }
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NestedCollectionMatrixSchema.nameRoleSets,
+      instance.roleSets,
+      Encodable.fromFunction((Set<UserRole> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.nestedEncoder().singleValue().encodeString(elem.name);
           }
         }
       }),

@@ -299,6 +299,10 @@ mixin BaseMappedDecoderMixin implements MappedDecoder {
       _decodeUnkeyedModelList(nestedDecoder(key).unkeyed(), decodable);
 
   @override
+  List<T>? decodeNullableListKey<T>(String key, Decodable<T> decodable) =>
+      _isMissingOrNull(key) ? null : decodeListKey(key, decodable);
+
+  @override
   List<int> decodeIntList(String key) =>
       _decodeUnkeyedIntList(nestedDecoder(key).unkeyed());
 
@@ -722,11 +726,25 @@ mixin BaseSingleValueEncoderMixin implements SingleValueEncoder {
 const int _jsMaxSafeInt = 0x1FFFFFFFFFFFFF;
 const int _jsMinSafeInt = -0x1FFFFFFFFFFFFF;
 
+final RegExp _canonicalIntKeyPattern = RegExp(r'^-?(?:0|[1-9]\d*)$');
+final RegExp _canonicalNumKeyPattern = RegExp(
+  r'^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$',
+);
+
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
 @pragma('dart2js:prefer-inline')
 bool _isValidJsSafeInt(int value) =>
     !identical(1.0, 1) || (value >= _jsMinSafeInt && value <= _jsMaxSafeInt);
+
+String _formatCanonicalFiniteDouble(double value) {
+  if (value == 0.0) return value.isNegative ? '-0.0' : '0.0';
+  final text = value.toString();
+  if (!text.contains('.') && !text.contains('e') && !text.contains('E')) {
+    return '$text.0';
+  }
+  return text;
+}
 
 /// Reusable scalar [Decoder] view over a string-keyed map entry key (such as
 /// JSON or TOML object/table keys).
@@ -797,8 +815,10 @@ final class StringMapKeyDecoder
   @pragma('wasm:prefer-inline')
   @pragma('dart2js:prefer-inline')
   int readInt() {
-    final parsed = int.tryParse(key);
-    if (parsed != null && _isValidJsSafeInt(parsed)) return parsed;
+    if (_canonicalIntKeyPattern.hasMatch(key)) {
+      final parsed = int.tryParse(key, radix: 10);
+      if (parsed != null && _isValidJsSafeInt(parsed)) return parsed;
+    }
     throw CodableException('Expected int $formatName map key, found "$key"');
   }
 
@@ -807,8 +827,10 @@ final class StringMapKeyDecoder
   @pragma('wasm:prefer-inline')
   @pragma('dart2js:prefer-inline')
   double readDouble() {
-    final parsed = double.tryParse(key);
-    if (parsed != null && parsed.isFinite) return parsed;
+    if (_canonicalNumKeyPattern.hasMatch(key)) {
+      final parsed = double.tryParse(key);
+      if (parsed != null && parsed.isFinite) return parsed;
+    }
     throw CodableException(
       'Expected finite double $formatName map key, found "$key"',
     );
@@ -816,8 +838,10 @@ final class StringMapKeyDecoder
 
   @override
   num readNum() {
-    final asInt = int.tryParse(key);
-    if (asInt != null && _isValidJsSafeInt(asInt)) return asInt;
+    if (_canonicalIntKeyPattern.hasMatch(key)) {
+      final asInt = int.tryParse(key, radix: 10);
+      if (asInt != null && _isValidJsSafeInt(asInt)) return asInt;
+    }
     return readDouble();
   }
 
@@ -924,7 +948,7 @@ mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
         '$formatName map keys must be finite numbers, got $value',
       );
     }
-    writeKeyString(value.toString());
+    writeKeyString(_formatCanonicalFiniteDouble(value));
   }
 
   @override
@@ -972,7 +996,7 @@ mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
   void encode<T>(T value, Encodable<T> encodable) {
     encodable.encode(value, this);
     if (!hasWrittenKey) {
-      throw const CodableException('Map key encoder did not write a key');
+      throw CodableException('$formatName map key encoder did not write a key');
     }
   }
 
