@@ -776,6 +776,12 @@ void _registerHandWrittenKnownLengthTests() {
 @Codable()
 final class EmptyMarker {
   const EmptyMarker();
+
+  @override
+  bool operator ==(Object other) => other is EmptyMarker;
+
+  @override
+  int get hashCode => 0;
 }
 
 @Codable()
@@ -839,6 +845,9 @@ void _registerContractBugfixFourWayTests() {
           const EmptyMarkerCodable(),
         );
         check(results.length).equals(4);
+        for (final r in results) {
+          check(r).equals(const EmptyMarker());
+        }
 
         final unknownCodec = Encodable<int>.fromFunction((_, encoder) {
           final k = encoder.keyed(length: 2);

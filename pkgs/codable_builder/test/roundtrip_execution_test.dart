@@ -5,6 +5,7 @@
 // ignore_for_file: lines_longer_than_80_chars
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable_json.dart';
@@ -1044,6 +1045,44 @@ void main() {
             JsonCodableDecoder.fromString('{"ignored": [1, 2], "extra": "ok"}'),
           ),
         ).isA<EmptyRecord>();
+
+        final matrix = NestedCollectionMatrix(
+          tensor3d: [
+            [
+              Float64List.fromList([1.5, 2.5]),
+            ],
+          ],
+          pointSets: const [
+            {Point(1, 2)},
+          ],
+          intRowsSet: const {
+            [10, 20],
+          },
+          mapGrid: const [
+            [
+              {'a': 1, 'b': 2},
+            ],
+          ],
+          roleSets: const [
+            {UserRole.admin, UserRole.guest},
+          ],
+        );
+        final matrixJson = JsonCodableEncoder.encode(
+          matrix,
+          const NestedCollectionMatrixCodable(),
+        );
+        final decodedMatrix = const NestedCollectionMatrixCodable().decode(
+          JsonCodableDecoder.fromString(matrixJson),
+        );
+        check(decodedMatrix.tensor3d.single.single)
+            .deepEquals(const [1.5, 2.5]);
+        check(decodedMatrix.pointSets.single.map((p) => (p.x, p.y)).toList())
+            .deepEquals(const [(1.0, 2.0)]);
+        check(decodedMatrix.intRowsSet.single).deepEquals(const [10, 20]);
+        check(decodedMatrix.mapGrid.single.single)
+            .deepEquals(const {'a': 1, 'b': 2});
+        check(decodedMatrix.roleSets.single)
+            .deepEquals(const {UserRole.admin, UserRole.guest});
       });
     });
   });

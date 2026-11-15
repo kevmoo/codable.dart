@@ -62,63 +62,92 @@ void main() {
 
 void _registerNestedListBugfixTests() {
   group('UnkeyedDecoder.decodeList & decodeNullableList', () {
-    test(
-      'roundtrips 2D List<List<@Codable>> and List<List<@Codable>?> in JSON',
-      () {
-        const board = GridBoard(
-          cells: [
-            [
-              GridCell(row: 0, col: 0, label: 'origin'),
-              GridCell(row: 0, col: 1),
-            ],
-            [],
-            [GridCell(row: 2, col: 0, label: 'end')],
-          ],
-          nullableRows: [
-            [GridCell(row: 1, col: 1, label: 'mid')],
-            null,
-            [],
-          ],
-        );
+    test('roundtrips 2D List<List<@Codable>> and List<List<@Codable>?> in JSON', () {
+      const board = GridBoard(
+        cells: [
+          [GridCell(row: 0, col: 0, label: 'origin'), GridCell(row: 0, col: 1)],
+          [],
+          [GridCell(row: 2, col: 0, label: 'end')],
+        ],
+        nullableRows: [
+          [GridCell(row: 1, col: 1, label: 'mid')],
+          null,
+          [],
+        ],
+      );
 
-        final encoded = JsonCodableEncoder.encode(
-          board,
-          const GridBoardCodable(),
-        );
-        final encodedBytes = Uint8List.fromList(utf8.encode(encoded));
+      final encoded = JsonCodableEncoder.encode(
+        board,
+        const GridBoardCodable(),
+      );
+      final encodedBytes = Uint8List.fromList(utf8.encode(encoded));
 
-        _checkBoard(
-          const GridBoardCodable().decode(
-            JsonCodableDecoder.fromString(encoded),
+      _checkBoard(
+        const GridBoardCodable().decode(JsonCodableDecoder.fromString(encoded)),
+      );
+      _checkBoard(
+        const GridBoardCodable().decode(
+          JsonCodableDecoder.fromBytes(encodedBytes),
+        ),
+      );
+      _checkBoard(
+        const GridBoardCodable().decode(
+          JsonCodableDecoder.fromBytes(
+            encodedBytes,
+            userInfo: const {#forceJsDom: true},
           ),
-        );
-        _checkBoard(
-          const GridBoardCodable().decode(
-            JsonCodableDecoder.fromBytes(encodedBytes),
-          ),
-        );
-        _checkBoard(
-          const GridBoardCodable().decode(
-            JsonCodableDecoder.fromBytes(
-              encodedBytes,
-              userInfo: const {#forceJsDom: true},
-            ),
-          ),
-        );
-        _checkBoard(
-          const GridBoardCodable().decode(
-            streaming.JsonCodableDecoder.fromBytes(encodedBytes),
-          ),
-        );
+        ),
+      );
+      _checkBoard(
+        const GridBoardCodable().decode(
+          streaming.JsonCodableDecoder.fromBytes(encodedBytes),
+        ),
+      );
 
-        // Buffered object-tree (DartObjectDecoder) via mapped() -> keyed() handoff
-        final bufferedDec = streaming.JsonCodableDecoder.fromBytes(
-          encodedBytes,
-        );
-        check(bufferedDec.mapped().containsKey('cells')).isTrue();
-        _checkBoard(const GridBoardCodable().decode(bufferedDec));
-      },
-    );
+      // Buffered object-tree (DartObjectDecoder) via mapped() -> keyed() handoff
+      final bufferedDec = streaming.JsonCodableDecoder.fromBytes(encodedBytes);
+      check(bufferedDec.mapped().containsKey('cells')).isTrue();
+      _checkBoard(const GridBoardCodable().decode(bufferedDec));
+
+      // Non-nullable 2D list rejects null row and null cell element
+      check(
+        () => const GridBoardCodable().decode(
+          JsonCodableDecoder.fromString('{"cells": [null]}'),
+        ),
+      ).throws<Exception>();
+      check(
+        () => const GridBoardCodable().decode(
+          JsonCodableDecoder.fromString('{"cells": [[null]]}'),
+        ),
+      ).throws<Exception>();
+      final bufferedNullRow = streaming.JsonCodableDecoder.fromBytes(
+        Uint8List.fromList(utf8.encode('{"cells": [null]}')),
+      )..mapped();
+      check(() => const GridBoardCodable().decode(bufferedNullRow))
+          .throws<CodableException>();
+
+      // MappedDecoder.decodeNullableListKey handles present, null, and missing
+      const mappedPayload =
+          '{"present": [{"row": 3, "col": 4}], "nulled": null}';
+      for (final mapped in [
+        JsonCodableDecoder.fromString(mappedPayload).mapped(),
+        JsonCodableDecoder.fromBytes(
+          Uint8List.fromList(utf8.encode(mappedPayload)),
+          userInfo: const {#forceJsDom: true},
+        ).mapped(),
+        streaming.JsonCodableDecoder.fromBytes(
+          Uint8List.fromList(utf8.encode(mappedPayload)),
+        ).mapped(),
+      ]) {
+        check(mapped.decodeNullableListKey('present', const GridCellCodable()))
+            .isNotNull()
+            .deepEquals(const [GridCell(row: 3, col: 4)]);
+        check(mapped.decodeNullableListKey('nulled', const GridCellCodable()))
+            .isNull();
+        check(mapped.decodeNullableListKey('absent', const GridCellCodable()))
+            .isNull();
+      }
+    });
 
     test(
       'exercises BaseUnkeyedDecoderMixin.decodeList & decodeNullableList',
@@ -397,9 +426,36 @@ void _registerStringMapKeyHelperTests() {
       keyDec.key = '42';
       check(keyDec.readNum()).equals(42);
 
-      for (final badDouble in ['NaN', 'Infinity', '-Infinity', 'abc']) {
+      for (final badInt in [
+        '0x10',
+        '-0xFF',
+        '+42',
+        ' 42 ',
+        '\t7\n',
+        '01',
+        '-01',
+        '1_000',
+        'abc',
+        '',
+      ]) {
+        keyDec.key = badInt;
+        check(keyDec.readInt).throws<CodableException>();
+      }
+
+      for (final badDouble in [
+        'NaN',
+        'Infinity',
+        '-Infinity',
+        'abc',
+        ' 42.5 ',
+        '+1.5',
+        '.5',
+        '5.',
+        '00.5',
+      ]) {
         keyDec.key = badDouble;
         check(keyDec.readDouble).throws<CodableException>();
+        check(keyDec.readNum).throws<CodableException>();
       }
       check(keyDec.readNull).throws<CodableException>();
       check(keyDec.keyed).throws<CodableException>();
@@ -414,6 +470,29 @@ void _registerStringMapKeyHelperTests() {
       keyEnc.encodeNullableBool(false);
       check(keyEnc.writtenKey).equals('false');
       keyEnc.reset();
+      keyEnc.encodeDouble(1.0);
+      check(keyEnc.writtenKey).equals('1.0');
+      keyEnc.reset();
+      keyEnc.encodeDouble(-0.0);
+      check(keyEnc.writtenKey).equals('-0.0');
+      keyEnc.reset();
+      check(() => keyEnc.encode<int>(0, Encodable.fromFunction((_, _) {})))
+          .throws<CodableException>()
+          .has((e) => e.message, 'message')
+          .contains('TOML map key encoder did not write a key');
+
+      // JSON Map<double, String> emits canonical "1.0" and "-0.0" on VM, Wasm, and JS
+      final jsonDoubleMap = JsonCodableEncoder.encode<Map<double, String>>(
+        {1.0: 'one', -0.0: 'neg_zero'},
+        Encodable.fromFunction((m, e) {
+          final me = e.map(length: m.length);
+          for (final entry in m.entries) {
+            me.keyEncoder().singleValue().encodeDouble(entry.key);
+            me.valueEncoder().singleValue().encodeString(entry.value);
+          }
+        }),
+      );
+      check(jsonDoubleMap).equals('{"1.0":"one","-0.0":"neg_zero"}');
 
       check(keyEnc.encodeNull).throws<CodableException>();
       check(() => keyEnc.encodeNullableInt(null)).throws<CodableException>();

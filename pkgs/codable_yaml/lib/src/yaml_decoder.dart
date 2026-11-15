@@ -7,11 +7,18 @@ import 'package:yaml/yaml.dart';
 
 import 'yaml_exception.dart';
 
+bool _startsWithPath(List<Object> full, List<Object> prefix) {
+  if (full.length < prefix.length) return false;
+  for (var i = 0; i < prefix.length; i++) {
+    if (full[i] != prefix[i]) return false;
+  }
+  return true;
+}
+
 List<Object> _mergePaths(List<Object> prefix, List<Object> suffix) {
   if (suffix.isEmpty) return List<Object>.unmodifiable(prefix);
-  if (prefix.isEmpty) return List<Object>.unmodifiable(suffix);
-  if (prefix.last == suffix.first) {
-    return List<Object>.unmodifiable([...prefix, ...suffix.skip(1)]);
+  if (prefix.isEmpty || _startsWithPath(suffix, prefix)) {
+    return List<Object>.unmodifiable(suffix);
   }
   return List<Object>.unmodifiable([...prefix, ...suffix]);
 }
@@ -324,7 +331,6 @@ final class _YamlKeyedDecoder
     if (_phase == 0 && !moveNextKey()) {
       throw const CodableException('No more keys in YAML map');
     }
-    _phase = 2;
     _trace.set(_activeValueNode!, _activePath);
     return _activeValueNode!;
   }

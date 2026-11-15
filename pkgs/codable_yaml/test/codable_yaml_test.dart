@@ -387,11 +387,32 @@ bytes: AQID
 
           final node = loadYamlNode('first: 1\nsecond: 2\n');
           final keyed = YamlCodableDecoder.fromNode(node).keyed();
+          check(keyed.moveNextKey()).isTrue();
+          check(keyed.peekKind()).equals(ValueKind.number);
+          check(keyed.isNextNull()).isFalse();
           check(keyed.peekKey()).equals('first');
           check(keyed.nextKey()).equals('first');
           check(keyed.readInt()).equals(1);
           keyed.skipValue();
           check(keyed.moveNextKey()).isFalse();
+
+          // Preserves duplicate adjacent path indices like matrix[0][0]
+          YamlCodableException? nestedPathErr;
+          try {
+            YamlCodableDecoder.decode<void>(
+              'matrix:\n  - [1]\n',
+              Decodable.fromFunction((d) {
+                final outer = d.mapped().nestedDecoder('matrix').unkeyed();
+                outer.moveNext();
+                outer.nestedDecoder().unkeyed();
+                throw const CodableException('Inner fail', path: [0]);
+              }),
+            );
+          } on YamlCodableException catch (e) {
+            nestedPathErr = e;
+          }
+          check(nestedPathErr).isNotNull();
+          check(nestedPathErr!.path).deepEquals(<Object>['matrix', 0, 0]);
         },
       );
     },

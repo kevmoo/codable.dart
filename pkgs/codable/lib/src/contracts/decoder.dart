@@ -273,6 +273,10 @@ abstract interface class MappedDecoder {
   /// Decodes a list of values associated with [key] using [decodable].
   List<T> decodeListKey<T>(String key, Decodable<T> decodable);
 
+  /// Decodes a nullable list of values associated with [key] using [decodable],
+  /// returning `null` if [key] is absent or mapped to `null`.
+  List<T>? decodeNullableListKey<T>(String key, Decodable<T> decodable);
+
   /// Decodes an integer list associated with [key].
   List<int> decodeIntList(String key);
 
@@ -375,10 +379,14 @@ abstract interface class UnkeyedDecoder {
   /// Decodes a nullable element using [decodable].
   T? decodeNullableElement<T>(Decodable<T> decodable);
 
-  /// Decodes a nested list of items using the element [decodable].
+  /// Decodes a nested child array element using the element [decodable]
+  /// (pair with `UnkeyedEncoder.nestedEncoder().unkeyed()` when encoding 2D
+  /// lists, as `UnkeyedEncoder.encodeList` writes flat elements into the
+  /// current array).
   List<T> decodeList<T>(Decodable<T> decodable);
 
-  /// Decodes a nullable nested list of items using the element [decodable].
+  /// Decodes a nullable nested child array element using the element
+  /// [decodable].
   List<T>? decodeNullableList<T>(Decodable<T> decodable);
 
   /// Decodes a nested contiguous list of integers.

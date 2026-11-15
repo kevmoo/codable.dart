@@ -463,6 +463,21 @@ final class JsonCodableDecoder implements Decoder {
     return _jsToValueKind(_activeValue ?? _decoded);
   }
 
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  JSObject _requireJsObject(String containerName) {
+    final target = _activeValue ?? _decoded;
+    if (target == null ||
+        !target.isA<JSObject>() ||
+        target.isA<JSArray>() ||
+        target.isA<JSUint8Array>()) {
+      throw CodableException(
+        'Expected object for $containerName(), found $target',
+      );
+    }
+    return target as JSObject;
+  }
+
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
     if (_reader != null) {
@@ -474,7 +489,7 @@ final class JsonCodableDecoder implements Decoder {
     }
     return _JsonCodableMappedKeyedDecoder(
       this,
-      (_activeValue ?? _decoded) as JSObject,
+      _requireJsObject('keyed'),
       options,
     );
   }
@@ -485,10 +500,7 @@ final class JsonCodableDecoder implements Decoder {
       final map = bufferStreamingObject(this, _reader, parseObjectFromReader);
       return DartObjectMappedDecoder(map, userInfo);
     }
-    return _JsonCodableMappedDecoder(
-      this,
-      (_activeValue ?? _decoded) as JSObject,
-    );
+    return _JsonCodableMappedDecoder(this, _requireJsObject('mapped'));
   }
 
   @override
@@ -503,14 +515,7 @@ final class JsonCodableDecoder implements Decoder {
       }
       return StreamingMapDecoder(reader, this);
     }
-    final target = _activeValue ?? _decoded;
-    if (target == null ||
-        !target.isA<JSObject>() ||
-        target.isA<JSArray>() ||
-        target.isA<JSUint8Array>()) {
-      throw CodableException('Expected object for map(), found $target');
-    }
-    return _JsonCodableJsMapDecoder(this, target as JSObject);
+    return _JsonCodableJsMapDecoder(this, _requireJsObject('map'));
   }
 
   @override
@@ -518,10 +523,11 @@ final class JsonCodableDecoder implements Decoder {
     if (_reader != null) {
       return StreamingUnkeyedDecoder(_reader, this);
     }
-    return _JsonCodableUnkeyedDecoder(
-      this,
-      (_activeValue ?? _decoded) as JSArray,
-    );
+    final target = _activeValue ?? _decoded;
+    if (target == null || !target.isA<JSArray>()) {
+      throw CodableException('Expected array for unkeyed(), found $target');
+    }
+    return _JsonCodableUnkeyedDecoder(this, target as JSArray);
   }
 
   @override
@@ -1016,6 +1022,13 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
   @override
   List<T> decodeListKey<T>(String key, Decodable<T> decodable) =>
       _decodeJsModelList(_prop(key), decodable, _rootDecoder.userInfo);
+
+  @override
+  List<T>? decodeNullableListKey<T>(String key, Decodable<T> decodable) {
+    final v = _prop(key);
+    if (v == null) return null;
+    return _decodeJsModelList(v, decodable, _rootDecoder.userInfo);
+  }
 
   @override
   List<int> decodeIntList(String key) => _extractIntList(_prop(key));
