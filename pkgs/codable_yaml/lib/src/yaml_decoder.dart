@@ -57,22 +57,63 @@ final BigInt _bigJsMaxSafeInt = BigInt.from(_yamlJsMaxSafeInt);
 final BigInt _bigJsMinSafeInt = BigInt.from(_yamlJsMinSafeInt);
 
 final RegExp _yamlPlainHexPrefix = RegExp(r'^[+-]?0[xX]');
+final RegExp _yamlWhitespace = RegExp(r'\s');
+
+int _yamlTagEndIndex(String s) {
+  if (s.startsWith('!<')) {
+    final gt = s.indexOf('>');
+    return gt < 0 ? -1 : gt + 1;
+  }
+  return s.indexOf(_yamlWhitespace);
+}
+
+bool _isYamlFloatTagToken(String tag) =>
+    tag.endsWith('!float') || tag.endsWith(':float') || tag.endsWith(':float>');
+
+(bool isFloatTag, String? remaining) _consumeYamlPropertyPrefix(String s) {
+  if (s.startsWith('#')) {
+    final nl = s.indexOf('\n');
+    return (false, nl < 0 ? '' : s.substring(nl + 1).trimLeft());
+  }
+  if (s.startsWith('&')) {
+    final ws = s.indexOf(_yamlWhitespace);
+    return (false, ws < 0 ? '' : s.substring(ws + 1).trimLeft());
+  }
+  if (s.startsWith('!')) {
+    final end = _yamlTagEndIndex(s);
+    if (end < 0) return (false, '');
+    final isFloat = _isYamlFloatTagToken(s.substring(0, end));
+    return (isFloat, s.substring(end).trimLeft());
+  }
+  return (false, null);
+}
+
+(bool hasFloatTag, String body) _stripYamlScalarProperties(String raw) {
+  var s = raw.trimLeft();
+  var hasFloatTag = false;
+  while (s.isNotEmpty) {
+    final (isFloat, next) = _consumeYamlPropertyPrefix(s);
+    if (isFloat) hasFloatTag = true;
+    if (next == null) break;
+    s = next;
+  }
+  return (hasFloatTag, s.trimRight());
+}
 
 bool _isPlainYamlFloatOnJs(YamlNode node) {
   if (!identical(1.0, 1) || node is! YamlScalar) return false;
-  if (node.style != ScalarStyle.PLAIN) return false;
-  final text = node.span.text;
+  final (hasFloatTag, text) = _stripYamlScalarProperties(node.span.text);
+  if (hasFloatTag) return true;
+  if (node.style != ScalarStyle.PLAIN || text.isEmpty) {
+    final val = node.value;
+    return val is num && val == 0 && val.isNegative;
+  }
   if (_yamlPlainHexPrefix.hasMatch(text)) return false;
   return text.contains('.') || text.contains('e') || text.contains('E');
 }
 
 String _extractYamlScalarToken(String raw) {
-  var s = raw.trim();
-  while (s.startsWith('!') || s.startsWith('&')) {
-    final space = s.indexOf(RegExp(r'\s'));
-    if (space < 0) break;
-    s = s.substring(space + 1).trimLeft();
-  }
+  var (_, s) = _stripYamlScalarProperties(raw);
   if (s.length >= 2 &&
       ((s.startsWith('"') && s.endsWith('"')) ||
           (s.startsWith("'") && s.endsWith("'")))) {
@@ -132,7 +173,7 @@ void _checkJsYamlSafeInt(YamlNode node, int v) {
 
 int _coerceYamlStringToInt(String v) {
   if (identical(1.0, 1)) {
-    final big = _tryParseYamlBigInt(v);
+    final big = BigInt.tryParse(v);
     if (big == null) {
       throw CodableException.typeMismatch(expectedType: int, actualValue: v);
     }

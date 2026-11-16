@@ -122,7 +122,7 @@ final class MsgPackCodableDecoder implements Decoder {
   SingleValueDecoder singleValue() {
     _drainActive();
     _rewindIfBufferedMap();
-    return _MsgPackSingleValueDecoder(_reader, userInfo, _depth);
+    return _MsgPackSingleValueDecoder(this);
   }
 
   @override
@@ -206,14 +206,20 @@ final class _MsgPackKeyedDecoder
 
   int _remainingPairs;
   int _phase = 0; // 0 = idle, 1 = atKey, 2 = atValue
+  int _itemStartOffset = -1;
   MsgPackCodableDecoder? _pendingChild;
 
   _MsgPackKeyedDecoder(this._reader, this._userInfo, this._childDepth)
     : _remainingPairs = _reader.readMapLength();
 
   void _finishPendingChild() {
-    _pendingChild?._drainActive();
+    final child = _pendingChild;
+    if (child == null) return;
     _pendingChild = null;
+    child._drainActive();
+    if (_reader.offset == _itemStartOffset) {
+      _reader.skipItem(_childDepth);
+    }
   }
 
   @override
@@ -321,6 +327,7 @@ final class _MsgPackKeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
@@ -520,6 +527,7 @@ final class _MsgPackUnkeyedDecoder
 
   int _remaining;
   bool _hasActive = false;
+  int _itemStartOffset = -1;
   MsgPackCodableDecoder? _pendingChild;
 
   _MsgPackUnkeyedDecoder(this._reader, this._userInfo, this._childDepth)
@@ -529,8 +537,13 @@ final class _MsgPackUnkeyedDecoder
   }
 
   void _finishPendingChild() {
-    _pendingChild?._drainActive();
+    final child = _pendingChild;
+    if (child == null) return;
     _pendingChild = null;
+    child._drainActive();
+    if (_reader.offset == _itemStartOffset) {
+      _reader.skipItem(_childDepth);
+    }
   }
 
   @override
@@ -580,6 +593,7 @@ final class _MsgPackUnkeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
@@ -593,12 +607,12 @@ final class _MsgPackUnkeyedDecoder
 final class _MsgPackSingleValueDecoder
     with BaseSingleValueDecoderMixin, _MsgPackValueReaderMixin
     implements SingleValueDecoder {
-  @override
-  final MsgPackReader _reader;
-  final Map<Object, Object?> _userInfo;
-  final int _depth;
+  final MsgPackCodableDecoder _parent;
 
-  _MsgPackSingleValueDecoder(this._reader, this._userInfo, this._depth);
+  _MsgPackSingleValueDecoder(this._parent);
+
+  @override
+  MsgPackReader get _reader => _parent._reader;
 
   @override
   void _prepareValueRead() {}
@@ -607,6 +621,5 @@ final class _MsgPackSingleValueDecoder
   void _completeValueRead() {}
 
   @override
-  Decoder nestedDecoder() =>
-      MsgPackCodableDecoder._(_reader, _depth, userInfo: _userInfo);
+  Decoder nestedDecoder() => _parent;
 }

@@ -109,7 +109,7 @@ _MsgPackNode _readNullNode(Decoder decoder) {
 }
 
 bool _isEncodableInt(num n) {
-  if (n is! int || identical(n, -0.0)) return false;
+  if (n is! int || (n == 0 && n.isNegative)) return false;
   if (!identical(1.0, 1)) return true;
   return n >= -msgPackJsMaxSafeInt && n <= msgPackJsMaxSafeInt;
 }

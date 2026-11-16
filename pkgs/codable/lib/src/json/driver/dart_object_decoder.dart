@@ -521,8 +521,9 @@ final class DartObjectSingleValueDecoder
   final Object? _value;
   @override
   final Map<Object, Object?> _userInfo;
+  final void Function()? _onCommit;
 
-  DartObjectSingleValueDecoder(this._value, this._userInfo);
+  DartObjectSingleValueDecoder(this._value, this._userInfo, [this._onCommit]);
 
   @override
   bool _hasCurrentValue() => true;
@@ -531,7 +532,9 @@ final class DartObjectSingleValueDecoder
   Object? _peekCurrentValue() => _value;
 
   @override
-  void _commitCurrentValue() {}
+  void _commitCurrentValue() {
+    _onCommit?.call();
+  }
 
   @override
   bool isNull() => _value == null;

@@ -78,6 +78,13 @@ final Expando<Map<String, Object?>> _mappedBuffers =
 bool hasStreamingBufferedObject(Decoder decoder) =>
     _activeMappedBufferCount != 0 && _mappedBuffers[decoder] != null;
 
+/// Returns any buffered object attached to [decoder] by `mapped()` without
+/// clearing it.
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+Map<String, Object?>? peekStreamingBufferedObject(Decoder decoder) =>
+    _activeMappedBufferCount != 0 ? _mappedBuffers[decoder] : null;
+
 /// Consumes and returns any buffered object attached to [decoder] by `mapped()`.
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
@@ -569,7 +576,12 @@ final class _StreamingMapValueDecoder
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void _ensureStarted() {}
+  void _ensureStarted() {
+    if (hasStreamingBufferedObject(_rootDecoder)) {
+      clearStreamingBufferedObject(_rootDecoder);
+      throw const CodableException('Expected scalar value, found object');
+    }
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -582,7 +594,12 @@ final class _StreamingMapValueDecoder
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  SingleValueDecoder singleValue() => this;
+  SingleValueDecoder singleValue() {
+    if (hasStreamingBufferedObject(_rootDecoder)) {
+      return _rootDecoder.singleValue();
+    }
+    return this;
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -610,7 +627,7 @@ final class _StreamingMapValueDecoder
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  bool isNull() => isNextNull();
+  bool isNull() => !hasStreamingBufferedObject(_rootDecoder) && isNextNull();
 
   @override
   @pragma('vm:prefer-inline')
@@ -626,7 +643,7 @@ final class _StreamingMapValueDecoder
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   T? decodeNullable<T>(Decodable<T> decodable) {
-    if (isNextNull()) {
+    if (!hasStreamingBufferedObject(_rootDecoder) && isNextNull()) {
       readNull();
       return null;
     }
@@ -741,7 +758,7 @@ final class StreamingSingleValueDecoder
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  bool isNull() => isNextNull();
+  bool isNull() => !hasStreamingBufferedObject(_rootDecoder) && isNextNull();
 
   @override
   @pragma('vm:prefer-inline')
@@ -757,7 +774,7 @@ final class StreamingSingleValueDecoder
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   T? decodeNullable<T>(Decodable<T> decodable) {
-    if (isNextNull()) {
+    if (!hasStreamingBufferedObject(_rootDecoder) && isNextNull()) {
       readNull();
       return null;
     }

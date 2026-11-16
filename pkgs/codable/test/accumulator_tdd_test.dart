@@ -12,8 +12,6 @@ import 'package:codable/codable_streaming.dart' as streaming;
 import 'package:codable/src/json/driver/scratch_byte_accumulator.dart';
 import 'package:test/test.dart';
 
-Uint8List? _asNullable(Uint8List? b) => b;
-
 void main() {
   group('ScratchByteAccumulator TDD', () {
     test('1. Cross-Stream Pool Reuse & Truncation Safety', () {
@@ -54,15 +52,11 @@ void main() {
           keyed.skipValue();
           check(keyed.moveNextKey()).isFalse();
 
-          final bytes = _asNullable(
-            (decoder as JsonCodableDecoder).reader.bytes,
-          );
-          secondLength = bytes?.length;
-          secondBufferLength = bytes?.buffer.lengthInBytes;
-          if (bytes != null) {
-            check(bytes.offsetInBytes % 8).equals(0);
-            secondPayload = Uint8List.fromList(bytes);
-          }
+          final bytes = (decoder as JsonCodableDecoder).reader.bytes;
+          secondLength = bytes.length;
+          secondBufferLength = bytes.buffer.lengthInBytes;
+          check(bytes.offsetInBytes % 8).equals(0);
+          secondPayload = Uint8List.fromList(bytes);
         }),
       );
       sink2.add(smallPayload);
@@ -70,10 +64,7 @@ void main() {
 
       check(secondLength).equals(smallPayload.length);
       check(secondPayload).isNotNull().deepEquals(smallPayload);
-
-      if (secondBufferLength != null) {
-        check(secondBufferLength!).isGreaterOrEqual(100 * 1024);
-      }
+      check(secondBufferLength).isNotNull().isGreaterOrEqual(100 * 1024);
     });
 
     test('2a. decoder.payload Escape Guard (Use-After-Free Protection)', () {
@@ -117,9 +108,7 @@ void main() {
         final sink1 = JsonCodableDecoder.startChunkedConversion<void>(
           ChunkedConversionSink.withCallback((_) {}),
           Decodable.fromFunction((decoder) {
-            retained = _asNullable(
-              (decoder as JsonCodableDecoder).reader.bytes,
-            );
+            retained = (decoder as JsonCodableDecoder).reader.bytes;
           }),
         );
         sink1
@@ -232,20 +221,16 @@ void main() {
       final sink2 = JsonCodableDecoder.startChunkedConversion<void>(
         ChunkedConversionSink.withCallback((_) {}),
         Decodable.fromFunction((decoder) {
-          final bytes = _asNullable(
-            (decoder as JsonCodableDecoder).reader.bytes,
-          );
+          final bytes = (decoder as JsonCodableDecoder).reader.bytes;
           smallReaderBytes = bytes;
-          smallBufferLength = bytes?.buffer.lengthInBytes;
+          smallBufferLength = bytes.buffer.lengthInBytes;
         }),
       );
       sink2.add(small);
       sink2.close();
 
       check(smallReaderBytes).isNotNull().deepEquals(small);
-      if (smallBufferLength != null) {
-        check(smallBufferLength!).isLessOrEqual(4 * 1024 * 1024);
-      }
+      check(smallBufferLength).isNotNull().isLessOrEqual(4 * 1024 * 1024);
     });
 
     test('6. ScratchByteAccumulator reuse after release(canPool: false)', () {

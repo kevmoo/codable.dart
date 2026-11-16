@@ -18,6 +18,9 @@ const int cborTwoPow32 = 0x100000000;
 /// High 32-bit word limit for JavaScript's `Number.MAX_SAFE_INTEGER` (`2^53-1`).
 const int cborJsMaxSafeHi = 0x1fffff;
 
+/// Exact `Number.MAX_SAFE_INTEGER` (`2^53 - 1`, `9007199254740991`).
+const int cborJsMaxSafeInt = cborJsMaxSafeHi * cborTwoPow32 + 0xffffffff;
+
 /// Enforces the anti-DoS container nesting limit of [maxCborDepth].
 void checkCborDepth(int depth) {
   if (depth >= maxCborDepth) {
@@ -196,7 +199,15 @@ final class CborReader {
     final mt = ib >>> 5;
     final ai = ib & 0x1f;
     if (mt == 0) return readArg(ai);
-    if (mt == 1) return -1 - readArg(ai);
+    if (mt == 1) {
+      final arg = readArg(ai);
+      if (identical(1.0, 1) && arg == cborJsMaxSafeInt) {
+        throw const CodableException(
+          'CBOR integer exceeds 53-bit safe integer range on JavaScript',
+        );
+      }
+      return -1 - arg;
+    }
     throw CodableException('Expected CBOR integer, got major type $mt');
   }
 

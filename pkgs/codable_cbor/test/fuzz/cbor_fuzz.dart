@@ -102,9 +102,15 @@ _CborNode _readNullNode(Decoder decoder) {
   return const _CborNull();
 }
 
+bool _isEncodableInt(num n) {
+  if (n is! int || (n == 0 && n.isNegative)) return false;
+  if (!identical(1.0, 1)) return true;
+  return n >= -cborJsMaxSafeInt && n <= cborJsMaxSafeInt;
+}
+
 _CborNode _readNumberNode(Decoder decoder) {
   final n = decoder.singleValue().readNum();
-  return n is int ? _CborInt(n) : _CborFloat(n.toDouble());
+  return _isEncodableInt(n) ? _CborInt(n as int) : _CborFloat(n.toDouble());
 }
 
 _CborNode _decodeArrayNode(Decoder decoder) {

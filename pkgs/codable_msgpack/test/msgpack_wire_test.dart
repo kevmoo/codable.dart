@@ -657,6 +657,181 @@ void _registerCursorMappedAndDepthLimitTests() {
         check(seen).deepEquals([-1, 0, 1]);
       },
     );
+
+    test('skips unconsumed nestedDecoder, drains singleValue.decode, and guards unwritten/surrogate writes', () {
+      // [[1, 2], [3, 4], 99]
+      final arrBytes = Uint8List.fromList([
+        0x93,
+        0x92,
+        0x01,
+        0x02,
+        0x92,
+        0x03,
+        0x04,
+        99,
+      ]);
+      final arrOut = MsgPackCodableDecoder.decode<(ValueKind, int, int)>(
+        arrBytes,
+        Decodable.fromFunction((d) {
+          final u = d.unkeyed();
+          check(u.moveNext()).isTrue();
+          final peeked = u.nestedDecoder().peekKind();
+
+          check(u.moveNext()).isTrue();
+          final partial = u.nestedDecoder().singleValue().decode<int>(
+            Decodable.fromFunction((d2) {
+              final u2 = d2.unkeyed();
+              check(u2.moveNext()).isTrue();
+              return u2.readInt();
+            }),
+          );
+
+          check(u.moveNext()).isTrue();
+          final last = u.readInt();
+          check(u.moveNext()).isFalse();
+          return (peeked, partial, last);
+        }),
+      );
+      check(arrOut).equals((ValueKind.list, 3, 99));
+
+      final mapBytes = MsgPackCodableEncoder.encode<void>(
+        null,
+        Encodable.fromFunction((_, e) {
+          final k = e.keyed(length: 3);
+          k.encodeIntList('skipPeek', const [1, 2]);
+          k.nestedEncoder('partial').keyed(length: 2)
+            ..encodeInt('a', 7)
+            ..encodeInt('b', 8);
+          k.encodeInt('tail', 42);
+        }),
+        requireKnownLength: true,
+      );
+      final mapOut = MsgPackCodableDecoder.decode<(ValueKind, int, int)>(
+        mapBytes,
+        Decodable.fromFunction((d) {
+          final k = d.keyed();
+          check(k.nextKey()).equals('skipPeek');
+          final peeked = k.nestedDecoder().peekKind();
+
+          check(k.nextKey()).equals('partial');
+          final partial = k.nestedDecoder().singleValue().decode<int>(
+            Decodable.fromFunction((d2) {
+              final k2 = d2.keyed();
+              check(k2.nextKey()).equals('a');
+              return k2.readInt();
+            }),
+          );
+
+          check(k.nextKey()).equals('tail');
+          final tail = k.readInt();
+          check(k.moveNextKey()).isFalse();
+          return (peeked, partial, tail);
+        }),
+      );
+      check(mapOut).equals((ValueKind.list, 7, 42));
+
+      for (final requireKnown in const [false, true]) {
+        for (final badEncode in <void Function(Encoder)>[
+          (e) => e.keyed(length: 1).nestedEncoder('unwritten'),
+          (e) {
+            final k = e.keyed(length: 2);
+            k.nestedEncoder('unwritten');
+            k.encodeInt('next', 1);
+          },
+          (e) => e.unkeyed(length: 1).nestedEncoder(),
+          (e) {
+            final u = e.unkeyed(length: 2);
+            u.nestedEncoder();
+            u.encodeInt(1);
+          },
+          (e) {
+            final m = e.map(length: 1);
+            m.keyEncoder();
+            m.valueEncoder().singleValue().encodeInt(1);
+          },
+          (e) {
+            final m = e.map(length: 1);
+            m.keyEncoder().singleValue().encodeInt(1);
+            m.valueEncoder();
+          },
+          (e) {
+            final m = e.map(length: 2);
+            m.keyEncoder().singleValue().encodeInt(1);
+            m.valueEncoder();
+            m.keyEncoder().singleValue().encodeInt(2);
+          },
+        ]) {
+          check(
+            () => MsgPackCodableEncoder.encode<void>(
+              null,
+              Encodable.fromFunction((_, e) => badEncode(e)),
+              requireKnownLength: requireKnown,
+            ),
+          ).throws<CodableException>();
+        }
+      }
+
+      final validEmoji = MsgPackCodableEncoder.encode<String>(
+        'hello 🚀 𝄞',
+        Encodable.fromFunction((v, e) => e.singleValue().encodeString(v)),
+        requireKnownLength: true,
+      );
+      check(
+        MsgPackCodableDecoder.decode<String>(
+          validEmoji,
+          Decodable.fromFunction((d) => d.singleValue().readString()),
+        ),
+      ).equals('hello 🚀 𝄞');
+
+      for (final bad in const <String>[
+        '\uD800',
+        'prefix\uDBFFsuffix',
+        '\uDC00',
+        'end\uDFFF',
+        '\uDC00\uD800',
+      ]) {
+        check(
+              () => MsgPackCodableEncoder.encode<String>(
+                bad,
+                Encodable.fromFunction(
+                  (v, e) => e.singleValue().encodeString(v),
+                ),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(bad);
+
+        check(
+              () => MsgPackCodableEncoder.encode<String>(
+                bad,
+                Encodable.fromFunction(
+                  (v, e) => e.keyed(length: 1).encodeInt(v, 1),
+                ),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(bad);
+      }
+
+      // Fuzz smoke seeds (-2^53 int64 and 1e20 / -0.0 float32)
+      fuzzTarget(
+        Uint8List.fromList(const [
+          0xd3,
+          0xff,
+          0xe0,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+        ]),
+      );
+      fuzzTarget(Uint8List.fromList(const [0xca, 0x60, 0xad, 0x78, 0xec]));
+      fuzzTarget(Uint8List.fromList(const [0xca, 0x80, 0x00, 0x00, 0x00]));
+    });
   });
 }
 

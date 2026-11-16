@@ -9,6 +9,7 @@ import 'package:test/test.dart';
 
 void main() {
   _registerJsIntFidelityTests();
+  _registerAnchorTagAndCoercionParityTests();
   _registerFloatFormattingTests();
   _registerMapEncoderAndSurrogateTests();
 }
@@ -157,6 +158,115 @@ void _registerJsIntFidelityTests() {
       },
     );
   });
+}
+
+void _registerAnchorTagAndCoercionParityTests() {
+  group(
+    'YAML anchors, aliases, tags, comments, and string-to-int coercion',
+    () {
+      test(
+        'decodes anchored, aliased, tagged, and commented integers and floats',
+        () {
+          final anchoredInt = YamlCodableDecoder.decode<(int, int, int)>(
+            'a: &shared 42\nb: *shared\nz: &zero 0\n',
+            Decodable.fromFunction((d) {
+              final m = d.mapped();
+              return (m.readInt('a'), m.readInt('b'), m.readInt('z'));
+            }),
+          );
+          check(anchoredInt).equals((42, 42, 0));
+
+          final taggedHex = YamlCodableDecoder.decode<int>(
+            'a: !!int 0x1e\n',
+            Decodable.fromFunction((d) => d.mapped().readInt('a')),
+          );
+          check(taggedHex).equals(30);
+
+          final commentedAnchorInt = YamlCodableDecoder.decode<int>(
+            'a: &k # comment mentioning 1.0e5\n  42\n',
+            Decodable.fromFunction((d) => d.mapped().readInt('a')),
+          );
+          check(commentedAnchorInt).equals(42);
+
+          const anchoredFloatYaml = 'a: &flt 1.0\nb: *flt\n';
+          final anchoredFloat = YamlCodableDecoder.decode<(double, double)>(
+            anchoredFloatYaml,
+            Decodable.fromFunction((d) {
+              final m = d.mapped();
+              return (m.readDouble('a'), m.readDouble('b'));
+            }),
+          );
+          check(anchoredFloat).equals((1.0, 1.0));
+
+          for (final key in const ['a', 'b']) {
+            check(
+              () => YamlCodableDecoder.decode<int>(
+                anchoredFloatYaml,
+                Decodable.fromFunction((d) => d.mapped().readInt(key)),
+              ),
+            ).throws<YamlCodableException>();
+          }
+
+          check(
+            YamlCodableDecoder.decode<double>(
+              'a: !!float 42\n',
+              Decodable.fromFunction((d) => d.mapped().readDouble('a')),
+            ),
+          ).equals(42.0);
+          check(
+            () => YamlCodableDecoder.decode<int>(
+              'a: !!float 42\n',
+              Decodable.fromFunction((d) => d.mapped().readInt('a')),
+            ),
+          ).throws<YamlCodableException>();
+
+          if (identical(1.0, 1)) {
+            for (final key in const ['a', 'b']) {
+              check(
+                () => YamlCodableDecoder.decode<int>(
+                  'a: &unsafe # comment\n  9007199254740993\nb: *unsafe\n',
+                  Decodable.fromFunction((d) => d.mapped().readInt(key)),
+                ),
+              ).throws<YamlCodableException>();
+            }
+          }
+        },
+      );
+
+      test(
+        'coerces quoted string map keys identically across VM, Wasm, and JS',
+        () {
+          int decodeSingleIntMapKey(String yaml) =>
+              YamlCodableDecoder.decode<int>(
+                yaml,
+                Decodable.fromFunction((d) {
+                  final m = d.map();
+                  check(m.moveNextEntry()).isTrue();
+                  return m.keyDecoder().singleValue().readInt();
+                }),
+              );
+
+          check(decodeSingleIntMapKey('"42": "ok"\n')).equals(42);
+          check(decodeSingleIntMapKey('"-42": "ok"\n')).equals(-42);
+          check(decodeSingleIntMapKey('"0x1e": "ok"\n')).equals(30);
+          check(decodeSingleIntMapKey('"-0x1e": "ok"\n')).equals(-30);
+
+          for (final rejectedKey in const <String>[
+            '0o10',
+            '0b10',
+            '1_000',
+            '&a 42',
+            '1.0',
+          ]) {
+            check(() => decodeSingleIntMapKey('"$rejectedKey": "ok"\n'))
+                .throws<YamlCodableException>()
+                .has((e) => e.actualValue, 'actualValue')
+                .equals(rejectedKey);
+          }
+        },
+      );
+    },
+  );
 }
 
 void _registerFloatFormattingTests() {

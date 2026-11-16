@@ -118,7 +118,7 @@ final class CborCodableDecoder implements Decoder {
   SingleValueDecoder singleValue() {
     _drainActive();
     _rewindIfBufferedMap();
-    return _CborSingleValueDecoder(_reader, userInfo, _depth);
+    return _CborSingleValueDecoder(this);
   }
 
   @override
@@ -202,14 +202,20 @@ final class _CborKeyedDecoder
 
   int _remainingPairs;
   int _phase = 0; // 0 = idle, 1 = atKey, 2 = atValue
+  int _itemStartOffset = -1;
   CborCodableDecoder? _pendingChild;
 
   _CborKeyedDecoder(this._reader, this._userInfo, this._childDepth)
     : _remainingPairs = _reader.readContainerLength(5);
 
   void _finishPendingChild() {
-    _pendingChild?._drainActive();
+    final child = _pendingChild;
+    if (child == null) return;
     _pendingChild = null;
+    child._drainActive();
+    if (_reader.offset == _itemStartOffset) {
+      _reader.skipItem(_childDepth);
+    }
   }
 
   @override
@@ -315,6 +321,7 @@ final class _CborKeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    _itemStartOffset = _reader.offset;
     final child = CborCodableDecoder._(
       _reader,
       _childDepth,
@@ -511,6 +518,7 @@ final class _CborUnkeyedDecoder
 
   int _remaining;
   bool _hasActive = false;
+  int _itemStartOffset = -1;
   CborCodableDecoder? _pendingChild;
 
   _CborUnkeyedDecoder(this._reader, this._userInfo, this._childDepth)
@@ -520,8 +528,13 @@ final class _CborUnkeyedDecoder
   }
 
   void _finishPendingChild() {
-    _pendingChild?._drainActive();
+    final child = _pendingChild;
+    if (child == null) return;
     _pendingChild = null;
+    child._drainActive();
+    if (_reader.offset == _itemStartOffset) {
+      _reader.skipItem(_childDepth);
+    }
   }
 
   @override
@@ -571,6 +584,7 @@ final class _CborUnkeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    _itemStartOffset = _reader.offset;
     final child = CborCodableDecoder._(
       _reader,
       _childDepth,
@@ -584,12 +598,12 @@ final class _CborUnkeyedDecoder
 final class _CborSingleValueDecoder
     with BaseSingleValueDecoderMixin, _CborValueReaderMixin
     implements SingleValueDecoder {
-  @override
-  final CborReader _reader;
-  final Map<Object, Object?> _userInfo;
-  final int _depth;
+  final CborCodableDecoder _parent;
 
-  _CborSingleValueDecoder(this._reader, this._userInfo, this._depth);
+  _CborSingleValueDecoder(this._parent);
+
+  @override
+  CborReader get _reader => _parent._reader;
 
   @override
   void _prepareValueRead() {}
@@ -598,6 +612,5 @@ final class _CborSingleValueDecoder
   void _completeValueRead() {}
 
   @override
-  Decoder nestedDecoder() =>
-      CborCodableDecoder._(_reader, _depth, userInfo: _userInfo);
+  Decoder nestedDecoder() => _parent;
 }

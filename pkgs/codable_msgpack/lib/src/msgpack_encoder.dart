@@ -9,6 +9,27 @@ import 'package:codable/codable.dart';
 
 import 'msgpack_reader.dart';
 
+bool _isLowUtf16Surrogate(int cu) => cu >= 0xDC00 && cu <= 0xDFFF;
+
+void _validateWellFormedMsgPackUtf16(String value) {
+  final len = value.length;
+  for (var i = 0; i < len; i++) {
+    final cu = value.codeUnitAt(i);
+    if (cu < 0xD800 || cu > 0xDFFF) continue;
+    if (cu <= 0xDBFF &&
+        i + 1 < len &&
+        _isLowUtf16Surrogate(value.codeUnitAt(i + 1))) {
+      i++;
+      continue;
+    }
+    throw CodableException(
+      'Invalid unpaired UTF-16 surrogate '
+      '(U+${cu.toRadixString(16).toUpperCase()}) in MessagePack string',
+      actualValue: value,
+    );
+  }
+}
+
 final class _MsgPackWriter {
   Uint8List _buf;
   late ByteData _bd = ByteData.sublistView(_buf);
@@ -236,6 +257,7 @@ final class _MsgPackWriter {
   }
 
   void writeTextString(String value) {
+    _validateWellFormedMsgPackUtf16(value);
     final encoded = utf8.encode(value);
     final len = encoded.length;
     if (len < 32) {
@@ -416,6 +438,7 @@ final class _MsgPackKeyedEncoder
   final int _headerOffset;
   int _count = 0;
   bool _closed = false;
+  int _pendingStartPos = -1;
   MsgPackCodableEncoder? _pendingNested;
 
   _MsgPackKeyedEncoder(this._owner, this._writer, {int? length})
@@ -428,8 +451,17 @@ final class _MsgPackKeyedEncoder
       );
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'MessagePack nested encoder completed without writing a value',
+      );
+    }
   }
 
   void _beginField(String key) {
@@ -491,6 +523,7 @@ final class _MsgPackKeyedEncoder
   @override
   Encoder nestedEncoder(String key) {
     _beginField(key);
+    _pendingStartPos = _writer._writePos;
     final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
@@ -506,6 +539,7 @@ final class _MsgPackUnkeyedEncoder
   final int _headerOffset;
   int _count = 0;
   bool _closed = false;
+  int _pendingStartPos = -1;
   MsgPackCodableEncoder? _pendingNested;
 
   _MsgPackUnkeyedEncoder(this._owner, this._writer, {int? length})
@@ -518,8 +552,17 @@ final class _MsgPackUnkeyedEncoder
       );
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'MessagePack nested encoder completed without writing a value',
+      );
+    }
   }
 
   void _beginElement() {
@@ -580,6 +623,7 @@ final class _MsgPackUnkeyedEncoder
   @override
   Encoder nestedEncoder() {
     _beginElement();
+    _pendingStartPos = _writer._writePos;
     final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
@@ -594,6 +638,7 @@ final class _MsgPackMapEncoder implements MapEncoder, _MsgPackCloseable {
   int _count = 0;
   bool _expectingValue = false;
   bool _closed = false;
+  int _pendingStartPos = -1;
   MsgPackCodableEncoder? _pendingNested;
 
   _MsgPackMapEncoder(this._owner, this._writer, {int? length})
@@ -606,8 +651,17 @@ final class _MsgPackMapEncoder implements MapEncoder, _MsgPackCloseable {
       );
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'MessagePack MapEncoder entry encoder completed without writing a value',
+      );
+    }
   }
 
   @override
@@ -620,6 +674,7 @@ final class _MsgPackMapEncoder implements MapEncoder, _MsgPackCloseable {
     }
     _expectingValue = true;
     _count++;
+    _pendingStartPos = _writer._writePos;
     final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
@@ -634,6 +689,7 @@ final class _MsgPackMapEncoder implements MapEncoder, _MsgPackCloseable {
       );
     }
     _expectingValue = false;
+    _pendingStartPos = _writer._writePos;
     final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
