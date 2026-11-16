@@ -8,6 +8,8 @@ part of 'codable_cbor_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for SensorCoordinate
 // =============================================================================
@@ -204,7 +206,7 @@ final class SensorBatchCodable implements Codable<SensorBatch> {
     int? batchId;
     Uint8List? rawSample;
     Float64List? readings;
-    var calibrationOffsets = const <SensorCoordinate, double>{};
+    Map<SensorCoordinate, double> calibrationOffsets = const {};
     var seen = _$SensorBatchSchema.none;
 
     while (keyed.moveNextKey()) {

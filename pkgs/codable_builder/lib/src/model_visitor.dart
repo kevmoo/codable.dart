@@ -271,7 +271,7 @@ final class ModelVisitor {
     if (keyReader == null) return null;
     final valueReader = keyReader.peek('defaultValue');
     if (valueReader != null) {
-      return _formatConstantReader(valueReader, nested: false);
+      return _formatConstantReader(valueReader, nested: false, param: param);
     }
     if (!_hasAnnotationArgument(keyAnnotation, 'defaultValue')) {
       return null;
@@ -309,20 +309,36 @@ final class ModelVisitor {
     return false;
   }
 
-  static String _formatDartObject(DartObject object, {required bool nested}) =>
-      _formatConstantReader(ConstantReader(object), nested: nested);
+  static String _formatDartObject(
+    DartObject object, {
+    required bool nested,
+    required FormalParameterElement param,
+  }) => _formatConstantReader(
+    ConstantReader(object),
+    nested: nested,
+    param: param,
+  );
 
   static String _formatConstantReader(
     ConstantReader reader, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
     final scalar = _tryFormatScalarConstant(reader);
     if (scalar != null) return scalar;
-    final collection = _tryFormatCollectionConstant(reader, nested: nested);
+    final collection = _tryFormatCollectionConstant(
+      reader,
+      nested: nested,
+      param: param,
+    );
     if (collection != null) return collection;
-    final record = _tryFormatRecordConstant(reader.objectValue, nested: nested);
+    final record = _tryFormatRecordConstant(
+      reader.objectValue,
+      nested: nested,
+      param: param,
+    );
     if (record != null) return record;
-    return _formatRevivableConstant(reader, nested: nested);
+    return _formatRevivableConstant(reader, nested: nested, param: param);
   }
 
   static String? _tryFormatScalarConstant(ConstantReader reader) {
@@ -344,35 +360,56 @@ final class ModelVisitor {
     return '$value';
   }
 
+  static String _typeArgDisplayAt(DartType? type, int index) =>
+      type is InterfaceType && type.typeArguments.length > index
+      ? type.typeArguments[index].getDisplayString()
+      : 'dynamic';
+
   static String? _tryFormatCollectionConstant(
     ConstantReader reader, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
-    final prefix = nested ? '' : 'const ';
     if (reader.isList) {
-      final items = [
-        for (final item in reader.listValue)
-          _formatDartObject(item, nested: true),
-      ];
-      return '$prefix[${items.join(', ')}]';
+      return _formatListConstant(reader, nested: nested, param: param);
     }
-    if (reader.isSet) return _formatSetConstant(reader, nested: nested);
-    if (reader.isMap) return _formatMapConstant(reader, nested: nested);
+    if (reader.isSet) {
+      return _formatSetConstant(reader, nested: nested, param: param);
+    }
+    if (reader.isMap) {
+      return _formatMapConstant(reader, nested: nested, param: param);
+    }
     return null;
+  }
+
+  static String _formatListConstant(
+    ConstantReader reader, {
+    required bool nested,
+    required FormalParameterElement param,
+  }) {
+    final items = [
+      for (final item in reader.listValue)
+        _formatDartObject(item, nested: true, param: param),
+    ];
+    if (items.isEmpty && nested) {
+      final elem = _typeArgDisplayAt(reader.objectValue.type, 0);
+      return '<$elem>[]';
+    }
+    final prefix = nested ? '' : 'const ';
+    return '$prefix[${items.join(', ')}]';
   }
 
   static String _formatSetConstant(
     ConstantReader reader, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
     final items = [
-      for (final item in reader.setValue) _formatDartObject(item, nested: true),
+      for (final item in reader.setValue)
+        _formatDartObject(item, nested: true, param: param),
     ];
     if (items.isEmpty && nested) {
-      final objType = reader.objectValue.type;
-      final elem = objType is InterfaceType && objType.typeArguments.isNotEmpty
-          ? objType.typeArguments.first.getDisplayString()
-          : 'dynamic';
+      final elem = _typeArgDisplayAt(reader.objectValue.type, 0);
       return '<$elem>{}';
     }
     final prefix = nested ? '' : 'const ';
@@ -382,30 +419,38 @@ final class ModelVisitor {
   static String _formatMapConstant(
     ConstantReader reader, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
-    final prefix = nested ? '' : 'const ';
     final entries = <String>[
       for (final MapEntry(:key, :value) in reader.mapValue.entries)
         if (key != null && value != null)
-          '${_formatDartObject(key, nested: true)}: '
-              '${_formatDartObject(value, nested: true)}',
+          '${_formatDartObject(key, nested: true, param: param)}: '
+              '${_formatDartObject(value, nested: true, param: param)}',
     ];
+    if (entries.isEmpty && nested) {
+      final objType = reader.objectValue.type;
+      final key = _typeArgDisplayAt(objType, 0);
+      final val = _typeArgDisplayAt(objType, 1);
+      return '<$key, $val>{}';
+    }
+    final prefix = nested ? '' : 'const ';
     return '$prefix{${entries.join(', ')}}';
   }
 
   static String? _tryFormatRecordConstant(
     DartObject object, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
     final record = object.toRecordValue();
     if (record == null) return null;
     final pos = [
       for (final item in record.positional)
-        _formatDartObject(item, nested: true),
+        _formatDartObject(item, nested: true, param: param),
     ];
     final named = [
       for (final entry in record.named.entries)
-        '${entry.key}: ${_formatDartObject(entry.value, nested: true)}',
+        '${entry.key}: ${_formatDartObject(entry.value, nested: true, param: param)}',
     ];
     final trailingComma = pos.length == 1 && named.isEmpty ? ',' : '';
     final prefix = nested ? '' : 'const ';
@@ -415,8 +460,18 @@ final class ModelVisitor {
   static String _formatRevivableConstant(
     ConstantReader reader, {
     required bool nested,
+    required FormalParameterElement param,
   }) {
     final revivable = reader.revive();
+    if (revivable.isPrivate) {
+      throw InvalidGenerationSourceError(
+        'Cannot revive private constant "$revivable" for '
+        '@CodableKey(defaultValue:) on parameter "${param.name}". '
+        'Use a constructor default value (${param.name} = ...) or a constant '
+        'with a public constructor.',
+        element: param,
+      );
+    }
     if (revivable.source.fragment.isEmpty && revivable.accessor.isNotEmpty) {
       return revivable.accessor;
     }
@@ -426,11 +481,11 @@ final class ModelVisitor {
     final ctor = revivable.accessor.isEmpty ? '' : '.${revivable.accessor}';
     final pos = [
       for (final arg in revivable.positionalArguments)
-        _formatDartObject(arg, nested: true),
+        _formatDartObject(arg, nested: true, param: param),
     ];
     final named = [
       for (final entry in revivable.namedArguments.entries)
-        '${entry.key}: ${_formatDartObject(entry.value, nested: true)}',
+        '${entry.key}: ${_formatDartObject(entry.value, nested: true, param: param)}',
     ];
     final prefix = nested ? '' : 'const ';
     return '$prefix$rawType$ctor(${[...pos, ...named].join(', ')})';

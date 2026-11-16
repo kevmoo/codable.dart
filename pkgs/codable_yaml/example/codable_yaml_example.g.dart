@@ -8,6 +8,8 @@ part of 'codable_yaml_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for EndpointConfig
 // =============================================================================
@@ -81,7 +83,7 @@ final class EndpointConfigCodable implements Codable<EndpointConfig> {
 
     String? host;
     int? port;
-    var tls = true;
+    bool tls = true;
     var seen = _$EndpointConfigSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -215,8 +217,8 @@ final class GatewayManifestCodable implements Codable<GatewayManifest> {
     String? service;
     EndpointConfig? primary;
     EndpointConfig? fallback;
-    var statusRoutes = const <int, String>{};
-    var allowedOrigins = const <String>[];
+    Map<int, String> statusRoutes = const {};
+    List<String> allowedOrigins = const [];
     var seen = _$GatewayManifestSchema.none;
 
     while (keyed.moveNextKey()) {

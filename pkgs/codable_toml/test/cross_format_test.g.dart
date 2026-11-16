@@ -8,6 +8,8 @@ part of 'cross_format_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for RetryPolicy
 // =============================================================================
@@ -2020,17 +2022,20 @@ final class TypedFeaturesEnvelopeCodable
             final mDecoder = keyed.nestedDecoder().map();
             final m = <HttpVerb, int>{};
             while (mDecoder.moveNextEntry()) {
-              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
-              final enumIdx1 = _$TypedFeaturesEnvelopeSchema
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$TypedFeaturesEnvelopeSchema
                   .enumHttpVerbKeyOptions
-                  .indexOf(rawEnum1);
-              if (enumIdx1 < 0) {
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
                 throw CodableException(
-                  'Unknown HttpVerb value: "$rawEnum1"',
-                  actualValue: rawEnum1,
+                  'Unknown HttpVerb value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
                 );
               }
-              final key = HttpVerb.values[enumIdx1];
+              final key = HttpVerb.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             verbQuotas = m;
@@ -2235,7 +2240,7 @@ final class CircleSpecCodable implements Codable<CircleSpec> {
     LevelC? meta;
     double? radius;
     String? label;
-    var kind = 'circle';
+    String kind = 'circle';
     var seen = _$CircleSpecSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2366,8 +2371,8 @@ final class PolygonSpecCodable implements Codable<PolygonSpec> {
     final keyed = decoder.keyed(options: _$PolygonSpecSchema.keyOptions);
 
     List<int>? vertices;
-    var closed = true;
-    var kind = 'polygon';
+    bool closed = true;
+    String kind = 'polygon';
     var seen = _$PolygonSpecSchema.none;
 
     while (keyed.moveNextKey()) {

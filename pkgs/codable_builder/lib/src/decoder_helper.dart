@@ -16,6 +16,7 @@ typedef _DecoderSlot = ({
   String decoderExpr,
   String indent,
   int depth,
+  String tag,
 });
 
 /// Emits the unified `_$ModelSchema` extension type and companion
@@ -341,72 +342,15 @@ final class DecoderGeneratorHelper {
     FieldDescriptor field,
     String typeStr,
   ) {
-    final defaultCode = _formatDefaultValue(field);
-    if (field.isNullable && defaultCode == 'null') {
-      buffer.writeln('  $typeStr ${field.name};');
-      return;
-    }
-    if (_needsExplicitDefaultVarType(field, defaultCode)) {
-      buffer.writeln('  $typeStr ${field.name} = $defaultCode;');
-      return;
-    }
-    buffer.writeln('  var ${field.name} = $defaultCode;');
-  }
-
-  static bool _needsExplicitDefaultVarType(
-    FieldDescriptor field,
-    String defaultCode,
-  ) {
-    if (field.isNullable) return true;
-    return field.nativeCategory == TypeCategory.primitiveNum &&
-        int.tryParse(defaultCode) != null;
-  }
-
-  static String _firstTypeArgDisplay(DartType? elemType, DartType container) {
-    if (elemType != null) return elemType.getDisplayString();
-    if (container is InterfaceType && container.typeArguments.isNotEmpty) {
-      return container.typeArguments.first.getDisplayString();
-    }
-    return 'dynamic';
-  }
-
-  String _formatDefaultValue(FieldDescriptor field) {
     var defaultCode = field.defaultValueCode!;
     if (defaultCode.endsWith(';')) {
       defaultCode = defaultCode.substring(0, defaultCode.length - 1);
     }
-    if (field.nativeCategory == TypeCategory.primitiveDouble &&
-        int.tryParse(defaultCode) != null) {
-      return '$defaultCode.0';
+    if (field.isNullable && defaultCode == 'null') {
+      buffer.writeln('  $typeStr ${field.name};');
+      return;
     }
-    return _formatCollectionDefaultCode(field, defaultCode);
-  }
-
-  static String _formatCollectionDefaultCode(
-    FieldDescriptor field,
-    String defaultCode,
-  ) {
-    final cat = field.nativeCategory;
-    if (cat == TypeCategory.set && defaultCode.startsWith('const {')) {
-      final elemType = _firstTypeArgDisplay(field.elementType, field.type);
-      return 'const <$elemType>${defaultCode.substring(6)}';
-    }
-    if (cat == TypeCategory.map && defaultCode.startsWith('const {')) {
-      final keyType = field.mapKeyType?.getDisplayString() ?? 'dynamic';
-      final valType = field.mapValueType?.getDisplayString() ?? 'dynamic';
-      return 'const <$keyType, $valType>${defaultCode.substring(6)}';
-    }
-    if (defaultCode == 'const []') {
-      final elemType = _firstTypeArgDisplay(field.elementType, field.type);
-      return 'const <$elemType>[]';
-    }
-    final elem = field.elementType;
-    if (defaultCode.startsWith('const [') &&
-        elem != null &&
-        (elem.isNullableType || elem.isDartCoreNum)) {
-      return 'const <${elem.getDisplayString()}>${defaultCode.substring(6)}';
-    }
-    return defaultCode;
+    buffer.writeln('  $typeStr ${field.name} = $defaultCode;');
   }
 
   void _writeKeyedSelectLoop(StringBuffer buffer, String schemaName) {
@@ -620,6 +564,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: 'keyed.nestedDecoder()',
           indent: indent,
           depth: 0,
+          tag: '',
         ), isSet: false),
       );
       return;
@@ -918,6 +863,7 @@ final class DecoderGeneratorHelper {
         decoderExpr: 'd',
         indent: '  ',
         depth: 0,
+        tag: '',
       ));
       return 'Decodable.fromFunction((d) {\n$body  return res;\n})';
     }
@@ -1006,6 +952,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: 'keyed.nestedDecoder()',
           indent: indent,
           depth: 0,
+          tag: '',
         ), isSet: true),
       );
       return;
@@ -1071,9 +1018,15 @@ final class DecoderGeneratorHelper {
         decoderExpr: 'keyed.nestedDecoder()',
         indent: indent,
         depth: 0,
+        tag: '',
       )),
     );
   }
+
+  static String _slotSuffix(_DecoderSlot slot, {bool emptyAtZero = false}) =>
+      emptyAtZero && slot.depth == 0 && slot.tag.isEmpty
+      ? ''
+      : '${slot.depth}${slot.tag}';
 
   static bool _isStringMapKey(DartType? keyType) =>
       keyType != null &&
@@ -1095,7 +1048,7 @@ final class DecoderGeneratorHelper {
     if (valType == null) {
       throw StateError('Missing value type for String-keyed Map.');
     }
-    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final sfx = _slotSuffix(slot, emptyAtZero: true);
     final kVar = 'k$sfx';
     final mapVar = 'm$sfx';
     final keyVar = 'key$sfx';
@@ -1118,6 +1071,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: '$kVar.nestedDecoder()',
           indent: '$indent    ',
           depth: slot.depth + 1,
+          tag: slot.tag,
         )),
       )
       ..writeln('$indent  }')
@@ -1154,6 +1108,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: '$kVar.nestedDecoder()',
           indent: '$indent  ',
           depth: slot.depth + 1,
+          tag: slot.tag,
         )),
       )
       ..writeln('$indent}');
@@ -1184,8 +1139,9 @@ final class DecoderGeneratorHelper {
     final schemaName = '_\$${model.className}Schema';
     final optRef = '$schemaName.enum${enumName}KeyOptions';
     final indent = slot.indent;
-    final rawVar = 'rawEnum${slot.depth}';
-    final idxVar = 'enumIdx${slot.depth}';
+    final sfx = _slotSuffix(slot);
+    final rawVar = 'rawEnum$sfx';
+    final idxVar = 'enumIdx$sfx';
     return '${indent}final $rawVar = $kVar.readString();\n'
         '${indent}final $idxVar = $optRef.indexOf($rawVar);\n'
         '${indent}if ($idxVar < 0) {\n'
@@ -1223,7 +1179,7 @@ final class DecoderGeneratorHelper {
     if (keyType == null || valType == null) {
       throw StateError('Missing key or value type for Map.');
     }
-    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final sfx = _slotSuffix(slot, emptyAtZero: true);
     final mDecVar = 'mDecoder$sfx';
     final mapVar = 'm$sfx';
     final keyVar = 'key$sfx';
@@ -1247,6 +1203,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: '$mDecVar.keyDecoder()',
           indent: bodyIndent,
           depth: slot.depth + 1,
+          tag: '${slot.tag}Key',
         )),
       )
       ..write(
@@ -1256,6 +1213,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: '$mDecVar.valueDecoder()',
           indent: bodyIndent,
           depth: slot.depth + 1,
+          tag: '${slot.tag}Val',
         )),
       )
       ..writeln('$indent  }')
@@ -1282,8 +1240,9 @@ final class DecoderGeneratorHelper {
     if (!type.isNullableType) {
       return _nonNullComplexDecoderValueCode(type, slot);
     }
-    final decVar = 'dec${slot.depth}';
-    final svVar = 'sv${slot.depth}';
+    final sfx = _slotSuffix(slot);
+    final decVar = 'dec$sfx';
+    final svVar = 'sv$sfx';
     final indent = slot.indent;
     final out = StringBuffer();
     if (slot.declareType != null) {
@@ -1303,6 +1262,7 @@ final class DecoderGeneratorHelper {
           decoderExpr: decVar,
           indent: '$indent  ',
           depth: slot.depth + 1,
+          tag: slot.tag,
         )),
       )
       ..writeln('$indent}');
@@ -1314,8 +1274,9 @@ final class DecoderGeneratorHelper {
     final schemaName = '_\$${model.className}Schema';
     final optRef = '$schemaName.enum${enumName}KeyOptions';
     final indent = slot.indent;
-    final rawVar = 'rawEnum${slot.depth}';
-    final idxVar = 'enumIdx${slot.depth}';
+    final sfx = _slotSuffix(slot);
+    final rawVar = 'rawEnum$sfx';
+    final idxVar = 'enumIdx$sfx';
     if (!type.isNullableType) {
       final assignLhs = slot.declareType != null
           ? 'final ${slot.target}'
@@ -1415,7 +1376,7 @@ final class DecoderGeneratorHelper {
       TypedDataKind.intList => ('int', 'readInt()'),
       TypedDataKind.uint8Bytes => throw StateError('Unreachable'),
     };
-    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final sfx = _slotSuffix(slot, emptyAtZero: true);
     final uVar = 'u$sfx';
     final lVar = 'l$sfx';
     final indent = slot.indent;
@@ -1456,7 +1417,7 @@ final class DecoderGeneratorHelper {
     if (inner == null) {
       throw StateError('Missing element type for nested collection.');
     }
-    final sfx = slot.depth == 0 ? '' : '${slot.depth}';
+    final sfx = _slotSuffix(slot, emptyAtZero: true);
     final uVar = 'u$sfx';
     final colVar = isSet ? 's$sfx' : 'l$sfx';
     final innerStr = inner.getDisplayString();
@@ -1485,6 +1446,7 @@ final class DecoderGeneratorHelper {
             decoderExpr: '$uVar.nestedDecoder()',
             indent: '$indent    ',
             depth: slot.depth + 1,
+            tag: slot.tag,
           )),
         )
         ..writeln('$indent    $colVar.add($itemVar);');

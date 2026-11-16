@@ -7,5 +7,10 @@ export 'src/decoder_helper.dart';
 export 'src/encoder_helper.dart';
 export 'src/field_descriptor.dart';
 export 'src/model_visitor.dart';
-export 'src/type_helper.dart';
+export 'src/type_helper.dart'
+    hide
+        TypedDataKind,
+        classifyTypedDataKind,
+        isIntegerTupleTargetType,
+        isNumericTupleTargetType;
 export 'src/utils.dart';

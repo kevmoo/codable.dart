@@ -8,6 +8,8 @@ part of 'codable_toml_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for DatabaseConfig
 // =============================================================================
@@ -70,7 +72,7 @@ final class DatabaseConfigCodable implements Codable<DatabaseConfig> {
     final keyed = decoder.keyed(options: _$DatabaseConfigSchema.keyOptions);
 
     String? host;
-    var port = 5432;
+    int port = 5432;
     var seen = _$DatabaseConfigSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -304,10 +306,10 @@ final class ServiceManifestCodable implements Codable<ServiceManifest> {
     final keyed = decoder.keyed(options: _$ServiceManifestSchema.keyOptions);
 
     DatabaseConfig? database;
-    var endpoints = const <EndpointRule>[];
+    List<EndpointRule> endpoints = const [];
     String? service;
     DateTime? deployedAt;
-    var statusLabels = const <int, String>{};
+    Map<int, String> statusLabels = const {};
     var seen = _$ServiceManifestSchema.none;
 
     while (keyed.moveNextKey()) {

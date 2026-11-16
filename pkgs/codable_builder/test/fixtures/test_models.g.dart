@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element
+// ignore_for_file: lines_longer_than_80_chars, omit_local_variable_types, unnecessary_lambdas, deprecated_member_use, unused_element
 
 part of 'test_models.dart';
 
@@ -233,9 +233,9 @@ final class UserAccountCodable implements Codable<UserAccount> {
     String? id;
     String? emailAddress;
     UserRole? role;
-    var tags = const <String>[];
+    List<String> tags = const [];
     Float64List? location;
-    var internalId = '';
+    String internalId = '';
     var seen = _$UserAccountSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -512,9 +512,9 @@ final class EnterpriseCodable implements Codable<Enterprise> {
 
     String? name;
     Address? headquarter;
-    var branches = const <Address>[];
-    var categories = const <String>{};
-    var headcountByDept = const <String, int>{};
+    List<Address> branches = const [];
+    Set<String> categories = const {};
+    Map<String, int> headcountByDept = const {};
     var seen = _$EnterpriseSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -973,11 +973,11 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
 
     num? score;
     num? optionalScore;
-    var samples = const <num>[];
-    var nullableSamples = const <num?>[];
-    var distinctValues = const <num>{};
-    var metrics = const <String, num>{};
-    var nullableMetrics = const <String, num?>{};
+    List<num> samples = const [];
+    List<num?> nullableSamples = const [];
+    Set<num> distinctValues = const {};
+    Map<String, num> metrics = const {};
+    Map<String, num?> nullableMetrics = const {};
     var seen = _$NumericMeasurementSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1223,9 +1223,9 @@ final class TeamCodable implements Codable<Team> {
     final keyed = decoder.keyed(options: _$TeamSchema.keyOptions);
 
     String? name;
-    var roles = const <UserRole>[];
-    var nullableTags = const <String?>{};
-    var scores = const <String, int?>{};
+    List<UserRole> roles = const [];
+    Set<String?> nullableTags = const {};
+    Map<String, int?> scores = const {};
     var seen = _$TeamSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1405,13 +1405,13 @@ final class PrimitiveCollectionsModelCodable
       options: _$PrimitiveCollectionsModelSchema.keyOptions,
     );
 
-    var ints = const <int>[];
-    var doubles = const <double>[];
-    var strings = const <String>[];
-    var bools = const <bool>[];
+    List<int> ints = const [];
+    List<double> doubles = const [];
+    List<String> strings = const [];
+    List<bool> bools = const [];
     Float64List? float64s;
-    var matrix = const <List<double>>[];
-    var nestedFloats = const <Float64List>[];
+    List<List<double>> matrix = const [];
+    List<Float64List> nestedFloats = const [];
     var seen = _$PrimitiveCollectionsModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1605,9 +1605,9 @@ final class BinaryPayloadModelCodable implements Codable<BinaryPayloadModel> {
 
     Uint8List? payload;
     Uint8List? signature;
-    var chunks = const <Uint8List>[];
-    var nullableChunks = const <Uint8List?>[];
-    var namedBlobs = const <String, Uint8List>{};
+    List<Uint8List> chunks = const [];
+    List<Uint8List?> nullableChunks = const [];
+    Map<String, Uint8List> namedBlobs = const {};
     var seen = _$BinaryPayloadModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1760,10 +1760,10 @@ final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
   TypedKeyMapModel decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$TypedKeyMapModelSchema.keyOptions);
 
-    var statusMessages = const <int, String>{};
-    var roleCounts = const <UserRole, int>{};
-    var flagWeights = const <bool, double>{};
-    var buckets = const <String, List<int>>{};
+    Map<int, String> statusMessages = const {};
+    Map<UserRole, int> roleCounts = const {};
+    Map<bool, double> flagWeights = const {};
+    Map<String, List<int>> buckets = const {};
     var seen = _$TypedKeyMapModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1784,16 +1784,20 @@ final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <UserRole, int>{};
             while (mDecoder.moveNextEntry()) {
-              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
-              final enumIdx1 = _$TypedKeyMapModelSchema.enumUserRoleKeyOptions
-                  .indexOf(rawEnum1);
-              if (enumIdx1 < 0) {
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$TypedKeyMapModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
                 throw CodableException(
-                  'Unknown UserRole value: "$rawEnum1"',
-                  actualValue: rawEnum1,
+                  'Unknown UserRole value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
                 );
               }
-              final key = UserRole.values[enumIdx1];
+              final key = UserRole.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             roleCounts = m;
@@ -1922,7 +1926,7 @@ final class CompositeKeyMapModelCodable
       options: _$CompositeKeyMapModelSchema.keyOptions,
     );
 
-    var labelsByPoint = const <Point, String>{};
+    Map<Point, String> labelsByPoint = const {};
     var seen = _$CompositeKeyMapModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2021,9 +2025,9 @@ final class StringKeyedNestedMapModelCodable
       options: _$StringKeyedNestedMapModelSchema.keyOptions,
     );
 
-    var rolesByUser = const <String, UserRole>{};
-    var officesByCode = const <String, Address?>{};
-    var nestedCounts = const <String, Map<String, int>>{};
+    Map<String, UserRole> rolesByUser = const {};
+    Map<String, Address?> officesByCode = const {};
+    Map<String, Map<String, int>> nestedCounts = const {};
     var seen = _$StringKeyedNestedMapModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2633,10 +2637,10 @@ final class NestedModelGridCodable implements Codable<NestedModelGrid> {
   NestedModelGrid decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$NestedModelGridSchema.keyOptions);
 
-    var rows = const <List<Point>>[];
-    var nullableRows = const <List<Point>?>[];
-    var sparseRows = const <List<Point?>>[];
-    var cube = const <List<List<Point>>>[];
+    List<List<Point>> rows = const [];
+    List<List<Point>?> nullableRows = const [];
+    List<List<Point?>> sparseRows = const [];
+    List<List<List<Point>>> cube = const [];
     var seen = _$NestedModelGridSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2838,11 +2842,11 @@ final class NestedCollectionMatrixCodable
       options: _$NestedCollectionMatrixSchema.keyOptions,
     );
 
-    var tensor3d = const <List<Float64List>>[];
-    var pointSets = const <Set<Point>>[];
-    var intRowsSet = const <List<int>>{};
-    var mapGrid = const <List<Map<String, int>>>[];
-    var roleSets = const <Set<UserRole>>[];
+    List<List<Float64List>> tensor3d = const [];
+    List<Set<Point>> pointSets = const [];
+    Set<List<int>> intRowsSet = const {};
+    List<List<Map<String, int>>> mapGrid = const [];
+    List<Set<UserRole>> roleSets = const [];
     var seen = _$NestedCollectionMatrixSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -3073,6 +3077,14 @@ extension type const _$DefaultValuesModelSchema(int _value) {
   static const String nameOrigin = 'origin';
   static const String nameNullableOverride = 'nullableOverride';
   static const String nameOmittedDefaultKeepCtor = 'explicit_name';
+  static const String nameWeights = 'weights';
+  static const String nameHexDouble = 'hexDouble';
+  static const String nameZeroDouble = 'zeroDouble';
+  static const String nameCountNum = 'countNum';
+  static const String nameEmptySet = 'emptySet';
+  static const String nameEmptyMap = 'emptyMap';
+  static const String nameNestedIntRows = 'nestedIntRows';
+  static const String nameNestedStringIntMaps = 'nestedStringIntMaps';
 
   // Key Indices for selectKeyIndex()
   static const int keyLabel = 0;
@@ -3086,6 +3098,14 @@ extension type const _$DefaultValuesModelSchema(int _value) {
   static const int keyOrigin = 8;
   static const int keyNullableOverride = 9;
   static const int keyOmittedDefaultKeepCtor = 10;
+  static const int keyWeights = 11;
+  static const int keyHexDouble = 12;
+  static const int keyZeroDouble = 13;
+  static const int keyCountNum = 14;
+  static const int keyEmptySet = 15;
+  static const int keyEmptyMap = 16;
+  static const int keyNestedIntRows = 17;
+  static const int keyNestedStringIntMaps = 18;
 
   // KeyOptions Table
   static final KeyOptions options = KeyOptions.of(const [
@@ -3100,6 +3120,14 @@ extension type const _$DefaultValuesModelSchema(int _value) {
     _$DefaultValuesModelSchema.nameOrigin,
     _$DefaultValuesModelSchema.nameNullableOverride,
     _$DefaultValuesModelSchema.nameOmittedDefaultKeepCtor,
+    _$DefaultValuesModelSchema.nameWeights,
+    _$DefaultValuesModelSchema.nameHexDouble,
+    _$DefaultValuesModelSchema.nameZeroDouble,
+    _$DefaultValuesModelSchema.nameCountNum,
+    _$DefaultValuesModelSchema.nameEmptySet,
+    _$DefaultValuesModelSchema.nameEmptyMap,
+    _$DefaultValuesModelSchema.nameNestedIntRows,
+    _$DefaultValuesModelSchema.nameNestedStringIntMaps,
   ]);
   static final KeyOptions keyOptions = options;
 
@@ -3133,17 +3161,28 @@ final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
   DefaultValuesModel decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$DefaultValuesModelSchema.keyOptions);
 
-    var label = 'guest';
-    var escapedNote = 'it\'s \$5\n';
-    var retryCount = 42;
-    var factor = 2.5;
-    var enabled = true;
-    var role = UserRole.guest;
-    var tags = const ['alpha', 'beta'];
-    var metadata = const <String, int>{'env': 1};
-    var origin = const Point(1.5, -2.5);
+    String label = 'guest';
+    String escapedNote = 'it\'s \$5\n';
+    int retryCount = 42;
+    double factor = 2.5;
+    bool enabled = true;
+    UserRole role = UserRole.guest;
+    List<String> tags = const ['alpha', 'beta'];
+    Map<String, int> metadata = const {'env': 1};
+    Point origin = const Point(1.5, -2.5);
     String? nullableOverride;
     String? omittedDefaultKeepCtor = 'kept_ctor_default';
+    List<double> weights = const [1, 2];
+    double hexDouble = 0x10;
+    double zeroDouble = 0;
+    num countNum = 1;
+    Set<String> emptySet = const {};
+    Map<String, int> emptyMap = const {};
+    List<List<int>> nestedIntRows = const [
+      <int>[],
+      [1],
+    ];
+    List<Map<String, int>> nestedStringIntMaps = const [<String, int>{}];
     var seen = _$DefaultValuesModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -3206,6 +3245,62 @@ final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
             omittedDefaultKeepCtor = keyed.readString();
           }
           break;
+        case _$DefaultValuesModelSchema.keyWeights:
+          weights = keyed.decodeDoubleList();
+          break;
+        case _$DefaultValuesModelSchema.keyHexDouble:
+          hexDouble = keyed.readDouble();
+          break;
+        case _$DefaultValuesModelSchema.keyZeroDouble:
+          zeroDouble = keyed.readDouble();
+          break;
+        case _$DefaultValuesModelSchema.keyCountNum:
+          countNum = keyed.readNum();
+          break;
+        case _$DefaultValuesModelSchema.keyEmptySet:
+          emptySet = keyed.decodeStringList().toSet();
+          break;
+        case _$DefaultValuesModelSchema.keyEmptyMap:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, int>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readInt();
+            }
+            emptyMap = m;
+          }
+          break;
+        case _$DefaultValuesModelSchema.keyNestedIntRows:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <List<int>>[];
+            while (u.moveNext()) {
+              l.add(u.decodeIntList());
+            }
+            nestedIntRows = l;
+          }
+          break;
+        case _$DefaultValuesModelSchema.keyNestedStringIntMaps:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Map<String, int>>[];
+            while (u.moveNext()) {
+              Map<String, int> item;
+              {
+                final k1 = u.nestedDecoder().keyed();
+                final m1 = <String, int>{};
+                while (k1.moveNextKey()) {
+                  final key1 = k1.nextKey();
+                  m1[key1] = k1.readInt();
+                }
+                item = m1;
+              }
+              l.add(item);
+            }
+            nestedStringIntMaps = l;
+          }
+          break;
         default:
           keyed.skipValue();
           break;
@@ -3227,12 +3322,20 @@ final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
       origin: origin,
       nullableOverride: nullableOverride,
       omittedDefaultKeepCtor: omittedDefaultKeepCtor,
+      weights: weights,
+      hexDouble: hexDouble,
+      zeroDouble: zeroDouble,
+      countNum: countNum,
+      emptySet: emptySet,
+      emptyMap: emptyMap,
+      nestedIntRows: nestedIntRows,
+      nestedStringIntMaps: nestedStringIntMaps,
     );
   }
 
   @override
   void encode(DefaultValuesModel instance, Encoder encoder) {
-    var count$ = 9;
+    var count$ = 17;
     final v$NullableOverride = instance.nullableOverride;
     if (v$NullableOverride != null) count$++;
     final v$OmittedDefaultKeepCtor = instance.omittedDefaultKeepCtor;
@@ -3276,6 +3379,63 @@ final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
         v$OmittedDefaultKeepCtor,
       );
     }
+    keyed.encodeDoubleList(
+      _$DefaultValuesModelSchema.nameWeights,
+      instance.weights,
+    );
+    keyed.encodeDouble(
+      _$DefaultValuesModelSchema.nameHexDouble,
+      instance.hexDouble,
+    );
+    keyed.encodeDouble(
+      _$DefaultValuesModelSchema.nameZeroDouble,
+      instance.zeroDouble,
+    );
+    switch (instance.countNum) {
+      case final int v:
+        keyed.encodeInt(_$DefaultValuesModelSchema.nameCountNum, v);
+      case final v:
+        keyed.encodeDouble(
+          _$DefaultValuesModelSchema.nameCountNum,
+          v.toDouble(),
+        );
+    }
+    keyed.encodeStringList(
+      _$DefaultValuesModelSchema.nameEmptySet,
+      instance.emptySet.toList(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$DefaultValuesModelSchema.nameEmptyMap)
+          .keyed(length: instance.emptyMap.length);
+      for (final entry in instance.emptyMap.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
+    keyed.encodeList(
+      _$DefaultValuesModelSchema.nameNestedIntRows,
+      instance.nestedIntRows,
+      Encodable.fromFunction((List<int> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$DefaultValuesModelSchema.nameNestedStringIntMaps,
+      instance.nestedStringIntMaps,
+      Encodable.fromFunction((Map<String, int> item, e) {
+        {
+          final k = e.keyed(length: item.length);
+          for (final entry in item.entries) {
+            k.encodeInt(entry.key, entry.value);
+          }
+        }
+      }),
+    );
   }
 }
 
@@ -3455,10 +3615,10 @@ final class PortableTypedDataModelCodable
     Float64List? float64;
     Int16List? nullableInt16;
     Float32List? nullableFloat32;
-    var nestedInt16s = const <Int16List>[];
-    var sparseInt16s = const <Int16List?>[];
-    var stringKeyedUint16s = const <String, Uint16List>{};
-    var intKeyedInt8s = const <int, Int8List>{};
+    List<Int16List> nestedInt16s = const [];
+    List<Int16List?> sparseInt16s = const [];
+    Map<String, Uint16List> stringKeyedUint16s = const {};
+    Map<int, Int8List> intKeyedInt8s = const {};
     var seen = _$PortableTypedDataModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -3605,12 +3765,12 @@ final class PortableTypedDataModelCodable
             while (mDecoder.moveNextEntry()) {
               final key = mDecoder.keyDecoder().singleValue().readInt();
               {
-                final u1 = mDecoder.valueDecoder().unkeyed();
-                final l1 = <int>[];
-                while (u1.moveNext()) {
-                  l1.add(u1.readInt());
+                final u1Val = mDecoder.valueDecoder().unkeyed();
+                final l1Val = <int>[];
+                while (u1Val.moveNext()) {
+                  l1Val.add(u1Val.readInt());
                 }
-                m[key] = Int8List.fromList(l1);
+                m[key] = Int8List.fromList(l1Val);
               }
             }
             intKeyedInt8s = m;
@@ -3843,8 +4003,8 @@ final class Vm64BitTypedDataModelCodable
     Uint64List? uint64;
     Int64List? nullableInt64;
     Uint64List? nullableUint64;
-    var nestedUint64s = const <Uint64List>[];
-    var namedUint64s = const <String, Uint64List>{};
+    List<Uint64List> nestedUint64s = const [];
+    Map<String, Uint64List> namedUint64s = const {};
     Int64List? tupleInt64;
     Uint64List? tupleUint64;
     var seen = _$Vm64BitTypedDataModelSchema.none;
@@ -4309,6 +4469,8 @@ extension type const _$EnumCollectionsAndAliasesModelSchema(int _value) {
   static const String nameRolesByKey = 'rolesByKey';
   static const String nameRolesById = 'rolesById';
   static const String nameCountsByRole = 'countsByRole';
+  static const String nameRoleTransitions = 'roleTransitions';
+  static const String nameNullableRoleTransitions = 'nullableRoleTransitions';
   static const String nameSlug = 'slug';
   static const String aliasSlugFooBar = 'foo-bar';
   static const String aliasSlugFooBar$2 = 'foo_bar';
@@ -4320,9 +4482,11 @@ extension type const _$EnumCollectionsAndAliasesModelSchema(int _value) {
   static const int keyRolesByKey = 3;
   static const int keyRolesById = 4;
   static const int keyCountsByRole = 5;
-  static const int keySlug = 6;
-  static const int aliasKeySlugFooBar = 7;
-  static const int aliasKeySlugFooBar$2 = 8;
+  static const int keyRoleTransitions = 6;
+  static const int keyNullableRoleTransitions = 7;
+  static const int keySlug = 8;
+  static const int aliasKeySlugFooBar = 9;
+  static const int aliasKeySlugFooBar$2 = 10;
 
   // KeyOptions Table
   static final KeyOptions options = KeyOptions.of(const [
@@ -4332,6 +4496,8 @@ extension type const _$EnumCollectionsAndAliasesModelSchema(int _value) {
     _$EnumCollectionsAndAliasesModelSchema.nameRolesByKey,
     _$EnumCollectionsAndAliasesModelSchema.nameRolesById,
     _$EnumCollectionsAndAliasesModelSchema.nameCountsByRole,
+    _$EnumCollectionsAndAliasesModelSchema.nameRoleTransitions,
+    _$EnumCollectionsAndAliasesModelSchema.nameNullableRoleTransitions,
     _$EnumCollectionsAndAliasesModelSchema.nameSlug,
     _$EnumCollectionsAndAliasesModelSchema.aliasSlugFooBar,
     _$EnumCollectionsAndAliasesModelSchema.aliasSlugFooBar$2,
@@ -4372,13 +4538,15 @@ final class EnumCollectionsAndAliasesModelCodable
       options: _$EnumCollectionsAndAliasesModelSchema.keyOptions,
     );
 
-    var roles = const <UserRole>[];
-    var nullableRoles = const <UserRole?>[];
-    var roleSet = const <UserRole>{};
-    var rolesByKey = const <String, UserRole>{};
-    var rolesById = const <int, UserRole>{};
-    var countsByRole = const <UserRole, int>{};
-    var slug = '';
+    List<UserRole> roles = const [];
+    List<UserRole?> nullableRoles = const [];
+    Set<UserRole> roleSet = const {};
+    Map<String, UserRole> rolesByKey = const {};
+    Map<int, UserRole> rolesById = const {};
+    Map<UserRole, int> countsByRole = const {};
+    Map<UserRole, UserRole> roleTransitions = const {};
+    Map<UserRole, UserRole?> nullableRoleTransitions = const {};
+    String slug = '';
     var seen = _$EnumCollectionsAndAliasesModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -4466,20 +4634,20 @@ final class EnumCollectionsAndAliasesModelCodable
             final m = <int, UserRole>{};
             while (mDecoder.moveNextEntry()) {
               final key = mDecoder.keyDecoder().singleValue().readInt();
-              final rawEnum1 = mDecoder
+              final rawEnum1Val = mDecoder
                   .valueDecoder()
                   .singleValue()
                   .readString();
-              final enumIdx1 = _$EnumCollectionsAndAliasesModelSchema
+              final enumIdx1Val = _$EnumCollectionsAndAliasesModelSchema
                   .enumUserRoleKeyOptions
-                  .indexOf(rawEnum1);
-              if (enumIdx1 < 0) {
+                  .indexOf(rawEnum1Val);
+              if (enumIdx1Val < 0) {
                 throw CodableException(
-                  'Unknown UserRole value: "$rawEnum1"',
-                  actualValue: rawEnum1,
+                  'Unknown UserRole value: "$rawEnum1Val"',
+                  actualValue: rawEnum1Val,
                 );
               }
-              m[key] = UserRole.values[enumIdx1];
+              m[key] = UserRole.values[enumIdx1Val];
             }
             rolesById = m;
           }
@@ -4489,20 +4657,101 @@ final class EnumCollectionsAndAliasesModelCodable
             final mDecoder = keyed.nestedDecoder().map();
             final m = <UserRole, int>{};
             while (mDecoder.moveNextEntry()) {
-              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
-              final enumIdx1 = _$EnumCollectionsAndAliasesModelSchema
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$EnumCollectionsAndAliasesModelSchema
                   .enumUserRoleKeyOptions
-                  .indexOf(rawEnum1);
-              if (enumIdx1 < 0) {
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
                 throw CodableException(
-                  'Unknown UserRole value: "$rawEnum1"',
-                  actualValue: rawEnum1,
+                  'Unknown UserRole value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
                 );
               }
-              final key = UserRole.values[enumIdx1];
+              final key = UserRole.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             countsByRole = m;
+          }
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyRoleTransitions:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <UserRole, UserRole>{};
+            while (mDecoder.moveNextEntry()) {
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
+                );
+              }
+              final key = UserRole.values[enumIdx1Key];
+              final rawEnum1Val = mDecoder
+                  .valueDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Val = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1Val);
+              if (enumIdx1Val < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1Val"',
+                  actualValue: rawEnum1Val,
+                );
+              }
+              m[key] = UserRole.values[enumIdx1Val];
+            }
+            roleTransitions = m;
+          }
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyNullableRoleTransitions:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <UserRole, UserRole?>{};
+            while (mDecoder.moveNextEntry()) {
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
+                );
+              }
+              final key = UserRole.values[enumIdx1Key];
+              final rawEnum1Val = mDecoder
+                  .valueDecoder()
+                  .singleValue()
+                  .readNullableString();
+              if (rawEnum1Val == null) {
+                m[key] = null;
+              } else {
+                final enumIdx1Val = _$EnumCollectionsAndAliasesModelSchema
+                    .enumUserRoleKeyOptions
+                    .indexOf(rawEnum1Val);
+                if (enumIdx1Val < 0) {
+                  throw CodableException(
+                    'Unknown UserRole value: "$rawEnum1Val"',
+                    actualValue: rawEnum1Val,
+                  );
+                }
+                m[key] = UserRole.values[enumIdx1Val];
+              }
+            }
+            nullableRoleTransitions = m;
           }
           break;
         case _$EnumCollectionsAndAliasesModelSchema.keySlug:
@@ -4526,13 +4775,15 @@ final class EnumCollectionsAndAliasesModelCodable
       rolesByKey: rolesByKey,
       rolesById: rolesById,
       countsByRole: countsByRole,
+      roleTransitions: roleTransitions,
+      nullableRoleTransitions: nullableRoleTransitions,
       slug: slug,
     );
   }
 
   @override
   void encode(EnumCollectionsAndAliasesModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 7);
+    final keyed = encoder.keyed(length: 9);
     keyed.encodeList(
       _$EnumCollectionsAndAliasesModelSchema.nameRoles,
       instance.roles,
@@ -4580,6 +4831,28 @@ final class EnumCollectionsAndAliasesModelCodable
       for (final entry in instance.countsByRole.entries) {
         m.keyEncoder().singleValue().encodeString(entry.key.name);
         m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(
+            _$EnumCollectionsAndAliasesModelSchema.nameRoleTransitions,
+          )
+          .map(length: instance.roleTransitions.length);
+      for (final entry in instance.roleTransitions.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeString(entry.value.name);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(
+            _$EnumCollectionsAndAliasesModelSchema.nameNullableRoleTransitions,
+          )
+          .map(length: instance.nullableRoleTransitions.length);
+      for (final entry in instance.nullableRoleTransitions.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeNullableString(entry.value?.name);
       }
     }
     keyed.encodeString(

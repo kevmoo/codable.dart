@@ -8,6 +8,8 @@ part of 'citm_catalog.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CitmCatalog
 // =============================================================================
@@ -76,17 +78,17 @@ final class CitmCatalogCodable implements Codable<CitmCatalog> {
   CitmCatalog decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$CitmCatalogSchema.keyOptions);
 
-    var areaNames = const <String, String>{};
-    var audienceSubCategoryNames = const <String, String>{};
-    var blockNames = const <String, String>{};
-    var events = const <String, CitmEvent>{};
-    var performances = const <CitmPerformance>[];
-    var seatCategoryNames = const <String, String>{};
-    var subTopicNames = const <String, String>{};
-    var subjectNames = const <String, String>{};
-    var topicNames = const <String, String>{};
-    var topicSynced = const <String, bool>{};
-    var venueNames = const <String, String>{};
+    Map<String, String> areaNames = const {};
+    Map<String, String> audienceSubCategoryNames = const {};
+    Map<String, String> blockNames = const {};
+    Map<String, CitmEvent> events = const {};
+    List<CitmPerformance> performances = const [];
+    Map<String, String> seatCategoryNames = const {};
+    Map<String, String> subTopicNames = const {};
+    Map<String, String> subjectNames = const {};
+    Map<String, String> topicNames = const {};
+    Map<String, bool> topicSynced = const {};
+    Map<String, String> venueNames = const {};
     var seen = _$CitmCatalogSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -412,10 +414,10 @@ final class CitmEventCodable implements Codable<CitmEvent> {
     int? id;
     String? logo;
     String? name;
-    var subTopicIds = const <int>[];
+    List<int> subTopicIds = const [];
     int? subjectCode;
     String? subtitle;
-    var topicIds = const <int>[];
+    List<int> topicIds = const [];
     var seen = _$CitmEventSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -633,8 +635,8 @@ final class CitmPerformanceCodable implements Codable<CitmPerformance> {
     int? id;
     String? logo;
     String? name;
-    var prices = const <CitmPrice>[];
-    var seatCategories = const <CitmSeatCategory>[];
+    List<CitmPrice> prices = const [];
+    List<CitmSeatCategory> seatCategories = const [];
     int? start;
     String? venueCode;
     var seen = _$CitmPerformanceSchema.none;
@@ -954,7 +956,7 @@ final class CitmSeatCategoryCodable implements Codable<CitmSeatCategory> {
   CitmSeatCategory decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$CitmSeatCategorySchema.keyOptions);
 
-    var areas = const <CitmArea>[];
+    List<CitmArea> areas = const [];
     int? seatCategoryId;
     var seen = _$CitmSeatCategorySchema.none;
 
@@ -1060,7 +1062,7 @@ final class CitmAreaCodable implements Codable<CitmArea> {
     final keyed = decoder.keyed(options: _$CitmAreaSchema.keyOptions);
 
     int? areaId;
-    var blockIds = const <int>[];
+    List<int> blockIds = const [];
     var seen = _$CitmAreaSchema.none;
 
     while (keyed.moveNextKey()) {

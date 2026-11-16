@@ -8,6 +8,8 @@ part of 'canada.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CanadaProperties
 // =============================================================================
@@ -46,7 +48,7 @@ final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
   CanadaProperties decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$CanadaPropertiesSchema.keyOptions);
 
-    var name = '';
+    String name = '';
     var seen = _$CanadaPropertiesSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -135,7 +137,7 @@ final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
     final keyed = decoder.keyed(options: _$CanadaGeometrySchema.keyOptions);
 
     String? type;
-    var coordinates = const <List<List<double>>>[];
+    List<List<List<double>>> coordinates = const [];
     var seen = _$CanadaGeometrySchema.none;
 
     while (keyed.moveNextKey()) {
@@ -388,7 +390,7 @@ final class CanadaFeatureCollectionCodable
     );
 
     String? type;
-    var features = const <CanadaFeature>[];
+    List<CanadaFeature> features = const [];
     var seen = _$CanadaFeatureCollectionSchema.none;
 
     while (keyed.moveNextKey()) {
