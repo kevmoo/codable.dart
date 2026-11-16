@@ -172,12 +172,13 @@ Float64List _extractFloat64List(JSAny? val) {
       for (var i = 0; i < len; i++) {
         final elem = arr.getProperty<JSAny?>(i.toJS);
         if (elem == null || !elem.isA<JSNumber>()) {
-          throw CodableException('Expected double in Float64List, found $elem');
+          _throwJsMismatch('Expected double in Float64List, found $elem', elem);
         }
         final d = (elem as JSNumber).toDartDouble;
         if (d.isNaN) {
           throw const CodableException(
             'Expected double in Float64List, found NaN',
+            actualValue: double.nan,
           );
         }
         out[i] = d;
@@ -185,7 +186,7 @@ Float64List _extractFloat64List(JSAny? val) {
       return out;
     }
   }
-  throw CodableException('Expected Float64List, found $val');
+  _throwJsMismatch('Expected Float64List, found $val', val);
 }
 
 ValueKind _jsToValueKind(JSAny? val) {
@@ -196,7 +197,7 @@ ValueKind _jsToValueKind(JSAny? val) {
   if (val.isA<JSUint8Array>()) return ValueKind.bytes;
   if (val.isA<JSArray>()) return ValueKind.list;
   if (val.isA<JSObject>()) return ValueKind.map;
-  throw CodableException('Unexpected JS value kind: $val');
+  _throwJsMismatch('Unexpected JS value kind: $val', val);
 }
 
 Uint8List _extractBytes(JSAny? val) {
@@ -211,7 +212,7 @@ Uint8List _extractBytes(JSAny? val) {
       return _extractByteArray(val as JSArray);
     }
   }
-  throw CodableException('Expected base64 string or byte list, found $val');
+  _throwJsMismatch('Expected base64 string or byte list, found $val', val);
 }
 
 Uint8List _extractByteArray(JSArray arr) {
@@ -221,7 +222,7 @@ Uint8List _extractByteArray(JSArray arr) {
     final e = arr.getProperty<JSAny?>(i.toJS);
     final asInt = _tryJsInt(e);
     if (asInt == null || asInt < 0 || asInt > 255) {
-      throw CodableException('Expected byte 0..255 in list, found $e');
+      _throwJsMismatch('Expected byte 0..255 in list, found $e', e);
     }
     out[i] = asInt;
   }
@@ -254,6 +255,8 @@ Object? _jsToDart(JSAny? value) {
   if (value.isA<JSString>()) return (value as JSString).toDart;
   if (value.isA<JSNumber>()) return _jsNumberToNum(value as JSNumber);
   if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
+  if (value.isA<JSUint8Array>()) return (value as JSUint8Array).toDart;
+  if (value.isA<JSFloat64Array>()) return (value as JSFloat64Array).toDart;
   if (value.isA<JSArray>()) {
     final arr = value as JSArray;
     final list = <Object?>[];
@@ -272,6 +275,36 @@ Object? _jsToDart(JSAny? value) {
     return map;
   }
   return null;
+}
+
+Never _throwJsMismatch(String message, JSAny? val) =>
+    throw CodableException(message, actualValue: _jsToDart(val));
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSObject _requireJsObjectValue(JSAny? target, String containerName) {
+  if (target == null ||
+      !target.isA<JSObject>() ||
+      target.isA<JSArray>() ||
+      target.isA<JSUint8Array>()) {
+    _throwJsMismatch(
+      'Expected object for $containerName(), found $target',
+      target,
+    );
+  }
+  return target as JSObject;
+}
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSArray _requireJsArrayValue(JSAny? target, String containerName) {
+  if (target == null || !target.isA<JSArray>()) {
+    _throwJsMismatch(
+      'Expected array for $containerName(), found $target',
+      target,
+    );
+  }
+  return target as JSArray;
 }
 
 List<T> _decodeJsModelList<T>(
@@ -295,7 +328,7 @@ List<T> _decodeJsModelList<T>(
     }
     return result;
   }
-  throw CodableException('Expected List, found $val');
+  _throwJsMismatch('Expected List, found $val', val);
 }
 
 List<int> _extractIntList(JSAny? val) {
@@ -308,12 +341,12 @@ List<int> _extractIntList(JSAny? val) {
       if (asInt != null) {
         result.add(asInt);
       } else {
-        throw CodableException('Expected int in list, found $e');
+        _throwJsMismatch('Expected int in list, found $e', e);
       }
     }
     return result;
   }
-  throw CodableException('Expected List, found $val');
+  _throwJsMismatch('Expected List, found $val', val);
 }
 
 List<double> _extractDoubleList(JSAny? val) {
@@ -325,12 +358,12 @@ List<double> _extractDoubleList(JSAny? val) {
       if (e != null && e.isA<JSNumber>()) {
         result.add((e as JSNumber).toDartDouble);
       } else {
-        throw CodableException('Expected double in list, found $e');
+        _throwJsMismatch('Expected double in list, found $e', e);
       }
     }
     return result;
   }
-  throw CodableException('Expected List, found $val');
+  _throwJsMismatch('Expected List, found $val', val);
 }
 
 List<String> _extractStringList(JSAny? val) {
@@ -342,12 +375,12 @@ List<String> _extractStringList(JSAny? val) {
       if (e != null && e.isA<JSString>()) {
         result.add((e as JSString).toDart);
       } else {
-        throw CodableException('Expected String in list, found $e');
+        _throwJsMismatch('Expected String in list, found $e', e);
       }
     }
     return result;
   }
-  throw CodableException('Expected List, found $val');
+  _throwJsMismatch('Expected List, found $val', val);
 }
 
 List<bool> _extractBoolList(JSAny? val) {
@@ -359,12 +392,12 @@ List<bool> _extractBoolList(JSAny? val) {
       if (e != null && e.isA<JSBoolean>()) {
         result.add((e as JSBoolean).toDart);
       } else {
-        throw CodableException('Expected bool in list, found $e');
+        _throwJsMismatch('Expected bool in list, found $e', e);
       }
     }
     return result;
   }
-  throw CodableException('Expected List, found $val');
+  _throwJsMismatch('Expected List, found $val', val);
 }
 
 /// Concrete high-performance JS object-tree JSON decoder connecting
@@ -465,18 +498,8 @@ final class JsonCodableDecoder implements Decoder {
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  JSObject _requireJsObject(String containerName) {
-    final target = _activeValue ?? _decoded;
-    if (target == null ||
-        !target.isA<JSObject>() ||
-        target.isA<JSArray>() ||
-        target.isA<JSUint8Array>()) {
-      throw CodableException(
-        'Expected object for $containerName(), found $target',
-      );
-    }
-    return target as JSObject;
-  }
+  JSObject _requireJsObject(String containerName) =>
+      _requireJsObjectValue(_activeValue ?? _decoded, containerName);
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -523,11 +546,10 @@ final class JsonCodableDecoder implements Decoder {
     if (_reader != null) {
       return StreamingUnkeyedDecoder(_reader, this);
     }
-    final target = _activeValue ?? _decoded;
-    if (target == null || !target.isA<JSArray>()) {
-      throw CodableException('Expected array for unkeyed(), found $target');
-    }
-    return _JsonCodableUnkeyedDecoder(this, target as JSArray);
+    return _JsonCodableUnkeyedDecoder(
+      this,
+      _requireJsArrayValue(_activeValue ?? _decoded, 'unkeyed'),
+    );
   }
 
   @override
@@ -588,7 +610,7 @@ mixin _JsSequentialDecoderMixin {
   void readNull() {
     final v = _peekJsValue();
     if (v != null) {
-      throw CodableException('Expected null, found $v');
+      _throwJsMismatch('Expected null, found $v', v);
     }
     _commitJsValue();
   }
@@ -608,7 +630,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return asInt;
     }
-    throw CodableException('Expected int, found $val');
+    _throwJsMismatch('Expected int, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -624,7 +646,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return asInt;
     }
-    throw CodableException('Expected int?, found $val');
+    _throwJsMismatch('Expected int?, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -635,7 +657,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSNumber).toDartDouble;
     }
-    throw CodableException('Expected double, found $val');
+    _throwJsMismatch('Expected double, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -650,7 +672,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSNumber).toDartDouble;
     }
-    throw CodableException('Expected double?, found $val');
+    _throwJsMismatch('Expected double?, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -661,7 +683,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return _jsNumberToNum(val as JSNumber);
     }
-    throw CodableException('Expected num, found $val');
+    _throwJsMismatch('Expected num, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -676,7 +698,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return _jsNumberToNum(val as JSNumber);
     }
-    throw CodableException('Expected num?, found $val');
+    _throwJsMismatch('Expected num?, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -687,7 +709,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSString).toDart;
     }
-    throw CodableException('Expected String, found $val');
+    _throwJsMismatch('Expected String, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -702,7 +724,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSString).toDart;
     }
-    throw CodableException('Expected String?, found $val');
+    _throwJsMismatch('Expected String?, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -713,7 +735,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSBoolean).toDart;
     }
-    throw CodableException('Expected bool, found $val');
+    _throwJsMismatch('Expected bool, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -728,7 +750,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSBoolean).toDart;
     }
-    throw CodableException('Expected bool?, found $val');
+    _throwJsMismatch('Expected bool?, found $val', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -925,7 +947,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     final asInt = _tryJsInt(v);
     if (asInt != null) return asInt;
-    throw CodableException('Expected int for $key, found $v');
+    _throwJsMismatch('Expected int for $key, found $v', v);
   }
 
   @override
@@ -934,14 +956,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     if (v == null) return null;
     final asInt = _tryJsInt(v);
     if (asInt != null) return asInt;
-    throw CodableException('Expected int for $key, found $v');
+    _throwJsMismatch('Expected int for $key, found $v', v);
   }
 
   @override
   double readDouble(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
-    throw CodableException('Expected double for $key, found $v');
+    _throwJsMismatch('Expected double for $key, found $v', v);
   }
 
   @override
@@ -949,14 +971,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
-    throw CodableException('Expected double for $key, found $v');
+    _throwJsMismatch('Expected double for $key, found $v', v);
   }
 
   @override
   num readNum(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
-    throw CodableException('Expected num for $key, found $v');
+    _throwJsMismatch('Expected num for $key, found $v', v);
   }
 
   @override
@@ -964,14 +986,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
-    throw CodableException('Expected num for $key, found $v');
+    _throwJsMismatch('Expected num for $key, found $v', v);
   }
 
   @override
   String readString(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
-    throw CodableException('Expected String for $key, found $v');
+    _throwJsMismatch('Expected String for $key, found $v', v);
   }
 
   @override
@@ -979,14 +1001,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSString>()) return (v as JSString).toDart;
-    throw CodableException('Expected String for $key, found $v');
+    _throwJsMismatch('Expected String for $key, found $v', v);
   }
 
   @override
   bool readBool(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
-    throw CodableException('Expected bool for $key, found $v');
+    _throwJsMismatch('Expected bool for $key, found $v', v);
   }
 
   @override
@@ -994,7 +1016,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
-    throw CodableException('Expected bool for $key, found $v');
+    _throwJsMismatch('Expected bool for $key, found $v', v);
   }
 
   @override
@@ -1124,28 +1146,29 @@ final class _JsonCodableJsMapValueDecoder
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  KeyedDecoder keyed({KeyOptions? options}) =>
-      _JsonCodableMappedKeyedDecoder(_rootDecoder, _val as JSObject, options);
+  KeyedDecoder keyed({KeyOptions? options}) => _JsonCodableMappedKeyedDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'keyed'),
+    options,
+  );
 
   @override
-  MappedDecoder mapped() =>
-      _JsonCodableMappedDecoder(_rootDecoder, _val as JSObject);
+  MappedDecoder mapped() => _JsonCodableMappedDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'mapped'),
+  );
 
   @override
-  MapDecoder map() {
-    final target = _val;
-    if (target == null ||
-        !target.isA<JSObject>() ||
-        target.isA<JSArray>() ||
-        target.isA<JSUint8Array>()) {
-      throw CodableException('Expected object for map(), found $target');
-    }
-    return _JsonCodableJsMapDecoder(_rootDecoder, target as JSObject);
-  }
+  MapDecoder map() => _JsonCodableJsMapDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'map'),
+  );
 
   @override
-  UnkeyedDecoder unkeyed() =>
-      _JsonCodableUnkeyedDecoder(_rootDecoder, _val as JSArray);
+  UnkeyedDecoder unkeyed() => _JsonCodableUnkeyedDecoder(
+    _rootDecoder,
+    _requireJsArrayValue(_val, 'unkeyed'),
+  );
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {

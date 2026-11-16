@@ -58,6 +58,7 @@ void main() {
   _registerEmptyMarkerAndEmptyKeyOptionsTests();
   _registerByteListFloatRejectionTests();
   _registerStringMapKeyHelperTests();
+  _registerExceptionActualValueTests();
 }
 
 void _registerNestedListBugfixTests() {
@@ -741,4 +742,157 @@ final class _StrictKeyedSingleEntryDecoder
 
   @override
   Decoder nestedDecoder() => _child;
+}
+
+void _registerExceptionActualValueTests() {
+  group('CodableException.actualValue diagnostics', () {
+    test(
+      'preserves unescaped actualValue on factories and StringMapKeyDecoder',
+      () {
+        final mismatch = CodableException.typeMismatch(
+          expectedType: int,
+          actualValue: '42"quoted"',
+          path: const ['count'],
+        );
+        check(mismatch.actualValue).equals('42"quoted"');
+        check(mismatch.formattedPath).equals('count');
+
+        final unknown = CodableException.unknownSubtype(
+          discriminatorKey: 'kind',
+          subtypeValue: 'unknown "quoted" kind',
+        );
+        check(unknown.actualValue).equals('unknown "quoted" kind');
+        check(unknown.path).deepEquals(const <Object>['kind']);
+
+        final keyDec = StringMapKeyDecoder(
+          const {},
+          key: 'bad "int" key',
+          formatName: 'JSON',
+        );
+        check(keyDec.readInt)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        check(keyDec.readDouble)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        check(keyDec.readBool)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        check(keyDec.readBytes)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        check(keyDec.readNull)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        for (final openContainer in <Object Function()>[
+          keyDec.keyed,
+          keyDec.mapped,
+          keyDec.map,
+          keyDec.unkeyed,
+        ]) {
+          check(openContainer)
+              .throws<CodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals('bad "int" key');
+        }
+
+        final keyEnc = _CustomStringMapKeyEncoder(formatName: 'JSON');
+        check(() => keyEnc.encodeDouble(double.infinity))
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(double.infinity);
+      },
+    );
+
+    test(
+      'captures actualValue on JSON base64, byte-range, and mapped mismatches',
+      () {
+        check(
+              () =>
+                  JsonCodableDecoder.fromString(r'{"b": "not==\"base64\""}')
+                      .mapped()
+                      .readBytes('b'),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('not=="base64"');
+
+        check(
+              () => JsonCodableDecoder.fromString('{"b": [1, 256]}').keyed()
+                ..moveNextKey()
+                ..nextKey()
+                ..readBytes(),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+
+        check(
+              () => JsonCodableDecoder.fromString('{"b": [1, 1.5]}').keyed()
+                ..moveNextKey()
+                ..nextKey()
+                ..readBytes(),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(1.5);
+
+        check(
+              () => JsonCodableDecoder.fromString('{"b": 42}').keyed()
+                ..moveNextKey()
+                ..nextKey()
+                ..readBytes(),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
+
+        check(() => JsonCodableDecoder.fromString('42').map().moveNextEntry())
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
+
+        check(() {
+              final m = JsonCodableDecoder.fromString('{"k": 42}').map();
+              m.moveNextEntry();
+              m.valueDecoder().map().moveNextEntry();
+            })
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
+
+        if (identical(1, 1.0)) {
+          for (final openOnVal in <void Function(Decoder)>[
+            (d) => d.keyed(),
+            (d) => d.mapped(),
+            (d) => d.unkeyed(),
+          ]) {
+            check(() {
+                  final m = JsonCodableDecoder.fromString('{"k": 42}').map();
+                  m.moveNextEntry();
+                  openOnVal(m.valueDecoder());
+                })
+                .throws<CodableException>()
+                .has((e) => e.actualValue, 'actualValue')
+                .equals(42);
+          }
+        }
+
+        check(
+              () =>
+                  JsonCodableDecoder.fromString(r'{"port": "8080 \"oops\""}')
+                      .mapped()
+                      .readInt('port'),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('8080 "oops"');
+      },
+    );
+  });
 }

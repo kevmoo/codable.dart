@@ -9,6 +9,8 @@ import 'package:codable/codable.dart';
 
 import 'cbor_reader.dart';
 
+const int _cborJsMaxSafeInt = cborJsMaxSafeHi * cborTwoPow32 + 0xffffffff;
+
 final class _CborWriter {
   Uint8List _buf;
   late ByteData _bd = ByteData.sublistView(_buf);
@@ -30,7 +32,10 @@ final class _CborWriter {
 
   void writeHeader(int majorType, int arg) {
     if (arg < 0) {
-      throw CodableException('Invalid negative CBOR argument: $arg');
+      throw CodableException(
+        'Invalid negative CBOR argument: $arg',
+        actualValue: arg,
+      );
     }
     final mtBits = majorType << 5;
     if (arg < 24) {
@@ -64,8 +69,9 @@ final class _CborWriter {
   void _writeUint64Header(int mtBits, int arg) {
     final hi = arg ~/ cborTwoPow32;
     if (identical(1.0, 1) && hi > cborJsMaxSafeHi) {
-      throw const CodableException(
+      throw CodableException(
         'CBOR integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: arg,
       );
     }
     _ensureCapacity(9);
@@ -119,6 +125,13 @@ final class _CborWriter {
   }
 
   void writeInt(int value) {
+    if (identical(1.0, 1) &&
+        (value < -_cborJsMaxSafeInt || value > _cborJsMaxSafeInt)) {
+      throw CodableException(
+        'CBOR integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: value,
+      );
+    }
     if (value >= 0) {
       writeHeader(0, value);
     } else {

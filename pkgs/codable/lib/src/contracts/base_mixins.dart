@@ -21,6 +21,7 @@ Uint8List _decodeBase64String(String encoded) {
   } on FormatException catch (e) {
     throw CodableException(
       'Invalid base64 string for bytes: ${e.message}',
+      actualValue: encoded,
       underlyingError: e,
     );
   }
@@ -29,7 +30,10 @@ Uint8List _decodeBase64String(String encoded) {
 int _readByteElement(UnkeyedDecoder u) {
   final b = u.readInt();
   if (b < 0 || b > 255) {
-    throw CodableException('Expected byte in range 0..255, got $b');
+    throw CodableException(
+      'Expected byte in range 0..255, got $b',
+      actualValue: b,
+    );
   }
   return b;
 }
@@ -782,21 +786,25 @@ final class StringMapKeyDecoder
   @override
   KeyedDecoder keyed({KeyOptions? options}) => throw CodableException(
     '$formatName map keys are scalar strings, not keyed objects',
+    actualValue: key,
   );
 
   @override
   MappedDecoder mapped() => throw CodableException(
     '$formatName map keys are scalar strings, not mapped objects',
+    actualValue: key,
   );
 
   @override
   MapDecoder map() => throw CodableException(
     '$formatName map keys are scalar strings, not maps',
+    actualValue: key,
   );
 
   @override
   UnkeyedDecoder unkeyed() => throw CodableException(
     '$formatName map keys are scalar strings, not arrays',
+    actualValue: key,
   );
 
   @override
@@ -807,8 +815,10 @@ final class StringMapKeyDecoder
   bool isNull() => false;
 
   @override
-  void readNull() =>
-      throw CodableException('Expected null $formatName map key, found "$key"');
+  void readNull() => throw CodableException(
+    'Expected null $formatName map key, found "$key"',
+    actualValue: key,
+  );
 
   @override
   @pragma('vm:prefer-inline')
@@ -819,7 +829,10 @@ final class StringMapKeyDecoder
       final parsed = int.tryParse(key, radix: 10);
       if (parsed != null && _isValidJsSafeInt(parsed)) return parsed;
     }
-    throw CodableException('Expected int $formatName map key, found "$key"');
+    throw CodableException(
+      'Expected int $formatName map key, found "$key"',
+      actualValue: key,
+    );
   }
 
   @override
@@ -833,6 +846,7 @@ final class StringMapKeyDecoder
     }
     throw CodableException(
       'Expected finite double $formatName map key, found "$key"',
+      actualValue: key,
     );
   }
 
@@ -858,12 +872,17 @@ final class StringMapKeyDecoder
   bool readBool() {
     if (key == 'true') return true;
     if (key == 'false') return false;
-    throw CodableException('Expected bool $formatName map key, found "$key"');
+    throw CodableException(
+      'Expected bool $formatName map key, found "$key"',
+      actualValue: key,
+    );
   }
 
   @override
-  Uint8List readBytes() =>
-      throw CodableException('$formatName map keys cannot be binary bytes');
+  Uint8List readBytes() => throw CodableException(
+    '$formatName map keys cannot be binary bytes',
+    actualValue: key,
+  );
 
   /// Matches [key] against [options] for enum map keys.
   @pragma('vm:prefer-inline')
@@ -927,6 +946,7 @@ mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
     if (!_isValidJsSafeInt(value)) {
       throw CodableException(
         '$formatName integer map key exceeds 53-bit safe range: $value',
+        actualValue: value,
       );
     }
     writeKeyString(value.toString());
@@ -946,6 +966,7 @@ mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
     if (!value.isFinite) {
       throw CodableException(
         '$formatName map keys must be finite numbers, got $value',
+        actualValue: value,
       );
     }
     writeKeyString(_formatCanonicalFiniteDouble(value));
@@ -982,12 +1003,16 @@ mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
   }
 
   @override
-  void encodeBytes(Uint8List value) =>
-      throw CodableException('$formatName map keys cannot be binary bytes');
+  void encodeBytes(Uint8List value) => throw CodableException(
+    '$formatName map keys cannot be binary bytes',
+    actualValue: value,
+  );
 
   @override
-  void encodeNullableBytes(Uint8List? value) =>
-      throw CodableException('$formatName map keys cannot be binary bytes');
+  void encodeNullableBytes(Uint8List? value) => throw CodableException(
+    '$formatName map keys cannot be binary bytes',
+    actualValue: value,
+  );
 
   @override
   void encodeNull() => _throwNullKey();

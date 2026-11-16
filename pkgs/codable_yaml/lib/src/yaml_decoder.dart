@@ -161,6 +161,7 @@ final class YamlCodableDecoder implements Decoder {
         e.message,
         decoder._trace.node.span,
         path: _mergePaths(decoder._trace.path, e.path),
+        actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
         source: yaml,
       );
@@ -380,6 +381,9 @@ final class _YamlKeyedDecoder
   void skipValue() {
     if (_phase != 0 || moveNextKey()) _phase = 0;
   }
+
+  @override
+  Uint8List readBytes() => nestedDecoder().singleValue().readBytes();
 }
 
 final class _YamlMappedDecoder
@@ -564,6 +568,9 @@ final class _YamlUnkeyedDecoder
   void skipElement() {
     _takeNode();
   }
+
+  @override
+  Uint8List readBytes() => nestedDecoder().singleValue().readBytes();
 }
 
 final class _YamlSingleValueDecoder
@@ -597,4 +604,17 @@ final class _YamlSingleValueDecoder
 
   @override
   void _consumeCurrent() {}
+
+  @override
+  Uint8List readBytes() {
+    final node = _peekNode();
+    final kind = _yamlNodeKind(node);
+    if (kind != ValueKind.string && kind != ValueKind.list) {
+      throw CodableException(
+        'Expected base64 string or byte list, got $kind',
+        actualValue: node is YamlScalar ? node.value : null,
+      );
+    }
+    return super.readBytes();
+  }
 }

@@ -403,25 +403,29 @@ void _registerKeyAndStringEscapingTests() {
     test('rejects unpaired UTF-16 surrogates in strings and keys', () {
       final loneSurrogate = String.fromCharCode(0xd800);
       check(
+        () => TomlCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, encoder) {
+            encoder.keyed().encodeString('bad', loneSurrogate);
+          }),
+        ),
+      ).throws<TomlCodableException>().which(
+        (it) => it
+          ..has((e) => e.path, 'path').deepEquals(['bad'])
+          ..has((e) => e.actualValue, 'actualValue').equals(loneSurrogate),
+      );
+
+      check(
             () => TomlCodableEncoder.encode<void>(
               null,
               Encodable.fromFunction((_, encoder) {
-                encoder.keyed().encodeString('bad', loneSurrogate);
+                encoder.keyed().encodeInt(loneSurrogate, 1);
               }),
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
-          .deepEquals(['bad']);
-
-      check(
-        () => TomlCodableEncoder.encode<void>(
-          null,
-          Encodable.fromFunction((_, encoder) {
-            encoder.keyed().encodeInt(loneSurrogate, 1);
-          }),
-        ),
-      ).throws<TomlCodableException>();
+          .has((e) => e.actualValue, 'actualValue')
+          .equals(loneSurrogate);
     });
   });
 }
@@ -550,16 +554,17 @@ void _registerNumericAndJsFloatTests() {
       if (identical(1, 1.0)) {
         const unsafeJs = 0x200000 * 0x100000000;
         check(
-              () => TomlCodableEncoder.encode<void>(
-                null,
-                Encodable.fromFunction((_, encoder) {
-                  encoder.keyed().encodeInt('unsafe', unsafeJs);
-                }),
-              ),
-            )
-            .throws<TomlCodableException>()
-            .has((e) => e.path, 'path')
-            .deepEquals(['unsafe']);
+          () => TomlCodableEncoder.encode<void>(
+            null,
+            Encodable.fromFunction((_, encoder) {
+              encoder.keyed().encodeInt('unsafe', unsafeJs);
+            }),
+          ),
+        ).throws<TomlCodableException>().which(
+          (it) => it
+            ..has((e) => e.path, 'path').deepEquals(['unsafe'])
+            ..has((e) => e.actualValue, 'actualValue').equals(unsafeJs),
+        );
       } else {
         const maxInt64 = 0x7fffffff * 0x100000000 + 0xffffffff;
         const minInt64 = -maxInt64 - 1;
@@ -806,17 +811,20 @@ void _registerBoundaryExceptionTests() {
 
       // Duplicate stringified keys in MapEncoder (`1` and `'1'`)
       check(
-        () => TomlCodableEncoder.encode<void>(
-          null,
-          Encodable.fromFunction((_, e) {
-            final m = e.map(length: 2);
-            m.keyEncoder().singleValue().encodeInt(1);
-            m.valueEncoder().singleValue().encodeString('int');
-            m.keyEncoder().singleValue().encodeString('1');
-            m.valueEncoder().singleValue().encodeString('str');
-          }),
-        ),
-      ).throws<TomlCodableException>();
+            () => TomlCodableEncoder.encode<void>(
+              null,
+              Encodable.fromFunction((_, e) {
+                final m = e.map(length: 2);
+                m.keyEncoder().singleValue().encodeInt(1);
+                m.valueEncoder().singleValue().encodeString('int');
+                m.keyEncoder().singleValue().encodeString('1');
+                m.valueEncoder().singleValue().encodeString('str');
+              }),
+            ),
+          )
+          .throws<TomlCodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('1');
     });
 
     test('enforces container recursion depth limit of 64', () {

@@ -273,7 +273,10 @@ final class CborReader {
     for (var i = 0; i < len; i++) {
       final b = readInt();
       if (b < 0 || b > 255) {
-        throw CodableException('Expected byte in range 0..255, got $b');
+        throw CodableException(
+          'Expected byte in range 0..255, got $b',
+          actualValue: b,
+        );
       }
       out[i] = b;
     }

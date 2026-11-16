@@ -1223,5 +1223,63 @@ void _registerStructuralBoundaryRejectionTests() {
             .deepEquals(const <Object>['cells', 'origin']);
       },
     );
+
+    test(
+      'captures actualValue across JSON, YAML, CBOR, MessagePack, and TOML',
+      () {
+        final readBytesFromMap = Decodable<Uint8List>.fromFunction(
+          (d) => d.mapped().readBytes('b'),
+        );
+        final badByteMapEnc = Encodable<void>.fromFunction((_, e) {
+          e
+              .keyed(length: 1)
+              .nestedEncoder('b')
+              .unkeyed(length: 1)
+              .encodeInt(256);
+        });
+
+        check(
+              () => readBytesFromMap.decode(
+                JsonCodableDecoder.fromString('{"b": [256]}'),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+        check(
+              () =>
+                  YamlCodableDecoder.decode('b:\n  - 256\n', readBytesFromMap),
+            )
+            .throws<YamlCodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+        check(
+              () => CborCodableDecoder.decode(
+                CborCodableEncoder.encode(null, badByteMapEnc),
+                readBytesFromMap,
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+        check(
+              () => MsgPackCodableDecoder.decode(
+                MsgPackCodableEncoder.encode(
+                  null,
+                  badByteMapEnc,
+                  requireKnownLength: true,
+                ),
+                readBytesFromMap,
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+        check(() => TomlCodableDecoder.decode('b = [256]\n', readBytesFromMap))
+            .throws<TomlCodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(256);
+      },
+    );
   });
 }

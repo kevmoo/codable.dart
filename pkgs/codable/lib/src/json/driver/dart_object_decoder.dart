@@ -18,7 +18,11 @@ Uint8List decodeJsonBase64Bytes(String encoded) {
   try {
     return base64Decode(encoded);
   } on FormatException catch (e) {
-    throw CodableException('Invalid base64 string for bytes: ${e.message}');
+    throw CodableException(
+      'Invalid base64 string for bytes: ${e.message}',
+      actualValue: encoded,
+      underlyingError: e,
+    );
   }
 }
 
@@ -31,7 +35,7 @@ ValueKind dartObjectToValueKind(Object? v) => switch (v) {
   Uint8List() => ValueKind.bytes,
   List() => ValueKind.list,
   Map() => ValueKind.map,
-  _ => throw CodableException('Unexpected value kind for $v'),
+  _ => throw CodableException('Unexpected value kind for $v', actualValue: v),
 };
 
 /// Parses a JSON object from [reader] into an in-memory `Map<String, Object?>`.
@@ -78,7 +82,10 @@ Uint8List _decodeObjectBytes(Object? v) {
   if (v is Uint8List) return v;
   if (v is String) return decodeJsonBase64Bytes(v);
   if (v is List<Object?>) return _decodeByteListFromObjects(v);
-  throw CodableException('Expected base64 string or byte list, found $v');
+  throw CodableException(
+    'Expected base64 string or byte list, found $v',
+    actualValue: v,
+  );
 }
 
 Uint8List _decodeByteListFromObjects(List<Object?> v) {
@@ -86,7 +93,10 @@ Uint8List _decodeByteListFromObjects(List<Object?> v) {
   for (var i = 0; i < v.length; i++) {
     final e = v[i];
     if (e is! int || e < 0 || e > 255) {
-      throw CodableException('Expected byte 0..255 in list, found $e');
+      throw CodableException(
+        'Expected byte 0..255 in list, found $e',
+        actualValue: e,
+      );
     }
     out[i] = e;
   }
@@ -117,7 +127,10 @@ final class DartObjectDecoder implements Decoder {
     if (v is Map<String, Object?>) {
       return DartObjectKeyedDecoder(v, userInfo);
     }
-    throw CodableException('Expected object for keyed(), found $v');
+    throw CodableException(
+      'Expected object for keyed(), found $v',
+      actualValue: v,
+    );
   }
 
   @override
@@ -126,7 +139,10 @@ final class DartObjectDecoder implements Decoder {
     if (v is Map<String, Object?>) {
       return DartObjectMappedDecoder(v, userInfo);
     }
-    throw CodableException('Expected object for mapped(), found $v');
+    throw CodableException(
+      'Expected object for mapped(), found $v',
+      actualValue: v,
+    );
   }
 
   @override
@@ -135,7 +151,10 @@ final class DartObjectDecoder implements Decoder {
     if (v is Map<String, Object?>) {
       return DartObjectMapDecoder(v, userInfo);
     }
-    throw CodableException('Expected object for map(), found $v');
+    throw CodableException(
+      'Expected object for map(), found $v',
+      actualValue: v,
+    );
   }
 
   @override
@@ -144,7 +163,10 @@ final class DartObjectDecoder implements Decoder {
     if (v is List<Object?>) {
       return DartObjectUnkeyedDecoder(v, userInfo);
     }
-    throw CodableException('Expected array for unkeyed(), found $v');
+    throw CodableException(
+      'Expected array for unkeyed(), found $v',
+      actualValue: v,
+    );
   }
 
   @override
@@ -178,35 +200,41 @@ final class DartObjectMappedDecoder
   int readInt(String key) {
     final v = _map[key];
     if (v is int) return v;
-    throw CodableException('Expected int for $key, found $v');
+    throw CodableException('Expected int for $key, found $v', actualValue: v);
   }
 
   @override
   double readDouble(String key) {
     final v = _map[key];
     if (v is num) return v.toDouble();
-    throw CodableException('Expected double for $key, found $v');
+    throw CodableException(
+      'Expected double for $key, found $v',
+      actualValue: v,
+    );
   }
 
   @override
   num readNum(String key) {
     final v = _map[key];
     if (v is num) return v;
-    throw CodableException('Expected num for $key, found $v');
+    throw CodableException('Expected num for $key, found $v', actualValue: v);
   }
 
   @override
   String readString(String key) {
     final v = _map[key];
     if (v is String) return v;
-    throw CodableException('Expected String for $key, found $v');
+    throw CodableException(
+      'Expected String for $key, found $v',
+      actualValue: v,
+    );
   }
 
   @override
   bool readBool(String key) {
     final v = _map[key];
     if (v is bool) return v;
-    throw CodableException('Expected bool for $key, found $v');
+    throw CodableException('Expected bool for $key, found $v', actualValue: v);
   }
 
   @override
@@ -241,7 +269,7 @@ mixin _DartObjectSequentialMixin {
   void readNull() {
     final v = _peekCurrentValue();
     if (v != null) {
-      throw CodableException('Expected null, found $v');
+      throw CodableException('Expected null, found $v', actualValue: v);
     }
     _commitCurrentValue();
   }
@@ -252,7 +280,7 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected int, found $v');
+    throw CodableException('Expected int, found $v', actualValue: v);
   }
 
   double readDouble() {
@@ -261,7 +289,7 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v.toDouble();
     }
-    throw CodableException('Expected double, found $v');
+    throw CodableException('Expected double, found $v', actualValue: v);
   }
 
   num readNum() {
@@ -270,7 +298,7 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected num, found $v');
+    throw CodableException('Expected num, found $v', actualValue: v);
   }
 
   String readString() {
@@ -279,7 +307,7 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected String, found $v');
+    throw CodableException('Expected String, found $v', actualValue: v);
   }
 
   bool readBool() {
@@ -288,7 +316,7 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected bool, found $v');
+    throw CodableException('Expected bool, found $v', actualValue: v);
   }
 
   Uint8List readBytes() {

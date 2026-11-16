@@ -457,18 +457,28 @@ void _registerDateTimeTests() {
       check(_decodeNativeDateTimeField('ts = "2026-11-14T00:30:00Z"')).isNull();
 
       // Malformed quoted ISO string throws CodableException (not bare
-      // FormatException) across both TomlCodableDecoder.fromString and JSON.
+      // FormatException) and preserves the exact unescaped string (including
+      // embedded quotes) in `actualValue` across TOML and JSON.
+      final badTomlIsoErr = _expectTomlError(
+        () => TomlCodableDecoder.decode<DateTime>(
+          'ts = "not-a-\\"date\\""\n',
+          Decodable.fromFunction((d) => d.mapped().decodeKey('ts', codec)),
+        ),
+      );
+      check(badTomlIsoErr.path).deepEquals(<Object>['ts']);
+      check(badTomlIsoErr.actualValue).equals('not-a-"date"');
       check(
-        () =>
-            TomlCodableDecoder.fromString('ts = "not-a-date"\n')
-                .mapped()
-                .decodeKey('ts', codec),
-      ).throws<CodableException>();
-      check(() => codec.decode(JsonCodableDecoder.fromString('"not-a-date"')))
-          .throws<CodableException>();
+            () => codec.decode(
+              JsonCodableDecoder.fromString(r'"not-a-\"date\""'),
+            ),
+          )
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('not-a-"date"');
 
       // TomlDateTimeCodable decodes native literals and rejects quoted strings
-      // on TOML while roundtripping literal strings on JSON.
+      // on TOML while roundtripping literal strings on JSON (and preserving
+      // `actualValue` on invalid literals).
       const valueCodec = TomlDateTimeCodable();
       final ltVal = _decodeField(
         't = 07:32:00.5',
@@ -478,9 +488,55 @@ void _registerDateTimeTests() {
         const TomlDateTime(kind: TomlDateTimeKind.localTime, raw: '07:32:00.5'),
       );
       check(
-        () =>
-            _decodeField('t = "07:32:00.5"', (k) => k.decodeValue(valueCodec)),
-      ).throws<TomlCodableException>();
+            () => _decodeField(
+              't = "07:32:00.5"',
+              (k) => k.decodeValue(valueCodec),
+            ),
+          )
+          .throws<TomlCodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('07:32:00.5');
+      check(
+            () => valueCodec.decode(
+              JsonCodableDecoder.fromString(r'"bad \"toml\" dt"'),
+            ),
+          )
+          .throws<TomlCodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('bad "toml" dt');
+      check(
+        () => valueCodec.decode(JsonCodableDecoder.fromString('"2023-02-29"')),
+      ).throws<TomlCodableException>().which(
+        (it) => it
+          ..has((e) => e.line, 'line').isNull()
+          ..has((e) => e.column, 'column').isNull()
+          ..has((e) => e.actualValue, 'actualValue').equals('2023-02-29'),
+      );
+
+      // When a custom codec parses a quoted TOML date-time literal on line 3,
+      // synthetic parser line/column must not clobber the outer TOML line 3.
+      final outerLineErr = _expectTomlError(
+        () => TomlCodableDecoder.decode<TomlDateTime>(
+          'ok = 1\n\nts = "2023-02-29"\n',
+          Decodable.fromFunction((d) {
+            final raw = d.mapped().readString('ts');
+            return valueCodec.decode(JsonCodableDecoder.fromString('"$raw"'));
+          }),
+        ),
+      );
+      check(outerLineErr.line).equals(3);
+      check(outerLineErr.actualValue).equals('2023-02-29');
+
+      // Boolean passed to TomlDateTimeCodec preserves `actualValue: true`.
+      check(
+            () => TomlCodableDecoder.decode<DateTime>(
+              'ts = true\n',
+              Decodable.fromFunction((d) => d.mapped().decodeKey('ts', codec)),
+            ),
+          )
+          .throws<TomlCodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals(true);
       final jsonRoundtrip = valueCodec.decode(
         JsonCodableDecoder.fromString(
           JsonCodableEncoder.encode(ltVal, valueCodec),
@@ -489,7 +545,7 @@ void _registerDateTimeTests() {
       check(jsonRoundtrip).equals(ltVal);
 
       // Local Time has no calendar date and throws TomlCodableException with
-      // enriched line, column, and hierarchical path from decoder._trace.
+      // enriched line, column, path, and `actualValue` from decoder._trace.
       final ltErr = _expectTomlError(
         () => TomlCodableDecoder.decode<DateTime>(
           '[event]\noffsetInstant = 07:32:00\n',
@@ -505,6 +561,9 @@ void _registerDateTimeTests() {
       check(ltErr.line).equals(2);
       check(ltErr.column).equals(17);
       check(ltErr.path).deepEquals(<Object>['event', 'offsetInstant']);
+      check(ltErr.actualValue).equals(
+        const TomlDateTime(kind: TomlDateTimeKind.localTime, raw: '07:32:00'),
+      );
     });
 
     test('rejects invalid calendar dates, leap years, and time ranges', () {
@@ -927,6 +986,7 @@ ports = [80, "bad_port", 443]
           check(portErr.column).equals(14);
           check(portErr.path).deepEquals(<Object>['server', 'ports', 1]);
           check(portErr.formattedPath).equals('server.ports[1]');
+          check(portErr.actualValue).equals('bad_port');
 
           const badMapKey = '[scores]\n42 = "ok"\noops = "bad"\n';
           final keyErr = _expectTomlError(
@@ -940,6 +1000,40 @@ ports = [80, "bad_port", 443]
           check(keyErr.line).equals(3);
           check(keyErr.column).equals(1);
           check(keyErr.path).deepEquals(<Object>['scores', 'oops']);
+          check(keyErr.actualValue).equals('oops');
+
+          final badLitErr = _expectTomlError(
+            () => TomlCodableDecoder.fromString('n = 01\n'),
+          );
+          check(badLitErr.actualValue).equals('01');
+
+          // Scalar-vs-container mismatches preserve scalar `actualValue`.
+          for (final openTable in <Object Function(Decoder)>[
+            (d) => d.keyed(),
+            (d) => d.mapped(),
+            (d) => d.map(),
+          ]) {
+            check(
+                  () => openTable(
+                    TomlCodableDecoder.fromString('s = "not_a_table"\n')
+                        .mapped()
+                        .nestedDecoder('s'),
+                  ),
+                )
+                .throws<TomlCodableException>()
+                .has((e) => e.actualValue, 'actualValue')
+                .equals('not_a_table');
+          }
+          check(
+                () =>
+                    TomlCodableDecoder.fromString('ports = 123\n')
+                        .mapped()
+                        .nestedDecoder('ports')
+                        .unkeyed(),
+              )
+              .throws<TomlCodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals(123);
 
           // Repeated adjacent path segments (e.g. matrix[0][0] or node.node)
           // must not be truncated during exception path merging.

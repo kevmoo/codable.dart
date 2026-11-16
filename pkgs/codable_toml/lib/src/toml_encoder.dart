@@ -92,12 +92,18 @@ bool _needsBasicStringEscape(String value) {
   return false;
 }
 
-void _writeEscapedRune(int rune, StringBuffer out, List<Object> path) {
+void _writeEscapedRune(
+  int rune,
+  StringBuffer out,
+  String sourceValue,
+  List<Object> path,
+) {
   if (rune >= 0xd800 && rune <= 0xdfff) {
     throw TomlCodableException(
       'Invalid unpaired UTF-16 surrogate '
       '(U+${rune.toRadixString(16).toUpperCase()}) in TOML string',
       path: path,
+      actualValue: sourceValue,
     );
   }
   switch (rune) {
@@ -129,7 +135,7 @@ String _escapeTomlBasicString(String value, [List<Object> path = const []]) {
   if (!_needsBasicStringEscape(value)) return '"$value"';
   final out = StringBuffer('"');
   for (final rune in value.runes) {
-    _writeEscapedRune(rune, out, path);
+    _writeEscapedRune(rune, out, value, path);
   }
   out.write('"');
   return out.toString();
@@ -147,6 +153,7 @@ String _formatTomlInt(int value, List<Object> path) {
       'Integer $value exceeds JavaScript 53-bit safe integer range '
       '[$_jsMinSafeInt, $_jsMaxSafeInt]',
       path: path,
+      actualValue: value,
     );
   }
   return value.toString();
@@ -168,14 +175,16 @@ void _validateRawDateTime(String raw, List<Object> path) {
     throw TomlCodableException(
       'Invalid empty TOML date-time literal',
       path: path,
+      actualValue: raw,
     );
   }
   for (var i = 0; i < raw.length; i++) {
     final c = raw.codeUnitAt(i);
     if (c < 0x20 || c >= 0x7f || c == 0x23) {
       throw TomlCodableException(
-        'Invalid character in TOML date-time literal "$raw"',
+        'Invalid character in TOML date-time literal',
         path: path,
+        actualValue: raw,
       );
     }
   }
@@ -234,6 +243,7 @@ void _validateTableKey(
       throw TomlCodableException(
         'Invalid unpaired UTF-16 surrogate in TOML key',
         path: [...tablePath, key],
+        actualValue: key,
       );
     }
   }
@@ -241,6 +251,7 @@ void _validateTableKey(
     throw TomlCodableException(
       'Duplicate TOML key "$key"',
       path: [...tablePath, key],
+      actualValue: key,
     );
   }
 }
@@ -403,6 +414,7 @@ final class TomlCodableEncoder implements Encoder {
       throw TomlCodableException(
         e.message,
         path: e.path.isNotEmpty ? e.path : encoder._trace.path,
+        actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
       );
     }
@@ -690,6 +702,7 @@ final class _TomlMapKeyEncoder
       throw TomlCodableException(
         'TOML map keys must be finite numbers, got $value',
         path: _path,
+        actualValue: value,
       );
     }
     writeKeyString(_formatTomlDouble(value));

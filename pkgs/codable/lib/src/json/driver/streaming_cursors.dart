@@ -13,6 +13,19 @@ import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 import 'dart_object_decoder.dart';
 
+Object? _tryReadDiagnosticScalar(JsonTokenReader reader) {
+  try {
+    return switch (reader.peek()) {
+      JsonTokenType.number => reader.readNum(),
+      JsonTokenType.string => reader.readString(),
+      JsonTokenType.boolean => reader.readBool(),
+      _ => null,
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
 Uint8List _readByteListFromReader(JsonTokenReader reader) {
   try {
     reader.beginArray();
@@ -20,7 +33,10 @@ Uint8List _readByteListFromReader(JsonTokenReader reader) {
     while (reader.moveNext()) {
       final b = reader.readInt();
       if (b < 0 || b > 255) {
-        throw CodableException('Byte value out of range 0..255: $b');
+        throw CodableException(
+          'Byte value out of range 0..255: $b',
+          actualValue: b,
+        );
       }
       builder.addByte(b);
     }
@@ -29,7 +45,11 @@ Uint8List _readByteListFromReader(JsonTokenReader reader) {
   } on CodableException {
     rethrow;
   } on FormatException catch (e) {
-    throw CodableException('Invalid byte array element: ${e.message}');
+    throw CodableException(
+      'Invalid byte array element: ${e.message}',
+      actualValue: _tryReadDiagnosticScalar(reader),
+      underlyingError: e,
+    );
   }
 }
 
@@ -237,6 +257,7 @@ mixin _JsonPrimitiveDecoderMixin {
       JsonTokenType.beginArray => _readByteListFromReader(_reader),
       final token => throw CodableException(
         'Expected base64 string or byte array for Uint8List, found $token',
+        actualValue: _tryReadDiagnosticScalar(_reader),
       ),
     };
   }
@@ -474,9 +495,11 @@ final class StreamingMapDecoder implements MapDecoder {
   int? get length => null;
 
   void _startObject() {
-    if (_reader.peek() != JsonTokenType.beginObject) {
+    final token = _reader.peek();
+    if (token != JsonTokenType.beginObject) {
       throw CodableException(
-        'Expected JSON object for map(), found ${_reader.peek()}',
+        'Expected JSON object for map(), found $token',
+        actualValue: _tryReadDiagnosticScalar(_reader),
       );
     }
     _reader.beginObject();

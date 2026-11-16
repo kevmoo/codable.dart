@@ -12,14 +12,23 @@ class CodableException implements Exception {
   /// `['users', 0, 'email']`).
   final List<Object> path;
 
+  /// Optional offending scalar or value observed at the failure site (e.g. an
+  /// unparsed `String` literal, out-of-range `int`, or mismatched `Object`),
+  /// allowing callers to inspect the value directly without parsing quotes out
+  /// of [message].
+  ///
+  /// Never holds an entire multi-value document buffer.
+  final Object? actualValue;
+
   /// Optional underlying cause (e.g. `FormatException`, `TypeError`).
   final Object? underlyingError;
 
-  /// Creates a [CodableException] with a [message], optional token [path], and
-  /// [underlyingError].
+  /// Creates a [CodableException] with a [message], optional token [path],
+  /// offending [actualValue], and [underlyingError].
   const CodableException(
     this.message, {
     this.path = const [],
+    this.actualValue,
     this.underlyingError,
   });
 
@@ -38,6 +47,7 @@ class CodableException implements Exception {
     'Expected value of type $expectedType but got ${actualValue.runtimeType} '
     '($actualValue)',
     path: path,
+    actualValue: actualValue,
   );
 
   /// Creates an exception for an unknown polymorphic subtype tag.
@@ -49,6 +59,7 @@ class CodableException implements Exception {
     'Unknown polymorphic subtype "$subtypeValue" for discriminator '
     '"$discriminatorKey"',
     path: [...path, discriminatorKey],
+    actualValue: subtypeValue,
   );
 
   /// Formats the hierarchical token path as a dot/bracket navigation string

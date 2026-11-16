@@ -31,7 +31,10 @@ final class _MsgPackWriter {
 
   void writeContainerHeader({required bool isMap, required int count}) {
     if (count < 0 || count > 0xffffffff) {
-      throw CodableException('Invalid MessagePack container length: $count');
+      throw CodableException(
+        'Invalid MessagePack container length: $count',
+        actualValue: count,
+      );
     }
     if (count < 16) {
       _ensureCapacity(1);
@@ -68,7 +71,10 @@ final class _MsgPackWriter {
       return;
     }
     if (count > 0xffffffff) {
-      throw CodableException('Invalid MessagePack container length: $count');
+      throw CodableException(
+        'Invalid MessagePack container length: $count',
+        actualValue: count,
+      );
     }
     final extra = count <= 0xffff ? 2 : 4;
     _ensureCapacity(extra);
@@ -128,8 +134,9 @@ final class _MsgPackWriter {
   void _writeUint64(int value) {
     final hi = value ~/ msgPackTwoPow32;
     if (identical(1.0, 1) && hi > msgPackJsMaxSafeHi) {
-      throw const CodableException(
+      throw CodableException(
         'MessagePack integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: value,
       );
     }
     _ensureCapacity(9);
@@ -170,8 +177,9 @@ final class _MsgPackWriter {
 
   void _writeInt64(int value) {
     if (identical(1.0, 1) && value < -msgPackJsMaxSafeInt) {
-      throw const CodableException(
+      throw CodableException(
         'MessagePack integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: value,
       );
     }
     final magMinus1 = -1 - value;
@@ -218,7 +226,10 @@ final class _MsgPackWriter {
       _bd.setUint32(_writePos, len);
       _writePos += 4;
     } else {
-      throw CodableException('MessagePack bin exceeds uint32 maximum: $len');
+      throw CodableException(
+        'MessagePack bin exceeds uint32 maximum: $len',
+        actualValue: len,
+      );
     }
     _buf.setRange(_writePos, _writePos + len, value);
     _writePos += len;
@@ -245,7 +256,10 @@ final class _MsgPackWriter {
       _bd.setUint32(_writePos, len);
       _writePos += 4;
     } else {
-      throw CodableException('MessagePack str exceeds uint32 maximum: $len');
+      throw CodableException(
+        'MessagePack str exceeds uint32 maximum: $len',
+        actualValue: len,
+      );
     }
     _buf.setRange(_writePos, _writePos + len, encoded);
     _writePos += len;
