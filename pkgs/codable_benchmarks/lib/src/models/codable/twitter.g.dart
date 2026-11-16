@@ -8,6 +8,8 @@ part of 'twitter.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for TwitterMetadata
 // =============================================================================
@@ -49,8 +51,8 @@ final class TwitterMetadataCodable implements Codable<TwitterMetadata> {
   TwitterMetadata decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$TwitterMetadataSchema.keyOptions);
 
-    var resultType = '';
-    var isoLanguageCode = '';
+    String resultType = '';
+    String isoLanguageCode = '';
     var seen = _$TwitterMetadataSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -188,7 +190,7 @@ final class TwitterUserMentionCodable implements Codable<TwitterUserMention> {
     String? name;
     int? id;
     String? idStr;
-    var indices = const <int>[];
+    List<int> indices = const [];
     var seen = _$TwitterUserMentionSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -346,7 +348,7 @@ final class TwitterUrlCodable implements Codable<TwitterUrl> {
     String? url;
     String? expandedUrl;
     String? displayUrl;
-    var indices = const <int>[];
+    List<int> indices = const [];
     var seen = _$TwitterUrlSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -447,7 +449,7 @@ final class TwitterEntitiesUrlsCodable implements Codable<TwitterEntitiesUrls> {
       options: _$TwitterEntitiesUrlsSchema.keyOptions,
     );
 
-    var urls = const <TwitterUrl>[];
+    List<TwitterUrl> urls = const [];
     var seen = _$TwitterEntitiesUrlsSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -627,8 +629,8 @@ final class TwitterEntitiesCodable implements Codable<TwitterEntities> {
   TwitterEntities decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$TwitterEntitiesSchema.keyOptions);
 
-    var urls = const <TwitterUrl>[];
-    var userMentions = const <TwitterUserMention>[];
+    List<TwitterUrl> urls = const [];
+    List<TwitterUserMention> userMentions = const [];
     var seen = _$TwitterEntitiesSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -879,42 +881,42 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
     String? idStr;
     String? name;
     String? screenName;
-    var location = '';
-    var description = '';
+    String location = '';
+    String description = '';
     String? url;
     TwitterUserEntities? entities;
-    var protected = false;
-    var followersCount = 0;
-    var friendsCount = 0;
-    var listedCount = 0;
+    bool protected = false;
+    int followersCount = 0;
+    int friendsCount = 0;
+    int listedCount = 0;
     String? createdAt;
-    var favouritesCount = 0;
+    int favouritesCount = 0;
     int? utcOffset;
     String? timeZone;
-    var geoEnabled = false;
-    var verified = false;
-    var statusesCount = 0;
-    var lang = 'en';
-    var contributorsEnabled = false;
-    var isTranslator = false;
-    var isTranslationEnabled = false;
-    var profileBackgroundColor = '';
-    var profileBackgroundImageUrl = '';
-    var profileBackgroundImageUrlHttps = '';
-    var profileBackgroundTile = false;
-    var profileImageUrl = '';
-    var profileImageUrlHttps = '';
+    bool geoEnabled = false;
+    bool verified = false;
+    int statusesCount = 0;
+    String lang = 'en';
+    bool contributorsEnabled = false;
+    bool isTranslator = false;
+    bool isTranslationEnabled = false;
+    String profileBackgroundColor = '';
+    String profileBackgroundImageUrl = '';
+    String profileBackgroundImageUrlHttps = '';
+    bool profileBackgroundTile = false;
+    String profileImageUrl = '';
+    String profileImageUrlHttps = '';
     String? profileBannerUrl;
-    var profileLinkColor = '';
-    var profileSidebarBorderColor = '';
-    var profileSidebarFillColor = '';
-    var profileTextColor = '';
-    var profileUseBackgroundImage = false;
-    var defaultProfile = false;
-    var defaultProfileImage = false;
-    var following = false;
-    var followRequestSent = false;
-    var notifications = false;
+    String profileLinkColor = '';
+    String profileSidebarBorderColor = '';
+    String profileSidebarFillColor = '';
+    String profileTextColor = '';
+    bool profileUseBackgroundImage = false;
+    bool defaultProfile = false;
+    bool defaultProfileImage = false;
+    bool following = false;
+    bool followRequestSent = false;
+    bool notifications = false;
     var seen = _$TwitterUserSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1430,20 +1432,20 @@ final class TwitterStatusCodable implements Codable<TwitterStatus> {
     String? idStr;
     String? text;
     String? source;
-    var truncated = false;
+    bool truncated = false;
     int? inReplyToStatusId;
     String? inReplyToStatusIdStr;
     int? inReplyToUserId;
     String? inReplyToUserIdStr;
     String? inReplyToScreenName;
     TwitterUser? user;
-    var retweetCount = 0;
-    var favoriteCount = 0;
+    int retweetCount = 0;
+    int favoriteCount = 0;
     TwitterEntities? entities;
-    var favorited = false;
-    var retweeted = false;
+    bool favorited = false;
+    bool retweeted = false;
     bool? possiblySensitive;
-    var lang = 'en';
+    String lang = 'en';
     TwitterStatus? retweetedStatus;
     var seen = _$TwitterStatusSchema.none;
 
@@ -1848,12 +1850,12 @@ final class TwitterSearchMetadataCodable
     double? completedIn;
     int? maxId;
     String? maxIdStr;
-    var nextResults = '';
+    String nextResults = '';
     String? query;
-    var refreshUrl = '';
+    String refreshUrl = '';
     int? count;
-    var sinceId = 0;
-    var sinceIdStr = '0';
+    int sinceId = 0;
+    String sinceIdStr = '0';
     var seen = _$TwitterSearchMetadataSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2028,7 +2030,7 @@ final class TwitterResponseCodable implements Codable<TwitterResponse> {
   TwitterResponse decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$TwitterResponseSchema.keyOptions);
 
-    var statuses = const <TwitterStatus>[];
+    List<TwitterStatus> statuses = const [];
     TwitterSearchMetadata? searchMetadata;
     var seen = _$TwitterResponseSchema.none;
 

@@ -24,7 +24,7 @@ Future<void> generateForFile(String sourceRelPath, String targetRelPath) async {
   final buffer = StringBuffer();
   buffer.writeln('// GENERATED CODE - DO NOT MODIFY BY HAND\n');
   buffer.writeln(
-    '// ignore_for_file: lines_longer_than_80_chars, unnecessary_lambdas, deprecated_member_use, unused_element\n',
+    '// ignore_for_file: lines_longer_than_80_chars, omit_local_variable_types, unnecessary_lambdas, deprecated_member_use, unused_element\n',
   );
   buffer.writeln("part of '$partOfName';\n");
 

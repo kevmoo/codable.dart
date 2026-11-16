@@ -8,6 +8,8 @@ part of 'codable_yaml_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for GridCoord
 // =============================================================================
@@ -227,16 +229,16 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
     final keyed = decoder.keyed(options: _$ServiceSpecSchema.keyOptions);
 
     String? serviceName;
-    var logLevel = LogLevel.info;
-    var maxRetries = 3;
+    LogLevel logLevel = LogLevel.info;
+    int maxRetries = 3;
     double? sampleRate;
     Uint8List? tlsCertDer;
     Float64List? bounds;
-    var tags = const <String>[];
-    var featureQuotas = const <String, int?>{};
-    var httpCodes = const <int, String>{};
-    var alertByLevel = const <LogLevel, bool>{};
-    var zoneLabels = const <GridCoord, String>{};
+    List<String> tags = const [];
+    Map<String, int?> featureQuotas = const {};
+    Map<int, String> httpCodes = const {};
+    Map<LogLevel, bool> alertByLevel = const {};
+    Map<GridCoord, String> zoneLabels = const {};
     var seen = _$ServiceSpecSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -322,16 +324,19 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <LogLevel, bool>{};
             while (mDecoder.moveNextEntry()) {
-              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
-              final enumIdx1 = _$ServiceSpecSchema.enumLogLevelKeyOptions
-                  .indexOf(rawEnum1);
-              if (enumIdx1 < 0) {
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$ServiceSpecSchema.enumLogLevelKeyOptions
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
                 throw CodableException(
-                  'Unknown LogLevel value: "$rawEnum1"',
-                  actualValue: rawEnum1,
+                  'Unknown LogLevel value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
                 );
               }
-              final key = LogLevel.values[enumIdx1];
+              final key = LogLevel.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readBool();
             }
             alertByLevel = m;

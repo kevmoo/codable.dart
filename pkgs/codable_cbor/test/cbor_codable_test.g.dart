@@ -8,6 +8,8 @@ part of 'cbor_codable_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CborEnvelope
 // =============================================================================
@@ -97,11 +99,11 @@ final class CborEnvelopeCodable implements Codable<CborEnvelope> {
     final keyed = decoder.keyed(options: _$CborEnvelopeSchema.keyOptions);
 
     int? id;
-    var priority = FramePriority.normal;
+    FramePriority priority = FramePriority.normal;
     Uint8List? body;
     Uint8List? digest;
-    var headers = const <int, String>{};
-    var metrics = const <double>[];
+    Map<int, String> headers = const {};
+    List<double> metrics = const [];
     var seen = _$CborEnvelopeSchema.none;
 
     while (keyed.moveNextKey()) {

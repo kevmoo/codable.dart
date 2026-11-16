@@ -8,6 +8,8 @@ part of 'generic_response_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Article
 // =============================================================================

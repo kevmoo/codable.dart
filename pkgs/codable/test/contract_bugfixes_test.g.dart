@@ -8,6 +8,8 @@ part of 'contract_bugfixes_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for EmptyMarker
 // =============================================================================
@@ -135,7 +137,7 @@ final class GridCellCodable implements Codable<GridCell> {
 
     int? row;
     int? col;
-    var label = '';
+    String label = '';
     var seen = _$GridCellSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -219,8 +221,8 @@ final class GridBoardCodable implements Codable<GridBoard> {
   GridBoard decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$GridBoardSchema.keyOptions);
 
-    var cells = const <List<GridCell>>[];
-    var nullableRows = const <List<GridCell>?>[];
+    List<List<GridCell>> cells = const [];
+    List<List<GridCell>?> nullableRows = const [];
     var seen = _$GridBoardSchema.none;
 
     while (keyed.moveNextKey()) {

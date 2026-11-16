@@ -76,7 +76,8 @@ TypedDataKind? classifyTypedDataKind(DartType? type) {
 
 /// Whether [type] is a valid numeric list target for `@CodableTuple(N)`.
 bool isNumericTupleTargetType(DartType type) {
-  if (classifyTypedDataKind(type) != null) return true;
+  final tdKind = classifyTypedDataKind(type);
+  if (tdKind != null) return tdKind != TypedDataKind.uint8Bytes;
   if (!type.isDartCoreList && type.element?.name != 'List') return false;
   final elem = type is InterfaceType && type.typeArguments.length == 1
       ? type.typeArguments.first
@@ -91,14 +92,13 @@ bool isNumericTupleTargetType(DartType type) {
 bool isIntegerTupleTargetType(DartType type) {
   final tdKind = classifyTypedDataKind(type);
   if (tdKind != null) {
-    return tdKind == TypedDataKind.intList ||
-        tdKind == TypedDataKind.uint8Bytes;
+    return tdKind == TypedDataKind.intList;
   }
   if (!type.isDartCoreList && type.element?.name != 'List') return false;
   final elem = type is InterfaceType && type.typeArguments.length == 1
       ? type.typeArguments.first
       : null;
-  return elem != null && elem.isDartCoreInt;
+  return elem != null && !elem.isNullableType && elem.isDartCoreInt;
 }
 
 /// Result record for [TypeClassifier.classify].
@@ -281,14 +281,18 @@ final class TypeClassifier {
     DartType type,
     int? tupleLength,
   ) {
-    if (classifyTypedDataKind(type) == null) return null;
+    final tdKind = classifyTypedDataKind(type);
+    if (tdKind == null) return null;
     final elemType = type is InterfaceType
         ? type.allSupertypes
               .where((s) => s.isDartCoreList && s.typeArguments.isNotEmpty)
               .map((s) => s.typeArguments.first)
               .firstOrNull
         : null;
-    final category = (tupleLength != null && tupleLength > 0)
+    final category =
+        (tupleLength != null &&
+            tupleLength > 0 &&
+            tdKind != TypedDataKind.uint8Bytes)
         ? TypeCategory.tuple
         : TypeCategory.list;
     return (

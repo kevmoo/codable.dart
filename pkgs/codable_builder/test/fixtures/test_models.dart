@@ -552,6 +552,14 @@ final class DefaultValuesModel {
   final Point origin;
   final String? nullableOverride;
   final String? omittedDefaultKeepCtor;
+  final List<double> weights;
+  final double hexDouble;
+  final double zeroDouble;
+  final num countNum;
+  final Set<String> emptySet;
+  final Map<String, int> emptyMap;
+  final List<List<int>> nestedIntRows;
+  final List<Map<String, int>> nestedStringIntMaps;
 
   const DefaultValuesModel({
     @CodableKey(defaultValue: 'guest') this.label = 'constructor_shadowed',
@@ -568,6 +576,21 @@ final class DefaultValuesModel {
     this.nullableOverride = 'non_null_ctor_default',
     @CodableKey(name: 'explicit_name')
     this.omittedDefaultKeepCtor = 'kept_ctor_default',
+    this.weights = const [1, 2],
+    this.hexDouble = 0x10,
+    this.zeroDouble = 0,
+    this.countNum = 1,
+    this.emptySet = const {},
+    this.emptyMap = const {},
+    @CodableKey(
+      defaultValue: <List<int>>[
+        [],
+        [1],
+      ],
+    )
+    this.nestedIntRows = const [],
+    @CodableKey(defaultValue: <Map<String, int>>[{}])
+    this.nestedStringIntMaps = const [],
   });
 }
 
@@ -660,6 +683,8 @@ final class EnumCollectionsAndAliasesModel {
   final Map<String, UserRole> rolesByKey;
   final Map<int, UserRole> rolesById;
   final Map<UserRole, int> countsByRole;
+  final Map<UserRole, UserRole> roleTransitions;
+  final Map<UserRole, UserRole?> nullableRoleTransitions;
   final String slug;
 
   const EnumCollectionsAndAliasesModel({
@@ -669,6 +694,8 @@ final class EnumCollectionsAndAliasesModel {
     this.rolesByKey = const {},
     this.rolesById = const {},
     this.countsByRole = const {},
+    this.roleTransitions = const {},
+    this.nullableRoleTransitions = const {},
     @CodableKey(aliases: ['foo-bar', 'foo_bar']) this.slug = '',
   });
 }
@@ -824,5 +851,67 @@ final class InvalidCrossFieldAliasToAliasCollision {
   const InvalidCrossFieldAliasToAliasCollision({
     @CodableKey(aliases: ['shared']) required this.alpha,
     @CodableKey(aliases: ['shared']) required this.beta,
+  });
+}
+
+@Codable()
+final class InvalidUint8ListTuple {
+  final Uint8List magic;
+
+  const InvalidUint8ListTuple({@CodableTuple(4) required this.magic});
+}
+
+final class BoxedSecret {
+  final int id;
+
+  const factory BoxedSecret(int id) = BoxedSecret._;
+
+  const BoxedSecret._(this.id);
+}
+
+final class BoxedSecretCodec implements Codable<BoxedSecret> {
+  const BoxedSecretCodec();
+
+  @override
+  BoxedSecret decode(Decoder decoder) =>
+      BoxedSecret(decoder.singleValue().readInt());
+
+  @override
+  void encode(BoxedSecret value, Encoder encoder) =>
+      encoder.singleValue().encodeInt(value.id);
+}
+
+final class BoxedSecretListCodec implements Codable<List<BoxedSecret>> {
+  const BoxedSecretListCodec();
+
+  @override
+  List<BoxedSecret> decode(Decoder decoder) =>
+      decoder.unkeyed().decodeList(const BoxedSecretCodec());
+
+  @override
+  void encode(List<BoxedSecret> value, Encoder encoder) =>
+      const BoxedSecretCodec().encodeList(value, encoder);
+}
+
+@Codable()
+final class InvalidPrivateRevivableDefault {
+  final BoxedSecret secret;
+
+  const InvalidPrivateRevivableDefault({
+    @CodableKey(codable: BoxedSecretCodec(), defaultValue: BoxedSecret._(42))
+    this.secret = const BoxedSecret(0),
+  });
+}
+
+@Codable()
+final class InvalidNestedPrivateRevivableDefault {
+  final List<BoxedSecret> secrets;
+
+  const InvalidNestedPrivateRevivableDefault({
+    @CodableKey(
+      codable: BoxedSecretListCodec(),
+      defaultValue: [BoxedSecret._(42)],
+    )
+    this.secrets = const [],
   });
 }

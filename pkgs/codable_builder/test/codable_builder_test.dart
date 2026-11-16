@@ -350,10 +350,10 @@ void main() {
     test('emits Map<int/UserRole, V> via map() and Map<String, List<int>> via keyed()', () {
       final output = runGeneratorFor('TypedKeyMapModel');
 
-      // Typed const {} defaults (not hardcoded to String)
-      check(output).contains('var statusMessages = const <int, String>{};');
-      check(output).contains('var roleCounts = const <UserRole, int>{};');
-      check(output).contains('var flagWeights = const <bool, double>{};');
+      // Explicit context-typed const {} defaults (not hardcoded to String)
+      check(output).contains('Map<int, String> statusMessages = const {};');
+      check(output).contains('Map<UserRole, int> roleCounts = const {};');
+      check(output).contains('Map<bool, double> flagWeights = const {};');
 
       // Constant length hint across 4 non-nullable fields
       check(output).contains('final keyed = encoder.keyed(length: 4);');
@@ -402,11 +402,11 @@ void main() {
       check(output).not((s) => s.contains('fromFunction'));
 
       // Map<String, UserRole> via 1-hop KeyedDecoder + KeyOptions.indexOf + actualValue
-      check(output).contains('final rawEnum1 = k.readString();');
+      check(output).contains('= k.readString();');
       check(output).contains(
-        'final enumIdx1 = _\$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions.indexOf(rawEnum1);',
+        '_\$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions.indexOf(',
       );
-      check(output).contains('actualValue: rawEnum1');
+      check(output).contains('actualValue:');
       check(output).contains('k.encodeString(entry.key, entry.value.name);');
 
       // Map<String, Address?> via isNextNull + nestedDecoder / nestedEncoder
@@ -431,7 +431,7 @@ void main() {
       () {
         final compositeOutput = runGeneratorFor('CompositeKeyMapModel');
         check(compositeOutput)
-            .contains('var labelsByPoint = const <Point, String>{};');
+            .contains('Map<Point, String> labelsByPoint = const {};');
         check(compositeOutput)
             .contains('final keyed = encoder.keyed(length: 1);');
         check(compositeOutput)
@@ -557,14 +557,24 @@ void main() {
 
     test('synthesizes @CodableKey(defaultValue:), disambiguated aliases, and StateError guards', () {
       final defaults = runGeneratorFor('DefaultValuesModel');
-      check(defaults).contains("var label = 'guest';");
-      check(defaults).contains('var role = UserRole.guest;');
-      check(defaults).contains("var tags = const ['alpha', 'beta'];");
-      check(defaults).contains("var metadata = const <String, int>{'env': 1};");
-      check(defaults).contains('var origin = const Point(1.5, -2.5);');
+      check(defaults).contains("= 'guest';");
+      check(defaults).contains('= UserRole.guest;');
+      check(defaults).contains("= const ['alpha', 'beta'];");
+      check(defaults).contains("= const {'env': 1};");
+      check(defaults).contains('= const Point(1.5, -2.5);');
       check(defaults).contains('String? nullableOverride;');
       check(defaults)
           .contains("String? omittedDefaultKeepCtor = 'kept_ctor_default';");
+      check(defaults).contains('List<double> weights = const [1, 2];');
+      check(defaults).contains('double hexDouble = 0x10;');
+      check(defaults).contains('double zeroDouble = 0;');
+      check(defaults).contains('num countNum = 1;');
+      check(defaults)
+          .contains('List<List<int>> nestedIntRows = const [<int>[], [1]];');
+      check(defaults).contains(
+        'List<Map<String, int>> nestedStringIntMaps = const [<String, int>{}];',
+      );
+      check(defaults).not((s) => s.contains('0x10.0'));
 
       final aliases = runGeneratorFor('EnumCollectionsAndAliasesModel');
       check(aliases)
@@ -573,6 +583,13 @@ void main() {
           .contains("static const String aliasSlugFooBar\$2 = 'foo_bar';");
       check(aliases).contains('static const int aliasKeySlugFooBar = ');
       check(aliases).contains('static const int aliasKeySlugFooBar\$2 = ');
+      check(aliases)
+          .contains('mDecoder.keyDecoder().singleValue().readString()');
+      check(aliases)
+          .contains('mDecoder.valueDecoder().singleValue().readString()');
+      check(
+        aliases,
+      ).contains('mDecoder.valueDecoder().singleValue().readNullableString()');
 
       // StateError guard when a synthetic unknown descriptor reaches helpers
       final pointEl = findClass('Point')!;
@@ -582,23 +599,12 @@ void main() {
         createEncoder: true,
         createDecoder: true,
         useGoldenMask: true,
-        fieldRename: pointEl.metadata.annotations.isEmpty
-            ? const ModelVisitor()
-                  .visitClass(
-                    pointEl,
-                    ConstantReader(
-                      codableTypeChecker.firstAnnotationOf(pointEl),
-                    ),
-                  )
-                  .fieldRename
-            : const ModelVisitor()
-                  .visitClass(
-                    pointEl,
-                    ConstantReader(
-                      codableTypeChecker.firstAnnotationOf(pointEl),
-                    ),
-                  )
-                  .fieldRename,
+        fieldRename: const ModelVisitor()
+            .visitClass(
+              pointEl,
+              ConstantReader(codableTypeChecker.firstAnnotationOf(pointEl)),
+            )
+            .fieldRename,
         fields: [
           FieldDescriptor(
             name: 'mystery',

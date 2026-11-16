@@ -290,11 +290,27 @@ void main() {
       check(fields['nullableOverride']!.defaultValueCode).equals('null');
       check(fields['omittedDefaultKeepCtor']!.defaultValueCode)
           .equals("'kept_ctor_default'");
+      check(fields['weights']!.defaultValueCode).equals('const [1, 2]');
+      check(fields['hexDouble']!.defaultValueCode).equals('0x10');
+      check(fields['nestedIntRows']!.defaultValueCode)
+          .equals('const [<int>[], [1]]');
+      check(fields['nestedStringIntMaps']!.defaultValueCode)
+          .equals('const [<String, int>{}]');
 
       check(() => visit('InvalidNullDefaultOnNonNullable'))
           .throws<InvalidGenerationSourceError>()
           .has((e) => e.message, 'message')
           .contains('defaultValue: null');
+
+      check(() => visit('InvalidPrivateRevivableDefault'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('private constant');
+
+      check(() => visit('InvalidNestedPrivateRevivableDefault'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('private constant');
     });
 
     test('validates @CodableTuple(N) positive length and numeric list target types', () {
@@ -303,9 +319,22 @@ void main() {
         'InvalidNegativeLengthTuple',
         'InvalidNonNumericTuple',
         'InvalidScalarTuple',
+        'InvalidUint8ListTuple',
       ]) {
         check(() => visit(className)).throws<InvalidGenerationSourceError>();
       }
+
+      check(() => visit('InvalidUint8ListTuple'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('Uint8List');
+
+      final binaryModel = visit('BinaryPayloadModel');
+      final uint8Type = binaryModel.fields
+          .firstWhere((f) => f.name == 'payload')
+          .type;
+      check(const TypeClassifier().classify(uint8Type, tupleLength: 4).category)
+          .equals(TypeCategory.list);
 
       final valid = visit('TupleVariantsModel');
       for (final field in valid.fields) {

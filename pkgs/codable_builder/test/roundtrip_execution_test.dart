@@ -1101,16 +1101,34 @@ void main() {
         check(defaults.origin.y).equals(-2.5);
         check(defaults.nullableOverride).isNull();
         check(defaults.omittedDefaultKeepCtor).equals('kept_ctor_default');
+        check(defaults.weights).deepEquals(const [1.0, 2.0]);
+        check(defaults.hexDouble).equals(16.0);
+        check(defaults.zeroDouble).equals(0.0);
+        check(defaults.countNum).isA<int>().equals(1);
+        check(defaults.emptySet).isEmpty();
+        check(defaults.emptyMap).isEmpty();
+        check(defaults.nestedIntRows.length).equals(2);
+        check(defaults.nestedIntRows[0]).isA<List<int>>().isEmpty();
+        check(defaults.nestedIntRows[1]).deepEquals(const [1]);
+        check(defaults.nestedStringIntMaps.length).equals(1);
+        check(defaults.nestedStringIntMaps[0])
+            .isA<Map<String, int>>()
+            .isEmpty();
 
         final overridden = const DefaultValuesModelCodable().decode(
           JsonCodableDecoder.fromString(
-            '{"label": "custom", "role": "admin", "nullableOverride": "set", "explicit_name": "named"}',
+            '{"label": "custom", "role": "admin", "nullableOverride": "set", '
+            '"explicit_name": "named", "weights": [3.5, 4.5], '
+            '"hexDouble": 32.5, "countNum": 2.5}',
           ),
         );
         check(overridden.label).equals('custom');
         check(overridden.role).equals(UserRole.admin);
         check(overridden.nullableOverride).equals('set');
         check(overridden.omittedDefaultKeepCtor).equals('named');
+        check(overridden.weights).deepEquals(const [3.5, 4.5]);
+        check(overridden.hexDouble).equals(32.5);
+        check(overridden.countNum).isA<double>().equals(2.5);
       });
 
       test('PortableTypedDataModel roundtrips across KeyedDecoder and MappedDecoder', () {
@@ -1241,6 +1259,14 @@ void main() {
           rolesByKey: {'primary': UserRole.admin},
           rolesById: {1: UserRole.member},
           countsByRole: {UserRole.guest: 5},
+          roleTransitions: {
+            UserRole.guest: UserRole.member,
+            UserRole.member: UserRole.admin,
+          },
+          nullableRoleTransitions: {
+            UserRole.admin: UserRole.member,
+            UserRole.guest: null,
+          },
           slug: 'canon',
         );
         final encoded = JsonCodableEncoder.encode(
@@ -1255,6 +1281,13 @@ void main() {
         check(roundtripped.rolesByKey).deepEquals({'primary': UserRole.admin});
         check(roundtripped.rolesById).deepEquals({1: UserRole.member});
         check(roundtripped.countsByRole).deepEquals({UserRole.guest: 5});
+        check(roundtripped.roleTransitions).deepEquals({
+          UserRole.guest: UserRole.member,
+          UserRole.member: UserRole.admin,
+        });
+        check(
+          roundtripped.nullableRoleTransitions,
+        ).deepEquals({UserRole.admin: UserRole.member, UserRole.guest: null});
         check(roundtripped.slug).equals('canon');
 
         // Both disambiguated aliases ('foo-bar' and 'foo_bar') resolve cleanly
@@ -1277,6 +1310,13 @@ void main() {
           ('{"rolesByKey": {"k": "bogus_str_map"}}', 'bogus_str_map'),
           ('{"rolesById": {"1": "bogus_int_map"}}', 'bogus_int_map'),
           ('{"countsByRole": {"bogus_key": 1}}', 'bogus_key'),
+          ('{"roleTransitions": {"bogus_from": "admin"}}', 'bogus_from'),
+          ('{"roleTransitions": {"admin": "bogus_to"}}', 'bogus_to'),
+          ('{"nullableRoleTransitions": {"bogus_nkey": null}}', 'bogus_nkey'),
+          (
+            '{"nullableRoleTransitions": {"admin": "bogus_nval"}}',
+            'bogus_nval',
+          ),
         ]) {
           check(
                 () => const EnumCollectionsAndAliasesModelCodable().decode(
