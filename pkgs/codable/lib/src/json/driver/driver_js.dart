@@ -28,6 +28,9 @@ external JSAny? _jsonParse(JSString text);
 @JS('Object.keys')
 external JSArray<JSAny?> _objectKeys(JSObject object);
 
+@JS('Object.hasOwn')
+external JSBoolean _objectHasOwn(JSObject object, JSString key);
+
 @JS('Function')
 external JSFunction? _createFunction(JSString arg1, JSString body);
 
@@ -53,7 +56,7 @@ JSFunction? _getExtractor(List<List<String>> propertyAliases) {
     final aliases = propertyAliases[k];
     final conditions = aliases.map((String a) {
       final escaped = jsonEncode(a);
-      return 'o[$escaped] !== undefined ? o[$escaped] : ';
+      return 'Object.hasOwn(o, $escaped) ? o[$escaped] : ';
     }).join();
     body.writeln('  const v$k = ${conditions}undefined;');
     body.writeln('  if (typeof v$k !== "number" || isNaN(v$k)) return null;');
@@ -123,7 +126,7 @@ Float64List? _extractUniformStaticFallback(
       JSAny? propVal;
       for (final alias in propertyAliases[k]) {
         final jsKey = alias.toJS;
-        if (obj.hasProperty(jsKey).toDart) {
+        if (_objectHasOwn(obj, jsKey).toDart) {
           propVal = obj.getProperty<JSAny?>(jsKey);
           break;
         }
@@ -137,9 +140,16 @@ Float64List? _extractUniformStaticFallback(
   return out;
 }
 
+extension type JSTextDecoderOptions._(JSObject _) implements JSObject {
+  external factory JSTextDecoderOptions({bool fatal});
+}
+
 @JS('TextDecoder')
 extension type JSTextDecoder._(JSObject _) implements JSObject {
-  external factory JSTextDecoder();
+  external factory JSTextDecoder([
+    JSString label,
+    JSTextDecoderOptions options,
+  ]);
   external JSString decode(JSUint8Array bytes);
 }
 
@@ -149,8 +159,33 @@ extension type JSTextEncoder._(JSObject _) implements JSObject {
   external JSUint8Array encode(JSString text);
 }
 
-final _textDecoder = JSTextDecoder();
+final _textDecoder = JSTextDecoder(
+  'utf-8'.toJS,
+  JSTextDecoderOptions(fatal: true),
+);
 final _textEncoder = JSTextEncoder();
+
+JSAny? _decodeAndParseJsJsonBytes(Uint8List bytes) {
+  final JSString jsString;
+  try {
+    jsString = _textDecoder.decode(bytes.toJS);
+  } on FormatException {
+    rethrow;
+  } on Object catch (e) {
+    throw FormatException('Invalid UTF-8 byte sequence: $e', bytes);
+  }
+  return _parseJsJson(jsString, bytes);
+}
+
+JSAny? _parseJsJson(JSString jsString, Object? source) {
+  try {
+    return _jsonParse(jsString);
+  } on FormatException {
+    rethrow;
+  } on Object catch (e) {
+    throw FormatException('Invalid JSON: $e', source);
+  }
+}
 
 List<String> _getKeys(JSObject obj) {
   final keys = _objectKeys(obj);
@@ -277,8 +312,18 @@ Object? _jsToDart(JSAny? value) {
   return null;
 }
 
+Object? _jsDiagnosticScalar(JSAny? value) {
+  if (value == null) return null;
+  if (value.isA<JSString>()) return (value as JSString).toDart;
+  if (value.isA<JSNumber>()) return _jsNumberToNum(value as JSNumber);
+  if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
+  if (value.isA<JSUint8Array>()) return (value as JSUint8Array).toDart;
+  if (value.isA<JSFloat64Array>()) return (value as JSFloat64Array).toDart;
+  return null;
+}
+
 Never _throwJsMismatch(String message, JSAny? val) =>
-    throw CodableException(message, actualValue: _jsToDart(val));
+    throw CodableException(message, actualValue: _jsDiagnosticScalar(val));
 
 @pragma('dart2js:prefer-inline')
 @pragma('wasm:prefer-inline')
@@ -441,8 +486,7 @@ final class JsonCodableDecoder implements Decoder {
         userInfo: userInfo,
       );
     }
-    final jsString = _textDecoder.decode(bytes.toJS);
-    final decoded = _jsonParse(jsString);
+    final decoded = _decodeAndParseJsJsonBytes(bytes);
     return JsonCodableDecoder._(decoded, bytes, userInfo: userInfo);
   }
 
@@ -450,11 +494,11 @@ final class JsonCodableDecoder implements Decoder {
     String text, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    if (_isWasm) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
       final bytes = Uint8List.fromList(utf8.encode(text));
       return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
     }
-    final decoded = _jsonParse(text.toJS);
+    final decoded = _parseJsJson(text.toJS, text);
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
@@ -544,6 +588,10 @@ final class JsonCodableDecoder implements Decoder {
   @override
   UnkeyedDecoder unkeyed() {
     if (_reader != null) {
+      final buffered = takeStreamingBufferedObject(this);
+      if (buffered != null) {
+        return DartObjectDecoder(buffered, userInfo: userInfo).unkeyed();
+      }
       return StreamingUnkeyedDecoder(_reader, this);
     }
     return _JsonCodableUnkeyedDecoder(
@@ -555,6 +603,10 @@ final class JsonCodableDecoder implements Decoder {
   @override
   SingleValueDecoder singleValue() {
     if (_reader != null) {
+      final buffered = takeStreamingBufferedObject(this);
+      if (buffered != null) {
+        return DartObjectDecoder(buffered, userInfo: userInfo).singleValue();
+      }
       return StreamingSingleValueDecoder(_reader, this);
     }
     return _JsonCodableSingleValueDecoder(this, _activeValue ?? _decoded);
@@ -562,8 +614,11 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   Uint8List? get payload {
+    if (_reader == null || hasStreamingBufferedObject(this)) {
+      return null;
+    }
     _payloadEscaped = true;
-    return _bytes ?? _reader?.bytes;
+    return _bytes ?? _reader.bytes;
   }
 
   @override
@@ -618,8 +673,13 @@ mixin _JsSequentialDecoderMixin {
   (int start, int end) readStringSpan() =>
       throw UnsupportedError('String spans not supported on JS backend');
 
-  (int start, int end)? readNullableStringSpan() =>
-      throw UnsupportedError('String spans not supported on JS backend');
+  (int start, int end)? readNullableStringSpan() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
+  }
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
@@ -817,7 +877,7 @@ final class _JsonCodableMappedKeyedDecoder
       while (_propertyIndex < keys.length) {
         final key = keys[_propertyIndex++];
         final jsKey = key.toJS;
-        if (_map.hasProperty(jsKey).toDart) {
+        if (_objectHasOwn(_map, jsKey).toDart) {
           _activeKey = key;
           _activeValue = _map.getProperty<JSAny?>(jsKey);
           _hasActiveValue = true;
@@ -931,10 +991,15 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  JSAny? _prop(String key) => _map.getProperty<JSAny?>(key.toJS);
+  JSAny? _prop(String key) {
+    final jsKey = key.toJS;
+    return _objectHasOwn(_map, jsKey).toDart
+        ? _map.getProperty<JSAny?>(jsKey)
+        : null;
+  }
 
   @override
-  bool containsKey(String key) => _map.hasProperty(key.toJS).toDart;
+  bool containsKey(String key) => _objectHasOwn(_map, key.toJS).toDart;
 
   @override
   bool isNull(String key) => _prop(key) == null;
@@ -1315,6 +1380,15 @@ final class _JsonCodableSingleValueDecoder
 @JS('JSON.stringify')
 external JSString _jsonStringify(JSAny? value);
 
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSNumber _finiteDoubleToJs(double value) {
+  if (!value.isFinite) {
+    throw UnsupportedError('NaN and Infinity are not supported in JSON');
+  }
+  return value.toJS;
+}
+
 /// Concrete high-performance JS object-tree JSON encoder connecting
 /// `package:codable` contracts directly to native JavaScript objects and
 /// `JSON.stringify`.
@@ -1345,6 +1419,13 @@ final class JsonCodableEncoder implements Encoder {
     Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
+      return streaming_driver.JsonCodableEncoder.encode(
+        value,
+        encodable,
+        userInfo: userInfo,
+      );
+    }
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encodable.encode(value, encoder);
     return _jsonStringify(encoder._root).toDart;
@@ -1357,6 +1438,14 @@ final class JsonCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
+      return streaming_driver.JsonCodableEncoder.toBytes(
+        value,
+        encodable,
+        userInfo: userInfo,
+        capacityHint: capacityHint,
+      );
+    }
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encodable.encode(value, encoder);
     final jsString = _jsonStringify(encoder._root);
@@ -1440,11 +1529,12 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   }
 
   @override
-  void encodeDouble(String key, double value) => _object[key] = value.toJS;
+  void encodeDouble(String key, double value) =>
+      _object[key] = _finiteDoubleToJs(value);
 
   @override
   void encodeNullableDouble(String key, double? value) {
-    if (value != null) _object[key] = value.toJS;
+    if (value != null) _object[key] = _finiteDoubleToJs(value);
   }
 
   @override
@@ -1519,7 +1609,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   void encodeDoubleList(String key, List<double> values) {
     final array = JSArray<JSNumber>.withLength(values.length);
     for (var i = 0; i < values.length; i++) {
-      array[i] = values[i].toJS;
+      array[i] = _finiteDoubleToJs(values[i]);
     }
     _object[key] = array;
   }
@@ -1675,11 +1765,12 @@ final class _JsonCodableJsMapValueEncoder
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void encodeDouble(double value) => _object[_currentKey] = value.toJS;
+  void encodeDouble(double value) =>
+      _object[_currentKey] = _finiteDoubleToJs(value);
 
   @override
   void encodeNullableDouble(double? value) =>
-      _object[_currentKey] = value?.toJS;
+      _object[_currentKey] = value == null ? null : _finiteDoubleToJs(value);
 
   @override
   @pragma('dart2js:prefer-inline')
@@ -1741,10 +1832,12 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNullableInt(int? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeDouble(double value) => _array[_index++] = value.toJS;
+  void encodeDouble(double value) =>
+      _array[_index++] = _finiteDoubleToJs(value);
 
   @override
-  void encodeNullableDouble(double? value) => _array[_index++] = value?.toJS;
+  void encodeNullableDouble(double? value) =>
+      _array[_index++] = value == null ? null : _finiteDoubleToJs(value);
 
   @override
   void encodeString(String value) => _array[_index++] = value.toJS;
@@ -1814,11 +1907,12 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
   void encodeNullableInt(int? value) => _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeDouble(double value) => _rootEncoder._setRoot(value.toJS);
+  void encodeDouble(double value) =>
+      _rootEncoder._setRoot(_finiteDoubleToJs(value));
 
   @override
   void encodeNullableDouble(double? value) =>
-      _rootEncoder._setRoot(value?.toJS);
+      _rootEncoder._setRoot(value == null ? null : _finiteDoubleToJs(value));
 
   @override
   void encodeString(String value) => _rootEncoder._setRoot(value.toJS);

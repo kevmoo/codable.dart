@@ -89,12 +89,18 @@ final class _CborWriter {
   }
 
   void patchHeader(int headerOffset, int majorType, int count) {
+    if (count < 0) {
+      throw CodableException(
+        'Invalid negative CBOR argument: $count',
+        actualValue: count,
+      );
+    }
     final mtBits = majorType << 5;
     if (count < 24) {
       _buf[headerOffset] = mtBits | count;
       return;
     }
-    final extra = count <= 255 ? 1 : (count <= 0xffff ? 2 : 4);
+    final extra = _headerExtraBytes(count);
     _ensureCapacity(extra);
     _buf.setRange(
       headerOffset + 1 + extra,
@@ -104,6 +110,19 @@ final class _CborWriter {
     );
     _writePos += extra;
     _writeMultiByteHeader(headerOffset, mtBits, count, extra);
+  }
+
+  int _headerExtraBytes(int count) {
+    if (count <= 255) return 1;
+    if (count <= 0xffff) return 2;
+    if (count <= 0xffffffff) return 4;
+    if (identical(1.0, 1) && count ~/ cborTwoPow32 > cborJsMaxSafeHi) {
+      throw CodableException(
+        'CBOR integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: count,
+      );
+    }
+    return 8;
   }
 
   void _writeMultiByteHeader(
@@ -118,9 +137,13 @@ final class _CborWriter {
     } else if (extra == 2) {
       _buf[headerOffset] = mtBits | 25;
       _bd.setUint16(headerOffset + 1, count);
-    } else {
+    } else if (extra == 4) {
       _buf[headerOffset] = mtBits | 26;
       _bd.setUint32(headerOffset + 1, count);
+    } else {
+      _buf[headerOffset] = mtBits | 27;
+      _bd.setUint32(headerOffset + 1, count ~/ cborTwoPow32);
+      _bd.setUint32(headerOffset + 5, count.remainder(cborTwoPow32));
     }
   }
 
@@ -181,12 +204,13 @@ abstract interface class _CborCloseable {
 /// Definite-length RFC 8949 CBOR [Encoder] (`isHumanReadable => false`).
 final class CborCodableEncoder implements Encoder {
   final _CborWriter _writer;
+  final int _depth;
   _CborCloseable? _activeContainer;
 
   @override
   final Map<Object, Object?> userInfo;
 
-  CborCodableEncoder._(this._writer, {this.userInfo = const {}});
+  CborCodableEncoder._(this._writer, this._depth, {this.userInfo = const {}});
 
   /// Encodes [value] to definite-length RFC 8949 CBOR bytes using [encodable].
   static Uint8List encode<T>(
@@ -199,7 +223,7 @@ final class CborCodableEncoder implements Encoder {
       throw RangeError.value(initialCapacity, 'initialCapacity');
     }
     final writer = _CborWriter(initialCapacity);
-    final encoder = CborCodableEncoder._(writer, userInfo: userInfo);
+    final encoder = CborCodableEncoder._(writer, 0, userInfo: userInfo);
     encodable.encode(value, encoder);
     encoder._finish();
     return writer.toBytes();
@@ -210,13 +234,17 @@ final class CborCodableEncoder implements Encoder {
     _activeContainer = null;
   }
 
+  CborCodableEncoder _spawnChild() =>
+      CborCodableEncoder._(_writer, _depth + 1, userInfo: userInfo);
+
   @override
   bool get isHumanReadable => false;
 
   @override
   KeyedEncoder keyed({KeyOptions? options, int? length}) {
     _finish();
-    final container = _CborKeyedEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborKeyedEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -224,7 +252,8 @@ final class CborCodableEncoder implements Encoder {
   @override
   UnkeyedEncoder unkeyed({int? length}) {
     _finish();
-    final container = _CborUnkeyedEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborUnkeyedEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -232,7 +261,8 @@ final class CborCodableEncoder implements Encoder {
   @override
   MapEncoder map({int? length}) {
     _finish();
-    final container = _CborMapEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborMapEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -247,15 +277,15 @@ final class CborCodableEncoder implements Encoder {
 final class _CborKeyedEncoder
     with BaseKeyedEncoderMixin
     implements KeyedEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
   bool _closed = false;
   CborCodableEncoder? _pendingNested;
 
-  _CborKeyedEncoder(this._writer, this._userInfo, {int? length})
+  _CborKeyedEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(5, length);
@@ -331,7 +361,7 @@ final class _CborKeyedEncoder
   @override
   Encoder nestedEncoder(String key) {
     _beginField(key);
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
@@ -340,15 +370,15 @@ final class _CborKeyedEncoder
 final class _CborUnkeyedEncoder
     with BaseUnkeyedEncoderMixin
     implements UnkeyedEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
   bool _closed = false;
   CborCodableEncoder? _pendingNested;
 
-  _CborUnkeyedEncoder(this._writer, this._userInfo, {int? length})
+  _CborUnkeyedEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(4, length);
@@ -423,15 +453,15 @@ final class _CborUnkeyedEncoder
   @override
   Encoder nestedEncoder() {
     _beginElement();
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
 }
 
 final class _CborMapEncoder implements MapEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
@@ -439,7 +469,7 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
   bool _closed = false;
   CborCodableEncoder? _pendingNested;
 
-  _CborMapEncoder(this._writer, this._userInfo, {int? length})
+  _CborMapEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(5, length);
@@ -464,7 +494,7 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
     }
     _expectingValue = true;
     _count++;
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
@@ -478,7 +508,7 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
       );
     }
     _expectingValue = false;
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }

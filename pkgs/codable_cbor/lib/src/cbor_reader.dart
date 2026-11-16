@@ -7,12 +7,23 @@ import 'dart:typed_data';
 
 import 'package:codable/codable.dart';
 
+/// Maximum nested container depth allowed during CBOR encoding, decoding, and
+/// value skipping.
+const int maxCborDepth = 64;
+
 /// Exact value of `2^32` (`4294967296`) for arithmetic 64-bit split/combine
 /// without 32-bit JavaScript bitwise shift truncation.
 const int cborTwoPow32 = 0x100000000;
 
 /// High 32-bit word limit for JavaScript's `Number.MAX_SAFE_INTEGER` (`2^53-1`).
 const int cborJsMaxSafeHi = 0x1fffff;
+
+/// Enforces the anti-DoS container nesting limit of [maxCborDepth].
+void checkCborDepth(int depth) {
+  if (depth >= maxCborDepth) {
+    throw const CodableException('CBOR nesting depth exceeds limit of 64');
+  }
+}
 
 /// Compares [length] bytes of [buf] starting at [start] against [target].
 bool cborBytesMatch(Uint8List buf, int start, Uint8List target, int length) {
@@ -67,6 +78,7 @@ ValueKind _major7ValueKind(int ai) => switch (ai) {
 final class CborReader {
   final Uint8List bytes;
   late final ByteData _bd = ByteData.sublistView(bytes);
+  late final Int32List _skipStack = Int32List(maxCborDepth);
   final ByteData _scratch = ByteData(4);
   int offset;
 
@@ -283,20 +295,40 @@ final class CborReader {
     return out;
   }
 
-  void skipItem() {
-    var remaining = 1;
-    while (remaining > 0) {
-      remaining--;
-      final ib = readByte();
-      final delta = _skipItemBody(ib >>> 5, ib & 0x1f);
-      if (delta > bytes.length - offset - remaining) {
-        throw const CodableException('Unexpected end of CBOR payload');
+  void skipItem([int baseDepth = 0]) {
+    final firstChildren = _consumeItemOrChildCount(readByte());
+    if (firstChildren < 0) return;
+    checkCborDepth(baseDepth);
+    if (firstChildren == 0) return;
+    final stack = _skipStack;
+    var sp = 0;
+    var pendingItems = firstChildren;
+    stack[0] = firstChildren;
+    while (sp >= 0) {
+      final rem = stack[sp];
+      if (rem == 0) {
+        sp--;
+        continue;
       }
-      remaining += delta;
+      stack[sp] = rem - 1;
+      pendingItems--;
+      final nested = _consumeItemOrChildCount(readByte());
+      if (nested >= 0) {
+        checkCborDepth(baseDepth + sp + 1);
+        if (nested > bytes.length - offset - pendingItems) {
+          throw const CodableException('Unexpected end of CBOR payload');
+        }
+        if (nested > 0) {
+          pendingItems += nested;
+          stack[++sp] = nested;
+        }
+      }
     }
   }
 
-  int _skipItemBody(int mt, int ai) {
+  int _consumeItemOrChildCount(int ib) {
+    final mt = ib >>> 5;
+    final ai = ib & 0x1f;
     if (ai == 31) {
       throw const CodableException(
         'Indefinite-length CBOR items are not supported',
@@ -305,14 +337,22 @@ final class CborReader {
     return switch (mt) {
       0 || 1 => _ignoreArg(readArg(ai)),
       2 || 3 => _skipBytes(readArg(ai)),
-      4 => readArg(ai),
+      4 => _skipArrayElements(ai),
       5 => _skipMapPairs(ai),
       7 => _skipMajor7(ai),
       _ => throw CodableException('Unsupported CBOR major type: $mt'),
     };
   }
 
-  int _ignoreArg(int _) => 0;
+  int _ignoreArg(int _) => -1;
+
+  int _skipArrayElements(int ai) {
+    final len = readArg(ai);
+    if (len > bytes.length - offset) {
+      throw const CodableException('Unexpected end of CBOR payload');
+    }
+    return len;
+  }
 
   int _skipMapPairs(int ai) {
     final pairs = readArg(ai);
@@ -325,7 +365,7 @@ final class CborReader {
   int _skipBytes(int len) {
     _require(len);
     offset += len;
-    return 0;
+    return -1;
   }
 
   int _skipMajor7(int ai) {

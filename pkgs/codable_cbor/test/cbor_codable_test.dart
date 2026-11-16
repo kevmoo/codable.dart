@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
 import 'package:codable_cbor/codable_cbor.dart';
+import 'package:codable_cbor/src/cbor_reader.dart';
 import 'package:test/test.dart';
 
 import '../example/codable_cbor_example.dart';
@@ -41,6 +42,7 @@ void main() {
   _registerIntegerWidthAndJsSafeTests();
   _registerFloatAndZeroCopyTests();
   _registerCursorDrainAndEncoderErrorTests();
+  _registerDepthLimitAndSiblingTests();
   _registerMalformedAndFuzzSmokeTests();
 }
 
@@ -408,6 +410,259 @@ void _registerCursorDrainAndEncoderErrorTests() {
       );
     },
   );
+}
+
+void _registerDepthLimitAndSiblingTests() {
+  group('CBOR maxCborDepth = 64 & sibling non-accumulation', () {
+    Uint8List nestedArrays(int depth) =>
+        Uint8List.fromList([...List<int>.filled(depth, 0x81), 0x17]);
+
+    Uint8List nestedMaps(int depth) => Uint8List.fromList([
+      for (var i = 0; i < depth; i++) ...const [0xa1, 0x61, 0x6b],
+      0x17,
+    ]);
+
+    int readNestedArrays(Decoder d, int remaining) {
+      if (remaining == 0) return d.singleValue().readInt();
+      final u = d.unkeyed();
+      check(u.moveNext()).isTrue();
+      return readNestedArrays(u.nestedDecoder(), remaining - 1);
+    }
+
+    int readNestedKeyed(Decoder d, int remaining) {
+      if (remaining == 0) return d.singleValue().readInt();
+      final k = d.keyed();
+      check(k.moveNextKey()).isTrue();
+      check(k.nextKey()).equals('k');
+      return readNestedKeyed(k.nestedDecoder(), remaining - 1);
+    }
+
+    int readNestedMapped(Decoder d, int remaining) {
+      if (remaining == 0) return d.singleValue().readInt();
+      return readNestedMapped(d.mapped().nestedDecoder('k'), remaining - 1);
+    }
+
+    int readNestedMap(Decoder d, int remaining) {
+      if (remaining == 0) return d.singleValue().readInt();
+      final m = d.map();
+      check(m.moveNextEntry()).isTrue();
+      check(m.keyDecoder().singleValue().readString()).equals('k');
+      return readNestedMap(m.valueDecoder(), remaining - 1);
+    }
+
+    test('allows 64-deep containers and rejects 65-deep on decode, skip, and encode', () {
+      check(maxCborDepth).equals(64);
+
+      // Unkeyed, keyed, mapped, and map at depth 64 succeed; depth 65 throws
+      check(
+        CborCodableDecoder.decode<int>(
+          nestedArrays(64),
+          Decodable.fromFunction((d) => readNestedArrays(d, 64)),
+        ),
+      ).equals(23);
+      check(
+        () => CborCodableDecoder.decode<int>(
+          nestedArrays(65),
+          Decodable.fromFunction((d) => readNestedArrays(d, 65)),
+        ),
+      ).throws<CodableException>();
+
+      for (final readerFn in <int Function(Decoder, int)>[
+        readNestedKeyed,
+        readNestedMapped,
+        readNestedMap,
+      ]) {
+        check(
+          CborCodableDecoder.decode<int>(
+            nestedMaps(64),
+            Decodable.fromFunction((d) => readerFn(d, 64)),
+          ),
+        ).equals(23);
+        check(
+          () => CborCodableDecoder.decode<int>(
+            nestedMaps(65),
+            Decodable.fromFunction((d) => readerFn(d, 65)),
+          ),
+        ).throws<CodableException>();
+      }
+
+      // Direct CborReader.skipItem and cursor skipElement at depth 64 vs 65
+      final r64 = CborReader(nestedArrays(64));
+      r64.skipItem();
+      check(r64.offset).equals(65);
+      check(() => CborReader(nestedArrays(65)).skipItem())
+          .throws<CodableException>();
+      check(() => CborReader(nestedMaps(65)).skipItem())
+          .throws<CodableException>();
+
+      final skipOk = Uint8List.fromList([0x82, ...nestedArrays(63), 0x07]);
+      check(
+        CborCodableDecoder.decode<int>(
+          skipOk,
+          Decodable.fromFunction((d) {
+            final u = d.unkeyed();
+            u.moveNext();
+            u.skipElement();
+            u.moveNext();
+            return u.readInt();
+          }),
+        ),
+      ).equals(7);
+
+      final skipTooDeep = Uint8List.fromList([0x82, ...nestedArrays(64), 0x07]);
+      check(
+        () => CborCodableDecoder.decode<int>(
+          skipTooDeep,
+          Decodable.fromFunction((d) {
+            final u = d.unkeyed();
+            u.moveNext();
+            u.skipElement();
+            u.moveNext();
+            return u.readInt();
+          }),
+        ),
+      ).throws<CodableException>();
+
+      // Encoder allows depth 64 and rejects depth 65 across unkeyed, keyed, map
+      void encodeNestedArrays(Encoder e, int remaining) {
+        if (remaining == 0) {
+          e.singleValue().encodeInt(23);
+          return;
+        }
+        encodeNestedArrays(e.unkeyed(length: 1).nestedEncoder(), remaining - 1);
+      }
+
+      void encodeNestedKeyed(Encoder e, int remaining) {
+        if (remaining == 0) {
+          e.singleValue().encodeInt(23);
+          return;
+        }
+        encodeNestedKeyed(e.keyed(length: 1).nestedEncoder('k'), remaining - 1);
+      }
+
+      void encodeNestedMap(Encoder e, int remaining) {
+        if (remaining == 0) {
+          e.singleValue().encodeInt(23);
+          return;
+        }
+        final m = e.map(length: 1);
+        m.keyEncoder().singleValue().encodeString('k');
+        encodeNestedMap(m.valueEncoder(), remaining - 1);
+      }
+
+      check(
+        CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedArrays(e, 64)),
+        ),
+      ).deepEquals(nestedArrays(64));
+      check(
+        () => CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedArrays(e, 65)),
+        ),
+      ).throws<CodableException>();
+      check(
+        CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedKeyed(e, 64)),
+        ),
+      ).deepEquals(nestedMaps(64));
+      check(
+        () => CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedKeyed(e, 65)),
+        ),
+      ).throws<CodableException>();
+      check(
+        CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedMap(e, 64)),
+        ),
+      ).deepEquals(nestedMaps(64));
+      check(
+        () => CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) => encodeNestedMap(e, 65)),
+        ),
+      ).throws<CodableException>();
+
+      // Fuzz target roundtrips depth 64 and cleanly catches depth 65..256
+      fuzzTarget(nestedArrays(64));
+      fuzzTarget(nestedArrays(65));
+      fuzzTarget(nestedArrays(256));
+    });
+
+    test(
+      'does not accumulate depth across >100 sequential sibling containers',
+      () {
+        const siblingCount = 150;
+        // Encode 150 sequential sibling maps inside an unknown-length array (patches 1-byte header)
+        final bytes = CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) {
+            final outer = e
+                .unkeyed(); // tests patchHeader for count = 150 (24..255)
+            for (var i = 0; i < siblingCount; i++) {
+              outer.nestedEncoder().keyed()
+                ..encodeInt('idx', i)
+                ..encodeList<int>(
+                  'pair',
+                  [i, i + 1],
+                  Encodable.fromFunction(
+                    (v, ie) => ie.singleValue().encodeInt(v),
+                  ),
+                );
+            }
+          }),
+        );
+
+        final reader = CborReader(bytes);
+        reader.skipItem();
+        check(reader.offset).equals(bytes.length);
+
+        final sum = CborCodableDecoder.decode<int>(
+          bytes,
+          Decodable.fromFunction((d) {
+            final u = d.unkeyed();
+            check(u.length).equals(siblingCount);
+            var total = 0;
+            for (var i = 0; u.moveNext(); i++) {
+              if (i.isEven) {
+                final m = u.nestedDecoder().mapped();
+                total += m.readInt('idx');
+              } else {
+                final k = u.nestedDecoder().keyed();
+                while (k.moveNextKey()) {
+                  if (k.nextKey() == 'idx') {
+                    total += k.readInt();
+                  } else {
+                    k.skipValue();
+                  }
+                }
+              }
+            }
+            return total;
+          }),
+        );
+        check(sum).equals((siblingCount - 1) * siblingCount ~/ 2);
+
+        // Also test patchHeader for >255 entries (2-byte patched header)
+        final map300 = CborCodableEncoder.encode<void>(
+          null,
+          Encodable.fromFunction((_, e) {
+            final k = e.keyed();
+            for (var i = 0; i < 300; i++) {
+              k.encodeInt('k$i', i);
+            }
+          }),
+        );
+        final mapped300 = CborCodableDecoder.fromBytes(map300).mapped();
+        check(mapped300.readInt('k0')).equals(0);
+        check(mapped300.readInt('k299')).equals(299);
+      },
+    );
+  });
 }
 
 void _registerMalformedAndFuzzSmokeTests() {

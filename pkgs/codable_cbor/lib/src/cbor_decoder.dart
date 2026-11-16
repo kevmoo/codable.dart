@@ -15,6 +15,7 @@ abstract interface class _CborCursor {
 /// Definite-length RFC 8949 CBOR [Decoder] (`isHumanReadable => false`).
 final class CborCodableDecoder implements Decoder {
   final CborReader _reader;
+  final int _depth;
   int? _bufferedMapOffset;
   _CborCursor? _activeCursor;
 
@@ -23,9 +24,10 @@ final class CborCodableDecoder implements Decoder {
 
   /// Creates a [CborCodableDecoder] streaming over [bytes].
   CborCodableDecoder.fromBytes(Uint8List bytes, {this.userInfo = const {}})
-    : _reader = CborReader(bytes);
+    : _reader = CborReader(bytes),
+      _depth = 0;
 
-  CborCodableDecoder._(this._reader, {required this.userInfo});
+  CborCodableDecoder._(this._reader, this._depth, {required this.userInfo});
 
   /// Decodes [bytes] into [T] using [decodable].
   static T decode<T>(
@@ -66,7 +68,8 @@ final class CborCodableDecoder implements Decoder {
   KeyedDecoder keyed({KeyOptions? options}) {
     _drainActive();
     _rewindIfBufferedMap();
-    final cursor = _CborKeyedDecoder(_reader, userInfo);
+    checkCborDepth(_depth);
+    final cursor = _CborKeyedDecoder(_reader, userInfo, _depth + 1);
     _activeCursor = cursor;
     return cursor;
   }
@@ -74,21 +77,29 @@ final class CborCodableDecoder implements Decoder {
   @override
   MappedDecoder mapped() {
     _drainActive();
+    checkCborDepth(_depth);
     final mapStart = _bufferedMapOffset ?? _reader.offset;
     _reader.offset = mapStart;
     final count = _reader.readContainerLength(5);
     final entriesStart = _reader.offset;
     _reader.offset = mapStart;
-    _reader.skipItem();
+    _reader.skipItem(_depth);
     _bufferedMapOffset = mapStart;
-    return _CborMappedDecoder(_reader.bytes, entriesStart, count, userInfo);
+    return _CborMappedDecoder(
+      _reader.bytes,
+      entriesStart,
+      count,
+      userInfo,
+      _depth + 1,
+    );
   }
 
   @override
   MapDecoder map() {
     _drainActive();
     _rewindIfBufferedMap();
-    final cursor = _CborMapDecoder(_reader, userInfo);
+    checkCborDepth(_depth);
+    final cursor = _CborMapDecoder(_reader, userInfo, _depth + 1);
     _activeCursor = cursor;
     return cursor;
   }
@@ -97,7 +108,8 @@ final class CborCodableDecoder implements Decoder {
   UnkeyedDecoder unkeyed() {
     _drainActive();
     _rewindIfBufferedMap();
-    final cursor = _CborUnkeyedDecoder(_reader, userInfo);
+    checkCborDepth(_depth);
+    final cursor = _CborUnkeyedDecoder(_reader, userInfo, _depth + 1);
     _activeCursor = cursor;
     return cursor;
   }
@@ -106,7 +118,7 @@ final class CborCodableDecoder implements Decoder {
   SingleValueDecoder singleValue() {
     _drainActive();
     _rewindIfBufferedMap();
-    return _CborSingleValueDecoder(_reader, userInfo);
+    return _CborSingleValueDecoder(_reader, userInfo, _depth);
   }
 
   @override
@@ -186,12 +198,13 @@ final class _CborKeyedDecoder
   @override
   final CborReader _reader;
   final Map<Object, Object?> _userInfo;
+  final int _childDepth;
 
   int _remainingPairs;
   int _phase = 0; // 0 = idle, 1 = atKey, 2 = atValue
   CborCodableDecoder? _pendingChild;
 
-  _CborKeyedDecoder(this._reader, this._userInfo)
+  _CborKeyedDecoder(this._reader, this._userInfo, this._childDepth)
     : _remainingPairs = _reader.readContainerLength(5);
 
   void _finishPendingChild() {
@@ -203,17 +216,17 @@ final class _CborKeyedDecoder
   void drain() {
     _finishPendingChild();
     if (_phase == 1) {
-      _reader.skipItem();
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
+      _reader.skipItem(_childDepth);
       _phase = 0;
     } else if (_phase == 2) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _phase = 0;
     }
     while (_remainingPairs > 0) {
       _remainingPairs--;
-      _reader.skipItem();
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
+      _reader.skipItem(_childDepth);
     }
   }
 
@@ -222,7 +235,7 @@ final class _CborKeyedDecoder
     _finishPendingChild();
     if (_phase == 1) return true;
     if (_phase == 2) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _phase = 0;
     }
     if (_remainingPairs <= 0) return false;
@@ -257,7 +270,7 @@ final class _CborKeyedDecoder
   int selectKeyIndex(KeyOptions options) {
     if (!moveNextKey()) return -1;
     if ((_reader.peekByte() >>> 5) != 3) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _phase = 2;
       return -1;
     }
@@ -278,7 +291,7 @@ final class _CborKeyedDecoder
   void _prepareValueRead() {
     _finishPendingChild();
     if (_phase == 1) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _phase = 2;
     }
     if (_phase != 2) {
@@ -294,7 +307,7 @@ final class _CborKeyedDecoder
   @override
   void skipValue() {
     _prepareValueRead();
-    _reader.skipItem();
+    _reader.skipItem(_childDepth);
     _completeValueRead();
   }
 
@@ -302,7 +315,11 @@ final class _CborKeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
-    final child = CborCodableDecoder._(_reader, userInfo: _userInfo);
+    final child = CborCodableDecoder._(
+      _reader,
+      _childDepth,
+      userInfo: _userInfo,
+    );
     _pendingChild = child;
     return child;
   }
@@ -317,12 +334,14 @@ final class _CborMappedDecoder
   final int _entriesStart;
   final int _count;
   final Map<Object, Object?> _userInfo;
+  final int _childDepth;
 
   _CborMappedDecoder(
     this._bytes,
     this._entriesStart,
     this._count,
     this._userInfo,
+    this._childDepth,
   );
 
   int _findValueOffset(String key) {
@@ -336,9 +355,9 @@ final class _CborMappedDecoder
           return cursor.offset;
         }
       } else {
-        cursor.skipItem();
+        cursor.skipItem(_childDepth);
       }
-      cursor.skipItem();
+      cursor.skipItem(_childDepth);
     }
     return -1;
   }
@@ -376,12 +395,13 @@ final class _CborMappedDecoder
 
   @override
   Decoder nestedDecoder(String key) =>
-      CborCodableDecoder._(_readerAtKey(key), userInfo: _userInfo);
+      CborCodableDecoder._(_readerAtKey(key), _childDepth, userInfo: _userInfo);
 }
 
 final class _CborMapDecoder implements MapDecoder, _CborCursor {
   final CborReader _reader;
   final Map<Object, Object?> _userInfo;
+  final int _childDepth;
   @override
   final int length;
 
@@ -390,7 +410,7 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
   int _itemStartOffset = -1;
   CborCodableDecoder? _pendingChild;
 
-  _CborMapDecoder(this._reader, this._userInfo)
+  _CborMapDecoder(this._reader, this._userInfo, this._childDepth)
     : length = _reader.readContainerLength(5),
       _remainingEntries = 0 {
     _remainingEntries = length;
@@ -404,13 +424,13 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
   void _advanceUnreadInCurrentEntry() {
     _finishPendingChild();
     if (_phase == 1) {
-      _reader.skipItem();
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
+      _reader.skipItem(_childDepth);
     } else if (_phase == 2) {
-      if (_reader.offset == _itemStartOffset) _reader.skipItem();
-      _reader.skipItem();
+      if (_reader.offset == _itemStartOffset) _reader.skipItem(_childDepth);
+      _reader.skipItem(_childDepth);
     } else if (_phase == 3 && _reader.offset == _itemStartOffset) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
     }
     _phase = 0;
   }
@@ -420,8 +440,8 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
     _advanceUnreadInCurrentEntry();
     while (_remainingEntries > 0) {
       _remainingEntries--;
-      _reader.skipItem();
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
+      _reader.skipItem(_childDepth);
     }
   }
 
@@ -444,7 +464,11 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
     }
     _phase = 2;
     _itemStartOffset = _reader.offset;
-    final child = CborCodableDecoder._(_reader, userInfo: _userInfo);
+    final child = CborCodableDecoder._(
+      _reader,
+      _childDepth,
+      userInfo: _userInfo,
+    );
     _pendingChild = child;
     return child;
   }
@@ -453,11 +477,11 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
   Decoder valueDecoder() {
     _finishPendingChild();
     if (_phase == 1) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _phase = 2;
       _itemStartOffset = -1;
     } else if (_phase == 2 && _reader.offset == _itemStartOffset) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
     } else if (_phase != 2) {
       throw const CodableException(
         'MapDecoder.valueDecoder() called out of order',
@@ -465,7 +489,11 @@ final class _CborMapDecoder implements MapDecoder, _CborCursor {
     }
     _phase = 3;
     _itemStartOffset = _reader.offset;
-    final child = CborCodableDecoder._(_reader, userInfo: _userInfo);
+    final child = CborCodableDecoder._(
+      _reader,
+      _childDepth,
+      userInfo: _userInfo,
+    );
     _pendingChild = child;
     return child;
   }
@@ -477,6 +505,7 @@ final class _CborUnkeyedDecoder
   @override
   final CborReader _reader;
   final Map<Object, Object?> _userInfo;
+  final int _childDepth;
   @override
   final int length;
 
@@ -484,7 +513,7 @@ final class _CborUnkeyedDecoder
   bool _hasActive = false;
   CborCodableDecoder? _pendingChild;
 
-  _CborUnkeyedDecoder(this._reader, this._userInfo)
+  _CborUnkeyedDecoder(this._reader, this._userInfo, this._childDepth)
     : length = _reader.readContainerLength(4),
       _remaining = 0 {
     _remaining = length;
@@ -499,12 +528,12 @@ final class _CborUnkeyedDecoder
   void drain() {
     _finishPendingChild();
     if (_hasActive) {
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
       _hasActive = false;
     }
     while (_remaining > 0) {
       _remaining--;
-      _reader.skipItem();
+      _reader.skipItem(_childDepth);
     }
   }
 
@@ -534,7 +563,7 @@ final class _CborUnkeyedDecoder
   @override
   void skipElement() {
     _prepareValueRead();
-    _reader.skipItem();
+    _reader.skipItem(_childDepth);
     _completeValueRead();
   }
 
@@ -542,7 +571,11 @@ final class _CborUnkeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
-    final child = CborCodableDecoder._(_reader, userInfo: _userInfo);
+    final child = CborCodableDecoder._(
+      _reader,
+      _childDepth,
+      userInfo: _userInfo,
+    );
     _pendingChild = child;
     return child;
   }
@@ -554,8 +587,9 @@ final class _CborSingleValueDecoder
   @override
   final CborReader _reader;
   final Map<Object, Object?> _userInfo;
+  final int _depth;
 
-  _CborSingleValueDecoder(this._reader, this._userInfo);
+  _CborSingleValueDecoder(this._reader, this._userInfo, this._depth);
 
   @override
   void _prepareValueRead() {}
@@ -564,5 +598,6 @@ final class _CborSingleValueDecoder
   void _completeValueRead() {}
 
   @override
-  Decoder nestedDecoder() => CborCodableDecoder._(_reader, userInfo: _userInfo);
+  Decoder nestedDecoder() =>
+      CborCodableDecoder._(_reader, _depth, userInfo: _userInfo);
 }

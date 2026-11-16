@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable_json.dart';
+import 'package:codable/codable_streaming.dart' as streaming;
 import 'package:test/test.dart';
 
 /// Lightweight 128-bit UUID parsed directly from UTF-8 byte spans without
@@ -92,12 +93,26 @@ void main() {
   }();
 
   group('Zero-Copy String Span Decoding in package:codable', () {
-    test('JsonCodableDecoder exposes payload buffer', () {
-      final jsonBytes = Uint8List.fromList(utf8.encode('{"name": "Alice"}'));
-      final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
+    test(
+      'JsonCodableDecoder exposes payload buffer only when span-capable',
+      () {
+        final jsonBytes = Uint8List.fromList(utf8.encode('{"name": "Alice"}'));
+        final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
 
-      check(decoder.payload).isNotNull().equals(jsonBytes);
-    });
+        if (identical(1.0, 1)) {
+          check(decoder.payload).isNull();
+        } else {
+          check(decoder.payload).isNotNull().equals(jsonBytes);
+        }
+
+        final streamingDecoder = streaming.JsonCodableDecoder.fromBytes(
+          jsonBytes,
+        );
+        check(streamingDecoder.payload).isNotNull().equals(jsonBytes);
+        streamingDecoder.mapped();
+        check(streamingDecoder.payload).isNull();
+      },
+    );
 
     test(
       'KeyedDecoder readStringSpan parses UUID and DateTime without String '

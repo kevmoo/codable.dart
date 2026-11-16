@@ -46,6 +46,7 @@ final class JsonCodableDecoder implements Decoder {
 
   @override
   Uint8List? get payload {
+    if (hasStreamingBufferedObject(this)) return null;
     _payloadEscaped = true;
     return _bytes ?? _reader.bytes;
   }
@@ -121,11 +122,22 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   @override
-  UnkeyedDecoder unkeyed() => StreamingUnkeyedDecoder(_reader, this);
+  UnkeyedDecoder unkeyed() {
+    final buffered = takeStreamingBufferedObject(this);
+    if (buffered != null) {
+      return DartObjectDecoder(buffered, userInfo: userInfo).unkeyed();
+    }
+    return StreamingUnkeyedDecoder(_reader, this);
+  }
 
   @override
-  SingleValueDecoder singleValue() =>
-      StreamingSingleValueDecoder(_reader, this);
+  SingleValueDecoder singleValue() {
+    final buffered = takeStreamingBufferedObject(this);
+    if (buffered != null) {
+      return DartObjectDecoder(buffered, userInfo: userInfo).singleValue();
+    }
+    return StreamingSingleValueDecoder(_reader, this);
+  }
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
