@@ -244,6 +244,7 @@ fallback:
         check(err).isA<CodableException>();
         check(err).isA<SourceSpanFormatException>();
         check(err.formattedPath).equals('primary.port');
+        check(err.actualValue).equals('not_a_port');
         check(err.span).isNotNull();
         check(err.span!.start.line).equals(3);
         check(err.span!.start.column).equals(8);

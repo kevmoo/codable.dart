@@ -30,7 +30,10 @@ final class _CborWriter {
 
   void writeHeader(int majorType, int arg) {
     if (arg < 0) {
-      throw CodableException('Invalid negative CBOR argument: $arg');
+      throw CodableException(
+        'Invalid negative CBOR argument: $arg',
+        actualValue: arg,
+      );
     }
     final mtBits = majorType << 5;
     if (arg < 24) {

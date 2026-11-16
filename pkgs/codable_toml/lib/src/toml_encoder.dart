@@ -147,6 +147,7 @@ String _formatTomlInt(int value, List<Object> path) {
       'Integer $value exceeds JavaScript 53-bit safe integer range '
       '[$_jsMinSafeInt, $_jsMaxSafeInt]',
       path: path,
+      actualValue: value,
     );
   }
   return value.toString();
@@ -168,14 +169,16 @@ void _validateRawDateTime(String raw, List<Object> path) {
     throw TomlCodableException(
       'Invalid empty TOML date-time literal',
       path: path,
+      actualValue: raw,
     );
   }
   for (var i = 0; i < raw.length; i++) {
     final c = raw.codeUnitAt(i);
     if (c < 0x20 || c >= 0x7f || c == 0x23) {
       throw TomlCodableException(
-        'Invalid character in TOML date-time literal "$raw"',
+        'Invalid character in TOML date-time literal',
         path: path,
+        actualValue: raw,
       );
     }
   }
@@ -403,6 +406,7 @@ final class TomlCodableEncoder implements Encoder {
       throw TomlCodableException(
         e.message,
         path: e.path.isNotEmpty ? e.path : encoder._trace.path,
+        actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
       );
     }
@@ -690,6 +694,7 @@ final class _TomlMapKeyEncoder
       throw TomlCodableException(
         'TOML map keys must be finite numbers, got $value',
         path: _path,
+        actualValue: value,
       );
     }
     writeKeyString(_formatTomlDouble(value));

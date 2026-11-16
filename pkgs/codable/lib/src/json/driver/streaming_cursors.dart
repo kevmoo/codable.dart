@@ -20,7 +20,10 @@ Uint8List _readByteListFromReader(JsonTokenReader reader) {
     while (reader.moveNext()) {
       final b = reader.readInt();
       if (b < 0 || b > 255) {
-        throw CodableException('Byte value out of range 0..255: $b');
+        throw CodableException(
+          'Byte value out of range 0..255: $b',
+          actualValue: b,
+        );
       }
       builder.addByte(b);
     }
@@ -29,7 +32,10 @@ Uint8List _readByteListFromReader(JsonTokenReader reader) {
   } on CodableException {
     rethrow;
   } on FormatException catch (e) {
-    throw CodableException('Invalid byte array element: ${e.message}');
+    throw CodableException(
+      'Invalid byte array element: ${e.message}',
+      underlyingError: e,
+    );
   }
 }
 

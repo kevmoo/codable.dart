@@ -128,8 +128,9 @@ final class _MsgPackWriter {
   void _writeUint64(int value) {
     final hi = value ~/ msgPackTwoPow32;
     if (identical(1.0, 1) && hi > msgPackJsMaxSafeHi) {
-      throw const CodableException(
+      throw CodableException(
         'MessagePack integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: value,
       );
     }
     _ensureCapacity(9);
@@ -170,8 +171,9 @@ final class _MsgPackWriter {
 
   void _writeInt64(int value) {
     if (identical(1.0, 1) && value < -msgPackJsMaxSafeInt) {
-      throw const CodableException(
+      throw CodableException(
         'MessagePack integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: value,
       );
     }
     final magMinus1 = -1 - value;

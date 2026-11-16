@@ -49,6 +49,7 @@ TomlCodableException _enrichTomlException(
     line: e.line ?? traceLine,
     column: e.column ?? traceCol,
     path: mergedPath,
+    actualValue: e.actualValue,
     underlyingError: e.underlyingError,
   );
 }
@@ -59,6 +60,15 @@ ValueKind _tomlNodeKind(TomlNode node) => switch (node) {
   TomlString() || TomlDateTimeValue() => ValueKind.string,
   TomlArray() => ValueKind.list,
   TomlTable() => ValueKind.map,
+};
+
+Object? _tomlNodeActualValue(TomlNode node) => switch (node) {
+  TomlBool(:final value) => value,
+  TomlInt(:final value) => value,
+  TomlFloat(:final value) => value,
+  TomlString(:final value) => value,
+  TomlDateTimeValue(:final value) => value,
+  TomlArray() || TomlTable() => null,
 };
 
 String _describeTomlNode(TomlNode node) => switch (node) {
@@ -87,6 +97,7 @@ final class _TomlTrace {
     String message, {
     int? atOffset,
     List<Object>? atPath,
+    Object? actualValue,
     Object? underlyingError,
   }) {
     final (line, column) = computeTomlLineColumn(source, atOffset ?? offset);
@@ -95,6 +106,7 @@ final class _TomlTrace {
       line: line,
       column: column,
       path: List<Object>.unmodifiable(atPath ?? path),
+      actualValue: actualValue,
       underlyingError: underlyingError,
     );
   }
@@ -111,6 +123,7 @@ int _readTomlInt(TomlNode node, _TomlTrace trace) {
   trace.fail(
     'Expected int, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -120,6 +133,7 @@ double _readTomlDouble(TomlNode node, _TomlTrace trace) {
   trace.fail(
     'Expected double, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -129,6 +143,7 @@ num _readTomlNum(TomlNode node, _TomlTrace trace) {
   trace.fail(
     'Expected num, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -138,6 +153,7 @@ String _readTomlString(TomlNode node, _TomlTrace trace) {
   trace.fail(
     'Expected String, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -146,6 +162,7 @@ bool _readTomlBool(TomlNode node, _TomlTrace trace) {
   trace.fail(
     'Expected bool, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -162,6 +179,7 @@ Uint8List _readTomlBytes(
         'Invalid base64 string for bytes: ${e.message}',
         atOffset: node.offset,
         atPath: nodePath,
+        actualValue: node.value,
         underlyingError: e,
       );
     }
@@ -176,6 +194,7 @@ Uint8List _readTomlBytes(
           'Expected byte integer in range 0..255, got TOML ${_describeTomlNode(elem)}',
           atOffset: elem.offset,
           atPath: <Object>[...nodePath, i],
+          actualValue: _tomlNodeActualValue(elem),
         );
       }
       out[i] = elem.value;
@@ -186,6 +205,7 @@ Uint8List _readTomlBytes(
     'Expected base64 string or byte list, got TOML ${_describeTomlNode(node)}',
     atOffset: node.offset,
     atPath: nodePath,
+    actualValue: _tomlNodeActualValue(node),
   );
 }
 
@@ -279,6 +299,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
       decoder._trace.fail(
         e.message,
         atPath: _mergePaths(decoder._trace.path, e.path),
+        actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
       );
     } on FormatException catch (e) {
@@ -383,6 +404,7 @@ mixin _TomlSequentialValueMixin {
     _trace.fail(
       'TOML v1.0 has no null values; got ${_describeTomlNode(node)}',
       atOffset: node.offset,
+      actualValue: _tomlNodeActualValue(node),
     );
   }
 
@@ -793,8 +815,12 @@ final class TomlDateTimeCodable implements Codable<TomlDateTime> {
     if (sv case final TomlNativeDateTimeSource source) {
       final dt = source.tryReadTomlDateTime();
       if (dt != null) return dt;
+      final actual = sv is _TomlSingleValueDecoder
+          ? _tomlNodeActualValue(sv._node)
+          : null;
       throw TomlCodableException(
         'Expected native TOML date-time literal, got ${sv.peekKind()}',
+        actualValue: actual,
       );
     }
     return parseTomlDateTimeLiteral(sv.readString());

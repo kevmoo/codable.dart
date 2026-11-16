@@ -13,14 +13,19 @@ final class YamlCodableException extends SourceSpanFormatException
   final List<Object> path;
 
   @override
+  final Object? actualValue;
+
+  @override
   final Object? underlyingError;
 
   /// Creates a [YamlCodableException] with a [message], optional [span],
-  /// structured [path], [underlyingError], and original [source].
+  /// structured [path], offending [actualValue], [underlyingError], and
+  /// original [source].
   YamlCodableException(
     String message,
     SourceSpan? span, {
     this.path = const [],
+    this.actualValue,
     this.underlyingError,
     Object? source,
   }) : super(message, span, source);

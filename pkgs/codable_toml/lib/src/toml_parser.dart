@@ -167,7 +167,10 @@ TomlDateTime parseTomlDateTimeLiteral(String raw) {
   if (_looksLikeDatePrefix(raw)) {
     return parser._parseDateOrDateTime(0, raw).value;
   }
-  throw TomlCodableException('Invalid TOML date-time literal "$raw"');
+  throw TomlCodableException(
+    'Invalid TOML date-time literal',
+    actualValue: raw,
+  );
 }
 
 final class _TomlParser {
@@ -178,10 +181,15 @@ final class _TomlParser {
 
   _TomlParser(this._source) : _length = _source.length;
 
-  Never _fail(String message, [int? atOffset]) {
+  Never _fail(String message, [int? atOffset, Object? actualValue]) {
     final pos = atOffset ?? _offset;
     final (line, column) = computeTomlLineColumn(_source, pos);
-    throw TomlCodableException(message, line: line, column: column);
+    throw TomlCodableException(
+      message,
+      line: line,
+      column: column,
+      actualValue: actualValue,
+    );
   }
 
   bool get _isAtEnd => _offset >= _length;
@@ -850,7 +858,7 @@ final class _TomlParser {
       allowLeadingZero: true,
     );
     if (cleaned == null) {
-      _fail('Invalid base-$radix integer literal "$raw"', start);
+      _fail('Invalid base-$radix integer literal', start, raw);
     }
     return TomlInt(
       _checkedBigIntToInt(BigInt.parse(cleaned, radix: radix), raw, start),
@@ -868,7 +876,7 @@ final class _TomlParser {
       allowLeadingZero: false,
     );
     if (cleaned == null) {
-      _fail('Invalid TOML literal "$raw"', start);
+      _fail('Invalid TOML literal', start, raw);
     }
     if (cleaned.length <= 15) {
       final mag = int.parse(cleaned);
@@ -884,7 +892,7 @@ final class _TomlParser {
         ? (_minSafeJs, _maxSafeJs)
         : (_minInt64, _maxInt64);
     if (value < minB || value > maxB) {
-      _fail('TOML integer literal out of range: "$raw"', start);
+      _fail('TOML integer literal out of range', start, raw);
     }
     return value == BigInt.zero ? 0 : value.toInt();
   }
@@ -895,11 +903,11 @@ final class _TomlParser {
     final expParts = unsigned.toLowerCase().split('e');
     if (expParts.length > 2 ||
         (expParts.length == 2 && !_isValidExponentTail(expParts[1]))) {
-      _fail('Invalid TOML float literal "$raw"', start);
+      _fail('Invalid TOML float literal', start, raw);
     }
     final dotParts = expParts[0].split('.');
     if (dotParts.length > 2 || !_isValidMantissaParts(dotParts)) {
-      _fail('Invalid TOML float literal "$raw"', start);
+      _fail('Invalid TOML float literal', start, raw);
     }
     return TomlFloat(double.parse(raw.replaceAll('_', '')), offset: start);
   }
@@ -907,7 +915,7 @@ final class _TomlParser {
   TomlDateTimeValue _parseLocalTime(int start, String raw) {
     final parsed = _parseTimePart(raw, 0);
     if (parsed == null || parsed.$2 != raw.length) {
-      _fail('Invalid TOML Local Time "$raw"', start);
+      _fail('Invalid TOML Local Time', start, raw);
     }
     return TomlDateTimeValue(
       TomlDateTime(kind: TomlDateTimeKind.localTime, raw: raw),
@@ -917,7 +925,7 @@ final class _TomlParser {
 
   TomlDateTimeValue _parseDateOrDateTime(int start, String raw) {
     final ymd = _parseCalendarDate(raw);
-    if (ymd == null) _fail('Invalid TOML calendar date in "$raw"', start);
+    if (ymd == null) _fail('Invalid TOML calendar date', start, raw);
     final (year, month, day) = ymd;
     if (raw.length == 10) {
       return TomlDateTimeValue(
@@ -931,11 +939,11 @@ final class _TomlParser {
     }
     final sep = raw.codeUnitAt(10);
     if (sep != 0x54 && sep != 0x74 && sep != 0x20) {
-      _fail('Invalid TOML date-time separator in "$raw"', start);
+      _fail('Invalid TOML date-time separator', start, raw);
     }
     final timeParsed = _parseTimePart(raw, 11);
     if (timeParsed == null) {
-      _fail('Invalid time component in TOML date-time "$raw"', start);
+      _fail('Invalid time component in TOML date-time', start, raw);
     }
     final (time, afterTime) = timeParsed;
     if (afterTime == raw.length) {
@@ -959,7 +967,7 @@ final class _TomlParser {
     }
     final offsetMins = _parseTimeOffsetMinutes(raw, afterTime);
     if (offsetMins == null) {
-      _fail('Invalid offset in TOML Offset Date-Time "$raw"', start);
+      _fail('Invalid offset in TOML Offset Date-Time', start, raw);
     }
     final wallUtc = DateTime.utc(
       year,

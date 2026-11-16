@@ -80,7 +80,8 @@ DateTime _parseIsoDateTimeString(String raw) {
     return DateTime.parse(raw);
   } on FormatException catch (e) {
     throw CodableException(
-      'Invalid ISO-8601 DateTime "$raw": ${e.message}',
+      'Invalid ISO-8601 DateTime: ${e.message}',
+      actualValue: raw,
       underlyingError: e,
     );
   }
@@ -103,7 +104,8 @@ final class TomlDateTimeCodec implements Codable<DateTime> {
         final dt = nativeDt.dateTime;
         if (dt != null) return dt;
         throw TomlCodableException(
-          'Expected Offset or Local Date-Time for DateTime, got ${nativeDt.kind} (${nativeDt.raw})',
+          'Expected Offset or Local Date-Time for DateTime, got ${nativeDt.kind}',
+          actualValue: nativeDt,
         );
       }
     }
@@ -148,6 +150,7 @@ final class TomlCodableException extends CodableException {
     this.line,
     this.column,
     super.path,
+    super.actualValue,
     super.underlyingError,
   });
 

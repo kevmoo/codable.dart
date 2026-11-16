@@ -161,6 +161,7 @@ final class YamlCodableDecoder implements Decoder {
         e.message,
         decoder._trace.node.span,
         path: _mergePaths(decoder._trace.path, e.path),
+        actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
         source: yaml,
       );
