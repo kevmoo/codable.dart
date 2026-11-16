@@ -60,6 +60,7 @@ void main() {
         'pkgs/codable_yaml',
         'pkgs/codable_cbor',
         'pkgs/codable_msgpack',
+        'pkgs/codable_toml',
       ], workingDirectory: tempDir.path);
     }
   } finally {

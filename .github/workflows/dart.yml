@@ -35,10 +35,15 @@ jobs:
         run: dart analyze --fatal-infos
 
       - name: Run tests
-        run: dart test pkgs/codable pkgs/codable_builder pkgs/codable_benchmarks pkgs/codable_yaml pkgs/codable_cbor pkgs/codable_msgpack
+        run: dart test pkgs/codable pkgs/codable_builder pkgs/codable_benchmarks pkgs/codable_yaml pkgs/codable_cbor pkgs/codable_msgpack pkgs/codable_toml
 
       # The VM run above exercises driver_streaming.dart. driver_js.dart is
       # selected by the `dart.library.js_interop` conditional export and would
       # otherwise only ever be analyzed, never executed.
       - name: Run tests (JS)
-        run: dart test -p node pkgs/codable pkgs/codable_yaml pkgs/codable_cbor pkgs/codable_msgpack
+        run: dart test -p node pkgs/codable pkgs/codable_yaml pkgs/codable_cbor pkgs/codable_msgpack pkgs/codable_toml
+
+      - name: Verify Wasm compilation
+        run: |
+          dart compile wasm pkgs/codable_toml/example/codable_toml_example.dart -o /tmp/codable_toml_example.wasm
+          dart compile wasm pkgs/codable_toml/test/fuzz/toml_fuzz.dart -o /tmp/toml_fuzz.wasm
