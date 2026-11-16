@@ -487,5 +487,15 @@ void main() {
       check(allNullEncode)
           .contains('final keyed = encoder.keyed(length: count\$);');
     });
+
+    test('emits UnkeyedDecoder.decodeList and decodeNullableList for 2D/3D @Codable lists', () {
+      final output = runGeneratorFor('NestedModelGrid');
+
+      check(output).contains('l.add(u.decodeList(const PointCodable()));');
+      check(output)
+          .contains('l.add(u.decodeNullableList(const PointCodable()));');
+      check(output)
+          .contains('l.add(u.decodeList((const PointCodable()).list));');
+    });
   });
 }

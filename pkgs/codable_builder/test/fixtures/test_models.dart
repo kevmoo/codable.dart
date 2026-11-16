@@ -506,3 +506,35 @@ final class HugeModel63 {
     required this.f62,
   });
 }
+
+@Codable()
+final class NestedModelGrid {
+  final List<List<Point>> rows;
+  final List<List<Point>?> nullableRows;
+  final List<List<Point?>> sparseRows;
+  final List<List<List<Point>>> cube;
+
+  const NestedModelGrid({
+    this.rows = const [],
+    this.nullableRows = const [],
+    this.sparseRows = const [],
+    this.cube = const [],
+  });
+}
+
+@Codable()
+final class NestedCollectionMatrix {
+  final List<List<Float64List>> tensor3d;
+  final List<Set<Point>> pointSets;
+  final Set<List<int>> intRowsSet;
+  final List<List<Map<String, int>>> mapGrid;
+  final List<Set<UserRole>> roleSets;
+
+  const NestedCollectionMatrix({
+    this.tensor3d = const [],
+    this.pointSets = const [],
+    this.intRowsSet = const {},
+    this.mapGrid = const [],
+    this.roleSets = const [],
+  });
+}

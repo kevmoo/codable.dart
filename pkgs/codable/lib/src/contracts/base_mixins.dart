@@ -26,14 +26,27 @@ Uint8List _decodeBase64String(String encoded) {
   }
 }
 
+int _readByteElement(UnkeyedDecoder u) {
+  final b = u.readInt();
+  if (b < 0 || b > 255) {
+    throw CodableException('Expected byte in range 0..255, got $b');
+  }
+  return b;
+}
+
 Uint8List _decodeByteList(UnkeyedDecoder u) {
+  final len = u.length;
+  if (len != null) {
+    final out = Uint8List(len);
+    var i = 0;
+    while (u.moveNext()) {
+      out[i++] = _readByteElement(u);
+    }
+    return out;
+  }
   final builder = BytesBuilder(copy: false);
   while (u.moveNext()) {
-    final b = u.readNum();
-    if (b is! int || b < 0 || b > 255) {
-      throw CodableException('Expected byte in range 0..255, got $b');
-    }
-    builder.addByte(b);
+    builder.addByte(_readByteElement(u));
   }
   return builder.takeBytes();
 }
@@ -286,6 +299,10 @@ mixin BaseMappedDecoderMixin implements MappedDecoder {
       _decodeUnkeyedModelList(nestedDecoder(key).unkeyed(), decodable);
 
   @override
+  List<T>? decodeNullableListKey<T>(String key, Decodable<T> decodable) =>
+      _isMissingOrNull(key) ? null : decodeListKey(key, decodable);
+
+  @override
   List<int> decodeIntList(String key) =>
       _decodeUnkeyedIntList(nestedDecoder(key).unkeyed());
 
@@ -406,6 +423,19 @@ mixin BaseUnkeyedDecoderMixin implements UnkeyedDecoder {
       return null;
     }
     return decodeElement(decodable);
+  }
+
+  @override
+  List<T> decodeList<T>(Decodable<T> decodable) =>
+      _decodeUnkeyedModelList(nestedDecoder().unkeyed(), decodable);
+
+  @override
+  List<T>? decodeNullableList<T>(Decodable<T> decodable) {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return decodeList(decodable);
   }
 
   @override
@@ -691,4 +721,288 @@ mixin BaseSingleValueEncoderMixin implements SingleValueEncoder {
   @override
   void encodeNullable<T>(T? value, Encodable<T> encodable) =>
       value == null ? encodeNull() : encode(value, encodable);
+}
+
+const int _jsMaxSafeInt = 0x1FFFFFFFFFFFFF;
+const int _jsMinSafeInt = -0x1FFFFFFFFFFFFF;
+
+final RegExp _canonicalIntKeyPattern = RegExp(r'^-?(?:0|[1-9]\d*)$');
+final RegExp _canonicalNumKeyPattern = RegExp(
+  r'^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$',
+);
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+@pragma('dart2js:prefer-inline')
+bool _isValidJsSafeInt(int value) =>
+    !identical(1.0, 1) || (value >= _jsMinSafeInt && value <= _jsMaxSafeInt);
+
+String _formatCanonicalFiniteDouble(double value) {
+  if (value == 0.0) return value.isNegative ? '-0.0' : '0.0';
+  final text = value.toString();
+  if (!text.contains('.') && !text.contains('e') && !text.contains('E')) {
+    return '$text.0';
+  }
+  return text;
+}
+
+/// Reusable scalar [Decoder] view over a string-keyed map entry key (such as
+/// JSON or TOML object/table keys).
+final class StringMapKeyDecoder
+    with BaseSingleValueDecoderMixin
+    implements Decoder, SingleValueDecoder {
+  /// Mutable active key string, allowing cursor reuse across map entries
+  /// without per-entry allocations.
+  String key;
+
+  @override
+  final Map<Object, Object?> userInfo;
+
+  /// Human-readable format name used in diagnostic [CodableException] messages.
+  final String formatName;
+
+  /// Creates a [StringMapKeyDecoder] for [formatName] (defaults to `'JSON'`).
+  StringMapKeyDecoder(this.userInfo, {this.key = '', this.formatName = 'JSON'});
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  Uint8List? get payload => null;
+
+  @override
+  ValueKind peekKind() => ValueKind.string;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  SingleValueDecoder singleValue() => this;
+
+  @override
+  KeyedDecoder keyed({KeyOptions? options}) => throw CodableException(
+    '$formatName map keys are scalar strings, not keyed objects',
+  );
+
+  @override
+  MappedDecoder mapped() => throw CodableException(
+    '$formatName map keys are scalar strings, not mapped objects',
+  );
+
+  @override
+  MapDecoder map() => throw CodableException(
+    '$formatName map keys are scalar strings, not maps',
+  );
+
+  @override
+  UnkeyedDecoder unkeyed() => throw CodableException(
+    '$formatName map keys are scalar strings, not arrays',
+  );
+
+  @override
+  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
+      null;
+
+  @override
+  bool isNull() => false;
+
+  @override
+  void readNull() =>
+      throw CodableException('Expected null $formatName map key, found "$key"');
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  int readInt() {
+    if (_canonicalIntKeyPattern.hasMatch(key)) {
+      final parsed = int.tryParse(key, radix: 10);
+      if (parsed != null && _isValidJsSafeInt(parsed)) return parsed;
+    }
+    throw CodableException('Expected int $formatName map key, found "$key"');
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  double readDouble() {
+    if (_canonicalNumKeyPattern.hasMatch(key)) {
+      final parsed = double.tryParse(key);
+      if (parsed != null && parsed.isFinite) return parsed;
+    }
+    throw CodableException(
+      'Expected finite double $formatName map key, found "$key"',
+    );
+  }
+
+  @override
+  num readNum() {
+    if (_canonicalIntKeyPattern.hasMatch(key)) {
+      final asInt = int.tryParse(key, radix: 10);
+      if (asInt != null && _isValidJsSafeInt(asInt)) return asInt;
+    }
+    return readDouble();
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  String readString() => key;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  bool readBool() {
+    if (key == 'true') return true;
+    if (key == 'false') return false;
+    throw CodableException('Expected bool $formatName map key, found "$key"');
+  }
+
+  @override
+  Uint8List readBytes() =>
+      throw CodableException('$formatName map keys cannot be binary bytes');
+
+  /// Matches [key] against [options] for enum map keys.
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  int selectStringIndex(KeyOptions options) => options.indexOf(key);
+
+  @override
+  Decoder nestedDecoder() => this;
+}
+
+/// Reusable base mixin for string-keyed [MapEncoder.keyEncoder]
+/// implementations (such as JSON or TOML).
+///
+/// Implementing classes only need to provide [formatName], [hasWrittenKey],
+/// [writeKeyString], and [Encoder.userInfo].
+mixin BaseStringMapKeyEncoderMixin implements Encoder, SingleValueEncoder {
+  /// Human-readable format name used in diagnostic [CodableException] messages.
+  String get formatName;
+
+  /// Whether a key string has been recorded for the active map entry.
+  bool get hasWrittenKey;
+
+  /// Records [key] for the active map entry, throwing [CodableException] if a
+  /// key has already been written for the entry.
+  void writeKeyString(String key);
+
+  Never _throwNullKey() =>
+      throw CodableException('$formatName map keys cannot be null');
+
+  @override
+  bool get isHumanReadable => true;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  SingleValueEncoder singleValue() => this;
+
+  @override
+  KeyedEncoder keyed({KeyOptions? options, int? length}) =>
+      throw CodableException(
+        '$formatName map keys must be scalar values, not keyed objects',
+      );
+
+  @override
+  UnkeyedEncoder unkeyed({int? length}) => throw CodableException(
+    '$formatName map keys must be scalar values, not arrays',
+  );
+
+  @override
+  MapEncoder map({int? length}) => throw CodableException(
+    '$formatName map keys must be scalar values, not maps',
+  );
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  void encodeInt(int value) {
+    if (!_isValidJsSafeInt(value)) {
+      throw CodableException(
+        '$formatName integer map key exceeds 53-bit safe range: $value',
+      );
+    }
+    writeKeyString(value.toString());
+  }
+
+  @override
+  void encodeNullableInt(int? value) {
+    if (value == null) _throwNullKey();
+    encodeInt(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  void encodeDouble(double value) {
+    if (!value.isFinite) {
+      throw CodableException(
+        '$formatName map keys must be finite numbers, got $value',
+      );
+    }
+    writeKeyString(_formatCanonicalFiniteDouble(value));
+  }
+
+  @override
+  void encodeNullableDouble(double? value) {
+    if (value == null) _throwNullKey();
+    encodeDouble(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  void encodeString(String value) => writeKeyString(value);
+
+  @override
+  void encodeNullableString(String? value) {
+    if (value == null) _throwNullKey();
+    encodeString(value);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  @pragma('dart2js:prefer-inline')
+  void encodeBool(bool value) => writeKeyString(value ? 'true' : 'false');
+
+  @override
+  void encodeNullableBool(bool? value) {
+    if (value == null) _throwNullKey();
+    encodeBool(value);
+  }
+
+  @override
+  void encodeBytes(Uint8List value) =>
+      throw CodableException('$formatName map keys cannot be binary bytes');
+
+  @override
+  void encodeNullableBytes(Uint8List? value) =>
+      throw CodableException('$formatName map keys cannot be binary bytes');
+
+  @override
+  void encodeNull() => _throwNullKey();
+
+  @override
+  void encode<T>(T value, Encodable<T> encodable) {
+    encodable.encode(value, this);
+    if (!hasWrittenKey) {
+      throw CodableException('$formatName map key encoder did not write a key');
+    }
+  }
+
+  @override
+  void encodeNullable<T>(T? value, Encodable<T> encodable) {
+    if (value == null) _throwNullKey();
+    encode(value, encodable);
+  }
 }

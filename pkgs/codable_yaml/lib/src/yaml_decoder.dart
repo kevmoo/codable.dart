@@ -7,11 +7,18 @@ import 'package:yaml/yaml.dart';
 
 import 'yaml_exception.dart';
 
+bool _startsWithPath(List<Object> full, List<Object> prefix) {
+  if (full.length < prefix.length) return false;
+  for (var i = 0; i < prefix.length; i++) {
+    if (full[i] != prefix[i]) return false;
+  }
+  return true;
+}
+
 List<Object> _mergePaths(List<Object> prefix, List<Object> suffix) {
   if (suffix.isEmpty) return List<Object>.unmodifiable(prefix);
-  if (prefix.isEmpty) return List<Object>.unmodifiable(suffix);
-  if (prefix.last == suffix.first) {
-    return List<Object>.unmodifiable([...prefix, ...suffix.skip(1)]);
+  if (prefix.isEmpty || _startsWithPath(suffix, prefix)) {
+    return List<Object>.unmodifiable(suffix);
   }
   return List<Object>.unmodifiable([...prefix, ...suffix]);
 }
@@ -43,9 +50,19 @@ ValueKind _yamlNodeKind(YamlNode node) => switch (node) {
 
 Object? _scalarValue(YamlNode node) => node is YamlScalar ? node.value : node;
 
+final RegExp _yamlPlainHexPrefix = RegExp(r'^[+-]?0[xX]');
+
+bool _isPlainYamlFloatOnJs(YamlNode node) {
+  if (!identical(1.0, 1) || node is! YamlScalar) return false;
+  if (node.style != ScalarStyle.PLAIN) return false;
+  final text = node.span.text;
+  if (_yamlPlainHexPrefix.hasMatch(text)) return false;
+  return text.contains('.') || text.contains('e') || text.contains('E');
+}
+
 int _readYamlInt(YamlNode node, {bool coerceString = false}) {
   final v = _scalarValue(node);
-  if (v is int) return v;
+  if (v is int && !_isPlainYamlFloatOnJs(node)) return v;
   if (coerceString && v is String) {
     final parsed = int.tryParse(v);
     if (parsed != null) return parsed;
@@ -314,7 +331,6 @@ final class _YamlKeyedDecoder
     if (_phase == 0 && !moveNextKey()) {
       throw const CodableException('No more keys in YAML map');
     }
-    _phase = 2;
     _trace.set(_activeValueNode!, _activePath);
     return _activeValueNode!;
   }

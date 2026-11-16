@@ -3373,7 +3373,7 @@ final class _MinimalKeyedDecoder with BaseKeyedDecoderMixin {
   }
 
   @override
-  int readInt() => _val as int;
+  int readInt() => _minimalInt(_val);
 
   @override
   double readDouble() => (_val as num).toDouble();
@@ -3393,6 +3393,11 @@ final class _MinimalKeyedDecoder with BaseKeyedDecoderMixin {
     reportUnkeyedLength: _reportUnkeyedLength,
     userInfo: _userInfo,
   );
+}
+
+int _minimalInt(Object? v) {
+  if (v is int) return v;
+  throw CodableException('Expected int, got $v');
 }
 
 final class _MinimalMappedDecoder with BaseMappedDecoderMixin {
@@ -3463,7 +3468,7 @@ final class _MinimalUnkeyedDecoder with BaseUnkeyedDecoderMixin {
   void skipElement() {}
 
   @override
-  int readInt() => _val as int;
+  int readInt() => _minimalInt(_val);
 
   @override
   double readDouble() => (_val as num).toDouble();
@@ -3501,7 +3506,7 @@ final class _MinimalSingleValueDecoder with BaseSingleValueDecoderMixin {
   }
 
   @override
-  int readInt() => _val as int;
+  int readInt() => _minimalInt(_val);
 
   @override
   double readDouble() => (_val as num).toDouble();

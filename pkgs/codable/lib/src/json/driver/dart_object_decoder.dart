@@ -93,118 +93,6 @@ Uint8List _decodeByteListFromObjects(List<Object?> v) {
   return out;
 }
 
-/// Reusable scalar [Decoder] view over a JSON object property name [String].
-final class JsonMapKeyDecoder
-    with BaseSingleValueDecoderMixin
-    implements Decoder, SingleValueDecoder {
-  String key = '';
-  @override
-  final Map<Object, Object?> userInfo;
-
-  JsonMapKeyDecoder(this.userInfo);
-
-  @override
-  bool get isHumanReadable => true;
-
-  @override
-  Uint8List? get payload => null;
-
-  @override
-  ValueKind peekKind() => ValueKind.string;
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  SingleValueDecoder singleValue() => this;
-
-  @override
-  KeyedDecoder keyed({KeyOptions? options}) => throw const CodableException(
-    'JSON map keys are scalar strings, not keyed objects',
-  );
-
-  @override
-  MappedDecoder mapped() => throw const CodableException(
-    'JSON map keys are scalar strings, not mapped objects',
-  );
-
-  @override
-  MapDecoder map() => throw const CodableException(
-    'JSON map keys are scalar strings, not maps',
-  );
-
-  @override
-  UnkeyedDecoder unkeyed() => throw const CodableException(
-    'JSON map keys are scalar strings, not arrays',
-  );
-
-  @override
-  Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
-      null;
-
-  @override
-  bool isNull() => false;
-
-  @override
-  void readNull() =>
-      throw CodableException('Expected null map key, found "$key"');
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  int readInt() {
-    final parsed = int.tryParse(key);
-    if (parsed != null) return parsed;
-    throw CodableException('Expected int map key, found "$key"');
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  double readDouble() {
-    final parsed = double.tryParse(key);
-    if (parsed != null && parsed.isFinite) return parsed;
-    throw CodableException('Expected finite double map key, found "$key"');
-  }
-
-  @override
-  num readNum() {
-    final asInt = int.tryParse(key);
-    if (asInt != null) return asInt;
-    return readDouble();
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  String readString() => key;
-
-  @override
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  bool readBool() {
-    if (key == 'true') return true;
-    if (key == 'false') return false;
-    throw CodableException('Expected bool map key, found "$key"');
-  }
-
-  @override
-  Uint8List readBytes() => decodeJsonBase64Bytes(key);
-
-  /// Matches [key] against [options] for enum map keys.
-  @pragma('vm:prefer-inline')
-  @pragma('wasm:prefer-inline')
-  @pragma('dart2js:prefer-inline')
-  int selectStringIndex(KeyOptions options) => options.indexOf(key);
-
-  @override
-  Decoder nestedDecoder() => this;
-}
-
 /// In-memory object-tree [Decoder] used when buffering JSON objects for
 /// random-access `mapped()` inspection and `SuperDecodable` handoff.
 final class DartObjectDecoder implements Decoder {
@@ -483,7 +371,7 @@ final class DartObjectMapDecoder implements MapDecoder {
   final Map<String, Object?> _map;
   final Map<Object, Object?> _userInfo;
   late final List<String> _keys = _map.keys.toList(growable: false);
-  late final JsonMapKeyDecoder _keyDecoder = JsonMapKeyDecoder(_userInfo);
+  late final StringMapKeyDecoder _keyDecoder = StringMapKeyDecoder(_userInfo);
   int _index = 0;
   Object? _currentValue;
   bool _hasCurrent = false;
