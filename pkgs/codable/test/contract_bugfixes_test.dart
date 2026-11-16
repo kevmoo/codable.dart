@@ -860,11 +860,28 @@ void _registerExceptionActualValueTests() {
         check(() {
               final m = JsonCodableDecoder.fromString('{"k": 42}').map();
               m.moveNextEntry();
-              m.valueDecoder().keyed();
+              m.valueDecoder().map().moveNextEntry();
             })
             .throws<CodableException>()
             .has((e) => e.actualValue, 'actualValue')
             .equals(42);
+
+        if (identical(1, 1.0)) {
+          for (final openOnVal in <void Function(Decoder)>[
+            (d) => d.keyed(),
+            (d) => d.mapped(),
+            (d) => d.unkeyed(),
+          ]) {
+            check(() {
+                  final m = JsonCodableDecoder.fromString('{"k": 42}').map();
+                  m.moveNextEntry();
+                  openOnVal(m.valueDecoder());
+                })
+                .throws<CodableException>()
+                .has((e) => e.actualValue, 'actualValue')
+                .equals(42);
+          }
+        }
 
         check(
               () =>
