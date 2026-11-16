@@ -9,7 +9,6 @@ import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
 import 'type_helper.dart';
-import 'utils.dart';
 
 typedef _EncoderSlot = ({
   String itemAccess,
@@ -48,7 +47,7 @@ final class EncoderGeneratorHelper {
       final fixedNonNullCount = nonIgnoredFields.length - nullableFields.length;
       raw.writeln('  var count\$ = $fixedNonNullCount;');
       for (final field in nullableFields) {
-        final suffix = toSafeIdentifierSuffix(field.name);
+        final suffix = field.schemaSuffix;
         raw.writeln('  final v\$$suffix = instance.${field.name};');
         raw.writeln('  if (v\$$suffix != null) count\$++;');
       }
@@ -56,7 +55,7 @@ final class EncoderGeneratorHelper {
     }
 
     for (final field in nonIgnoredFields) {
-      final suffix = toSafeIdentifierSuffix(field.name);
+      final suffix = field.schemaSuffix;
       final keyExpr = '$schemaName.name$suffix';
 
       if (field.isNullable) {
@@ -138,7 +137,10 @@ final class EncoderGeneratorHelper {
           );
         }
       case TypeCategory.tuple:
-        buffer.writeln('${indent}keyed.encodeDoubleList($keyExpr, $access);');
+        final tupleMethod = isIntegerTupleTargetType(field.type)
+            ? 'encodeIntList'
+            : 'encodeDoubleList';
+        buffer.writeln('${indent}keyed.$tupleMethod($keyExpr, $access);');
       case TypeCategory.list:
         _writeListEncode(buffer, field, keyExpr, access, indent: indent);
       case TypeCategory.set:
@@ -152,18 +154,20 @@ final class EncoderGeneratorHelper {
           '$keyExpr, $access, const ${nestedName}Codable());',
         );
       case TypeCategory.unknown:
-        buffer.writeln(
-          '${indent}keyed.encodeString($keyExpr, $access.toString());',
+        throw StateError(
+          'Unsupported unknown field type '
+          '"${field.type.getDisplayString()}" for "${field.name}".',
         );
     }
   }
 
-  static String? _typedDataKeyedMethod(String? typeName) => switch (typeName) {
-    'Float64List' || 'Float32List' => 'encodeDoubleList',
-    'Uint8List' => 'encodeBytes',
-    'Int64List' || 'Int32List' => 'encodeIntList',
-    _ => null,
-  };
+  static String? _typedDataKeyedMethod(DartType type) =>
+      switch (classifyTypedDataKind(type)) {
+        TypedDataKind.float64 || TypedDataKind.float32 => 'encodeDoubleList',
+        TypedDataKind.uint8Bytes => 'encodeBytes',
+        TypedDataKind.intList => 'encodeIntList',
+        null => null,
+      };
 
   static String? _primitiveKeyedListMethod(DartType? elemType) {
     if (elemType == null || elemType.isNullableType) return null;
@@ -190,13 +194,19 @@ final class EncoderGeneratorHelper {
     String access, {
     required String indent,
   }) {
-    final typedMethod = _typedDataKeyedMethod(field.type.element?.name);
+    final typedMethod = _typedDataKeyedMethod(field.type);
     if (typedMethod != null) {
       buffer.writeln('${indent}keyed.$typedMethod($keyExpr, $access);');
       return;
     }
 
     final elemType = field.elementType;
+    if (elemType == null) {
+      throw StateError(
+        'Missing element type for List field "${field.name}" '
+        '(${field.type.getDisplayString()}).',
+      );
+    }
     final primMethod = _primitiveKeyedListMethod(elemType);
     if (primMethod != null) {
       buffer.writeln('${indent}keyed.$primMethod($keyExpr, $access);');
@@ -212,7 +222,7 @@ final class EncoderGeneratorHelper {
       return;
     }
 
-    final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
+    final elemTypeStr = elemType.getDisplayString();
     buffer.writeln(
       '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
     );
@@ -235,6 +245,12 @@ final class EncoderGeneratorHelper {
     required String indent,
   }) {
     final elemType = field.elementType;
+    if (elemType == null) {
+      throw StateError(
+        'Missing element type for Set field "${field.name}" '
+        '(${field.type.getDisplayString()}).',
+      );
+    }
     final primMethod = _primitiveKeyedListMethod(elemType);
     if (primMethod != null) {
       buffer.writeln('${indent}keyed.$primMethod($keyExpr, $access.toList());');
@@ -250,7 +266,7 @@ final class EncoderGeneratorHelper {
       return;
     }
 
-    final elemTypeStr = elemType?.getDisplayString() ?? 'dynamic';
+    final elemTypeStr = elemType.getDisplayString();
     buffer.writeln(
       '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
     );
@@ -335,8 +351,7 @@ final class EncoderGeneratorHelper {
     _EncoderSlot slot,
   ) {
     if (type == null) {
-      return '${slot.indent}$kVar.encodeString('
-          '$keyExpr, ${slot.itemAccess}.toString());\n';
+      throw StateError('Missing Map value type.');
     }
     if (type.isDartCoreNum) {
       return _numKeyedMapValueEncodeCode(
@@ -413,7 +428,7 @@ final class EncoderGeneratorHelper {
   }
 
   static String? _keyedDirectListEncodeMethod(DartType type) {
-    final typed = _typedDataKeyedMethod(type.element?.name);
+    final typed = _typedDataKeyedMethod(type);
     if (typed != null) return typed;
     if (type.isDartCoreList || type.element?.name == 'List') {
       return _primitiveKeyedListMethod(_typeArgAt(type, 0));
@@ -466,7 +481,7 @@ final class EncoderGeneratorHelper {
     if (type.isDartCoreDouble) return ('encodeDouble', 'encodeNullableDouble');
     if (type.isDartCoreString) return ('encodeString', 'encodeNullableString');
     if (type.isDartCoreBool) return ('encodeBool', 'encodeNullableBool');
-    if (type.element?.name == 'Uint8List') {
+    if (classifyTypedDataKind(type) == TypedDataKind.uint8Bytes) {
       return ('encodeBytes', 'encodeNullableBytes');
     }
     return null;
@@ -480,8 +495,7 @@ final class EncoderGeneratorHelper {
 
   static String _encoderValueCode(DartType? type, _EncoderSlot slot) {
     if (type == null) {
-      return '${slot.indent}${slot.encoderExpr}.singleValue().encodeString('
-          '${slot.itemAccess}.toString());\n';
+      throw StateError('Missing nested value type.');
     }
     final scalarMethod = _scalarEncodeMethod(type);
     if (scalarMethod != null) {
@@ -545,11 +559,12 @@ final class EncoderGeneratorHelper {
       ? type.typeArguments[index]
       : null;
 
-  static String? _typedUnkeyedElementMethod(String? name) => switch (name) {
-    'Float64List' || 'Float32List' => 'encodeDouble',
-    'Int64List' || 'Int32List' => 'encodeInt',
-    _ => null,
-  };
+  static String? _typedUnkeyedElementMethod(DartType type) =>
+      switch (classifyTypedDataKind(type)) {
+        TypedDataKind.float64 || TypedDataKind.float32 => 'encodeDouble',
+        TypedDataKind.intList => 'encodeInt',
+        TypedDataKind.uint8Bytes || null => null,
+      };
 
   static String _nonNullComplexEncoderValueCode(
     DartType type,
@@ -569,7 +584,7 @@ final class EncoderGeneratorHelper {
         name == 'Set') {
       return _inlineUnkeyedEncodeCode(_typeArgAt(type, 0), slot);
     }
-    final typedMethod = _typedUnkeyedElementMethod(name);
+    final typedMethod = _typedUnkeyedElementMethod(type);
     if (typedMethod != null) {
       return _inlineTypedUnkeyedEncodeCode(typedMethod, slot);
     }
@@ -578,11 +593,15 @@ final class EncoderGeneratorHelper {
       return '${slot.indent}const ${type.element!.name}Codable().encode('
           '${slot.itemAccess}, ${slot.encoderExpr});\n';
     }
-    return '${slot.indent}${slot.encoderExpr}.singleValue().encodeString('
-        '${slot.itemAccess}.toString());\n';
+    throw StateError(
+      'Unsupported nested value type "${type.getDisplayString()}".',
+    );
   }
 
   static String _inlineUnkeyedEncodeCode(DartType? inner, _EncoderSlot slot) {
+    if (inner == null) {
+      throw StateError('Missing element type for nested collection.');
+    }
     final sfx = slot.depth == 0 ? '' : '${slot.depth}';
     final uVar = 'u$sfx';
     final elemVar = 'elem$sfx';
@@ -594,7 +613,7 @@ final class EncoderGeneratorHelper {
       '${slot.encoderExpr}.unkeyed(length: ${slot.itemAccess}.length);',
     );
     out.writeln('$indent  for (final $elemVar in ${slot.itemAccess}) {');
-    final directMethod = inner != null ? _scalarEncodeMethod(inner) : null;
+    final directMethod = _scalarEncodeMethod(inner);
     if (directMethod != null) {
       out.writeln('$indent    $uVar.$directMethod($elemVar);');
     } else {

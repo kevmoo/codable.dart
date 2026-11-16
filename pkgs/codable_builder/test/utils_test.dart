@@ -57,6 +57,8 @@ void main() {
       check(toSafeIdentifierSuffix('user_id')).equals('UserId');
       check(toSafeIdentifierSuffix('user-id')).equals('UserId');
       check(toSafeIdentifierSuffix('user@domain')).equals('UserDomain');
+      check(toSafeIdentifierSuffix('')).equals('Empty');
+      check(toSafeIdentifierSuffix('---')).equals('Empty');
     });
   });
 }

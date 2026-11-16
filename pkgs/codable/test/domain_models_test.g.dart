@@ -8,6 +8,8 @@ part of 'domain_models_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for Coordinate
 // =============================================================================
@@ -248,7 +250,7 @@ final class UserProfileCodable implements Codable<UserProfile> {
     String? email;
     UserRole? role;
     String? zip;
-    var tags = const <String>[];
+    List<String> tags = const [];
     var seen = _$UserProfileSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -657,8 +659,8 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
     String? statusCode;
     num? reading;
     num? delta;
-    var history = const <num>[];
-    var counters = const <String, num>{};
+    List<num> history = const [];
+    Map<String, num> counters = const {};
     Vehicle? vehicle;
     String? notes;
     var seen = _$TelemetryPacketSchema.none;

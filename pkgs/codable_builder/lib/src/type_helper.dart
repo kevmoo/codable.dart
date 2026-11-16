@@ -34,6 +34,73 @@ const codableTupleTypeChecker = TypeChecker.fromUrl(
   'package:codable/src/contracts/annotations.dart#CodableTuple',
 );
 
+/// Categories of `dart:typed_data` list types supported by `codable_builder`.
+enum TypedDataKind {
+  /// `Uint8List` binary byte buffers (`readBytes` / `encodeBytes`).
+  uint8Bytes,
+
+  /// `Float64List` unboxed 64-bit float lists.
+  float64,
+
+  /// `Float32List` 32-bit float lists.
+  float32,
+
+  /// Fixed-width integer `TypedData` lists (`Int8List`, `Int16List`,
+  /// `Int32List`, `Int64List`, `Uint8ClampedList`, `Uint16List`, `Uint32List`,
+  /// `Uint64List`).
+  intList,
+}
+
+/// Classifies [type] if it is one of the supported `dart:typed_data` list
+/// types.
+TypedDataKind? classifyTypedDataKind(DartType? type) {
+  final element = type?.element;
+  if (element == null) return null;
+  final libUri = element.library?.uri.toString();
+  if (libUri != null && libUri != 'dart:typed_data') return null;
+  return switch (element.name) {
+    'Uint8List' => TypedDataKind.uint8Bytes,
+    'Float64List' => TypedDataKind.float64,
+    'Float32List' => TypedDataKind.float32,
+    'Int8List' ||
+    'Int16List' ||
+    'Int32List' ||
+    'Int64List' ||
+    'Uint8ClampedList' ||
+    'Uint16List' ||
+    'Uint32List' ||
+    'Uint64List' => TypedDataKind.intList,
+    _ => null,
+  };
+}
+
+/// Whether [type] is a valid numeric list target for `@CodableTuple(N)`.
+bool isNumericTupleTargetType(DartType type) {
+  final tdKind = classifyTypedDataKind(type);
+  if (tdKind != null) return tdKind != TypedDataKind.uint8Bytes;
+  if (!type.isDartCoreList && type.element?.name != 'List') return false;
+  final elem = type is InterfaceType && type.typeArguments.length == 1
+      ? type.typeArguments.first
+      : null;
+  return elem != null &&
+      !elem.isNullableType &&
+      (elem.isDartCoreInt || elem.isDartCoreDouble);
+}
+
+/// Whether [type] is an integer list or integer `TypedData` target for
+/// `@CodableTuple(N)`.
+bool isIntegerTupleTargetType(DartType type) {
+  final tdKind = classifyTypedDataKind(type);
+  if (tdKind != null) {
+    return tdKind == TypedDataKind.intList;
+  }
+  if (!type.isDartCoreList && type.element?.name != 'List') return false;
+  final elem = type is InterfaceType && type.typeArguments.length == 1
+      ? type.typeArguments.first
+      : null;
+  return elem != null && !elem.isNullableType && elem.isDartCoreInt;
+}
+
 /// Result record for [TypeClassifier.classify].
 typedef TypeClassification = ({
   TypeCategory category,
@@ -70,10 +137,6 @@ final class TypeClassifier {
   }
 
   TypeClassification _classifyNative(DartType type, {int? tupleLength}) {
-    if (tupleLength != null && tupleLength > 0) {
-      return _emptyClassification(TypeCategory.tuple);
-    }
-
     final primitive = _classifyPrimitive(type);
     if (primitive != null) {
       return _emptyClassification(primitive);
@@ -84,9 +147,11 @@ final class TypeClassifier {
 
     final element = type.element;
     final collection = _classifyCollection(type, element);
-    if (collection != null) return collection;
+    if (collection != null) {
+      return _applyTupleToCollection(collection, type, tupleLength);
+    }
 
-    final typedData = _classifyTypedData(element, tupleLength);
+    final typedData = _classifyTypedData(type, tupleLength);
     if (typedData != null) return typedData;
 
     if (element != null && isCodableElement(element)) {
@@ -94,6 +159,26 @@ final class TypeClassifier {
     }
 
     return _emptyClassification(TypeCategory.unknown);
+  }
+
+  static TypeClassification _applyTupleToCollection(
+    TypeClassification collection,
+    DartType type,
+    int? tupleLength,
+  ) {
+    if (tupleLength == null ||
+        tupleLength <= 0 ||
+        !isNumericTupleTargetType(type)) {
+      return collection;
+    }
+    return (
+      category: TypeCategory.tuple,
+      nativeCategory: TypeCategory.tuple,
+      elementType: collection.elementType,
+      mapKeyType: null,
+      mapValueType: null,
+      enumConstants: null,
+    );
   }
 
   static TypeClassification _emptyClassification(TypeCategory category) => (
@@ -193,30 +278,27 @@ final class TypeClassifier {
   }
 
   static TypeClassification? _classifyTypedData(
-    Element? element,
+    DartType type,
     int? tupleLength,
   ) {
-    const typedDataNames = {
-      'Float64List',
-      'Float32List',
-      'Int64List',
-      'Int32List',
-      'Int16List',
-      'Int8List',
-      'Uint64List',
-      'Uint32List',
-      'Uint16List',
-      'Uint8List',
-      'Uint8ClampedList',
-    };
-    if (element == null || !typedDataNames.contains(element.name)) return null;
-    final category = tupleLength != null
+    final tdKind = classifyTypedDataKind(type);
+    if (tdKind == null) return null;
+    final elemType = type is InterfaceType
+        ? type.allSupertypes
+              .where((s) => s.isDartCoreList && s.typeArguments.isNotEmpty)
+              .map((s) => s.typeArguments.first)
+              .firstOrNull
+        : null;
+    final category =
+        (tupleLength != null &&
+            tupleLength > 0 &&
+            tdKind != TypedDataKind.uint8Bytes)
         ? TypeCategory.tuple
         : TypeCategory.list;
     return (
       category: category,
       nativeCategory: category,
-      elementType: null,
+      elementType: elemType,
       mapKeyType: null,
       mapValueType: null,
       enumConstants: null,

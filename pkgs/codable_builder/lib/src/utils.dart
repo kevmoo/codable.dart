@@ -74,7 +74,8 @@ String toScreamingSnakeCase(String name) {
 String toSafeIdentifierSuffix(String name) {
   if (name.isEmpty) return 'Empty';
   final sanitized = name.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-  return toPascalCase(sanitized);
+  final pascal = toPascalCase(sanitized);
+  return pascal.isEmpty ? 'Empty' : pascal;
 }
 
 /// Encodes a UTF-8 string into a Dart const list expression.

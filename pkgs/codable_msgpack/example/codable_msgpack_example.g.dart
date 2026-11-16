@@ -8,6 +8,8 @@ part of 'codable_msgpack_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for TelemetryCoordinate
 // =============================================================================
@@ -212,7 +214,7 @@ final class TelemetryBatchCodable implements Codable<TelemetryBatch> {
     int? batchId;
     Uint8List? rawSample;
     Float64List? readings;
-    var calibrationOffsets = const <TelemetryCoordinate, double>{};
+    Map<TelemetryCoordinate, double> calibrationOffsets = const {};
     var seen = _$TelemetryBatchSchema.none;
 
     while (keyed.moveNextKey()) {

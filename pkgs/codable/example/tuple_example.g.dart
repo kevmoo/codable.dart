@@ -8,6 +8,8 @@ part of 'tuple_example.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for CoordinatePair
 // =============================================================================
@@ -57,6 +59,12 @@ final class CoordinatePairCodable implements Codable<CoordinatePair> {
             location = null;
           } else {
             location = keyed.decodeFloat64List();
+            if (location.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "location", got ${location.length}',
+                actualValue: location.length,
+              );
+            }
           }
           break;
         default:

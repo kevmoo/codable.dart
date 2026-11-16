@@ -8,6 +8,8 @@ part of 'cross_format_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for OrderItem
 // =============================================================================
@@ -334,7 +336,7 @@ final class PersonCodable implements Codable<Person> {
     String? lastName;
     DateTime? dateOfBirth;
     String? middleName;
-    var orders = const <Order>[];
+    List<Order> orders = const [];
     var seen = _$PersonSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -633,9 +635,9 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
     HttpVerb? method;
     Uint8List? schemaHash;
     Uint8List? signature;
-    var responses = const <int, String>{};
-    var rateLimits = const <HttpVerb, int>{};
-    var latencyBuckets = const <String, List<int>>{};
+    Map<int, String> responses = const {};
+    Map<HttpVerb, int> rateLimits = const {};
+    Map<String, List<int>> latencyBuckets = const {};
     var seen = _$OpenApiSpecModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -692,12 +694,20 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <HttpVerb, int>{};
             while (mDecoder.moveNextEntry()) {
-              final enumIdx1 = _$OpenApiSpecModelSchema.enumHttpVerbKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
-              if (enumIdx1 < 0) {
-                throw const CodableException('Unknown HttpVerb value');
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$OpenApiSpecModelSchema
+                  .enumHttpVerbKeyOptions
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
+                throw CodableException(
+                  'Unknown HttpVerb value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
+                );
               }
-              final key = HttpVerb.values[enumIdx1];
+              final key = HttpVerb.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             rateLimits = m;
@@ -819,7 +829,7 @@ final class GridOverlayModelCodable implements Codable<GridOverlayModel> {
   GridOverlayModel decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$GridOverlayModelSchema.keyOptions);
 
-    var cells = const <PointKey, String>{};
+    Map<PointKey, String> cells = const {};
     var seen = _$GridOverlayModelSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1145,7 +1155,7 @@ final class CircleShapeCodable implements Codable<CircleShape> {
     final keyed = decoder.keyed(options: _$CircleShapeSchema.keyOptions);
 
     double? radius;
-    var kind = 'circle';
+    String kind = 'circle';
     var seen = _$CircleShapeSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1253,7 +1263,7 @@ final class RectShapeCodable implements Codable<RectShape> {
 
     int? width;
     int? height;
-    var kind = 'rect';
+    String kind = 'rect';
     var seen = _$RectShapeSchema.none;
 
     while (keyed.moveNextKey()) {

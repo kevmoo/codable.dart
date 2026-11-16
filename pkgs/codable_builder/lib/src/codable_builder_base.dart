@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:codable/codable.dart';
@@ -17,6 +19,13 @@ class CodableGenerator extends GeneratorForAnnotation<Codable> {
   final ModelVisitor _visitor;
 
   const CodableGenerator({this._visitor = const ModelVisitor()});
+
+  @override
+  FutureOr<String> generate(LibraryReader library, BuildStep buildStep) async {
+    final generated = await super.generate(library, buildStep);
+    if (generated.isEmpty) return generated;
+    return '// ignore_for_file: omit_local_variable_types\n\n$generated';
+  }
 
   @override
   String generateForAnnotatedElement(

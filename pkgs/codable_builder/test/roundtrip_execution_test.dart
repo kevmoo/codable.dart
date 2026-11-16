@@ -1084,6 +1084,261 @@ void main() {
         check(decodedMatrix.roleSets.single)
             .deepEquals(const {UserRole.admin, UserRole.guest});
       });
+
+      test('DefaultValuesModel applies @CodableKey(defaultValue:) precedence and literals', () {
+        final defaults = const DefaultValuesModelCodable().decode(
+          JsonCodableDecoder.fromString('{}'),
+        );
+        check(defaults.label).equals('guest');
+        check(defaults.escapedNote).equals("it's \$5\n");
+        check(defaults.retryCount).equals(42);
+        check(defaults.factor).equals(2.5);
+        check(defaults.enabled).isTrue();
+        check(defaults.role).equals(UserRole.guest);
+        check(defaults.tags).deepEquals(const ['alpha', 'beta']);
+        check(defaults.metadata).deepEquals(const {'env': 1});
+        check(defaults.origin.x).equals(1.5);
+        check(defaults.origin.y).equals(-2.5);
+        check(defaults.nullableOverride).isNull();
+        check(defaults.omittedDefaultKeepCtor).equals('kept_ctor_default');
+        check(defaults.weights).deepEquals(const [1.0, 2.0]);
+        check(defaults.hexDouble).equals(16.0);
+        check(defaults.zeroDouble).equals(0.0);
+        check(defaults.countNum).isA<int>().equals(1);
+        check(defaults.emptySet).isEmpty();
+        check(defaults.emptyMap).isEmpty();
+        check(defaults.nestedIntRows.length).equals(2);
+        check(defaults.nestedIntRows[0]).isA<List<int>>().isEmpty();
+        check(defaults.nestedIntRows[1]).deepEquals(const [1]);
+        check(defaults.nestedStringIntMaps.length).equals(1);
+        check(defaults.nestedStringIntMaps[0])
+            .isA<Map<String, int>>()
+            .isEmpty();
+
+        final overridden = const DefaultValuesModelCodable().decode(
+          JsonCodableDecoder.fromString(
+            '{"label": "custom", "role": "admin", "nullableOverride": "set", '
+            '"explicit_name": "named", "weights": [3.5, 4.5], '
+            '"hexDouble": 32.5, "countNum": 2.5}',
+          ),
+        );
+        check(overridden.label).equals('custom');
+        check(overridden.role).equals(UserRole.admin);
+        check(overridden.nullableOverride).equals('set');
+        check(overridden.omittedDefaultKeepCtor).equals('named');
+        check(overridden.weights).deepEquals(const [3.5, 4.5]);
+        check(overridden.hexDouble).equals(32.5);
+        check(overridden.countNum).isA<double>().equals(2.5);
+      });
+
+      test('PortableTypedDataModel roundtrips across KeyedDecoder and MappedDecoder', () {
+        final model = PortableTypedDataModel(
+          uint8: Uint8List.fromList([0, 127, 255]),
+          uint8Clamped: Uint8ClampedList.fromList([0, 128, 255]),
+          uint16: Uint16List.fromList([0, 1024, 65535]),
+          uint32: Uint32List.fromList([0, 100000, 4000000000]),
+          int8: Int8List.fromList([-128, 0, 127]),
+          int16: Int16List.fromList([-32768, 0, 32767]),
+          int32: Int32List.fromList([-2000000000, 0, 2000000000]),
+          float32: Float32List.fromList([1.5, -2.25]),
+          float64: Float64List.fromList([3.125, -6.5]),
+          nullableInt16: Int16List.fromList([10, -20]),
+          nullableFloat32: Float32List.fromList([0.5]),
+          nestedInt16s: [
+            Int16List.fromList([1, 2]),
+            Int16List.fromList([-3]),
+          ],
+          sparseInt16s: [
+            Int16List.fromList([7]),
+            null,
+          ],
+          stringKeyedUint16s: {
+            'ports': Uint16List.fromList([80, 443]),
+          },
+          intKeyedInt8s: {
+            1: Int8List.fromList([-1, 1]),
+          },
+        );
+
+        final encoded = JsonCodableEncoder.encode(
+          model,
+          const PortableTypedDataModelCodable(),
+        );
+        final viaKeyed = const PortableTypedDataModelCodable().decode(
+          JsonCodableDecoder.fromString(encoded),
+        );
+        final mappedRoot = JsonCodableDecoder.fromString('{"m": $encoded}')
+          ..mapped();
+        final viaMapped = mappedRoot.mapped().decodeKey(
+          'm',
+          const PortableTypedDataModelCodable(),
+        );
+
+        for (final decoded in [viaKeyed, viaMapped]) {
+          check(decoded.uint8).deepEquals([0, 127, 255]);
+          check(decoded.uint8Clamped).deepEquals([0, 128, 255]);
+          check(decoded.uint16).deepEquals([0, 1024, 65535]);
+          check(decoded.uint32).deepEquals([0, 100000, 4000000000]);
+          check(decoded.int8).deepEquals([-128, 0, 127]);
+          check(decoded.int16).deepEquals([-32768, 0, 32767]);
+          check(decoded.int32).deepEquals([-2000000000, 0, 2000000000]);
+          check(decoded.float32).deepEquals([1.5, -2.25]);
+          check(decoded.float64).deepEquals([3.125, -6.5]);
+          check(decoded.nullableInt16).isNotNull().deepEquals([10, -20]);
+          check(decoded.nullableFloat32).isNotNull().deepEquals([0.5]);
+          check(decoded.nestedInt16s.length).equals(2);
+          check(decoded.nestedInt16s[0]).deepEquals([1, 2]);
+          check(decoded.sparseInt16s[0]).isNotNull().deepEquals([7]);
+          check(decoded.sparseInt16s[1]).isNull();
+          check(decoded.stringKeyedUint16s['ports'])
+              .isNotNull()
+              .deepEquals([80, 443]);
+          check(decoded.intKeyedInt8s[1]).isNotNull().deepEquals([-1, 1]);
+        }
+      });
+
+      test('TupleVariantsModel roundtrips and enforces @CodableTuple(N) length with actualValue', () {
+        final valid = TupleVariantsModel(
+          intPair: const [10, 20],
+          doubleTriple: const [1.5, 2.5, 3.5],
+          float64Pair: Float64List.fromList([4.0, 5.0]),
+          float32Pair: Float32List.fromList([6.5, 7.5]),
+          int32Triple: Int32List.fromList([-1, 0, 1]),
+          optionalIntPair: const [8, 9],
+          optionalUint16Pair: Uint16List.fromList([100, 200]),
+        );
+
+        final encoded = JsonCodableEncoder.encode(
+          valid,
+          const TupleVariantsModelCodable(),
+        );
+        final decodedKeyed = const TupleVariantsModelCodable().decode(
+          JsonCodableDecoder.fromString(encoded),
+        );
+        final decodedMapped = JsonCodableDecoder.fromString('{"t": $encoded}')
+            .mapped()
+            .decodeKey('t', const TupleVariantsModelCodable());
+        for (final d in [decodedKeyed, decodedMapped]) {
+          check(d.intPair).deepEquals([10, 20]);
+          check(d.doubleTriple).deepEquals([1.5, 2.5, 3.5]);
+          check(d.float64Pair).deepEquals([4.0, 5.0]);
+          check(d.float32Pair).deepEquals([6.5, 7.5]);
+          check(d.int32Triple).deepEquals([-1, 0, 1]);
+          check(d.optionalIntPair).isNotNull().deepEquals([8, 9]);
+          check(d.optionalUint16Pair).isNotNull().deepEquals([100, 200]);
+        }
+
+        const wrongLengthJson =
+            '{"intPair": [1, 2, 3], "doubleTriple": [1.0, 2.0, 3.0], '
+            '"float64Pair": [1.0, 2.0], "float32Pair": [1.0, 2.0], '
+            '"int32Triple": [1, 2, 3]}';
+        check(
+              () => const TupleVariantsModelCodable().decode(
+                JsonCodableDecoder.fromString(wrongLengthJson),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(3);
+        check(
+              () =>
+                  JsonCodableDecoder.fromString('{"t": $wrongLengthJson}')
+                      .mapped()
+                      .decodeKey('t', const TupleVariantsModelCodable()),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(3);
+      });
+
+      test('EnumCollectionsAndAliasesModel throws CodableException with actualValue and resolves colliding aliases', () {
+        const valid = EnumCollectionsAndAliasesModel(
+          roles: [UserRole.admin, UserRole.member],
+          nullableRoles: [UserRole.guest, null],
+          roleSet: {UserRole.admin},
+          rolesByKey: {'primary': UserRole.admin},
+          rolesById: {1: UserRole.member},
+          countsByRole: {UserRole.guest: 5},
+          roleTransitions: {
+            UserRole.guest: UserRole.member,
+            UserRole.member: UserRole.admin,
+          },
+          nullableRoleTransitions: {
+            UserRole.admin: UserRole.member,
+            UserRole.guest: null,
+          },
+          slug: 'canon',
+        );
+        final encoded = JsonCodableEncoder.encode(
+          valid,
+          const EnumCollectionsAndAliasesModelCodable(),
+        );
+        final roundtripped = const EnumCollectionsAndAliasesModelCodable()
+            .decode(JsonCodableDecoder.fromString(encoded));
+        check(roundtripped.roles).deepEquals([UserRole.admin, UserRole.member]);
+        check(roundtripped.nullableRoles).deepEquals([UserRole.guest, null]);
+        check(roundtripped.roleSet).deepEquals({UserRole.admin});
+        check(roundtripped.rolesByKey).deepEquals({'primary': UserRole.admin});
+        check(roundtripped.rolesById).deepEquals({1: UserRole.member});
+        check(roundtripped.countsByRole).deepEquals({UserRole.guest: 5});
+        check(roundtripped.roleTransitions).deepEquals({
+          UserRole.guest: UserRole.member,
+          UserRole.member: UserRole.admin,
+        });
+        check(
+          roundtripped.nullableRoleTransitions,
+        ).deepEquals({UserRole.admin: UserRole.member, UserRole.guest: null});
+        check(roundtripped.slug).equals('canon');
+
+        // Both disambiguated aliases ('foo-bar' and 'foo_bar') resolve cleanly
+        check(
+          const EnumCollectionsAndAliasesModelCodable()
+              .decode(JsonCodableDecoder.fromString('{"foo-bar": "kebab"}'))
+              .slug,
+        ).equals('kebab');
+        check(
+          const EnumCollectionsAndAliasesModelCodable()
+              .decode(JsonCodableDecoder.fromString('{"foo_bar": "snake"}'))
+              .slug,
+        ).equals('snake');
+
+        // Unknown enum wire strings throw CodableException with actualValue
+        for (final (payload, badValue) in [
+          ('{"roles": ["admin", "bogus_list"]}', 'bogus_list'),
+          ('{"nullableRoles": [null, "bogus_nullable"]}', 'bogus_nullable'),
+          ('{"roleSet": ["bogus_set"]}', 'bogus_set'),
+          ('{"rolesByKey": {"k": "bogus_str_map"}}', 'bogus_str_map'),
+          ('{"rolesById": {"1": "bogus_int_map"}}', 'bogus_int_map'),
+          ('{"countsByRole": {"bogus_key": 1}}', 'bogus_key'),
+          ('{"roleTransitions": {"bogus_from": "admin"}}', 'bogus_from'),
+          ('{"roleTransitions": {"admin": "bogus_to"}}', 'bogus_to'),
+          ('{"nullableRoleTransitions": {"bogus_nkey": null}}', 'bogus_nkey'),
+          (
+            '{"nullableRoleTransitions": {"admin": "bogus_nval"}}',
+            'bogus_nval',
+          ),
+        ]) {
+          check(
+                () => const EnumCollectionsAndAliasesModelCodable().decode(
+                  JsonCodableDecoder.fromString(payload),
+                ),
+              )
+              .throws<CodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals(badValue);
+          check(
+                () => JsonCodableDecoder.fromString('{"m": $payload}')
+                    .mapped()
+                    .decodeKey(
+                      'm',
+                      const EnumCollectionsAndAliasesModelCodable(),
+                    ),
+              )
+              .throws<CodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals(badValue);
+        }
+      });
     });
   });
 }

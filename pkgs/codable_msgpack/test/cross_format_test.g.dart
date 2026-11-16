@@ -8,6 +8,8 @@ part of 'cross_format_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for AllOptionalPatch
 // =============================================================================
@@ -841,15 +843,15 @@ final class CrossFormatEnvelopeCodable implements Codable<CrossFormatEnvelope> {
     String? id;
     NestedMeta? primaryMeta;
     NestedMeta? backupMeta;
-    var history = const <NestedMeta>[];
-    var tags = const <String>{};
-    var ports = const <int>{};
+    List<NestedMeta> history = const [];
+    Set<String> tags = const {};
+    Set<int> ports = const {};
     Uint8List? payload;
     Uint8List? signature;
     Float64List? samples;
-    var counters = const <String, int>{};
-    var statusLabels = const <int, String>{};
-    var quotas = const <RouteMethod, int>{};
+    Map<String, int> counters = const {};
+    Map<int, String> statusLabels = const {};
+    Map<RouteMethod, int> quotas = const {};
     num? primaryMetric;
     num? secondaryMetric;
     num? optionalMetric;
@@ -940,13 +942,20 @@ final class CrossFormatEnvelopeCodable implements Codable<CrossFormatEnvelope> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <RouteMethod, int>{};
             while (mDecoder.moveNextEntry()) {
-              final enumIdx1 = _$CrossFormatEnvelopeSchema
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$CrossFormatEnvelopeSchema
                   .enumRouteMethodKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
-              if (enumIdx1 < 0) {
-                throw const CodableException('Unknown RouteMethod value');
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
+                throw CodableException(
+                  'Unknown RouteMethod value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
+                );
               }
-              final key = RouteMethod.values[enumIdx1];
+              final key = RouteMethod.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             quotas = m;
@@ -1177,7 +1186,7 @@ final class CircleNodeCodable implements Codable<CircleNode> {
 
     double? radius;
     String? label;
-    var kind = 'circle';
+    String kind = 'circle';
     var seen = _$CircleNodeSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1291,8 +1300,8 @@ final class PolygonNodeCodable implements Codable<PolygonNode> {
     final keyed = decoder.keyed(options: _$PolygonNodeSchema.keyOptions);
 
     List<int>? vertices;
-    var closed = true;
-    var kind = 'polygon';
+    bool closed = true;
+    String kind = 'polygon';
     var seen = _$PolygonNodeSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -1700,8 +1709,8 @@ final class MatrixBoardCodable implements Codable<MatrixBoard> {
   MatrixBoard decode(Decoder decoder) {
     final keyed = decoder.keyed(options: _$MatrixBoardSchema.keyOptions);
 
-    var cells = const <List<MatrixCell>>[];
-    var nullableRows = const <List<MatrixCell>?>[];
+    List<List<MatrixCell>> cells = const [];
+    List<List<MatrixCell>?> nullableRows = const [];
     var seen = _$MatrixBoardSchema.none;
 
     while (keyed.moveNextKey()) {

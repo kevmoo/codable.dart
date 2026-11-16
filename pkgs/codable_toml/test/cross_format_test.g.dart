@@ -8,6 +8,8 @@ part of 'cross_format_test.dart';
 // CodableGenerator
 // **************************************************************************
 
+// ignore_for_file: omit_local_variable_types
+
 // =============================================================================
 // 1. Unified Schema Descriptor for RetryPolicy
 // =============================================================================
@@ -2020,13 +2022,20 @@ final class TypedFeaturesEnvelopeCodable
             final mDecoder = keyed.nestedDecoder().map();
             final m = <HttpVerb, int>{};
             while (mDecoder.moveNextEntry()) {
-              final enumIdx1 = _$TypedFeaturesEnvelopeSchema
+              final rawEnum1Key = mDecoder
+                  .keyDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1Key = _$TypedFeaturesEnvelopeSchema
                   .enumHttpVerbKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
-              if (enumIdx1 < 0) {
-                throw const CodableException('Unknown HttpVerb value');
+                  .indexOf(rawEnum1Key);
+              if (enumIdx1Key < 0) {
+                throw CodableException(
+                  'Unknown HttpVerb value: "$rawEnum1Key"',
+                  actualValue: rawEnum1Key,
+                );
               }
-              final key = HttpVerb.values[enumIdx1];
+              final key = HttpVerb.values[enumIdx1Key];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
             }
             verbQuotas = m;
@@ -2057,6 +2066,12 @@ final class TypedFeaturesEnvelopeCodable
             throw const CodableException('Duplicate field "coords"');
           }
           coords = keyed.decodeFloat64List();
+          if (coords.length != 2) {
+            throw CodableException(
+              'Expected tuple of length 2 for "coords", got ${coords.length}',
+              actualValue: coords.length,
+            );
+          }
           seen |= _$TypedFeaturesEnvelopeSchema.coords;
           break;
         case _$TypedFeaturesEnvelopeSchema.keyNormal:
@@ -2065,6 +2080,12 @@ final class TypedFeaturesEnvelopeCodable
             normal = null;
           } else {
             normal = keyed.decodeFloat64List();
+            if (normal.length != 4) {
+              throw CodableException(
+                'Expected tuple of length 4 for "normal", got ${normal.length}',
+                actualValue: normal.length,
+              );
+            }
           }
           break;
         default:
@@ -2219,7 +2240,7 @@ final class CircleSpecCodable implements Codable<CircleSpec> {
     LevelC? meta;
     double? radius;
     String? label;
-    var kind = 'circle';
+    String kind = 'circle';
     var seen = _$CircleSpecSchema.none;
 
     while (keyed.moveNextKey()) {
@@ -2350,8 +2371,8 @@ final class PolygonSpecCodable implements Codable<PolygonSpec> {
     final keyed = decoder.keyed(options: _$PolygonSpecSchema.keyOptions);
 
     List<int>? vertices;
-    var closed = true;
-    var kind = 'polygon';
+    bool closed = true;
+    String kind = 'polygon';
     var seen = _$PolygonSpecSchema.none;
 
     while (keyed.moveNextKey()) {
