@@ -349,6 +349,8 @@ void _registerEncoderStyleTests() {
       check(decoded[0].isNaN).isTrue();
       check(decoded[1]).equals(double.infinity);
       check(decoded[2]).equals(double.negativeInfinity);
+      check(decoded[3]).equals(0.0);
+      check(decoded[3].isNegative).isTrue();
       check(decoded[4]).equals(42.5);
 
       const emptySpec = ServiceSpec(serviceName: 'minimal');

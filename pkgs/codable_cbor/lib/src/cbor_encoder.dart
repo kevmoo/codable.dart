@@ -9,7 +9,26 @@ import 'package:codable/codable.dart';
 
 import 'cbor_reader.dart';
 
-const int _cborJsMaxSafeInt = cborJsMaxSafeHi * cborTwoPow32 + 0xffffffff;
+bool _isLowUtf16Surrogate(int cu) => cu >= 0xDC00 && cu <= 0xDFFF;
+
+void _validateWellFormedCborUtf16(String value) {
+  final len = value.length;
+  for (var i = 0; i < len; i++) {
+    final cu = value.codeUnitAt(i);
+    if (cu < 0xD800 || cu > 0xDFFF) continue;
+    if (cu <= 0xDBFF &&
+        i + 1 < len &&
+        _isLowUtf16Surrogate(value.codeUnitAt(i + 1))) {
+      i++;
+      continue;
+    }
+    throw CodableException(
+      'Invalid unpaired UTF-16 surrogate '
+      '(U+${cu.toRadixString(16).toUpperCase()}) in CBOR text string',
+      actualValue: value,
+    );
+  }
+}
 
 final class _CborWriter {
   Uint8List _buf;
@@ -89,12 +108,18 @@ final class _CborWriter {
   }
 
   void patchHeader(int headerOffset, int majorType, int count) {
+    if (count < 0) {
+      throw CodableException(
+        'Invalid negative CBOR argument: $count',
+        actualValue: count,
+      );
+    }
     final mtBits = majorType << 5;
     if (count < 24) {
       _buf[headerOffset] = mtBits | count;
       return;
     }
-    final extra = count <= 255 ? 1 : (count <= 0xffff ? 2 : 4);
+    final extra = _headerExtraBytes(count);
     _ensureCapacity(extra);
     _buf.setRange(
       headerOffset + 1 + extra,
@@ -104,6 +129,19 @@ final class _CborWriter {
     );
     _writePos += extra;
     _writeMultiByteHeader(headerOffset, mtBits, count, extra);
+  }
+
+  int _headerExtraBytes(int count) {
+    if (count <= 255) return 1;
+    if (count <= 0xffff) return 2;
+    if (count <= 0xffffffff) return 4;
+    if (identical(1.0, 1) && count ~/ cborTwoPow32 > cborJsMaxSafeHi) {
+      throw CodableException(
+        'CBOR integer exceeds 53-bit safe integer range on JavaScript',
+        actualValue: count,
+      );
+    }
+    return 8;
   }
 
   void _writeMultiByteHeader(
@@ -118,15 +156,19 @@ final class _CborWriter {
     } else if (extra == 2) {
       _buf[headerOffset] = mtBits | 25;
       _bd.setUint16(headerOffset + 1, count);
-    } else {
+    } else if (extra == 4) {
       _buf[headerOffset] = mtBits | 26;
       _bd.setUint32(headerOffset + 1, count);
+    } else {
+      _buf[headerOffset] = mtBits | 27;
+      _bd.setUint32(headerOffset + 1, count ~/ cborTwoPow32);
+      _bd.setUint32(headerOffset + 5, count.remainder(cborTwoPow32));
     }
   }
 
   void writeInt(int value) {
     if (identical(1.0, 1) &&
-        (value < -_cborJsMaxSafeInt || value > _cborJsMaxSafeInt)) {
+        (value < -cborJsMaxSafeInt || value > cborJsMaxSafeInt)) {
       throw CodableException(
         'CBOR integer exceeds 53-bit safe integer range on JavaScript',
         actualValue: value,
@@ -164,6 +206,7 @@ final class _CborWriter {
   }
 
   void writeTextString(String value) {
+    _validateWellFormedCborUtf16(value);
     final encoded = utf8.encode(value);
     writeHeader(3, encoded.length);
     _ensureCapacity(encoded.length);
@@ -181,12 +224,13 @@ abstract interface class _CborCloseable {
 /// Definite-length RFC 8949 CBOR [Encoder] (`isHumanReadable => false`).
 final class CborCodableEncoder implements Encoder {
   final _CborWriter _writer;
+  final int _depth;
   _CborCloseable? _activeContainer;
 
   @override
   final Map<Object, Object?> userInfo;
 
-  CborCodableEncoder._(this._writer, {this.userInfo = const {}});
+  CborCodableEncoder._(this._writer, this._depth, {this.userInfo = const {}});
 
   /// Encodes [value] to definite-length RFC 8949 CBOR bytes using [encodable].
   static Uint8List encode<T>(
@@ -199,7 +243,7 @@ final class CborCodableEncoder implements Encoder {
       throw RangeError.value(initialCapacity, 'initialCapacity');
     }
     final writer = _CborWriter(initialCapacity);
-    final encoder = CborCodableEncoder._(writer, userInfo: userInfo);
+    final encoder = CborCodableEncoder._(writer, 0, userInfo: userInfo);
     encodable.encode(value, encoder);
     encoder._finish();
     return writer.toBytes();
@@ -210,13 +254,17 @@ final class CborCodableEncoder implements Encoder {
     _activeContainer = null;
   }
 
+  CborCodableEncoder _spawnChild() =>
+      CborCodableEncoder._(_writer, _depth + 1, userInfo: userInfo);
+
   @override
   bool get isHumanReadable => false;
 
   @override
   KeyedEncoder keyed({KeyOptions? options, int? length}) {
     _finish();
-    final container = _CborKeyedEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborKeyedEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -224,7 +272,8 @@ final class CborCodableEncoder implements Encoder {
   @override
   UnkeyedEncoder unkeyed({int? length}) {
     _finish();
-    final container = _CborUnkeyedEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborUnkeyedEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -232,7 +281,8 @@ final class CborCodableEncoder implements Encoder {
   @override
   MapEncoder map({int? length}) {
     _finish();
-    final container = _CborMapEncoder(_writer, userInfo, length: length);
+    checkCborDepth(_depth);
+    final container = _CborMapEncoder(this, _writer, length: length);
     _activeContainer = container;
     return container;
   }
@@ -247,15 +297,16 @@ final class CborCodableEncoder implements Encoder {
 final class _CborKeyedEncoder
     with BaseKeyedEncoderMixin
     implements KeyedEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
   bool _closed = false;
+  int _pendingStartPos = -1;
   CborCodableEncoder? _pendingNested;
 
-  _CborKeyedEncoder(this._writer, this._userInfo, {int? length})
+  _CborKeyedEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(5, length);
@@ -266,8 +317,17 @@ final class _CborKeyedEncoder
   }
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'CBOR nested encoder completed without writing a value',
+      );
+    }
   }
 
   void _beginField(String key) {
@@ -331,7 +391,8 @@ final class _CborKeyedEncoder
   @override
   Encoder nestedEncoder(String key) {
     _beginField(key);
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    _pendingStartPos = _writer._writePos;
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
@@ -340,15 +401,16 @@ final class _CborKeyedEncoder
 final class _CborUnkeyedEncoder
     with BaseUnkeyedEncoderMixin
     implements UnkeyedEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
   bool _closed = false;
+  int _pendingStartPos = -1;
   CborCodableEncoder? _pendingNested;
 
-  _CborUnkeyedEncoder(this._writer, this._userInfo, {int? length})
+  _CborUnkeyedEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(4, length);
@@ -359,8 +421,17 @@ final class _CborUnkeyedEncoder
   }
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'CBOR nested encoder completed without writing a value',
+      );
+    }
   }
 
   void _beginElement() {
@@ -423,23 +494,25 @@ final class _CborUnkeyedEncoder
   @override
   Encoder nestedEncoder() {
     _beginElement();
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    _pendingStartPos = _writer._writePos;
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
 }
 
 final class _CborMapEncoder implements MapEncoder, _CborCloseable {
+  final CborCodableEncoder _owner;
   final _CborWriter _writer;
-  final Map<Object, Object?> _userInfo;
   final int? _fixedLength;
   late final int _headerOffset;
   int _count = 0;
   bool _expectingValue = false;
   bool _closed = false;
+  int _pendingStartPos = -1;
   CborCodableEncoder? _pendingNested;
 
-  _CborMapEncoder(this._writer, this._userInfo, {int? length})
+  _CborMapEncoder(this._owner, this._writer, {int? length})
     : _fixedLength = length {
     if (length != null) {
       _writer.writeHeader(5, length);
@@ -450,8 +523,17 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
   }
 
   void _finishPending() {
-    _pendingNested?._finish();
+    final pending = _pendingNested;
+    if (pending == null) return;
+    final startPos = _pendingStartPos;
     _pendingNested = null;
+    _pendingStartPos = -1;
+    pending._finish();
+    if (_writer._writePos == startPos) {
+      throw const CodableException(
+        'CBOR MapEncoder entry encoder completed without writing a value',
+      );
+    }
   }
 
   @override
@@ -464,7 +546,8 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
     }
     _expectingValue = true;
     _count++;
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    _pendingStartPos = _writer._writePos;
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }
@@ -478,7 +561,8 @@ final class _CborMapEncoder implements MapEncoder, _CborCloseable {
       );
     }
     _expectingValue = false;
-    final child = CborCodableEncoder._(_writer, userInfo: _userInfo);
+    _pendingStartPos = _writer._writePos;
+    final child = _owner._spawnChild();
     _pendingNested = child;
     return child;
   }

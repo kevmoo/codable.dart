@@ -50,23 +50,154 @@ ValueKind _yamlNodeKind(YamlNode node) => switch (node) {
 
 Object? _scalarValue(YamlNode node) => node is YamlScalar ? node.value : node;
 
+const int _yamlTwoPow32 = 0x100000000;
+const int _yamlJsMaxSafeInt = 0x1fffff * _yamlTwoPow32 + 0xffffffff;
+const int _yamlJsMinSafeInt = -_yamlJsMaxSafeInt;
+final BigInt _bigJsMaxSafeInt = BigInt.from(_yamlJsMaxSafeInt);
+final BigInt _bigJsMinSafeInt = BigInt.from(_yamlJsMinSafeInt);
+
 final RegExp _yamlPlainHexPrefix = RegExp(r'^[+-]?0[xX]');
+final RegExp _yamlWhitespace = RegExp(r'\s');
+
+int _yamlTagEndIndex(String s) {
+  if (s.startsWith('!<')) {
+    final gt = s.indexOf('>');
+    return gt < 0 ? -1 : gt + 1;
+  }
+  return s.indexOf(_yamlWhitespace);
+}
+
+bool _isYamlFloatTagToken(String tag) =>
+    tag.endsWith('!float') || tag.endsWith(':float') || tag.endsWith(':float>');
+
+(bool isFloatTag, String? remaining) _consumeYamlPropertyPrefix(String s) {
+  if (s.startsWith('#')) {
+    final nl = s.indexOf('\n');
+    return (false, nl < 0 ? '' : s.substring(nl + 1).trimLeft());
+  }
+  if (s.startsWith('&')) {
+    final ws = s.indexOf(_yamlWhitespace);
+    return (false, ws < 0 ? '' : s.substring(ws + 1).trimLeft());
+  }
+  if (s.startsWith('!')) {
+    final end = _yamlTagEndIndex(s);
+    if (end < 0) return (false, '');
+    final isFloat = _isYamlFloatTagToken(s.substring(0, end));
+    return (isFloat, s.substring(end).trimLeft());
+  }
+  return (false, null);
+}
+
+(bool hasFloatTag, String body) _stripYamlScalarProperties(String raw) {
+  var s = raw.trimLeft();
+  var hasFloatTag = false;
+  while (s.isNotEmpty) {
+    final (isFloat, next) = _consumeYamlPropertyPrefix(s);
+    if (isFloat) hasFloatTag = true;
+    if (next == null) break;
+    s = next;
+  }
+  return (hasFloatTag, s.trimRight());
+}
 
 bool _isPlainYamlFloatOnJs(YamlNode node) {
   if (!identical(1.0, 1) || node is! YamlScalar) return false;
-  if (node.style != ScalarStyle.PLAIN) return false;
-  final text = node.span.text;
+  final (hasFloatTag, text) = _stripYamlScalarProperties(node.span.text);
+  if (hasFloatTag) return true;
+  if (node.style != ScalarStyle.PLAIN || text.isEmpty) {
+    final val = node.value;
+    return val is num && val == 0 && val.isNegative;
+  }
   if (_yamlPlainHexPrefix.hasMatch(text)) return false;
   return text.contains('.') || text.contains('e') || text.contains('E');
 }
 
+String _extractYamlScalarToken(String raw) {
+  var (_, s) = _stripYamlScalarProperties(raw);
+  if (s.length >= 2 &&
+      ((s.startsWith('"') && s.endsWith('"')) ||
+          (s.startsWith("'") && s.endsWith("'")))) {
+    s = s.substring(1, s.length - 1);
+  }
+  return s.contains('_') ? s.replaceAll('_', '') : s;
+}
+
+BigInt? _tryParseYamlBigInt(String raw) {
+  final s = _extractYamlScalarToken(raw);
+  if (s.isEmpty) return null;
+  final isNeg = s.startsWith('-');
+  final body = (isNeg || s.startsWith('+')) ? s.substring(1) : s;
+  if (body.isEmpty) return null;
+  final (radix, digits) = _radixAndDigits(body);
+  if (digits.isEmpty || digits.startsWith('-') || digits.startsWith('+')) {
+    return null;
+  }
+  final magnitude = BigInt.tryParse(digits, radix: radix);
+  if (magnitude == null) return null;
+  return isNeg ? -magnitude : magnitude;
+}
+
+(int, String) _radixAndDigits(String body) {
+  if (body.startsWith('0x') || body.startsWith('0X')) {
+    return (16, body.substring(2));
+  }
+  if (body.startsWith('0o') || body.startsWith('0O')) {
+    return (8, body.substring(2));
+  }
+  if (body.startsWith('0b') || body.startsWith('0B')) {
+    return (2, body.substring(2));
+  }
+  return (10, body);
+}
+
+void _checkJsYamlSafeInt(YamlNode node, int v) {
+  if (node is YamlScalar) {
+    final raw = node.span.text;
+    final big = _tryParseYamlBigInt(raw);
+    if (big != null && (big < _bigJsMinSafeInt || big > _bigJsMaxSafeInt)) {
+      throw CodableException(
+        'YAML integer $raw exceeds JavaScript 53-bit safe integer range '
+        '[$_yamlJsMinSafeInt, $_yamlJsMaxSafeInt]',
+        actualValue: raw,
+      );
+    }
+  }
+  if (v < _yamlJsMinSafeInt || v > _yamlJsMaxSafeInt) {
+    throw CodableException(
+      'YAML integer $v exceeds JavaScript 53-bit safe integer range '
+      '[$_yamlJsMinSafeInt, $_yamlJsMaxSafeInt]',
+      actualValue: v,
+    );
+  }
+}
+
+int _coerceYamlStringToInt(String v) {
+  if (identical(1.0, 1)) {
+    final big = BigInt.tryParse(v);
+    if (big == null) {
+      throw CodableException.typeMismatch(expectedType: int, actualValue: v);
+    }
+    if (big < _bigJsMinSafeInt || big > _bigJsMaxSafeInt) {
+      throw CodableException(
+        'YAML integer $v exceeds JavaScript 53-bit safe integer range '
+        '[$_yamlJsMinSafeInt, $_yamlJsMaxSafeInt]',
+        actualValue: v,
+      );
+    }
+    return big.toInt();
+  }
+  final parsed = int.tryParse(v);
+  if (parsed != null) return parsed;
+  throw CodableException.typeMismatch(expectedType: int, actualValue: v);
+}
+
 int _readYamlInt(YamlNode node, {bool coerceString = false}) {
   final v = _scalarValue(node);
-  if (v is int && !_isPlainYamlFloatOnJs(node)) return v;
-  if (coerceString && v is String) {
-    final parsed = int.tryParse(v);
-    if (parsed != null) return parsed;
+  if (v is int && !_isPlainYamlFloatOnJs(node)) {
+    if (identical(1.0, 1)) _checkJsYamlSafeInt(node, v);
+    return v;
   }
+  if (coerceString && v is String) return _coerceYamlStringToInt(v);
   throw CodableException.typeMismatch(expectedType: int, actualValue: v);
 }
 

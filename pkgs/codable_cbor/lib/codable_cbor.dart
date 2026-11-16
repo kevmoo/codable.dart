@@ -8,3 +8,4 @@ library;
 
 export 'src/cbor_decoder.dart' show CborCodableDecoder;
 export 'src/cbor_encoder.dart' show CborCodableEncoder;
+export 'src/cbor_reader.dart' show maxCborDepth;

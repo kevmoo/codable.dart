@@ -6,6 +6,10 @@ import 'dart:convert';
 
 import 'package:codable/codable.dart';
 
+const int _yamlTwoPow32 = 0x100000000;
+const int _yamlJsMaxSafeInt = 0x1fffff * _yamlTwoPow32 + 0xffffffff;
+const int _yamlJsMinSafeInt = -_yamlJsMaxSafeInt;
+
 final RegExp _bareYamlIdent = RegExp(r'^[a-zA-Z_][a-zA-Z0-9_-]*$');
 const Set<String> _yamlReservedWords = {
   'true',
@@ -19,7 +23,28 @@ const Set<String> _yamlReservedWords = {
   'inf',
 };
 
+void _validateWellFormedUtf16(String value) {
+  final len = value.length;
+  for (var i = 0; i < len; i++) {
+    final cu = value.codeUnitAt(i);
+    if (cu < 0xD800 || cu > 0xDFFF) continue;
+    if (cu <= 0xDBFF && i + 1 < len) {
+      final low = value.codeUnitAt(i + 1);
+      if (low >= 0xDC00 && low <= 0xDFFF) {
+        i++;
+        continue;
+      }
+    }
+    throw CodableException(
+      'Invalid unpaired UTF-16 surrogate '
+      '(U+${cu.toRadixString(16).toUpperCase()}) in YAML string',
+      actualValue: value,
+    );
+  }
+}
+
 String _formatYamlString(String value) {
+  _validateWellFormedUtf16(value);
   if (_bareYamlIdent.hasMatch(value) &&
       !_yamlReservedWords.contains(value.toLowerCase())) {
     return value;
@@ -27,10 +52,27 @@ String _formatYamlString(String value) {
   return jsonEncode(value);
 }
 
+String _formatYamlInt(int value) {
+  if (identical(1.0, 1) &&
+      (value < _yamlJsMinSafeInt || value > _yamlJsMaxSafeInt)) {
+    throw CodableException(
+      'Integer $value exceeds JavaScript 53-bit safe integer range '
+      '[$_yamlJsMinSafeInt, $_yamlJsMaxSafeInt]',
+      actualValue: value,
+    );
+  }
+  return value.toString();
+}
+
 String _formatYamlDouble(double value) {
   if (value.isNaN) return '.nan';
   if (value.isInfinite) return value.isNegative ? '-.inf' : '.inf';
-  return value.toString();
+  if (value == 0.0) return value.isNegative ? '-0.0' : '0.0';
+  final text = value.toString();
+  if (!text.contains('.') && !text.contains('e') && !text.contains('E')) {
+    return '$text.0';
+  }
+  return text;
 }
 
 sealed class _YamlOut {
@@ -48,6 +90,22 @@ final class _YamlOutSeq extends _YamlOut {
 
 final class _YamlOutMap extends _YamlOut {
   final List<(YamlCodableEncoder, YamlCodableEncoder)> entries = [];
+  YamlCodableEncoder? pendingKey;
+}
+
+void _validateYamlMapComplete(_YamlOutMap mapNode) {
+  if (mapNode.pendingKey != null) {
+    throw const CodableException(
+      'Dangling key without value in YAML MapEncoder',
+    );
+  }
+  for (final (_, valEnc) in mapNode.entries) {
+    if (valEnc._out == null) {
+      throw const CodableException(
+        'YAML map value encoder did not write a value',
+      );
+    }
+  }
 }
 
 void _emitYamlBlock(_YamlOut node, StringBuffer out, int indent) {
@@ -56,8 +114,9 @@ void _emitYamlBlock(_YamlOut node, StringBuffer out, int indent) {
       out.write(text);
     case _YamlOutSeq(:final items):
       _emitYamlBlockSeq(items, out, indent);
-    case _YamlOutMap(:final entries):
-      _emitYamlBlockMap(entries, out, indent);
+    case final _YamlOutMap mapNode:
+      _validateYamlMapComplete(mapNode);
+      _emitYamlBlockMap(mapNode.entries, out, indent);
   }
 }
 
@@ -145,8 +204,9 @@ void _emitYamlFlow(_YamlOut node, StringBuffer out) {
         _emitYamlFlow(items[i]._resolvedOut(), out);
       }
       out.write(']');
-    case _YamlOutMap(:final entries):
-      _emitYamlFlowMap(entries, out);
+    case final _YamlOutMap mapNode:
+      _validateYamlMapComplete(mapNode);
+      _emitYamlFlowMap(mapNode.entries, out);
   }
 }
 
@@ -173,7 +233,8 @@ void _emitYamlFlowMap(
 
 bool _isEmptyCollection(_YamlOut node) => switch (node) {
   _YamlOutSeq(:final items) => items.isEmpty,
-  _YamlOutMap(:final entries) => entries.isEmpty,
+  _YamlOutMap(:final entries, :final pendingKey) =>
+    entries.isEmpty && pendingKey == null,
   _YamlOutScalar() => false,
 };
 
@@ -264,7 +325,8 @@ final class _YamlKeyedEncoder
   }
 
   @override
-  void encodeInt(String key, int value) => _putScalar(key, value.toString());
+  void encodeInt(String key, int value) =>
+      _putScalar(key, _formatYamlInt(value));
 
   @override
   void encodeDouble(String key, double value) =>
@@ -306,7 +368,7 @@ final class _YamlUnkeyedEncoder
   }
 
   @override
-  void encodeInt(int value) => _addScalar(value.toString());
+  void encodeInt(int value) => _addScalar(_formatYamlInt(value));
 
   @override
   void encodeDouble(double value) => _addScalar(_formatYamlDouble(value));
@@ -332,31 +394,38 @@ final class _YamlMapEncoder implements MapEncoder {
   final _YamlOutMap _mapOut;
   final Map<Object, Object?> _userInfo;
   final bool _flow;
-  YamlCodableEncoder? _pendingKey;
 
   _YamlMapEncoder(this._mapOut, this._userInfo, this._flow);
 
   @override
   Encoder keyEncoder() {
-    if (_pendingKey != null) {
+    if (_mapOut.pendingKey != null) {
       throw const CodableException(
         'MapEncoder.keyEncoder() called before valueEncoder()',
       );
     }
+    if (_mapOut.entries.isNotEmpty && _mapOut.entries.last.$2._out == null) {
+      throw const CodableException(
+        'YAML map value encoder did not write a value',
+      );
+    }
     final keyEnc = YamlCodableEncoder(userInfo: _userInfo, flow: _flow);
-    _pendingKey = keyEnc;
+    _mapOut.pendingKey = keyEnc;
     return keyEnc;
   }
 
   @override
   Encoder valueEncoder() {
-    final keyEnc = _pendingKey;
+    final keyEnc = _mapOut.pendingKey;
     if (keyEnc == null) {
       throw const CodableException(
         'MapEncoder.valueEncoder() called before keyEncoder()',
       );
     }
-    _pendingKey = null;
+    if (keyEnc._out == null) {
+      throw const CodableException('YAML map key encoder did not write a key');
+    }
+    _mapOut.pendingKey = null;
     final valEnc = YamlCodableEncoder(userInfo: _userInfo, flow: _flow);
     _mapOut.entries.add((keyEnc, valEnc));
     return valEnc;
@@ -375,7 +444,7 @@ final class _YamlSingleValueEncoder
   }
 
   @override
-  void encodeInt(int value) => _set(value.toString());
+  void encodeInt(int value) => _set(_formatYamlInt(value));
 
   @override
   void encodeDouble(double value) => _set(_formatYamlDouble(value));

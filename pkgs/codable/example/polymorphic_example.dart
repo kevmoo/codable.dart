@@ -23,49 +23,21 @@ final class VehicleCodable implements Codable<Vehicle> {
 
   @override
   Vehicle decode(Decoder decoder) {
-    final keyed = decoder.keyed();
-    String? type;
-    int? maxSpeed;
-    int? doors;
-    bool? hasBell;
-
-    while (keyed.moveNextKey()) {
-      final key = keyed.nextKey();
-      switch (key) {
-        case 'type':
-          type = keyed.readString();
-          break;
-        case 'maxSpeed':
-          maxSpeed = keyed.readInt();
-          break;
-        case 'doors':
-          doors = keyed.readInt();
-          break;
-        case 'hasBell':
-          hasBell = keyed.readBool();
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey('type')) {
+      throw const CodableException(
+        'Missing discriminator key "type" for Vehicle',
+      );
     }
-
-    if (type == null || maxSpeed == null) {
-      throw const CodableException('Missing required fields for Vehicle');
-    }
-
-    if (type == 'car') {
-      if (doors == null) {
-        throw const CodableException('Missing doors for Car');
-      }
-      return Car(maxSpeed: maxSpeed, doors: doors);
-    } else if (type == 'bicycle') {
-      if (hasBell == null) {
-        throw const CodableException('Missing hasBell for Bicycle');
-      }
-      return Bicycle(maxSpeed: maxSpeed, hasBell: hasBell);
-    }
-    throw CodableException('Unknown vehicle type: $type');
+    final type = mapped.readString('type');
+    return switch (type) {
+      'car' => const CarCodable().decode(decoder),
+      'bicycle' => const BicycleCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: 'type',
+        subtypeValue: type,
+      ),
+    };
   }
 
   List<Vehicle> decodeList(Decoder decoder) {
@@ -79,11 +51,18 @@ final class VehicleCodable implements Codable<Vehicle> {
 
   @override
   void encode(Vehicle value, Encoder encoder) {
+    final keyed = encoder.keyed(length: 3);
     switch (value) {
       case Car():
-        const CarCodable().encode(value, encoder);
+        keyed
+          ..encodeString('type', 'car')
+          ..encodeInt(_$CarSchema.nameMaxSpeed, value.maxSpeed)
+          ..encodeInt(_$CarSchema.nameDoors, value.doors);
       case Bicycle():
-        const BicycleCodable().encode(value, encoder);
+        keyed
+          ..encodeString('type', 'bicycle')
+          ..encodeInt(_$BicycleSchema.nameMaxSpeed, value.maxSpeed)
+          ..encodeBool(_$BicycleSchema.nameHasBell, value.hasBell);
     }
   }
 }

@@ -147,7 +147,7 @@ void main() {
       check(encoded).equals('{"location":[37.7749,-122.4194]}');
     });
 
-    test('PolymorphicExample: Vehicle hierarchy resolution', () {
+    test('PolymorphicExample: Vehicle hierarchy resolution and roundtrip', () {
       const jsonArray = '''
       [
         {"type": "car", "maxSpeed": 120, "doors": 4},
@@ -157,18 +157,38 @@ void main() {
 
       final bytes = Uint8List.fromList(utf8.encode(jsonArray));
       final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final unkeyed = decoder.unkeyed();
-
-      final vehicles = <Vehicle>[];
-      while (unkeyed.moveNext()) {
-        vehicles.add(unkeyed.decodeElement(const VehicleCodable()));
-      }
+      final vehicles = const VehicleCodable().decodeList(decoder);
 
       check(vehicles.length).equals(2);
       check(vehicles[0]).isA<Car>();
+      check((vehicles[0] as Car).maxSpeed).equals(120);
       check((vehicles[0] as Car).doors).equals(4);
       check(vehicles[1]).isA<Bicycle>();
+      check((vehicles[1] as Bicycle).maxSpeed).equals(25);
       check((vehicles[1] as Bicycle).hasBell).isTrue();
+
+      final carJson = JsonCodableEncoder.encode<Vehicle>(
+        vehicles[0],
+        const VehicleCodable(),
+      );
+      check(carJson).contains('"type":"car"');
+      final roundtrippedCar = const VehicleCodable().decode(
+        JsonCodableDecoder.fromString(carJson),
+      );
+      check(roundtrippedCar).isA<Car>();
+      check((roundtrippedCar as Car).maxSpeed).equals(120);
+      check(roundtrippedCar.doors).equals(4);
+
+      final bikeBytes = JsonCodableEncoder.toBytes<Vehicle>(
+        vehicles[1],
+        const VehicleCodable(),
+      );
+      final roundtrippedBike = const VehicleCodable().decode(
+        JsonCodableDecoder.fromBytes(bikeBytes),
+      );
+      check(roundtrippedBike).isA<Bicycle>();
+      check((roundtrippedBike as Bicycle).maxSpeed).equals(25);
+      check(roundtrippedBike.hasBell).isTrue();
     });
   });
 }

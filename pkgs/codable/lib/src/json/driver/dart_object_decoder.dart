@@ -26,6 +26,12 @@ Uint8List decodeJsonBase64Bytes(String encoded) {
   }
 }
 
+Object? _diagnosticScalar(Object? v) {
+  if (v is Map) return null;
+  if (v is List && v is! TypedData) return null;
+  return v;
+}
+
 /// Maps an in-memory Dart object to a format-agnostic [ValueKind].
 ValueKind dartObjectToValueKind(Object? v) => switch (v) {
   null => ValueKind.nullValue,
@@ -35,7 +41,10 @@ ValueKind dartObjectToValueKind(Object? v) => switch (v) {
   Uint8List() => ValueKind.bytes,
   List() => ValueKind.list,
   Map() => ValueKind.map,
-  _ => throw CodableException('Unexpected value kind for $v', actualValue: v),
+  _ => throw CodableException(
+    'Unexpected value kind for $v',
+    actualValue: _diagnosticScalar(v),
+  ),
 };
 
 /// Parses a JSON object from [reader] into an in-memory `Map<String, Object?>`.
@@ -84,7 +93,7 @@ Uint8List _decodeObjectBytes(Object? v) {
   if (v is List<Object?>) return _decodeByteListFromObjects(v);
   throw CodableException(
     'Expected base64 string or byte list, found $v',
-    actualValue: v,
+    actualValue: _diagnosticScalar(v),
   );
 }
 
@@ -95,7 +104,7 @@ Uint8List _decodeByteListFromObjects(List<Object?> v) {
     if (e is! int || e < 0 || e > 255) {
       throw CodableException(
         'Expected byte 0..255 in list, found $e',
-        actualValue: e,
+        actualValue: _diagnosticScalar(e),
       );
     }
     out[i] = e;
@@ -129,7 +138,7 @@ final class DartObjectDecoder implements Decoder {
     }
     throw CodableException(
       'Expected object for keyed(), found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -141,7 +150,7 @@ final class DartObjectDecoder implements Decoder {
     }
     throw CodableException(
       'Expected object for mapped(), found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -153,7 +162,7 @@ final class DartObjectDecoder implements Decoder {
     }
     throw CodableException(
       'Expected object for map(), found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -165,7 +174,7 @@ final class DartObjectDecoder implements Decoder {
     }
     throw CodableException(
       'Expected array for unkeyed(), found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -200,7 +209,10 @@ final class DartObjectMappedDecoder
   int readInt(String key) {
     final v = _map[key];
     if (v is int) return v;
-    throw CodableException('Expected int for $key, found $v', actualValue: v);
+    throw CodableException(
+      'Expected int for $key, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   @override
@@ -209,7 +221,7 @@ final class DartObjectMappedDecoder
     if (v is num) return v.toDouble();
     throw CodableException(
       'Expected double for $key, found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -217,7 +229,10 @@ final class DartObjectMappedDecoder
   num readNum(String key) {
     final v = _map[key];
     if (v is num) return v;
-    throw CodableException('Expected num for $key, found $v', actualValue: v);
+    throw CodableException(
+      'Expected num for $key, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   @override
@@ -226,7 +241,7 @@ final class DartObjectMappedDecoder
     if (v is String) return v;
     throw CodableException(
       'Expected String for $key, found $v',
-      actualValue: v,
+      actualValue: _diagnosticScalar(v),
     );
   }
 
@@ -234,7 +249,10 @@ final class DartObjectMappedDecoder
   bool readBool(String key) {
     final v = _map[key];
     if (v is bool) return v;
-    throw CodableException('Expected bool for $key, found $v', actualValue: v);
+    throw CodableException(
+      'Expected bool for $key, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   @override
@@ -269,7 +287,10 @@ mixin _DartObjectSequentialMixin {
   void readNull() {
     final v = _peekCurrentValue();
     if (v != null) {
-      throw CodableException('Expected null, found $v', actualValue: v);
+      throw CodableException(
+        'Expected null, found $v',
+        actualValue: _diagnosticScalar(v),
+      );
     }
     _commitCurrentValue();
   }
@@ -280,7 +301,10 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected int, found $v', actualValue: v);
+    throw CodableException(
+      'Expected int, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   double readDouble() {
@@ -289,7 +313,10 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v.toDouble();
     }
-    throw CodableException('Expected double, found $v', actualValue: v);
+    throw CodableException(
+      'Expected double, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   num readNum() {
@@ -298,7 +325,10 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected num, found $v', actualValue: v);
+    throw CodableException(
+      'Expected num, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   String readString() {
@@ -307,7 +337,10 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected String, found $v', actualValue: v);
+    throw CodableException(
+      'Expected String, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   bool readBool() {
@@ -316,7 +349,10 @@ mixin _DartObjectSequentialMixin {
       _commitCurrentValue();
       return v;
     }
-    throw CodableException('Expected bool, found $v', actualValue: v);
+    throw CodableException(
+      'Expected bool, found $v',
+      actualValue: _diagnosticScalar(v),
+    );
   }
 
   Uint8List readBytes() {
@@ -485,8 +521,9 @@ final class DartObjectSingleValueDecoder
   final Object? _value;
   @override
   final Map<Object, Object?> _userInfo;
+  final void Function()? _onCommit;
 
-  DartObjectSingleValueDecoder(this._value, this._userInfo);
+  DartObjectSingleValueDecoder(this._value, this._userInfo, [this._onCommit]);
 
   @override
   bool _hasCurrentValue() => true;
@@ -495,7 +532,9 @@ final class DartObjectSingleValueDecoder
   Object? _peekCurrentValue() => _value;
 
   @override
-  void _commitCurrentValue() {}
+  void _commitCurrentValue() {
+    _onCommit?.call();
+  }
 
   @override
   bool isNull() => _value == null;

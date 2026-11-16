@@ -28,6 +28,9 @@ external JSAny? _jsonParse(JSString text);
 @JS('Object.keys')
 external JSArray<JSAny?> _objectKeys(JSObject object);
 
+@JS('Object.hasOwn')
+external JSBoolean _objectHasOwn(JSObject object, JSString key);
+
 @JS('Function')
 external JSFunction? _createFunction(JSString arg1, JSString body);
 
@@ -53,7 +56,7 @@ JSFunction? _getExtractor(List<List<String>> propertyAliases) {
     final aliases = propertyAliases[k];
     final conditions = aliases.map((String a) {
       final escaped = jsonEncode(a);
-      return 'o[$escaped] !== undefined ? o[$escaped] : ';
+      return 'Object.hasOwn(o, $escaped) ? o[$escaped] : ';
     }).join();
     body.writeln('  const v$k = ${conditions}undefined;');
     body.writeln('  if (typeof v$k !== "number" || isNaN(v$k)) return null;');
@@ -123,7 +126,7 @@ Float64List? _extractUniformStaticFallback(
       JSAny? propVal;
       for (final alias in propertyAliases[k]) {
         final jsKey = alias.toJS;
-        if (obj.hasProperty(jsKey).toDart) {
+        if (_objectHasOwn(obj, jsKey).toDart) {
           propVal = obj.getProperty<JSAny?>(jsKey);
           break;
         }
@@ -137,9 +140,16 @@ Float64List? _extractUniformStaticFallback(
   return out;
 }
 
+extension type JSTextDecoderOptions._(JSObject _) implements JSObject {
+  external factory JSTextDecoderOptions({bool fatal, bool ignoreBOM});
+}
+
 @JS('TextDecoder')
 extension type JSTextDecoder._(JSObject _) implements JSObject {
-  external factory JSTextDecoder();
+  external factory JSTextDecoder([
+    JSString label,
+    JSTextDecoderOptions options,
+  ]);
   external JSString decode(JSUint8Array bytes);
 }
 
@@ -149,8 +159,33 @@ extension type JSTextEncoder._(JSObject _) implements JSObject {
   external JSUint8Array encode(JSString text);
 }
 
-final _textDecoder = JSTextDecoder();
+final _textDecoder = JSTextDecoder(
+  'utf-8'.toJS,
+  JSTextDecoderOptions(fatal: true, ignoreBOM: true),
+);
 final _textEncoder = JSTextEncoder();
+
+JSAny? _decodeAndParseJsJsonBytes(Uint8List bytes) {
+  final JSString jsString;
+  try {
+    jsString = _textDecoder.decode(bytes.toJS);
+  } on FormatException {
+    rethrow;
+  } on Object catch (e) {
+    throw FormatException('Invalid UTF-8 byte sequence: $e', bytes);
+  }
+  return _parseJsJson(jsString, bytes);
+}
+
+JSAny? _parseJsJson(JSString jsString, Object? source) {
+  try {
+    return _jsonParse(jsString);
+  } on FormatException {
+    rethrow;
+  } on Object catch (e) {
+    throw FormatException('Invalid JSON: $e', source);
+  }
+}
 
 List<String> _getKeys(JSObject obj) {
   final keys = _objectKeys(obj);
@@ -172,7 +207,7 @@ Float64List _extractFloat64List(JSAny? val) {
       for (var i = 0; i < len; i++) {
         final elem = arr.getProperty<JSAny?>(i.toJS);
         if (elem == null || !elem.isA<JSNumber>()) {
-          _throwJsMismatch('Expected double in Float64List, found $elem', elem);
+          _throwJsExpected('double in Float64List', elem);
         }
         final d = (elem as JSNumber).toDartDouble;
         if (d.isNaN) {
@@ -186,7 +221,7 @@ Float64List _extractFloat64List(JSAny? val) {
       return out;
     }
   }
-  _throwJsMismatch('Expected Float64List, found $val', val);
+  _throwJsExpected('Float64List', val);
 }
 
 ValueKind _jsToValueKind(JSAny? val) {
@@ -197,7 +232,7 @@ ValueKind _jsToValueKind(JSAny? val) {
   if (val.isA<JSUint8Array>()) return ValueKind.bytes;
   if (val.isA<JSArray>()) return ValueKind.list;
   if (val.isA<JSObject>()) return ValueKind.map;
-  _throwJsMismatch('Unexpected JS value kind: $val', val);
+  _throwJsMismatch('Unexpected JS value kind: ${_describeJsValue(val)}', val);
 }
 
 Uint8List _extractBytes(JSAny? val) {
@@ -212,7 +247,7 @@ Uint8List _extractBytes(JSAny? val) {
       return _extractByteArray(val as JSArray);
     }
   }
-  _throwJsMismatch('Expected base64 string or byte list, found $val', val);
+  _throwJsExpected('base64 string or byte list', val);
 }
 
 Uint8List _extractByteArray(JSArray arr) {
@@ -222,7 +257,7 @@ Uint8List _extractByteArray(JSArray arr) {
     final e = arr.getProperty<JSAny?>(i.toJS);
     final asInt = _tryJsInt(e);
     if (asInt == null || asInt < 0 || asInt > 255) {
-      _throwJsMismatch('Expected byte 0..255 in list, found $e', e);
+      _throwJsExpected('byte 0..255 in list', e);
     }
     out[i] = asInt;
   }
@@ -277,8 +312,33 @@ Object? _jsToDart(JSAny? value) {
   return null;
 }
 
+Object? _jsDiagnosticScalar(JSAny? value) {
+  if (value == null) return null;
+  if (value.isA<JSString>()) return (value as JSString).toDart;
+  if (value.isA<JSNumber>()) return _jsNumberToNum(value as JSNumber);
+  if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
+  if (value.isA<JSUint8Array>()) return (value as JSUint8Array).toDart;
+  if (value.isA<JSFloat64Array>()) return (value as JSFloat64Array).toDart;
+  return null;
+}
+
+String _describeJsValue(JSAny? value) {
+  if (value == null) return 'null';
+  if (value.isA<JSString>()) return '"${(value as JSString).toDart}"';
+  if (value.isA<JSNumber>()) return '${_jsNumberToNum(value as JSNumber)}';
+  if (value.isA<JSBoolean>()) return '${(value as JSBoolean).toDart}';
+  if (value.isA<JSArray>()) return 'array';
+  if (value.isA<JSUint8Array>()) return 'Uint8Array';
+  if (value.isA<JSFloat64Array>()) return 'Float64Array';
+  if (value.isA<JSObject>()) return 'object';
+  return 'unknown';
+}
+
 Never _throwJsMismatch(String message, JSAny? val) =>
-    throw CodableException(message, actualValue: _jsToDart(val));
+    throw CodableException(message, actualValue: _jsDiagnosticScalar(val));
+
+Never _throwJsExpected(String expected, JSAny? val) =>
+    _throwJsMismatch('Expected $expected, found ${_describeJsValue(val)}', val);
 
 @pragma('dart2js:prefer-inline')
 @pragma('wasm:prefer-inline')
@@ -287,10 +347,7 @@ JSObject _requireJsObjectValue(JSAny? target, String containerName) {
       !target.isA<JSObject>() ||
       target.isA<JSArray>() ||
       target.isA<JSUint8Array>()) {
-    _throwJsMismatch(
-      'Expected object for $containerName(), found $target',
-      target,
-    );
+    _throwJsExpected('object for $containerName()', target);
   }
   return target as JSObject;
 }
@@ -299,10 +356,7 @@ JSObject _requireJsObjectValue(JSAny? target, String containerName) {
 @pragma('wasm:prefer-inline')
 JSArray _requireJsArrayValue(JSAny? target, String containerName) {
   if (target == null || !target.isA<JSArray>()) {
-    _throwJsMismatch(
-      'Expected array for $containerName(), found $target',
-      target,
-    );
+    _throwJsExpected('array for $containerName()', target);
   }
   return target as JSArray;
 }
@@ -328,7 +382,7 @@ List<T> _decodeJsModelList<T>(
     }
     return result;
   }
-  _throwJsMismatch('Expected List, found $val', val);
+  _throwJsExpected('List', val);
 }
 
 List<int> _extractIntList(JSAny? val) {
@@ -341,12 +395,12 @@ List<int> _extractIntList(JSAny? val) {
       if (asInt != null) {
         result.add(asInt);
       } else {
-        _throwJsMismatch('Expected int in list, found $e', e);
+        _throwJsExpected('int in list', e);
       }
     }
     return result;
   }
-  _throwJsMismatch('Expected List, found $val', val);
+  _throwJsExpected('List', val);
 }
 
 List<double> _extractDoubleList(JSAny? val) {
@@ -358,12 +412,12 @@ List<double> _extractDoubleList(JSAny? val) {
       if (e != null && e.isA<JSNumber>()) {
         result.add((e as JSNumber).toDartDouble);
       } else {
-        _throwJsMismatch('Expected double in list, found $e', e);
+        _throwJsExpected('double in list', e);
       }
     }
     return result;
   }
-  _throwJsMismatch('Expected List, found $val', val);
+  _throwJsExpected('List', val);
 }
 
 List<String> _extractStringList(JSAny? val) {
@@ -375,12 +429,12 @@ List<String> _extractStringList(JSAny? val) {
       if (e != null && e.isA<JSString>()) {
         result.add((e as JSString).toDart);
       } else {
-        _throwJsMismatch('Expected String in list, found $e', e);
+        _throwJsExpected('String in list', e);
       }
     }
     return result;
   }
-  _throwJsMismatch('Expected List, found $val', val);
+  _throwJsExpected('List', val);
 }
 
 List<bool> _extractBoolList(JSAny? val) {
@@ -392,12 +446,12 @@ List<bool> _extractBoolList(JSAny? val) {
       if (e != null && e.isA<JSBoolean>()) {
         result.add((e as JSBoolean).toDart);
       } else {
-        _throwJsMismatch('Expected bool in list, found $e', e);
+        _throwJsExpected('bool in list', e);
       }
     }
     return result;
   }
-  _throwJsMismatch('Expected List, found $val', val);
+  _throwJsExpected('List', val);
 }
 
 /// Concrete high-performance JS object-tree JSON decoder connecting
@@ -419,8 +473,6 @@ final class JsonCodableDecoder implements Decoder {
   @override
   final Map<Object, Object?> userInfo;
 
-  JSAny? _activeValue;
-
   JsonCodableDecoder._(this._decoded, this._bytes, {this.userInfo = const {}})
     : _reader = null;
 
@@ -441,8 +493,7 @@ final class JsonCodableDecoder implements Decoder {
         userInfo: userInfo,
       );
     }
-    final jsString = _textDecoder.decode(bytes.toJS);
-    final decoded = _jsonParse(jsString);
+    final decoded = _decodeAndParseJsJsonBytes(bytes);
     return JsonCodableDecoder._(decoded, bytes, userInfo: userInfo);
   }
 
@@ -450,11 +501,11 @@ final class JsonCodableDecoder implements Decoder {
     String text, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    if (_isWasm) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
       final bytes = Uint8List.fromList(utf8.encode(text));
       return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
     }
-    final decoded = _jsonParse(text.toJS);
+    final decoded = _parseJsJson(text.toJS, text);
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
@@ -474,11 +525,9 @@ final class JsonCodableDecoder implements Decoder {
     if (_reader != null) return _reader;
     final cached = _cachedFallbackReader;
     if (cached != null) return cached;
-    final target = _activeValue ?? _decoded;
-    final bytes = (target == _decoded && _bytes != null)
-        ? _bytes
-        : Uint8List.fromList(utf8.encode(jsonEncode(_jsToDart(target))));
-    _activeValue = null;
+    final bytes =
+        _bytes ??
+        Uint8List.fromList(utf8.encode(jsonEncode(_jsToDart(_decoded))));
     final fallback = JsonTokenReader.fromBytes(bytes);
     _cachedFallbackReader = fallback;
     return fallback;
@@ -493,13 +542,13 @@ final class JsonCodableDecoder implements Decoder {
       if (hasStreamingBufferedObject(this)) return ValueKind.map;
       return streamingTokenTypeToValueKind(_reader.peek());
     }
-    return _jsToValueKind(_activeValue ?? _decoded);
+    return _jsToValueKind(_decoded);
   }
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
   JSObject _requireJsObject(String containerName) =>
-      _requireJsObjectValue(_activeValue ?? _decoded, containerName);
+      _requireJsObjectValue(_decoded, containerName);
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -544,26 +593,41 @@ final class JsonCodableDecoder implements Decoder {
   @override
   UnkeyedDecoder unkeyed() {
     if (_reader != null) {
+      final buffered = takeStreamingBufferedObject(this);
+      if (buffered != null) {
+        return DartObjectDecoder(buffered, userInfo: userInfo).unkeyed();
+      }
       return StreamingUnkeyedDecoder(_reader, this);
     }
     return _JsonCodableUnkeyedDecoder(
       this,
-      _requireJsArrayValue(_activeValue ?? _decoded, 'unkeyed'),
+      _requireJsArrayValue(_decoded, 'unkeyed'),
     );
   }
 
   @override
   SingleValueDecoder singleValue() {
     if (_reader != null) {
+      final buffered = peekStreamingBufferedObject(this);
+      if (buffered != null) {
+        return DartObjectSingleValueDecoder(
+          buffered,
+          userInfo,
+          () => clearStreamingBufferedObject(this),
+        );
+      }
       return StreamingSingleValueDecoder(_reader, this);
     }
-    return _JsonCodableSingleValueDecoder(this, _activeValue ?? _decoded);
+    return _JsonCodableSingleValueDecoder(this, _decoded);
   }
 
   @override
   Uint8List? get payload {
+    if (_reader == null || hasStreamingBufferedObject(this)) {
+      return null;
+    }
     _payloadEscaped = true;
-    return _bytes ?? _reader?.bytes;
+    return _bytes ?? _reader.bytes;
   }
 
   @override
@@ -574,9 +638,8 @@ final class JsonCodableDecoder implements Decoder {
         propertyAliases,
       );
     }
-    final target = _activeValue ?? _decoded;
+    final target = _decoded;
     if (target != null && target.isA<JSArray>()) {
-      _activeValue = null;
       return _extractUniformFloat64Array(target, propertyAliases);
     }
     return null;
@@ -610,7 +673,7 @@ mixin _JsSequentialDecoderMixin {
   void readNull() {
     final v = _peekJsValue();
     if (v != null) {
-      _throwJsMismatch('Expected null, found $v', v);
+      _throwJsExpected('null', v);
     }
     _commitJsValue();
   }
@@ -618,8 +681,13 @@ mixin _JsSequentialDecoderMixin {
   (int start, int end) readStringSpan() =>
       throw UnsupportedError('String spans not supported on JS backend');
 
-  (int start, int end)? readNullableStringSpan() =>
-      throw UnsupportedError('String spans not supported on JS backend');
+  (int start, int end)? readNullableStringSpan() {
+    if (isNextNull()) {
+      readNull();
+      return null;
+    }
+    return readStringSpan();
+  }
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
@@ -630,7 +698,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return asInt;
     }
-    _throwJsMismatch('Expected int, found $val', val);
+    _throwJsExpected('int', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -646,7 +714,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return asInt;
     }
-    _throwJsMismatch('Expected int?, found $val', val);
+    _throwJsExpected('int?', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -657,7 +725,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSNumber).toDartDouble;
     }
-    _throwJsMismatch('Expected double, found $val', val);
+    _throwJsExpected('double', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -672,7 +740,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSNumber).toDartDouble;
     }
-    _throwJsMismatch('Expected double?, found $val', val);
+    _throwJsExpected('double?', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -683,7 +751,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return _jsNumberToNum(val as JSNumber);
     }
-    _throwJsMismatch('Expected num, found $val', val);
+    _throwJsExpected('num', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -698,7 +766,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return _jsNumberToNum(val as JSNumber);
     }
-    _throwJsMismatch('Expected num?, found $val', val);
+    _throwJsExpected('num?', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -709,7 +777,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSString).toDart;
     }
-    _throwJsMismatch('Expected String, found $val', val);
+    _throwJsExpected('String', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -724,7 +792,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSString).toDart;
     }
-    _throwJsMismatch('Expected String?, found $val', val);
+    _throwJsExpected('String?', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -735,7 +803,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSBoolean).toDart;
     }
-    _throwJsMismatch('Expected bool, found $val', val);
+    _throwJsExpected('bool', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -750,7 +818,7 @@ mixin _JsSequentialDecoderMixin {
       _commitJsValue();
       return (val as JSBoolean).toDart;
     }
-    _throwJsMismatch('Expected bool?, found $val', val);
+    _throwJsExpected('bool?', val);
   }
 
   @pragma('dart2js:prefer-inline')
@@ -817,7 +885,7 @@ final class _JsonCodableMappedKeyedDecoder
       while (_propertyIndex < keys.length) {
         final key = keys[_propertyIndex++];
         final jsKey = key.toJS;
-        if (_map.hasProperty(jsKey).toDart) {
+        if (_objectHasOwn(_map, jsKey).toDart) {
           _activeKey = key;
           _activeValue = _map.getProperty<JSAny?>(jsKey);
           _hasActiveValue = true;
@@ -931,10 +999,15 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  JSAny? _prop(String key) => _map.getProperty<JSAny?>(key.toJS);
+  JSAny? _prop(String key) {
+    final jsKey = key.toJS;
+    return _objectHasOwn(_map, jsKey).toDart
+        ? _map.getProperty<JSAny?>(jsKey)
+        : null;
+  }
 
   @override
-  bool containsKey(String key) => _map.hasProperty(key.toJS).toDart;
+  bool containsKey(String key) => _objectHasOwn(_map, key.toJS).toDart;
 
   @override
   bool isNull(String key) => _prop(key) == null;
@@ -947,7 +1020,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     final asInt = _tryJsInt(v);
     if (asInt != null) return asInt;
-    _throwJsMismatch('Expected int for $key, found $v', v);
+    _throwJsExpected('int for $key', v);
   }
 
   @override
@@ -956,14 +1029,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     if (v == null) return null;
     final asInt = _tryJsInt(v);
     if (asInt != null) return asInt;
-    _throwJsMismatch('Expected int for $key, found $v', v);
+    _throwJsExpected('int for $key', v);
   }
 
   @override
   double readDouble(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
-    _throwJsMismatch('Expected double for $key, found $v', v);
+    _throwJsExpected('double for $key', v);
   }
 
   @override
@@ -971,14 +1044,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSNumber>()) return (v as JSNumber).toDartDouble;
-    _throwJsMismatch('Expected double for $key, found $v', v);
+    _throwJsExpected('double for $key', v);
   }
 
   @override
   num readNum(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
-    _throwJsMismatch('Expected num for $key, found $v', v);
+    _throwJsExpected('num for $key', v);
   }
 
   @override
@@ -986,14 +1059,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSNumber>()) return _jsNumberToNum(v as JSNumber);
-    _throwJsMismatch('Expected num for $key, found $v', v);
+    _throwJsExpected('num for $key', v);
   }
 
   @override
   String readString(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSString>()) return (v as JSString).toDart;
-    _throwJsMismatch('Expected String for $key, found $v', v);
+    _throwJsExpected('String for $key', v);
   }
 
   @override
@@ -1001,14 +1074,14 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSString>()) return (v as JSString).toDart;
-    _throwJsMismatch('Expected String for $key, found $v', v);
+    _throwJsExpected('String for $key', v);
   }
 
   @override
   bool readBool(String key) {
     final v = _prop(key);
     if (v != null && v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
-    _throwJsMismatch('Expected bool for $key, found $v', v);
+    _throwJsExpected('bool for $key', v);
   }
 
   @override
@@ -1016,7 +1089,7 @@ final class _JsonCodableMappedDecoder implements MappedDecoder {
     final v = _prop(key);
     if (v == null) return null;
     if (v.isA<JSBoolean>()) return (v as JSBoolean).toDart;
-    _throwJsMismatch('Expected bool for $key, found $v', v);
+    _throwJsExpected('bool for $key', v);
   }
 
   @override
@@ -1315,19 +1388,72 @@ final class _JsonCodableSingleValueDecoder
 @JS('JSON.stringify')
 external JSString _jsonStringify(JSAny? value);
 
+@JS('Object.defineProperty')
+external void _objectDefineProperty(
+  JSObject target,
+  JSString key,
+  JSPropertyDescriptor descriptor,
+);
+
+extension type JSPropertyDescriptor._(JSObject _) implements JSObject {
+  external factory JSPropertyDescriptor({
+    JSAny? value,
+    bool writable,
+    bool enumerable,
+    bool configurable,
+  });
+}
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+void _setJsProperty(JSObject obj, String key, JSAny? value) {
+  if (key != '__proto__') {
+    obj[key] = value;
+    return;
+  }
+  _objectDefineProperty(
+    obj,
+    key.toJS,
+    JSPropertyDescriptor(
+      value: value,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    ),
+  );
+}
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSNumber _finiteDoubleToJs(double value) {
+  if (!value.isFinite) {
+    throw UnsupportedError('NaN and Infinity are not supported in JSON');
+  }
+  return value.toJS;
+}
+
 /// Concrete high-performance JS object-tree JSON encoder connecting
 /// `package:codable` contracts directly to native JavaScript objects and
 /// `JSON.stringify`.
 final class JsonCodableEncoder implements Encoder {
   JSAny? _root;
+  bool _hasRoot = false;
+  final JsonCodableEncoder? _parentRoot;
   final void Function(JSAny?)? _onRoot;
   _JsonCodableJsSingleValueEncoder? _singleValue;
+  List<_JsonCodableJsMapEncoder>? _mapEncoders;
   @override
   final Map<Object, Object?> userInfo;
 
-  JsonCodableEncoder({this.userInfo = const {}}) : _onRoot = null;
+  JsonCodableEncoder({this.userInfo = const {}})
+    : _parentRoot = null,
+      _onRoot = null;
 
-  JsonCodableEncoder._nested(this.userInfo, this._onRoot);
+  JsonCodableEncoder._child(JsonCodableEncoder root, [this._onRoot])
+    : _parentRoot = root._topRoot,
+      userInfo = root.userInfo;
+
+  JsonCodableEncoder get _topRoot => _parentRoot ?? this;
 
   @override
   bool get isHumanReadable => true;
@@ -1336,7 +1462,21 @@ final class JsonCodableEncoder implements Encoder {
   @pragma('wasm:prefer-inline')
   void _setRoot(JSAny? value) {
     _root = value;
+    _hasRoot = true;
     _onRoot?.call(value);
+  }
+
+  void _registerMapEncoder(_JsonCodableJsMapEncoder mapEncoder) {
+    (_topRoot._mapEncoders ??= <_JsonCodableJsMapEncoder>[]).add(mapEncoder);
+  }
+
+  void _validateComplete() {
+    final maps = _mapEncoders;
+    if (maps != null) {
+      for (var i = 0; i < maps.length; i++) {
+        maps[i]._validateComplete();
+      }
+    }
   }
 
   /// Encodes [value] to a JSON String using [encodable].
@@ -1345,8 +1485,16 @@ final class JsonCodableEncoder implements Encoder {
     Encodable<T> encodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
+      return streaming_driver.JsonCodableEncoder.encode(
+        value,
+        encodable,
+        userInfo: userInfo,
+      );
+    }
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encodable.encode(value, encoder);
+    encoder._validateComplete();
     return _jsonStringify(encoder._root).toDart;
   }
 
@@ -1357,8 +1505,17 @@ final class JsonCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int? capacityHint,
   }) {
+    if (_isWasm && userInfo[#forceJsDom] != true) {
+      return streaming_driver.JsonCodableEncoder.toBytes(
+        value,
+        encodable,
+        userInfo: userInfo,
+        capacityHint: capacityHint,
+      );
+    }
     final encoder = JsonCodableEncoder(userInfo: userInfo);
     encodable.encode(value, encoder);
+    encoder._validateComplete();
     final jsString = _jsonStringify(encoder._root);
     final jsBytes = _textEncoder.encode(jsString);
     return jsBytes.toDart;
@@ -1432,60 +1589,64 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   _JsonCodableJsKeyedEncoder(this._rootEncoder, this._object);
 
   @override
-  void encodeInt(String key, int value) => _object[key] = value.toJS;
+  void encodeInt(String key, int value) =>
+      _setJsProperty(_object, key, value.toJS);
 
   @override
   void encodeNullableInt(String key, int? value) {
-    if (value != null) _object[key] = value.toJS;
+    if (value != null) _setJsProperty(_object, key, value.toJS);
   }
 
   @override
-  void encodeDouble(String key, double value) => _object[key] = value.toJS;
+  void encodeDouble(String key, double value) =>
+      _setJsProperty(_object, key, _finiteDoubleToJs(value));
 
   @override
   void encodeNullableDouble(String key, double? value) {
-    if (value != null) _object[key] = value.toJS;
+    if (value != null) _setJsProperty(_object, key, _finiteDoubleToJs(value));
   }
 
   @override
-  void encodeString(String key, String value) => _object[key] = value.toJS;
+  void encodeString(String key, String value) =>
+      _setJsProperty(_object, key, value.toJS);
 
   @override
   void encodeNullableString(String key, String? value) {
-    if (value != null) _object[key] = value.toJS;
+    if (value != null) _setJsProperty(_object, key, value.toJS);
   }
 
   @override
-  void encodeBool(String key, bool value) => _object[key] = value.toJS;
+  void encodeBool(String key, bool value) =>
+      _setJsProperty(_object, key, value.toJS);
 
   @override
   void encodeNullableBool(String key, bool? value) {
-    if (value != null) _object[key] = value.toJS;
+    if (value != null) _setJsProperty(_object, key, value.toJS);
   }
 
   @override
   void encodeBytes(String key, Uint8List value) =>
-      _object[key] = base64Encode(value).toJS;
+      _setJsProperty(_object, key, base64Encode(value).toJS);
 
   @override
   void encodeNullableBytes(String key, Uint8List? value) {
-    if (value != null) _object[key] = base64Encode(value).toJS;
+    if (value != null) _setJsProperty(_object, key, base64Encode(value).toJS);
   }
 
   @override
-  void encodeNull(String key) => _object[key] = null;
+  void encodeNull(String key) => _setJsProperty(_object, key, null);
 
   @override
-  Encoder nestedEncoder(String key) => JsonCodableEncoder._nested(
-    _rootEncoder.userInfo,
-    (val) => _object[key] = val,
+  Encoder nestedEncoder(String key) => JsonCodableEncoder._child(
+    _rootEncoder,
+    (val) => _setJsProperty(_object, key, val),
   );
 
   @override
   void encodeValue<T>(String key, T value, Encodable<T> encodable) {
-    final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+    final child = JsonCodableEncoder._child(_rootEncoder);
     encodable.encode(value, child);
-    _object[key] = child._root;
+    _setJsProperty(_object, key, child._root);
   }
 
   @override
@@ -1499,11 +1660,11 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
   void encodeList<T>(String key, Iterable<T> elements, Encodable<T> encodable) {
     final array = JSArray<JSAny?>();
     for (final e in elements) {
-      final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+      final child = JsonCodableEncoder._child(_rootEncoder);
       encodable.encode(e, child);
       array.add(child._root);
     }
-    _object[key] = array;
+    _setJsProperty(_object, key, array);
   }
 
   @override
@@ -1512,16 +1673,16 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     for (var i = 0; i < values.length; i++) {
       array[i] = values[i].toJS;
     }
-    _object[key] = array;
+    _setJsProperty(_object, key, array);
   }
 
   @override
   void encodeDoubleList(String key, List<double> values) {
     final array = JSArray<JSNumber>.withLength(values.length);
     for (var i = 0; i < values.length; i++) {
-      array[i] = values[i].toJS;
+      array[i] = _finiteDoubleToJs(values[i]);
     }
-    _object[key] = array;
+    _setJsProperty(_object, key, array);
   }
 
   @override
@@ -1530,7 +1691,7 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     for (var i = 0; i < values.length; i++) {
       array[i] = values[i].toJS;
     }
-    _object[key] = array;
+    _setJsProperty(_object, key, array);
   }
 
   @override
@@ -1539,22 +1700,25 @@ final class _JsonCodableJsKeyedEncoder implements KeyedEncoder {
     for (var i = 0; i < values.length; i++) {
       array[i] = values[i].toJS;
     }
-    _object[key] = array;
+    _setJsProperty(_object, key, array);
   }
 }
 
 final class _JsonCodableJsMapEncoder implements MapEncoder {
   final _JsonCodableJsMapKeyEncoder _keyEncoder;
   final _JsonCodableJsMapValueEncoder _valueEncoder;
+  int _phase = 0; // 0 = idle, 1 = inKey, 2 = inValue
 
   factory _JsonCodableJsMapEncoder(
     JsonCodableEncoder rootEncoder,
     JSObject object,
   ) {
-    return _JsonCodableJsMapEncoder._(
-      _JsonCodableJsMapKeyEncoder(rootEncoder.userInfo),
-      _JsonCodableJsMapValueEncoder(rootEncoder, object),
-    );
+    final keyEnc = _JsonCodableJsMapKeyEncoder(rootEncoder.userInfo);
+    final valEnc = _JsonCodableJsMapValueEncoder(rootEncoder, object);
+    final mapEnc = _JsonCodableJsMapEncoder._(keyEnc, valEnc);
+    valEnc._mapEncoder = mapEnc;
+    rootEncoder._registerMapEncoder(mapEnc);
+    return mapEnc;
   }
 
   _JsonCodableJsMapEncoder._(this._keyEncoder, this._valueEncoder);
@@ -1567,11 +1731,26 @@ final class _JsonCodableJsMapEncoder implements MapEncoder {
     'Map key must be encoded before valueEncoder()',
   );
 
+  static Never _throwMissingValue() => throw const CodableException(
+    'Map value encoder completed without writing a value',
+  );
+
+  void _validateComplete() {
+    if (_phase == 1) {
+      throw const CodableException(
+        'Map key was encoded without a corresponding value',
+      );
+    }
+    if (_phase == 2) _throwMissingValue();
+  }
+
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
   Encoder keyEncoder() {
-    if (_keyEncoder._pendingKey != null) _throwUnpairedKey();
+    if (_phase == 1 || _keyEncoder._pendingKey != null) _throwUnpairedKey();
+    if (_phase == 2) _throwMissingValue();
+    _phase = 1;
     return _keyEncoder;
   }
 
@@ -1580,8 +1759,9 @@ final class _JsonCodableJsMapEncoder implements MapEncoder {
   @pragma('wasm:prefer-inline')
   Encoder valueEncoder() {
     final key = _keyEncoder._pendingKey;
-    if (key == null) _throwMissingKey();
+    if (_phase != 1 || key == null) _throwMissingKey();
     _keyEncoder._pendingKey = null;
+    _phase = 2;
     _valueEncoder._currentKey = key;
     return _valueEncoder;
   }
@@ -1620,6 +1800,7 @@ final class _JsonCodableJsMapValueEncoder
     implements Encoder, SingleValueEncoder {
   final JsonCodableEncoder _rootEncoder;
   final JSObject _object;
+  late final _JsonCodableJsMapEncoder _mapEncoder;
   String _currentKey = '';
 
   _JsonCodableJsMapValueEncoder(this._rootEncoder, this._object);
@@ -1629,6 +1810,16 @@ final class _JsonCodableJsMapValueEncoder
 
   @override
   Map<Object, Object?> get userInfo => _rootEncoder.userInfo;
+
+  @pragma('dart2js:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _writeValue(JSAny? val) {
+    if (_mapEncoder._phase != 2) {
+      throw const CodableException('Map value encoder used without active key');
+    }
+    _mapEncoder._phase = 0;
+    _setJsProperty(_object, _currentKey, val);
+  }
 
   @override
   @pragma('dart2js:prefer-inline')
@@ -1640,7 +1831,7 @@ final class _JsonCodableJsMapValueEncoder
   @pragma('wasm:prefer-inline')
   KeyedEncoder keyed({KeyOptions? options, int? length}) {
     final obj = JSObject();
-    _object[_currentKey] = obj;
+    _writeValue(obj);
     return _JsonCodableJsKeyedEncoder(_rootEncoder, obj);
   }
 
@@ -1651,7 +1842,7 @@ final class _JsonCodableJsMapValueEncoder
     final array = length != null
         ? JSArray<JSAny?>.withLength(length)
         : JSArray<JSAny?>();
-    _object[_currentKey] = array;
+    _writeValue(array);
     return _JsonCodableJsUnkeyedEncoder(_rootEncoder, array);
   }
 
@@ -1660,67 +1851,70 @@ final class _JsonCodableJsMapValueEncoder
   @pragma('wasm:prefer-inline')
   MapEncoder map({int? length}) {
     final obj = JSObject();
-    _object[_currentKey] = obj;
+    _writeValue(obj);
     return _JsonCodableJsMapEncoder(_rootEncoder, obj);
   }
 
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void encodeInt(int value) => _object[_currentKey] = value.toJS;
+  void encodeInt(int value) => _writeValue(value.toJS);
 
   @override
-  void encodeNullableInt(int? value) => _object[_currentKey] = value?.toJS;
+  void encodeNullableInt(int? value) => _writeValue(value?.toJS);
 
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void encodeDouble(double value) => _object[_currentKey] = value.toJS;
+  void encodeDouble(double value) => _writeValue(_finiteDoubleToJs(value));
 
   @override
   void encodeNullableDouble(double? value) =>
-      _object[_currentKey] = value?.toJS;
+      _writeValue(value == null ? null : _finiteDoubleToJs(value));
 
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void encodeString(String value) => _object[_currentKey] = value.toJS;
+  void encodeString(String value) => _writeValue(value.toJS);
 
   @override
-  void encodeNullableString(String? value) =>
-      _object[_currentKey] = value?.toJS;
+  void encodeNullableString(String? value) => _writeValue(value?.toJS);
 
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  void encodeBool(bool value) => _object[_currentKey] = value.toJS;
+  void encodeBool(bool value) => _writeValue(value.toJS);
 
   @override
-  void encodeNullableBool(bool? value) => _object[_currentKey] = value?.toJS;
+  void encodeNullableBool(bool? value) => _writeValue(value?.toJS);
 
   @override
-  void encodeBytes(Uint8List value) =>
-      _object[_currentKey] = base64Encode(value).toJS;
+  void encodeBytes(Uint8List value) => _writeValue(base64Encode(value).toJS);
 
   @override
   void encodeNullableBytes(Uint8List? value) =>
-      _object[_currentKey] = value == null ? null : base64Encode(value).toJS;
+      _writeValue(value == null ? null : base64Encode(value).toJS);
 
   @override
-  void encodeNull() => _object[_currentKey] = null;
+  void encodeNull() => _writeValue(null);
 
   @override
   void encode<T>(T value, Encodable<T> encodable) {
+    if (_mapEncoder._phase != 2) {
+      throw const CodableException('Map value encoder used without active key');
+    }
     final key = _currentKey;
-    final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+    _mapEncoder._phase = 0;
+    final child = JsonCodableEncoder._child(_rootEncoder);
     encodable.encode(value, child);
-    _object[key] = child._root;
+    if (!child._hasRoot) _JsonCodableJsMapEncoder._throwMissingValue();
+    _setJsProperty(_object, key, child._root);
   }
 
   @override
   void encodeNullable<T>(T? value, Encodable<T> encodable) {
     if (value == null) {
-      _object[_currentKey] = null;
+      encodeNull();
     } else {
       encode(value, encodable);
     }
@@ -1741,10 +1935,12 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   void encodeNullableInt(int? value) => _array[_index++] = value?.toJS;
 
   @override
-  void encodeDouble(double value) => _array[_index++] = value.toJS;
+  void encodeDouble(double value) =>
+      _array[_index++] = _finiteDoubleToJs(value);
 
   @override
-  void encodeNullableDouble(double? value) => _array[_index++] = value?.toJS;
+  void encodeNullableDouble(double? value) =>
+      _array[_index++] = value == null ? null : _finiteDoubleToJs(value);
 
   @override
   void encodeString(String value) => _array[_index++] = value.toJS;
@@ -1772,15 +1968,12 @@ final class _JsonCodableJsUnkeyedEncoder implements UnkeyedEncoder {
   @override
   Encoder nestedEncoder() {
     final slot = _index++;
-    return JsonCodableEncoder._nested(
-      _rootEncoder.userInfo,
-      (val) => _array[slot] = val,
-    );
+    return JsonCodableEncoder._child(_rootEncoder, (val) => _array[slot] = val);
   }
 
   @override
   void encodeElement<T>(T value, Encodable<T> encodable) {
-    final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+    final child = JsonCodableEncoder._child(_rootEncoder);
     encodable.encode(value, child);
     _array[_index++] = child._root;
   }
@@ -1814,11 +2007,12 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
   void encodeNullableInt(int? value) => _rootEncoder._setRoot(value?.toJS);
 
   @override
-  void encodeDouble(double value) => _rootEncoder._setRoot(value.toJS);
+  void encodeDouble(double value) =>
+      _rootEncoder._setRoot(_finiteDoubleToJs(value));
 
   @override
   void encodeNullableDouble(double? value) =>
-      _rootEncoder._setRoot(value?.toJS);
+      _rootEncoder._setRoot(value == null ? null : _finiteDoubleToJs(value));
 
   @override
   void encodeString(String value) => _rootEncoder._setRoot(value.toJS);
@@ -1846,7 +2040,7 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
 
   @override
   void encode<T>(T value, Encodable<T> encodable) {
-    final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+    final child = JsonCodableEncoder._child(_rootEncoder);
     encodable.encode(value, child);
     _rootEncoder._setRoot(child._root);
   }
@@ -1856,7 +2050,7 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
     if (value == null) {
       _rootEncoder._setRoot(null);
     } else {
-      final child = JsonCodableEncoder(userInfo: _rootEncoder.userInfo);
+      final child = JsonCodableEncoder._child(_rootEncoder);
       encodable.encode(value, child);
       _rootEncoder._setRoot(child._root);
     }

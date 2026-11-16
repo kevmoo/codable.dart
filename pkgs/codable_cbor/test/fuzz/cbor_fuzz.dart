@@ -68,7 +68,7 @@ void _fuzzGenericDecodeAndReencode(Uint8List bytes) {
   try {
     reader = CborReader(bytes);
     final decoder = CborCodableDecoder.fromBytes(bytes);
-    root = _decodeNode(decoder, 0);
+    root = _decodeNode(decoder);
     reader.skipItem();
   } on CodableException {
     return;
@@ -80,53 +80,54 @@ void _fuzzGenericDecodeAndReencode(Uint8List bytes) {
   );
   final roundtripped = CborCodableDecoder.decode<_CborNode>(
     reencoded,
-    Decodable.fromFunction((d) => _decodeNode(d, 0)),
+    const Decodable.fromFunction(_decodeNode),
   );
   if (!_nodesEqual(root, roundtripped)) {
     throw StateError('CBOR roundtrip mismatch on valid input');
   }
 }
 
-_CborNode _decodeNode(Decoder decoder, int depth) {
-  if (depth > 24) {
-    throw const CodableException('Max fuzz nesting depth exceeded');
-  }
-  return switch (decoder.peekKind()) {
-    ValueKind.nullValue => _readNullNode(decoder),
-    ValueKind.boolean => _CborBool(decoder.singleValue().readBool()),
-    ValueKind.number => _readNumberNode(decoder),
-    ValueKind.string => _CborText(decoder.singleValue().readString()),
-    ValueKind.bytes => _CborBytes(decoder.singleValue().readBytes()),
-    ValueKind.list => _decodeArrayNode(decoder, depth + 1),
-    ValueKind.map => _decodeMapNode(decoder, depth + 1),
-  };
-}
+_CborNode _decodeNode(Decoder decoder) => switch (decoder.peekKind()) {
+  ValueKind.nullValue => _readNullNode(decoder),
+  ValueKind.boolean => _CborBool(decoder.singleValue().readBool()),
+  ValueKind.number => _readNumberNode(decoder),
+  ValueKind.string => _CborText(decoder.singleValue().readString()),
+  ValueKind.bytes => _CborBytes(decoder.singleValue().readBytes()),
+  ValueKind.list => _decodeArrayNode(decoder),
+  ValueKind.map => _decodeMapNode(decoder),
+};
 
 _CborNode _readNullNode(Decoder decoder) {
   decoder.singleValue().readNull();
   return const _CborNull();
 }
 
-_CborNode _readNumberNode(Decoder decoder) {
-  final n = decoder.singleValue().readNum();
-  return n is int ? _CborInt(n) : _CborFloat(n.toDouble());
+bool _isEncodableInt(num n) {
+  if (n is! int || (n == 0 && n.isNegative)) return false;
+  if (!identical(1.0, 1)) return true;
+  return n >= -cborJsMaxSafeInt && n <= cborJsMaxSafeInt;
 }
 
-_CborNode _decodeArrayNode(Decoder decoder, int nextDepth) {
+_CborNode _readNumberNode(Decoder decoder) {
+  final n = decoder.singleValue().readNum();
+  return _isEncodableInt(n) ? _CborInt(n as int) : _CborFloat(n.toDouble());
+}
+
+_CborNode _decodeArrayNode(Decoder decoder) {
   final u = decoder.unkeyed();
   final items = <_CborNode>[];
   while (u.moveNext()) {
-    items.add(_decodeNode(u.nestedDecoder(), nextDepth));
+    items.add(_decodeNode(u.nestedDecoder()));
   }
   return _CborArray(items);
 }
 
-_CborNode _decodeMapNode(Decoder decoder, int nextDepth) {
+_CborNode _decodeMapNode(Decoder decoder) {
   final m = decoder.map();
   final entries = <(_CborNode, _CborNode)>[];
   while (m.moveNextEntry()) {
-    final k = _decodeNode(m.keyDecoder(), nextDepth);
-    final v = _decodeNode(m.valueDecoder(), nextDepth);
+    final k = _decodeNode(m.keyDecoder());
+    final v = _decodeNode(m.valueDecoder());
     entries.add((k, v));
   }
   return _CborMap(entries);
