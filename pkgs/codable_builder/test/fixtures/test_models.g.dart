@@ -279,6 +279,12 @@ final class UserAccountCodable implements Codable<UserAccount> {
             location = null;
           } else {
             location = keyed.decodeFloat64List();
+            if (location.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "location", got ${location.length}',
+                actualValue: location.length,
+              );
+            }
           }
           break;
         default:
@@ -1167,6 +1173,13 @@ extension type const _$TeamSchema(int _value) {
   ]);
   static final KeyOptions keyOptions = options;
 
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
   // Bitmask Flags strictly for Required Fields
   static const _$TeamSchema none = _$TeamSchema(0);
   static const int _nameBit = 1 << 0;
@@ -1226,9 +1239,17 @@ final class TeamCodable implements Codable<Team> {
           break;
         case _$TeamSchema.keyRoles:
           roles = keyed.decodeList(
-            Decodable.fromFunction(
-              (d) => UserRole.values.byName(d.singleValue().readString()),
-            ),
+            Decodable.fromFunction((d) {
+              final raw = d.singleValue().readString();
+              final idx = _$TeamSchema.enumUserRoleKeyOptions.indexOf(raw);
+              if (idx < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$raw"',
+                  actualValue: raw,
+                );
+              }
+              return UserRole.values[idx];
+            }),
           );
           break;
         case _$TeamSchema.keyNullableTags:
@@ -1763,10 +1784,14 @@ final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <UserRole, int>{};
             while (mDecoder.moveNextEntry()) {
+              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
               final enumIdx1 = _$TypedKeyMapModelSchema.enumUserRoleKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
+                  .indexOf(rawEnum1);
               if (enumIdx1 < 0) {
-                throw const CodableException('Unknown UserRole value');
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
               }
               final key = UserRole.values[enumIdx1];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();
@@ -2011,11 +2036,15 @@ final class StringKeyedNestedMapModelCodable
             final m = <String, UserRole>{};
             while (k.moveNextKey()) {
               final key = k.nextKey();
-              final enumIdx1 = k.selectStringIndex(
-                _$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions,
-              );
-              if (enumIdx1 < 0 || enumIdx1 >= UserRole.values.length) {
-                throw const CodableException('Unknown UserRole value');
+              final rawEnum1 = k.readString();
+              final enumIdx1 = _$StringKeyedNestedMapModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1);
+              if (enumIdx1 < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
               }
               m[key] = UserRole.values[enumIdx1];
             }
@@ -2306,6 +2335,13 @@ extension type const _$AllNullableModelSchema(int _value) {
   ]);
   static final KeyOptions keyOptions = options;
 
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
   // Bitmask Flags strictly for Required Fields
   static const _$AllNullableModelSchema none = _$AllNullableModelSchema(0);
 
@@ -2369,9 +2405,18 @@ final class AllNullableModelCodable implements Codable<AllNullableModel> {
           } else {
             roles = keyed
                 .decodeList(
-                  Decodable.fromFunction(
-                    (d) => UserRole.values.byName(d.singleValue().readString()),
-                  ),
+                  Decodable.fromFunction((d) {
+                    final raw = d.singleValue().readString();
+                    final idx = _$AllNullableModelSchema.enumUserRoleKeyOptions
+                        .indexOf(raw);
+                    if (idx < 0) {
+                      throw CodableException(
+                        'Unknown UserRole value: "$raw"',
+                        actualValue: raw,
+                      );
+                    }
+                    return UserRole.values[idx];
+                  }),
                 )
                 .toSet();
           }
@@ -2895,11 +2940,18 @@ final class NestedCollectionMatrixCodable
                 final u1 = u.nestedDecoder().unkeyed();
                 final s1 = <UserRole>{};
                 while (u1.moveNext()) {
+                  final rawEnum2 = u1
+                      .nestedDecoder()
+                      .singleValue()
+                      .readString();
                   final enumIdx2 = _$NestedCollectionMatrixSchema
                       .enumUserRoleKeyOptions
-                      .indexOf(u1.nestedDecoder().singleValue().readString());
+                      .indexOf(rawEnum2);
                   if (enumIdx2 < 0) {
-                    throw const CodableException('Unknown UserRole value');
+                    throw CodableException(
+                      'Unknown UserRole value: "$rawEnum2"',
+                      actualValue: rawEnum2,
+                    );
                   }
                   final item1 = UserRole.values[enumIdx2];
                   s1.add(item1);
@@ -3001,6 +3053,1538 @@ final class NestedCollectionMatrixCodable
           }
         }
       }),
+    );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for DefaultValuesModel
+// =============================================================================
+extension type const _$DefaultValuesModelSchema(int _value) {
+  // String Name Constants
+  static const String nameLabel = 'label';
+  static const String nameEscapedNote = 'escapedNote';
+  static const String nameRetryCount = 'retryCount';
+  static const String nameFactor = 'factor';
+  static const String nameEnabled = 'enabled';
+  static const String nameRole = 'role';
+  static const String nameTags = 'tags';
+  static const String nameMetadata = 'metadata';
+  static const String nameOrigin = 'origin';
+  static const String nameNullableOverride = 'nullableOverride';
+  static const String nameOmittedDefaultKeepCtor = 'explicit_name';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLabel = 0;
+  static const int keyEscapedNote = 1;
+  static const int keyRetryCount = 2;
+  static const int keyFactor = 3;
+  static const int keyEnabled = 4;
+  static const int keyRole = 5;
+  static const int keyTags = 6;
+  static const int keyMetadata = 7;
+  static const int keyOrigin = 8;
+  static const int keyNullableOverride = 9;
+  static const int keyOmittedDefaultKeepCtor = 10;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$DefaultValuesModelSchema.nameLabel,
+    _$DefaultValuesModelSchema.nameEscapedNote,
+    _$DefaultValuesModelSchema.nameRetryCount,
+    _$DefaultValuesModelSchema.nameFactor,
+    _$DefaultValuesModelSchema.nameEnabled,
+    _$DefaultValuesModelSchema.nameRole,
+    _$DefaultValuesModelSchema.nameTags,
+    _$DefaultValuesModelSchema.nameMetadata,
+    _$DefaultValuesModelSchema.nameOrigin,
+    _$DefaultValuesModelSchema.nameNullableOverride,
+    _$DefaultValuesModelSchema.nameOmittedDefaultKeepCtor,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for role
+  static final KeyOptions roleEnumOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+  static final KeyOptions roleKeyOptions = roleEnumOptions;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$DefaultValuesModelSchema none = _$DefaultValuesModelSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$DefaultValuesModelSchema operator |(_$DefaultValuesModelSchema other) =>
+      _$DefaultValuesModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for DefaultValuesModel
+// =============================================================================
+final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
+  const DefaultValuesModelCodable();
+
+  @override
+  DefaultValuesModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DefaultValuesModelSchema.keyOptions);
+
+    var label = 'guest';
+    var escapedNote = 'it\'s \$5\n';
+    var retryCount = 42;
+    var factor = 2.5;
+    var enabled = true;
+    var role = UserRole.guest;
+    var tags = const ['alpha', 'beta'];
+    var metadata = const <String, int>{'env': 1};
+    var origin = const Point(1.5, -2.5);
+    String? nullableOverride;
+    String? omittedDefaultKeepCtor = 'kept_ctor_default';
+    var seen = _$DefaultValuesModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DefaultValuesModelSchema.keyOptions)) {
+        case _$DefaultValuesModelSchema.keyLabel:
+          label = keyed.readString();
+          break;
+        case _$DefaultValuesModelSchema.keyEscapedNote:
+          escapedNote = keyed.readString();
+          break;
+        case _$DefaultValuesModelSchema.keyRetryCount:
+          retryCount = keyed.readInt();
+          break;
+        case _$DefaultValuesModelSchema.keyFactor:
+          factor = keyed.readDouble();
+          break;
+        case _$DefaultValuesModelSchema.keyEnabled:
+          enabled = keyed.readBool();
+          break;
+        case _$DefaultValuesModelSchema.keyRole:
+          final enumIndex = keyed.selectStringIndex(
+            _$DefaultValuesModelSchema.roleKeyOptions,
+          );
+          if (enumIndex >= 0 && enumIndex < UserRole.values.length) {
+            role = UserRole.values[enumIndex];
+          } else {
+            throw const CodableException('Unknown UserRole value');
+          }
+          break;
+        case _$DefaultValuesModelSchema.keyTags:
+          tags = keyed.decodeStringList();
+          break;
+        case _$DefaultValuesModelSchema.keyMetadata:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, int>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = k.readInt();
+            }
+            metadata = m;
+          }
+          break;
+        case _$DefaultValuesModelSchema.keyOrigin:
+          origin = const PointCodable().decode(keyed.nestedDecoder());
+          break;
+        case _$DefaultValuesModelSchema.keyNullableOverride:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nullableOverride = null;
+          } else {
+            nullableOverride = keyed.readString();
+          }
+          break;
+        case _$DefaultValuesModelSchema.keyOmittedDefaultKeepCtor:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            omittedDefaultKeepCtor = null;
+          } else {
+            omittedDefaultKeepCtor = keyed.readString();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return DefaultValuesModel(
+      label: label,
+      escapedNote: escapedNote,
+      retryCount: retryCount,
+      factor: factor,
+      enabled: enabled,
+      role: role,
+      tags: tags,
+      metadata: metadata,
+      origin: origin,
+      nullableOverride: nullableOverride,
+      omittedDefaultKeepCtor: omittedDefaultKeepCtor,
+    );
+  }
+
+  @override
+  void encode(DefaultValuesModel instance, Encoder encoder) {
+    var count$ = 9;
+    final v$NullableOverride = instance.nullableOverride;
+    if (v$NullableOverride != null) count$++;
+    final v$OmittedDefaultKeepCtor = instance.omittedDefaultKeepCtor;
+    if (v$OmittedDefaultKeepCtor != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeString(_$DefaultValuesModelSchema.nameLabel, instance.label);
+    keyed.encodeString(
+      _$DefaultValuesModelSchema.nameEscapedNote,
+      instance.escapedNote,
+    );
+    keyed.encodeInt(
+      _$DefaultValuesModelSchema.nameRetryCount,
+      instance.retryCount,
+    );
+    keyed.encodeDouble(_$DefaultValuesModelSchema.nameFactor, instance.factor);
+    keyed.encodeBool(_$DefaultValuesModelSchema.nameEnabled, instance.enabled);
+    keyed.encodeString(_$DefaultValuesModelSchema.nameRole, instance.role.name);
+    keyed.encodeStringList(_$DefaultValuesModelSchema.nameTags, instance.tags);
+    {
+      final k = keyed
+          .nestedEncoder(_$DefaultValuesModelSchema.nameMetadata)
+          .keyed(length: instance.metadata.length);
+      for (final entry in instance.metadata.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
+    keyed.encodeValue(
+      _$DefaultValuesModelSchema.nameOrigin,
+      instance.origin,
+      const PointCodable(),
+    );
+    if (v$NullableOverride != null) {
+      keyed.encodeString(
+        _$DefaultValuesModelSchema.nameNullableOverride,
+        v$NullableOverride,
+      );
+    }
+    if (v$OmittedDefaultKeepCtor != null) {
+      keyed.encodeString(
+        _$DefaultValuesModelSchema.nameOmittedDefaultKeepCtor,
+        v$OmittedDefaultKeepCtor,
+      );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for PortableTypedDataModel
+// =============================================================================
+extension type const _$PortableTypedDataModelSchema(int _value) {
+  // String Name Constants
+  static const String nameUint8 = 'uint8';
+  static const String nameUint8Clamped = 'uint8Clamped';
+  static const String nameUint16 = 'uint16';
+  static const String nameUint32 = 'uint32';
+  static const String nameInt8 = 'int8';
+  static const String nameInt16 = 'int16';
+  static const String nameInt32 = 'int32';
+  static const String nameFloat32 = 'float32';
+  static const String nameFloat64 = 'float64';
+  static const String nameNullableInt16 = 'nullableInt16';
+  static const String nameNullableFloat32 = 'nullableFloat32';
+  static const String nameNestedInt16s = 'nestedInt16s';
+  static const String nameSparseInt16s = 'sparseInt16s';
+  static const String nameStringKeyedUint16s = 'stringKeyedUint16s';
+  static const String nameIntKeyedInt8s = 'intKeyedInt8s';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyUint8 = 0;
+  static const int keyUint8Clamped = 1;
+  static const int keyUint16 = 2;
+  static const int keyUint32 = 3;
+  static const int keyInt8 = 4;
+  static const int keyInt16 = 5;
+  static const int keyInt32 = 6;
+  static const int keyFloat32 = 7;
+  static const int keyFloat64 = 8;
+  static const int keyNullableInt16 = 9;
+  static const int keyNullableFloat32 = 10;
+  static const int keyNestedInt16s = 11;
+  static const int keySparseInt16s = 12;
+  static const int keyStringKeyedUint16s = 13;
+  static const int keyIntKeyedInt8s = 14;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PortableTypedDataModelSchema.nameUint8,
+    _$PortableTypedDataModelSchema.nameUint8Clamped,
+    _$PortableTypedDataModelSchema.nameUint16,
+    _$PortableTypedDataModelSchema.nameUint32,
+    _$PortableTypedDataModelSchema.nameInt8,
+    _$PortableTypedDataModelSchema.nameInt16,
+    _$PortableTypedDataModelSchema.nameInt32,
+    _$PortableTypedDataModelSchema.nameFloat32,
+    _$PortableTypedDataModelSchema.nameFloat64,
+    _$PortableTypedDataModelSchema.nameNullableInt16,
+    _$PortableTypedDataModelSchema.nameNullableFloat32,
+    _$PortableTypedDataModelSchema.nameNestedInt16s,
+    _$PortableTypedDataModelSchema.nameSparseInt16s,
+    _$PortableTypedDataModelSchema.nameStringKeyedUint16s,
+    _$PortableTypedDataModelSchema.nameIntKeyedInt8s,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PortableTypedDataModelSchema none =
+      _$PortableTypedDataModelSchema(0);
+  static const int _uint8Bit = 1 << 0;
+  static const _$PortableTypedDataModelSchema uint8 =
+      _$PortableTypedDataModelSchema(_uint8Bit);
+  static const int _uint8ClampedBit = 1 << 1;
+  static const _$PortableTypedDataModelSchema uint8Clamped =
+      _$PortableTypedDataModelSchema(_uint8ClampedBit);
+  static const int _uint16Bit = 1 << 2;
+  static const _$PortableTypedDataModelSchema uint16 =
+      _$PortableTypedDataModelSchema(_uint16Bit);
+  static const int _uint32Bit = 1 << 3;
+  static const _$PortableTypedDataModelSchema uint32 =
+      _$PortableTypedDataModelSchema(_uint32Bit);
+  static const int _int8Bit = 1 << 4;
+  static const _$PortableTypedDataModelSchema int8 =
+      _$PortableTypedDataModelSchema(_int8Bit);
+  static const int _int16Bit = 1 << 5;
+  static const _$PortableTypedDataModelSchema int16 =
+      _$PortableTypedDataModelSchema(_int16Bit);
+  static const int _int32Bit = 1 << 6;
+  static const _$PortableTypedDataModelSchema int32 =
+      _$PortableTypedDataModelSchema(_int32Bit);
+  static const int _float32Bit = 1 << 7;
+  static const _$PortableTypedDataModelSchema float32 =
+      _$PortableTypedDataModelSchema(_float32Bit);
+  static const int _float64Bit = 1 << 8;
+  static const _$PortableTypedDataModelSchema float64 =
+      _$PortableTypedDataModelSchema(_float64Bit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PortableTypedDataModelSchema golden =
+      _$PortableTypedDataModelSchema(
+        _uint8Bit |
+            _uint8ClampedBit |
+            _uint16Bit |
+            _uint32Bit |
+            _int8Bit |
+            _int16Bit |
+            _int32Bit |
+            _float32Bit |
+            _float64Bit,
+      );
+
+  @pragma('vm:prefer-inline')
+  _$PortableTypedDataModelSchema operator |(
+    _$PortableTypedDataModelSchema other,
+  ) => _$PortableTypedDataModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _uint8Bit) == 0) {
+      missing.add(nameUint8);
+    }
+    if ((_value & _uint8ClampedBit) == 0) {
+      missing.add(nameUint8Clamped);
+    }
+    if ((_value & _uint16Bit) == 0) {
+      missing.add(nameUint16);
+    }
+    if ((_value & _uint32Bit) == 0) {
+      missing.add(nameUint32);
+    }
+    if ((_value & _int8Bit) == 0) {
+      missing.add(nameInt8);
+    }
+    if ((_value & _int16Bit) == 0) {
+      missing.add(nameInt16);
+    }
+    if ((_value & _int32Bit) == 0) {
+      missing.add(nameInt32);
+    }
+    if ((_value & _float32Bit) == 0) {
+      missing.add(nameFloat32);
+    }
+    if ((_value & _float64Bit) == 0) {
+      missing.add(nameFloat64);
+    }
+    throw CodableException(
+      'Missing required fields for PortableTypedDataModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for PortableTypedDataModel
+// =============================================================================
+final class PortableTypedDataModelCodable
+    implements Codable<PortableTypedDataModel> {
+  const PortableTypedDataModelCodable();
+
+  @override
+  PortableTypedDataModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$PortableTypedDataModelSchema.keyOptions,
+    );
+
+    Uint8List? uint8;
+    Uint8ClampedList? uint8Clamped;
+    Uint16List? uint16;
+    Uint32List? uint32;
+    Int8List? int8;
+    Int16List? int16;
+    Int32List? int32;
+    Float32List? float32;
+    Float64List? float64;
+    Int16List? nullableInt16;
+    Float32List? nullableFloat32;
+    var nestedInt16s = const <Int16List>[];
+    var sparseInt16s = const <Int16List?>[];
+    var stringKeyedUint16s = const <String, Uint16List>{};
+    var intKeyedInt8s = const <int, Int8List>{};
+    var seen = _$PortableTypedDataModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PortableTypedDataModelSchema.keyOptions)) {
+        case _$PortableTypedDataModelSchema.keyUint8:
+          if ((seen._value & _$PortableTypedDataModelSchema.uint8._value) !=
+              0) {
+            throw const CodableException('Duplicate field "uint8"');
+          }
+          uint8 = keyed.readBytes();
+          seen |= _$PortableTypedDataModelSchema.uint8;
+          break;
+        case _$PortableTypedDataModelSchema.keyUint8Clamped:
+          if ((seen._value &
+                  _$PortableTypedDataModelSchema.uint8Clamped._value) !=
+              0) {
+            throw const CodableException('Duplicate field "uint8Clamped"');
+          }
+          uint8Clamped = Uint8ClampedList.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.uint8Clamped;
+          break;
+        case _$PortableTypedDataModelSchema.keyUint16:
+          if ((seen._value & _$PortableTypedDataModelSchema.uint16._value) !=
+              0) {
+            throw const CodableException('Duplicate field "uint16"');
+          }
+          uint16 = Uint16List.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.uint16;
+          break;
+        case _$PortableTypedDataModelSchema.keyUint32:
+          if ((seen._value & _$PortableTypedDataModelSchema.uint32._value) !=
+              0) {
+            throw const CodableException('Duplicate field "uint32"');
+          }
+          uint32 = Uint32List.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.uint32;
+          break;
+        case _$PortableTypedDataModelSchema.keyInt8:
+          if ((seen._value & _$PortableTypedDataModelSchema.int8._value) != 0) {
+            throw const CodableException('Duplicate field "int8"');
+          }
+          int8 = Int8List.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.int8;
+          break;
+        case _$PortableTypedDataModelSchema.keyInt16:
+          if ((seen._value & _$PortableTypedDataModelSchema.int16._value) !=
+              0) {
+            throw const CodableException('Duplicate field "int16"');
+          }
+          int16 = Int16List.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.int16;
+          break;
+        case _$PortableTypedDataModelSchema.keyInt32:
+          if ((seen._value & _$PortableTypedDataModelSchema.int32._value) !=
+              0) {
+            throw const CodableException('Duplicate field "int32"');
+          }
+          int32 = Int32List.fromList(keyed.decodeIntList());
+          seen |= _$PortableTypedDataModelSchema.int32;
+          break;
+        case _$PortableTypedDataModelSchema.keyFloat32:
+          if ((seen._value & _$PortableTypedDataModelSchema.float32._value) !=
+              0) {
+            throw const CodableException('Duplicate field "float32"');
+          }
+          float32 = Float32List.fromList(keyed.decodeDoubleList());
+          seen |= _$PortableTypedDataModelSchema.float32;
+          break;
+        case _$PortableTypedDataModelSchema.keyFloat64:
+          if ((seen._value & _$PortableTypedDataModelSchema.float64._value) !=
+              0) {
+            throw const CodableException('Duplicate field "float64"');
+          }
+          float64 = keyed.decodeFloat64List();
+          seen |= _$PortableTypedDataModelSchema.float64;
+          break;
+        case _$PortableTypedDataModelSchema.keyNullableInt16:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nullableInt16 = null;
+          } else {
+            nullableInt16 = Int16List.fromList(keyed.decodeIntList());
+          }
+          break;
+        case _$PortableTypedDataModelSchema.keyNullableFloat32:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nullableFloat32 = null;
+          } else {
+            nullableFloat32 = Float32List.fromList(keyed.decodeDoubleList());
+          }
+          break;
+        case _$PortableTypedDataModelSchema.keyNestedInt16s:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Int16List>[];
+            while (u.moveNext()) {
+              l.add(Int16List.fromList(u.decodeIntList()));
+            }
+            nestedInt16s = l;
+          }
+          break;
+        case _$PortableTypedDataModelSchema.keySparseInt16s:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Int16List?>[];
+            while (u.moveNext()) {
+              Int16List? item;
+              final dec1 = u.nestedDecoder();
+              final sv1 = dec1.singleValue();
+              if (sv1.isNull()) {
+                sv1.readNull();
+                item = null;
+              } else {
+                {
+                  final u2 = dec1.unkeyed();
+                  final l2 = <int>[];
+                  while (u2.moveNext()) {
+                    l2.add(u2.readInt());
+                  }
+                  item = Int16List.fromList(l2);
+                }
+              }
+              l.add(item);
+            }
+            sparseInt16s = l;
+          }
+          break;
+        case _$PortableTypedDataModelSchema.keyStringKeyedUint16s:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, Uint16List>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = Uint16List.fromList(k.decodeIntList());
+            }
+            stringKeyedUint16s = m;
+          }
+          break;
+        case _$PortableTypedDataModelSchema.keyIntKeyedInt8s:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <int, Int8List>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = mDecoder.keyDecoder().singleValue().readInt();
+              {
+                final u1 = mDecoder.valueDecoder().unkeyed();
+                final l1 = <int>[];
+                while (u1.moveNext()) {
+                  l1.add(u1.readInt());
+                }
+                m[key] = Int8List.fromList(l1);
+              }
+            }
+            intKeyedInt8s = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return PortableTypedDataModel(
+      uint8: uint8!,
+      uint8Clamped: uint8Clamped!,
+      uint16: uint16!,
+      uint32: uint32!,
+      int8: int8!,
+      int16: int16!,
+      int32: int32!,
+      float32: float32!,
+      float64: float64!,
+      nullableInt16: nullableInt16,
+      nullableFloat32: nullableFloat32,
+      nestedInt16s: nestedInt16s,
+      sparseInt16s: sparseInt16s,
+      stringKeyedUint16s: stringKeyedUint16s,
+      intKeyedInt8s: intKeyedInt8s,
+    );
+  }
+
+  @override
+  void encode(PortableTypedDataModel instance, Encoder encoder) {
+    var count$ = 13;
+    final v$NullableInt16 = instance.nullableInt16;
+    if (v$NullableInt16 != null) count$++;
+    final v$NullableFloat32 = instance.nullableFloat32;
+    if (v$NullableFloat32 != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeBytes(_$PortableTypedDataModelSchema.nameUint8, instance.uint8);
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint8Clamped,
+      instance.uint8Clamped,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint16,
+      instance.uint16,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint32,
+      instance.uint32,
+    );
+    keyed.encodeIntList(_$PortableTypedDataModelSchema.nameInt8, instance.int8);
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameInt16,
+      instance.int16,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameInt32,
+      instance.int32,
+    );
+    keyed.encodeDoubleList(
+      _$PortableTypedDataModelSchema.nameFloat32,
+      instance.float32,
+    );
+    keyed.encodeDoubleList(
+      _$PortableTypedDataModelSchema.nameFloat64,
+      instance.float64,
+    );
+    if (v$NullableInt16 != null) {
+      keyed.encodeIntList(
+        _$PortableTypedDataModelSchema.nameNullableInt16,
+        v$NullableInt16,
+      );
+    }
+    if (v$NullableFloat32 != null) {
+      keyed.encodeDoubleList(
+        _$PortableTypedDataModelSchema.nameNullableFloat32,
+        v$NullableFloat32,
+      );
+    }
+    keyed.encodeList(
+      _$PortableTypedDataModelSchema.nameNestedInt16s,
+      instance.nestedInt16s,
+      Encodable.fromFunction((Int16List item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$PortableTypedDataModelSchema.nameSparseInt16s,
+      instance.sparseInt16s,
+      Encodable.fromFunction((Int16List? item, e) {
+        if (item case final val0?) {
+          {
+            final u1 = e.unkeyed(length: val0.length);
+            for (final elem1 in val0) {
+              u1.encodeInt(elem1);
+            }
+          }
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PortableTypedDataModelSchema.nameStringKeyedUint16s)
+          .keyed(length: instance.stringKeyedUint16s.length);
+      for (final entry in instance.stringKeyedUint16s.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$PortableTypedDataModelSchema.nameIntKeyedInt8s)
+          .map(length: instance.intKeyedInt8s.length);
+      for (final entry in instance.intKeyedInt8s.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        {
+          final u1 = m.valueEncoder().unkeyed(length: entry.value.length);
+          for (final elem1 in entry.value) {
+            u1.encodeInt(elem1);
+          }
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for Vm64BitTypedDataModel
+// =============================================================================
+extension type const _$Vm64BitTypedDataModelSchema(int _value) {
+  // String Name Constants
+  static const String nameInt64 = 'int64';
+  static const String nameUint64 = 'uint64';
+  static const String nameNullableInt64 = 'nullableInt64';
+  static const String nameNullableUint64 = 'nullableUint64';
+  static const String nameNestedUint64s = 'nestedUint64s';
+  static const String nameNamedUint64s = 'namedUint64s';
+  static const String nameTupleInt64 = 'tupleInt64';
+  static const String nameTupleUint64 = 'tupleUint64';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyInt64 = 0;
+  static const int keyUint64 = 1;
+  static const int keyNullableInt64 = 2;
+  static const int keyNullableUint64 = 3;
+  static const int keyNestedUint64s = 4;
+  static const int keyNamedUint64s = 5;
+  static const int keyTupleInt64 = 6;
+  static const int keyTupleUint64 = 7;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$Vm64BitTypedDataModelSchema.nameInt64,
+    _$Vm64BitTypedDataModelSchema.nameUint64,
+    _$Vm64BitTypedDataModelSchema.nameNullableInt64,
+    _$Vm64BitTypedDataModelSchema.nameNullableUint64,
+    _$Vm64BitTypedDataModelSchema.nameNestedUint64s,
+    _$Vm64BitTypedDataModelSchema.nameNamedUint64s,
+    _$Vm64BitTypedDataModelSchema.nameTupleInt64,
+    _$Vm64BitTypedDataModelSchema.nameTupleUint64,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$Vm64BitTypedDataModelSchema none =
+      _$Vm64BitTypedDataModelSchema(0);
+  static const int _int64Bit = 1 << 0;
+  static const _$Vm64BitTypedDataModelSchema int64 =
+      _$Vm64BitTypedDataModelSchema(_int64Bit);
+  static const int _uint64Bit = 1 << 1;
+  static const _$Vm64BitTypedDataModelSchema uint64 =
+      _$Vm64BitTypedDataModelSchema(_uint64Bit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$Vm64BitTypedDataModelSchema golden =
+      _$Vm64BitTypedDataModelSchema(_int64Bit | _uint64Bit);
+
+  @pragma('vm:prefer-inline')
+  _$Vm64BitTypedDataModelSchema operator |(
+    _$Vm64BitTypedDataModelSchema other,
+  ) => _$Vm64BitTypedDataModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _int64Bit) == 0) {
+      missing.add(nameInt64);
+    }
+    if ((_value & _uint64Bit) == 0) {
+      missing.add(nameUint64);
+    }
+    throw CodableException(
+      'Missing required fields for Vm64BitTypedDataModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for Vm64BitTypedDataModel
+// =============================================================================
+final class Vm64BitTypedDataModelCodable
+    implements Codable<Vm64BitTypedDataModel> {
+  const Vm64BitTypedDataModelCodable();
+
+  @override
+  Vm64BitTypedDataModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$Vm64BitTypedDataModelSchema.keyOptions,
+    );
+
+    Int64List? int64;
+    Uint64List? uint64;
+    Int64List? nullableInt64;
+    Uint64List? nullableUint64;
+    var nestedUint64s = const <Uint64List>[];
+    var namedUint64s = const <String, Uint64List>{};
+    Int64List? tupleInt64;
+    Uint64List? tupleUint64;
+    var seen = _$Vm64BitTypedDataModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$Vm64BitTypedDataModelSchema.keyOptions)) {
+        case _$Vm64BitTypedDataModelSchema.keyInt64:
+          if ((seen._value & _$Vm64BitTypedDataModelSchema.int64._value) != 0) {
+            throw const CodableException('Duplicate field "int64"');
+          }
+          int64 = Int64List.fromList(keyed.decodeIntList());
+          seen |= _$Vm64BitTypedDataModelSchema.int64;
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyUint64:
+          if ((seen._value & _$Vm64BitTypedDataModelSchema.uint64._value) !=
+              0) {
+            throw const CodableException('Duplicate field "uint64"');
+          }
+          uint64 = Uint64List.fromList(keyed.decodeIntList());
+          seen |= _$Vm64BitTypedDataModelSchema.uint64;
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyNullableInt64:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nullableInt64 = null;
+          } else {
+            nullableInt64 = Int64List.fromList(keyed.decodeIntList());
+          }
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyNullableUint64:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nullableUint64 = null;
+          } else {
+            nullableUint64 = Uint64List.fromList(keyed.decodeIntList());
+          }
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyNestedUint64s:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <Uint64List>[];
+            while (u.moveNext()) {
+              l.add(Uint64List.fromList(u.decodeIntList()));
+            }
+            nestedUint64s = l;
+          }
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyNamedUint64s:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, Uint64List>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = Uint64List.fromList(k.decodeIntList());
+            }
+            namedUint64s = m;
+          }
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyTupleInt64:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            tupleInt64 = null;
+          } else {
+            tupleInt64 = Int64List.fromList(keyed.decodeIntList());
+            if (tupleInt64.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "tupleInt64", got ${tupleInt64.length}',
+                actualValue: tupleInt64.length,
+              );
+            }
+          }
+          break;
+        case _$Vm64BitTypedDataModelSchema.keyTupleUint64:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            tupleUint64 = null;
+          } else {
+            tupleUint64 = Uint64List.fromList(keyed.decodeIntList());
+            if (tupleUint64.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "tupleUint64", got ${tupleUint64.length}',
+                actualValue: tupleUint64.length,
+              );
+            }
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return Vm64BitTypedDataModel(
+      int64: int64!,
+      uint64: uint64!,
+      nullableInt64: nullableInt64,
+      nullableUint64: nullableUint64,
+      nestedUint64s: nestedUint64s,
+      namedUint64s: namedUint64s,
+      tupleInt64: tupleInt64,
+      tupleUint64: tupleUint64,
+    );
+  }
+
+  @override
+  void encode(Vm64BitTypedDataModel instance, Encoder encoder) {
+    var count$ = 4;
+    final v$NullableInt64 = instance.nullableInt64;
+    if (v$NullableInt64 != null) count$++;
+    final v$NullableUint64 = instance.nullableUint64;
+    if (v$NullableUint64 != null) count$++;
+    final v$TupleInt64 = instance.tupleInt64;
+    if (v$TupleInt64 != null) count$++;
+    final v$TupleUint64 = instance.tupleUint64;
+    if (v$TupleUint64 != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeIntList(
+      _$Vm64BitTypedDataModelSchema.nameInt64,
+      instance.int64,
+    );
+    keyed.encodeIntList(
+      _$Vm64BitTypedDataModelSchema.nameUint64,
+      instance.uint64,
+    );
+    if (v$NullableInt64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameNullableInt64,
+        v$NullableInt64,
+      );
+    }
+    if (v$NullableUint64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameNullableUint64,
+        v$NullableUint64,
+      );
+    }
+    keyed.encodeList(
+      _$Vm64BitTypedDataModelSchema.nameNestedUint64s,
+      instance.nestedUint64s,
+      Encodable.fromFunction((Uint64List item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$Vm64BitTypedDataModelSchema.nameNamedUint64s)
+          .keyed(length: instance.namedUint64s.length);
+      for (final entry in instance.namedUint64s.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+    if (v$TupleInt64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameTupleInt64,
+        v$TupleInt64,
+      );
+    }
+    if (v$TupleUint64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameTupleUint64,
+        v$TupleUint64,
+      );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for TupleVariantsModel
+// =============================================================================
+extension type const _$TupleVariantsModelSchema(int _value) {
+  // String Name Constants
+  static const String nameIntPair = 'intPair';
+  static const String nameDoubleTriple = 'doubleTriple';
+  static const String nameFloat64Pair = 'float64Pair';
+  static const String nameFloat32Pair = 'float32Pair';
+  static const String nameInt32Triple = 'int32Triple';
+  static const String nameOptionalIntPair = 'optionalIntPair';
+  static const String nameOptionalUint16Pair = 'optionalUint16Pair';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyIntPair = 0;
+  static const int keyDoubleTriple = 1;
+  static const int keyFloat64Pair = 2;
+  static const int keyFloat32Pair = 3;
+  static const int keyInt32Triple = 4;
+  static const int keyOptionalIntPair = 5;
+  static const int keyOptionalUint16Pair = 6;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$TupleVariantsModelSchema.nameIntPair,
+    _$TupleVariantsModelSchema.nameDoubleTriple,
+    _$TupleVariantsModelSchema.nameFloat64Pair,
+    _$TupleVariantsModelSchema.nameFloat32Pair,
+    _$TupleVariantsModelSchema.nameInt32Triple,
+    _$TupleVariantsModelSchema.nameOptionalIntPair,
+    _$TupleVariantsModelSchema.nameOptionalUint16Pair,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$TupleVariantsModelSchema none = _$TupleVariantsModelSchema(0);
+  static const int _intPairBit = 1 << 0;
+  static const _$TupleVariantsModelSchema intPair = _$TupleVariantsModelSchema(
+    _intPairBit,
+  );
+  static const int _doubleTripleBit = 1 << 1;
+  static const _$TupleVariantsModelSchema doubleTriple =
+      _$TupleVariantsModelSchema(_doubleTripleBit);
+  static const int _float64PairBit = 1 << 2;
+  static const _$TupleVariantsModelSchema float64Pair =
+      _$TupleVariantsModelSchema(_float64PairBit);
+  static const int _float32PairBit = 1 << 3;
+  static const _$TupleVariantsModelSchema float32Pair =
+      _$TupleVariantsModelSchema(_float32PairBit);
+  static const int _int32TripleBit = 1 << 4;
+  static const _$TupleVariantsModelSchema int32Triple =
+      _$TupleVariantsModelSchema(_int32TripleBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$TupleVariantsModelSchema golden = _$TupleVariantsModelSchema(
+    _intPairBit |
+        _doubleTripleBit |
+        _float64PairBit |
+        _float32PairBit |
+        _int32TripleBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$TupleVariantsModelSchema operator |(_$TupleVariantsModelSchema other) =>
+      _$TupleVariantsModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _intPairBit) == 0) {
+      missing.add(nameIntPair);
+    }
+    if ((_value & _doubleTripleBit) == 0) {
+      missing.add(nameDoubleTriple);
+    }
+    if ((_value & _float64PairBit) == 0) {
+      missing.add(nameFloat64Pair);
+    }
+    if ((_value & _float32PairBit) == 0) {
+      missing.add(nameFloat32Pair);
+    }
+    if ((_value & _int32TripleBit) == 0) {
+      missing.add(nameInt32Triple);
+    }
+    throw CodableException(
+      'Missing required fields for TupleVariantsModel: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for TupleVariantsModel
+// =============================================================================
+final class TupleVariantsModelCodable implements Codable<TupleVariantsModel> {
+  const TupleVariantsModelCodable();
+
+  @override
+  TupleVariantsModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$TupleVariantsModelSchema.keyOptions);
+
+    List<int>? intPair;
+    List<double>? doubleTriple;
+    Float64List? float64Pair;
+    Float32List? float32Pair;
+    Int32List? int32Triple;
+    List<int>? optionalIntPair;
+    Uint16List? optionalUint16Pair;
+    var seen = _$TupleVariantsModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TupleVariantsModelSchema.keyOptions)) {
+        case _$TupleVariantsModelSchema.keyIntPair:
+          if ((seen._value & _$TupleVariantsModelSchema.intPair._value) != 0) {
+            throw const CodableException('Duplicate field "intPair"');
+          }
+          intPair = keyed.decodeIntList();
+          if (intPair.length != 2) {
+            throw CodableException(
+              'Expected tuple of length 2 for "intPair", got ${intPair.length}',
+              actualValue: intPair.length,
+            );
+          }
+          seen |= _$TupleVariantsModelSchema.intPair;
+          break;
+        case _$TupleVariantsModelSchema.keyDoubleTriple:
+          if ((seen._value & _$TupleVariantsModelSchema.doubleTriple._value) !=
+              0) {
+            throw const CodableException('Duplicate field "doubleTriple"');
+          }
+          doubleTriple = keyed.decodeDoubleList();
+          if (doubleTriple.length != 3) {
+            throw CodableException(
+              'Expected tuple of length 3 for "doubleTriple", got ${doubleTriple.length}',
+              actualValue: doubleTriple.length,
+            );
+          }
+          seen |= _$TupleVariantsModelSchema.doubleTriple;
+          break;
+        case _$TupleVariantsModelSchema.keyFloat64Pair:
+          if ((seen._value & _$TupleVariantsModelSchema.float64Pair._value) !=
+              0) {
+            throw const CodableException('Duplicate field "float64Pair"');
+          }
+          float64Pair = keyed.decodeFloat64List();
+          if (float64Pair.length != 2) {
+            throw CodableException(
+              'Expected tuple of length 2 for "float64Pair", got ${float64Pair.length}',
+              actualValue: float64Pair.length,
+            );
+          }
+          seen |= _$TupleVariantsModelSchema.float64Pair;
+          break;
+        case _$TupleVariantsModelSchema.keyFloat32Pair:
+          if ((seen._value & _$TupleVariantsModelSchema.float32Pair._value) !=
+              0) {
+            throw const CodableException('Duplicate field "float32Pair"');
+          }
+          float32Pair = Float32List.fromList(keyed.decodeDoubleList());
+          if (float32Pair.length != 2) {
+            throw CodableException(
+              'Expected tuple of length 2 for "float32Pair", got ${float32Pair.length}',
+              actualValue: float32Pair.length,
+            );
+          }
+          seen |= _$TupleVariantsModelSchema.float32Pair;
+          break;
+        case _$TupleVariantsModelSchema.keyInt32Triple:
+          if ((seen._value & _$TupleVariantsModelSchema.int32Triple._value) !=
+              0) {
+            throw const CodableException('Duplicate field "int32Triple"');
+          }
+          int32Triple = Int32List.fromList(keyed.decodeIntList());
+          if (int32Triple.length != 3) {
+            throw CodableException(
+              'Expected tuple of length 3 for "int32Triple", got ${int32Triple.length}',
+              actualValue: int32Triple.length,
+            );
+          }
+          seen |= _$TupleVariantsModelSchema.int32Triple;
+          break;
+        case _$TupleVariantsModelSchema.keyOptionalIntPair:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            optionalIntPair = null;
+          } else {
+            optionalIntPair = keyed.decodeIntList();
+            if (optionalIntPair.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "optionalIntPair", got ${optionalIntPair.length}',
+                actualValue: optionalIntPair.length,
+              );
+            }
+          }
+          break;
+        case _$TupleVariantsModelSchema.keyOptionalUint16Pair:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            optionalUint16Pair = null;
+          } else {
+            optionalUint16Pair = Uint16List.fromList(keyed.decodeIntList());
+            if (optionalUint16Pair.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "optionalUint16Pair", got ${optionalUint16Pair.length}',
+                actualValue: optionalUint16Pair.length,
+              );
+            }
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return TupleVariantsModel(
+      intPair: intPair!,
+      doubleTriple: doubleTriple!,
+      float64Pair: float64Pair!,
+      float32Pair: float32Pair!,
+      int32Triple: int32Triple!,
+      optionalIntPair: optionalIntPair,
+      optionalUint16Pair: optionalUint16Pair,
+    );
+  }
+
+  @override
+  void encode(TupleVariantsModel instance, Encoder encoder) {
+    var count$ = 5;
+    final v$OptionalIntPair = instance.optionalIntPair;
+    if (v$OptionalIntPair != null) count$++;
+    final v$OptionalUint16Pair = instance.optionalUint16Pair;
+    if (v$OptionalUint16Pair != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeIntList(
+      _$TupleVariantsModelSchema.nameIntPair,
+      instance.intPair,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameDoubleTriple,
+      instance.doubleTriple,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameFloat64Pair,
+      instance.float64Pair,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameFloat32Pair,
+      instance.float32Pair,
+    );
+    keyed.encodeIntList(
+      _$TupleVariantsModelSchema.nameInt32Triple,
+      instance.int32Triple,
+    );
+    if (v$OptionalIntPair != null) {
+      keyed.encodeIntList(
+        _$TupleVariantsModelSchema.nameOptionalIntPair,
+        v$OptionalIntPair,
+      );
+    }
+    if (v$OptionalUint16Pair != null) {
+      keyed.encodeIntList(
+        _$TupleVariantsModelSchema.nameOptionalUint16Pair,
+        v$OptionalUint16Pair,
+      );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EnumCollectionsAndAliasesModel
+// =============================================================================
+extension type const _$EnumCollectionsAndAliasesModelSchema(int _value) {
+  // String Name Constants
+  static const String nameRoles = 'roles';
+  static const String nameNullableRoles = 'nullableRoles';
+  static const String nameRoleSet = 'roleSet';
+  static const String nameRolesByKey = 'rolesByKey';
+  static const String nameRolesById = 'rolesById';
+  static const String nameCountsByRole = 'countsByRole';
+  static const String nameSlug = 'slug';
+  static const String aliasSlugFooBar = 'foo-bar';
+  static const String aliasSlugFooBar$2 = 'foo_bar';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyRoles = 0;
+  static const int keyNullableRoles = 1;
+  static const int keyRoleSet = 2;
+  static const int keyRolesByKey = 3;
+  static const int keyRolesById = 4;
+  static const int keyCountsByRole = 5;
+  static const int keySlug = 6;
+  static const int aliasKeySlugFooBar = 7;
+  static const int aliasKeySlugFooBar$2 = 8;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$EnumCollectionsAndAliasesModelSchema.nameRoles,
+    _$EnumCollectionsAndAliasesModelSchema.nameNullableRoles,
+    _$EnumCollectionsAndAliasesModelSchema.nameRoleSet,
+    _$EnumCollectionsAndAliasesModelSchema.nameRolesByKey,
+    _$EnumCollectionsAndAliasesModelSchema.nameRolesById,
+    _$EnumCollectionsAndAliasesModelSchema.nameCountsByRole,
+    _$EnumCollectionsAndAliasesModelSchema.nameSlug,
+    _$EnumCollectionsAndAliasesModelSchema.aliasSlugFooBar,
+    _$EnumCollectionsAndAliasesModelSchema.aliasSlugFooBar$2,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$EnumCollectionsAndAliasesModelSchema none =
+      _$EnumCollectionsAndAliasesModelSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$EnumCollectionsAndAliasesModelSchema operator |(
+    _$EnumCollectionsAndAliasesModelSchema other,
+  ) => _$EnumCollectionsAndAliasesModelSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for EnumCollectionsAndAliasesModel
+// =============================================================================
+final class EnumCollectionsAndAliasesModelCodable
+    implements Codable<EnumCollectionsAndAliasesModel> {
+  const EnumCollectionsAndAliasesModelCodable();
+
+  @override
+  EnumCollectionsAndAliasesModel decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$EnumCollectionsAndAliasesModelSchema.keyOptions,
+    );
+
+    var roles = const <UserRole>[];
+    var nullableRoles = const <UserRole?>[];
+    var roleSet = const <UserRole>{};
+    var rolesByKey = const <String, UserRole>{};
+    var rolesById = const <int, UserRole>{};
+    var countsByRole = const <UserRole, int>{};
+    var slug = '';
+    var seen = _$EnumCollectionsAndAliasesModelSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(
+        _$EnumCollectionsAndAliasesModelSchema.keyOptions,
+      )) {
+        case _$EnumCollectionsAndAliasesModelSchema.keyRoles:
+          roles = keyed.decodeList(
+            Decodable.fromFunction((d) {
+              final raw = d.singleValue().readString();
+              final idx = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(raw);
+              if (idx < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$raw"',
+                  actualValue: raw,
+                );
+              }
+              return UserRole.values[idx];
+            }),
+          );
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyNullableRoles:
+          nullableRoles = keyed.decodeList(
+            Decodable.fromFunction((d) {
+              final raw = d.singleValue().readNullableString();
+              if (raw == null) return null;
+              final idx = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(raw);
+              if (idx < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$raw"',
+                  actualValue: raw,
+                );
+              }
+              return UserRole.values[idx];
+            }),
+          );
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyRoleSet:
+          roleSet = keyed
+              .decodeList(
+                Decodable.fromFunction((d) {
+                  final raw = d.singleValue().readString();
+                  final idx = _$EnumCollectionsAndAliasesModelSchema
+                      .enumUserRoleKeyOptions
+                      .indexOf(raw);
+                  if (idx < 0) {
+                    throw CodableException(
+                      'Unknown UserRole value: "$raw"',
+                      actualValue: raw,
+                    );
+                  }
+                  return UserRole.values[idx];
+                }),
+              )
+              .toSet();
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyRolesByKey:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, UserRole>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              final rawEnum1 = k.readString();
+              final enumIdx1 = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1);
+              if (enumIdx1 < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
+              }
+              m[key] = UserRole.values[enumIdx1];
+            }
+            rolesByKey = m;
+          }
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyRolesById:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <int, UserRole>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = mDecoder.keyDecoder().singleValue().readInt();
+              final rawEnum1 = mDecoder
+                  .valueDecoder()
+                  .singleValue()
+                  .readString();
+              final enumIdx1 = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1);
+              if (enumIdx1 < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
+              }
+              m[key] = UserRole.values[enumIdx1];
+            }
+            rolesById = m;
+          }
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keyCountsByRole:
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <UserRole, int>{};
+            while (mDecoder.moveNextEntry()) {
+              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
+              final enumIdx1 = _$EnumCollectionsAndAliasesModelSchema
+                  .enumUserRoleKeyOptions
+                  .indexOf(rawEnum1);
+              if (enumIdx1 < 0) {
+                throw CodableException(
+                  'Unknown UserRole value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
+              }
+              final key = UserRole.values[enumIdx1];
+              m[key] = mDecoder.valueDecoder().singleValue().readInt();
+            }
+            countsByRole = m;
+          }
+          break;
+        case _$EnumCollectionsAndAliasesModelSchema.keySlug:
+        case _$EnumCollectionsAndAliasesModelSchema.aliasKeySlugFooBar:
+        case _$EnumCollectionsAndAliasesModelSchema.aliasKeySlugFooBar$2:
+          slug = keyed.readString();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return EnumCollectionsAndAliasesModel(
+      roles: roles,
+      nullableRoles: nullableRoles,
+      roleSet: roleSet,
+      rolesByKey: rolesByKey,
+      rolesById: rolesById,
+      countsByRole: countsByRole,
+      slug: slug,
+    );
+  }
+
+  @override
+  void encode(EnumCollectionsAndAliasesModel instance, Encoder encoder) {
+    final keyed = encoder.keyed(length: 7);
+    keyed.encodeList(
+      _$EnumCollectionsAndAliasesModelSchema.nameRoles,
+      instance.roles,
+      Encodable.fromFunction((UserRole item, e) {
+        e.singleValue().encodeString(item.name);
+      }),
+    );
+    keyed.encodeList(
+      _$EnumCollectionsAndAliasesModelSchema.nameNullableRoles,
+      instance.nullableRoles,
+      Encodable.fromFunction((UserRole? item, e) {
+        e.singleValue().encodeNullableString(item?.name);
+      }),
+    );
+    keyed.encodeList(
+      _$EnumCollectionsAndAliasesModelSchema.nameRoleSet,
+      instance.roleSet,
+      Encodable.fromFunction((UserRole item, e) {
+        e.singleValue().encodeString(item.name);
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$EnumCollectionsAndAliasesModelSchema.nameRolesByKey)
+          .keyed(length: instance.rolesByKey.length);
+      for (final entry in instance.rolesByKey.entries) {
+        k.encodeString(entry.key, entry.value.name);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$EnumCollectionsAndAliasesModelSchema.nameRolesById)
+          .map(length: instance.rolesById.length);
+      for (final entry in instance.rolesById.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value.name);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(
+            _$EnumCollectionsAndAliasesModelSchema.nameCountsByRole,
+          )
+          .map(length: instance.countsByRole.length);
+      for (final entry in instance.countsByRole.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    keyed.encodeString(
+      _$EnumCollectionsAndAliasesModelSchema.nameSlug,
+      instance.slug,
     );
   }
 }

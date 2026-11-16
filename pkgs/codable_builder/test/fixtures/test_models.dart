@@ -538,3 +538,291 @@ final class NestedCollectionMatrix {
     this.roleSets = const [],
   });
 }
+
+@Codable()
+final class DefaultValuesModel {
+  final String label;
+  final String escapedNote;
+  final int retryCount;
+  final double factor;
+  final bool enabled;
+  final UserRole role;
+  final List<String> tags;
+  final Map<String, int> metadata;
+  final Point origin;
+  final String? nullableOverride;
+  final String? omittedDefaultKeepCtor;
+
+  const DefaultValuesModel({
+    @CodableKey(defaultValue: 'guest') this.label = 'constructor_shadowed',
+    @CodableKey(defaultValue: "it's \$5\n") this.escapedNote = '',
+    @CodableKey(defaultValue: 42) this.retryCount = 1,
+    @CodableKey(defaultValue: 2.5) this.factor = 1.0,
+    @CodableKey(defaultValue: true) this.enabled = false,
+    @CodableKey(defaultValue: UserRole.guest) required this.role,
+    @CodableKey(defaultValue: ['alpha', 'beta']) this.tags = const [],
+    @CodableKey(defaultValue: {'env': 1}) this.metadata = const {},
+    @CodableKey(defaultValue: Point(1.5, -2.5))
+    this.origin = const Point(0.0, 0.0),
+    @CodableKey(defaultValue: null)
+    this.nullableOverride = 'non_null_ctor_default',
+    @CodableKey(name: 'explicit_name')
+    this.omittedDefaultKeepCtor = 'kept_ctor_default',
+  });
+}
+
+@Codable()
+final class PortableTypedDataModel {
+  final Uint8List uint8;
+  final Uint8ClampedList uint8Clamped;
+  final Uint16List uint16;
+  final Uint32List uint32;
+  final Int8List int8;
+  final Int16List int16;
+  final Int32List int32;
+  final Float32List float32;
+  final Float64List float64;
+  final Int16List? nullableInt16;
+  final Float32List? nullableFloat32;
+  final List<Int16List> nestedInt16s;
+  final List<Int16List?> sparseInt16s;
+  final Map<String, Uint16List> stringKeyedUint16s;
+  final Map<int, Int8List> intKeyedInt8s;
+
+  const PortableTypedDataModel({
+    required this.uint8,
+    required this.uint8Clamped,
+    required this.uint16,
+    required this.uint32,
+    required this.int8,
+    required this.int16,
+    required this.int32,
+    required this.float32,
+    required this.float64,
+    this.nullableInt16,
+    this.nullableFloat32,
+    this.nestedInt16s = const [],
+    this.sparseInt16s = const [],
+    this.stringKeyedUint16s = const {},
+    this.intKeyedInt8s = const {},
+  });
+}
+
+@Codable()
+final class Vm64BitTypedDataModel {
+  final Int64List int64;
+  final Uint64List uint64;
+  final Int64List? nullableInt64;
+  final Uint64List? nullableUint64;
+  final List<Uint64List> nestedUint64s;
+  final Map<String, Uint64List> namedUint64s;
+  final Int64List? tupleInt64;
+  final Uint64List? tupleUint64;
+
+  const Vm64BitTypedDataModel({
+    required this.int64,
+    required this.uint64,
+    this.nullableInt64,
+    this.nullableUint64,
+    this.nestedUint64s = const [],
+    this.namedUint64s = const {},
+    @CodableTuple(2) this.tupleInt64,
+    @CodableTuple(2) this.tupleUint64,
+  });
+}
+
+@Codable()
+final class TupleVariantsModel {
+  final List<int> intPair;
+  final List<double> doubleTriple;
+  final Float64List float64Pair;
+  final Float32List float32Pair;
+  final Int32List int32Triple;
+  final List<int>? optionalIntPair;
+  final Uint16List? optionalUint16Pair;
+
+  const TupleVariantsModel({
+    @CodableTuple(2) required this.intPair,
+    @CodableTuple(3) required this.doubleTriple,
+    @CodableTuple(2) required this.float64Pair,
+    @CodableTuple(2) required this.float32Pair,
+    @CodableTuple(3) required this.int32Triple,
+    @CodableTuple(2) this.optionalIntPair,
+    @CodableTuple(2) this.optionalUint16Pair,
+  });
+}
+
+@Codable()
+final class EnumCollectionsAndAliasesModel {
+  final List<UserRole> roles;
+  final List<UserRole?> nullableRoles;
+  final Set<UserRole> roleSet;
+  final Map<String, UserRole> rolesByKey;
+  final Map<int, UserRole> rolesById;
+  final Map<UserRole, int> countsByRole;
+  final String slug;
+
+  const EnumCollectionsAndAliasesModel({
+    this.roles = const [],
+    this.nullableRoles = const [],
+    this.roleSet = const {},
+    this.rolesByKey = const {},
+    this.rolesById = const {},
+    this.countsByRole = const {},
+    @CodableKey(aliases: ['foo-bar', 'foo_bar']) this.slug = '',
+  });
+}
+
+@Codable()
+final class InvalidUnknownDateTimeField {
+  final DateTime at;
+
+  const InvalidUnknownDateTimeField({required this.at});
+}
+
+@Codable()
+final class InvalidUnknownUriField {
+  final Uri link;
+
+  const InvalidUnknownUriField({required this.link});
+}
+
+@Codable()
+final class InvalidUnknownDynamicField {
+  final dynamic anything;
+
+  const InvalidUnknownDynamicField({this.anything});
+}
+
+@Codable()
+final class InvalidUnknownObjectField {
+  final Object? payload;
+
+  const InvalidUnknownObjectField({this.payload});
+}
+
+@Codable()
+final class InvalidUnknownRecordField {
+  final (int, String) pair;
+
+  const InvalidUnknownRecordField({required this.pair});
+}
+
+@Codable()
+final class InvalidNestedListDateTime {
+  final List<DateTime> timestamps;
+
+  const InvalidNestedListDateTime({this.timestamps = const []});
+}
+
+@Codable()
+final class InvalidNestedSetUri {
+  final Set<Uri> urls;
+
+  const InvalidNestedSetUri({this.urls = const {}});
+}
+
+@Codable()
+final class InvalidNestedMapValueBigInt {
+  final Map<String, BigInt> balances;
+
+  const InvalidNestedMapValueBigInt({this.balances = const {}});
+}
+
+@Codable()
+final class InvalidMapKeyDateTime {
+  final Map<DateTime, int> byDate;
+
+  const InvalidMapKeyDateTime({this.byDate = const {}});
+}
+
+@Codable()
+final class InvalidMapKeyList {
+  final Map<List<int>, String> byCoords;
+
+  const InvalidMapKeyList({this.byCoords = const {}});
+}
+
+@Codable()
+final class InvalidMapKeyNullable {
+  final Map<String?, int> byNullableKey;
+
+  const InvalidMapKeyNullable({this.byNullableKey = const {}});
+}
+
+@Codable()
+final class InvalidNullDefaultOnNonNullable {
+  final String name;
+
+  const InvalidNullDefaultOnNonNullable({
+    @CodableKey(defaultValue: null) required this.name,
+  });
+}
+
+@Codable()
+final class InvalidZeroLengthTuple {
+  final List<double> coords;
+
+  const InvalidZeroLengthTuple({@CodableTuple(0) required this.coords});
+}
+
+@Codable()
+final class InvalidNegativeLengthTuple {
+  final Float64List coords;
+
+  const InvalidNegativeLengthTuple({@CodableTuple(-3) required this.coords});
+}
+
+@Codable()
+final class InvalidNonNumericTuple {
+  final List<String> names;
+
+  const InvalidNonNumericTuple({@CodableTuple(2) required this.names});
+}
+
+@Codable()
+final class InvalidScalarTuple {
+  final String code;
+
+  const InvalidScalarTuple({@CodableTuple(2) required this.code});
+}
+
+@Codable()
+final class InvalidDuplicateAliasInField {
+  final String name;
+
+  const InvalidDuplicateAliasInField({
+    @CodableKey(aliases: ['dup', 'dup']) required this.name,
+  });
+}
+
+@Codable()
+final class InvalidAliasEqualsWireName {
+  final String id;
+
+  const InvalidAliasEqualsWireName({
+    @CodableKey(name: 'user_id', aliases: ['user_id']) required this.id,
+  });
+}
+
+@Codable()
+final class InvalidCrossFieldAliasCollision {
+  final String alpha;
+  final String beta;
+
+  const InvalidCrossFieldAliasCollision({
+    required this.alpha,
+    @CodableKey(aliases: ['alpha']) required this.beta,
+  });
+}
+
+@Codable()
+final class InvalidCrossFieldAliasToAliasCollision {
+  final String alpha;
+  final String beta;
+
+  const InvalidCrossFieldAliasToAliasCollision({
+    @CodableKey(aliases: ['shared']) required this.alpha,
+    @CodableKey(aliases: ['shared']) required this.beta,
+  });
+}

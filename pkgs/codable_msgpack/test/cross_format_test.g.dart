@@ -940,11 +940,15 @@ final class CrossFormatEnvelopeCodable implements Codable<CrossFormatEnvelope> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <RouteMethod, int>{};
             while (mDecoder.moveNextEntry()) {
+              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
               final enumIdx1 = _$CrossFormatEnvelopeSchema
                   .enumRouteMethodKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
+                  .indexOf(rawEnum1);
               if (enumIdx1 < 0) {
-                throw const CodableException('Unknown RouteMethod value');
+                throw CodableException(
+                  'Unknown RouteMethod value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
               }
               final key = RouteMethod.values[enumIdx1];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();

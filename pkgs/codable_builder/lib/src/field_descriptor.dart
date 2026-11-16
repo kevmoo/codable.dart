@@ -6,6 +6,8 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:codable/codable.dart';
 
+import 'utils.dart';
+
 /// Categories of types supported by `package:codable_builder`.
 enum TypeCategory {
   primitiveInt,
@@ -95,6 +97,13 @@ final class FieldDescriptor {
   /// Indices of aliases in the static `JsonKeyOptions.options` table.
   final List<int> aliasIndices;
 
+  /// Disambiguated PascalCase identifier suffix for `_$Schema` field constants.
+  final String schemaSuffix;
+
+  /// Disambiguated PascalCase identifier suffixes for `_$Schema` alias
+  /// constants.
+  final List<String> aliasSchemaSuffixes;
+
   FieldDescriptor({
     required this.name,
     required this.wireName,
@@ -119,7 +128,17 @@ final class FieldDescriptor {
     this.reqBitIndex,
     required this.keyIndex,
     required this.aliasIndices,
-  }) : nativeCategory = nativeCategory ?? category;
+    String? schemaSuffix,
+    List<String>? aliasSchemaSuffixes,
+  }) : nativeCategory = nativeCategory ?? category,
+       schemaSuffix = schemaSuffix ?? toSafeIdentifierSuffix(name),
+       aliasSchemaSuffixes =
+           aliasSchemaSuffixes ??
+           [
+             for (final alias in aliases)
+               '${schemaSuffix ?? toSafeIdentifierSuffix(name)}'
+                   '${toSafeIdentifierSuffix(alias)}',
+           ];
 
   /// Whether this field participates in golden mask validation.
   bool get participatesInGoldenMask =>

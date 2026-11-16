@@ -692,10 +692,14 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <HttpVerb, int>{};
             while (mDecoder.moveNextEntry()) {
+              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
               final enumIdx1 = _$OpenApiSpecModelSchema.enumHttpVerbKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
+                  .indexOf(rawEnum1);
               if (enumIdx1 < 0) {
-                throw const CodableException('Unknown HttpVerb value');
+                throw CodableException(
+                  'Unknown HttpVerb value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
               }
               final key = HttpVerb.values[enumIdx1];
               m[key] = mDecoder.valueDecoder().singleValue().readInt();

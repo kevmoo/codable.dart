@@ -214,8 +214,10 @@ void main() {
       () {
         final output = runGeneratorFor('Team');
 
+        check(output).not((s) => s.contains('.byName('));
         check(output)
-            .contains('UserRole.values.byName(d.singleValue().readString())');
+            .contains('_\$TeamSchema.enumUserRoleKeyOptions.indexOf(raw)');
+        check(output).contains('actualValue: raw');
         check(output).contains('nullableTags = keyed.decodeList<String?>');
         check(output).contains('final k = keyed.nestedDecoder().keyed();');
         check(output).contains('m[key] = k.readNullableInt();');
@@ -399,10 +401,12 @@ void main() {
       check(output).not((s) => s.contains('.map('));
       check(output).not((s) => s.contains('fromFunction'));
 
-      // Map<String, UserRole> via selectStringIndex + encodeString
+      // Map<String, UserRole> via 1-hop KeyedDecoder + KeyOptions.indexOf + actualValue
+      check(output).contains('final rawEnum1 = k.readString();');
       check(output).contains(
-        'final enumIdx1 = k.selectStringIndex(_\$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions);',
+        'final enumIdx1 = _\$StringKeyedNestedMapModelSchema.enumUserRoleKeyOptions.indexOf(rawEnum1);',
       );
+      check(output).contains('actualValue: rawEnum1');
       check(output).contains('k.encodeString(entry.key, entry.value.name);');
 
       // Map<String, Address?> via isNextNull + nestedDecoder / nestedEncoder
@@ -499,6 +503,126 @@ void main() {
           .contains('l.add(u.decodeNullableList(const PointCodable()));');
       check(output)
           .contains('l.add(u.decodeList((const PointCodable()).list));');
+    });
+
+    test(
+      'synthesizes all 11 dart:typed_data list codecs and tuple length checks',
+      () {
+        final portable = runGeneratorFor('PortableTypedDataModel');
+        check(portable).not((s) => s.contains('as dynamic'));
+        check(portable).not((s) => s.contains('.toString()'));
+        check(portable).contains('uint8 = keyed.readBytes();');
+        check(portable).contains(
+          'uint8Clamped = Uint8ClampedList.fromList(keyed.decodeIntList());',
+        );
+        check(portable)
+            .contains('uint16 = Uint16List.fromList(keyed.decodeIntList());');
+        check(portable)
+            .contains('uint32 = Uint32List.fromList(keyed.decodeIntList());');
+        check(portable)
+            .contains('int8 = Int8List.fromList(keyed.decodeIntList());');
+        check(portable)
+            .contains('int16 = Int16List.fromList(keyed.decodeIntList());');
+        check(portable)
+            .contains('int32 = Int32List.fromList(keyed.decodeIntList());');
+        check(
+          portable,
+        ).contains('float32 = Float32List.fromList(keyed.decodeDoubleList());');
+        check(portable).contains('float64 = keyed.decodeFloat64List();');
+        check(portable).contains('keyed.encodeIntList(');
+        check(portable).contains('keyed.encodeDoubleList(');
+
+        final vm64 = runGeneratorFor('Vm64BitTypedDataModel');
+        check(vm64).not((s) => s.contains('as dynamic'));
+        check(vm64)
+            .contains('int64 = Int64List.fromList(keyed.decodeIntList());');
+        check(vm64)
+            .contains('uint64 = Uint64List.fromList(keyed.decodeIntList());');
+        check(vm64).contains('if (tupleInt64.length != 2)');
+        check(vm64).contains('actualValue: tupleInt64.length');
+
+        final tuples = runGeneratorFor('TupleVariantsModel');
+        check(tuples).contains('intPair = keyed.decodeIntList();');
+        check(tuples).contains('if (intPair.length != 2)');
+        check(tuples).contains('doubleTriple = keyed.decodeDoubleList();');
+        check(tuples).contains('if (doubleTriple.length != 3)');
+        check(
+          tuples,
+        ).contains('int32Triple = Int32List.fromList(keyed.decodeIntList());');
+        check(tuples).contains(
+          'keyed.encodeIntList(_\$TupleVariantsModelSchema.nameIntPair, instance.intPair);',
+        );
+      },
+    );
+
+    test('synthesizes @CodableKey(defaultValue:), disambiguated aliases, and StateError guards', () {
+      final defaults = runGeneratorFor('DefaultValuesModel');
+      check(defaults).contains("var label = 'guest';");
+      check(defaults).contains('var role = UserRole.guest;');
+      check(defaults).contains("var tags = const ['alpha', 'beta'];");
+      check(defaults).contains("var metadata = const <String, int>{'env': 1};");
+      check(defaults).contains('var origin = const Point(1.5, -2.5);');
+      check(defaults).contains('String? nullableOverride;');
+      check(defaults)
+          .contains("String? omittedDefaultKeepCtor = 'kept_ctor_default';");
+
+      final aliases = runGeneratorFor('EnumCollectionsAndAliasesModel');
+      check(aliases)
+          .contains("static const String aliasSlugFooBar = 'foo-bar';");
+      check(aliases)
+          .contains("static const String aliasSlugFooBar\$2 = 'foo_bar';");
+      check(aliases).contains('static const int aliasKeySlugFooBar = ');
+      check(aliases).contains('static const int aliasKeySlugFooBar\$2 = ');
+
+      // StateError guard when a synthetic unknown descriptor reaches helpers
+      final pointEl = findClass('Point')!;
+      final syntheticUnknown = ModelDescriptor(
+        element: pointEl,
+        className: 'SyntheticUnknown',
+        createEncoder: true,
+        createDecoder: true,
+        useGoldenMask: true,
+        fieldRename: pointEl.metadata.annotations.isEmpty
+            ? const ModelVisitor()
+                  .visitClass(
+                    pointEl,
+                    ConstantReader(
+                      codableTypeChecker.firstAnnotationOf(pointEl),
+                    ),
+                  )
+                  .fieldRename
+            : const ModelVisitor()
+                  .visitClass(
+                    pointEl,
+                    ConstantReader(
+                      codableTypeChecker.firstAnnotationOf(pointEl),
+                    ),
+                  )
+                  .fieldRename,
+        fields: [
+          FieldDescriptor(
+            name: 'mystery',
+            wireName: 'mystery',
+            aliases: const [],
+            type: pointEl.thisType,
+            category: TypeCategory.unknown,
+            isPositional: false,
+            isNamed: true,
+            isRequired: true,
+            isNullable: false,
+            hasDefaultValue: false,
+            ignore: false,
+            keyIndex: 0,
+            aliasIndices: const [],
+          ),
+        ],
+        requiredFields: const [],
+        allOptionsKeys: const ['mystery'],
+      );
+      check(() => DecoderGeneratorHelper(syntheticUnknown).generateMethods())
+          .throws<StateError>();
+      check(() => EncoderGeneratorHelper(syntheticUnknown).generateMethod())
+          .throws<StateError>();
     });
   });
 }

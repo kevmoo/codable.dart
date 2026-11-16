@@ -2,6 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+@TestOn('vm')
+library;
+
 import 'dart:io';
 
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
@@ -241,6 +244,89 @@ void main() {
           .throws<InvalidGenerationSourceError>()
           .has((e) => e.message, 'message')
           .contains('not natively encodable');
+    });
+
+    test(
+      'rejects unsupported top-level, nested collection, and Map key types',
+      () {
+        for (final (className, expectedTypeSnippet) in [
+          ('InvalidUnknownDateTimeField', 'DateTime'),
+          ('InvalidUnknownUriField', 'Uri'),
+          ('InvalidUnknownDynamicField', 'dynamic'),
+          ('InvalidUnknownObjectField', 'Object?'),
+          ('InvalidUnknownRecordField', '(int, String)'),
+          ('InvalidNestedListDateTime', 'DateTime'),
+          ('InvalidNestedSetUri', 'Uri'),
+          ('InvalidNestedMapValueBigInt', 'BigInt'),
+          ('InvalidMapKeyDateTime', 'DateTime'),
+          ('InvalidMapKeyList', 'List<int>'),
+          ('InvalidMapKeyNullable', 'String?'),
+        ]) {
+          check(() => visit(className))
+              .throws<InvalidGenerationSourceError>()
+              .has((e) => e.message, 'message')
+              .contains(expectedTypeSnippet);
+        }
+      },
+    );
+
+    test('extracts @CodableKey(defaultValue:) literals, enums, consts, and precedence', () {
+      final model = visit('DefaultValuesModel');
+      final fields = {for (final f in model.fields) f.name: f};
+
+      check(fields['label']!.defaultValueCode).equals("'guest'");
+      check(fields['escapedNote']!.defaultValueCode)
+          .isNotNull()
+          .contains(r'\n');
+      check(fields['retryCount']!.defaultValueCode).equals('42');
+      check(fields['factor']!.defaultValueCode).equals('2.5');
+      check(fields['enabled']!.defaultValueCode).equals('true');
+      check(fields['role']!.defaultValueCode).equals('UserRole.guest');
+      check(fields['role']!.participatesInGoldenMask).isFalse();
+      check(fields['tags']!.defaultValueCode).equals("const ['alpha', 'beta']");
+      check(fields['metadata']!.defaultValueCode).equals("const {'env': 1}");
+      check(fields['origin']!.defaultValueCode)
+          .equals('const Point(1.5, -2.5)');
+      check(fields['nullableOverride']!.defaultValueCode).equals('null');
+      check(fields['omittedDefaultKeepCtor']!.defaultValueCode)
+          .equals("'kept_ctor_default'");
+
+      check(() => visit('InvalidNullDefaultOnNonNullable'))
+          .throws<InvalidGenerationSourceError>()
+          .has((e) => e.message, 'message')
+          .contains('defaultValue: null');
+    });
+
+    test('validates @CodableTuple(N) positive length and numeric list target types', () {
+      for (final className in [
+        'InvalidZeroLengthTuple',
+        'InvalidNegativeLengthTuple',
+        'InvalidNonNumericTuple',
+        'InvalidScalarTuple',
+      ]) {
+        check(() => visit(className)).throws<InvalidGenerationSourceError>();
+      }
+
+      final valid = visit('TupleVariantsModel');
+      for (final field in valid.fields) {
+        check(field.category).equals(TypeCategory.tuple);
+      }
+    });
+
+    test('validates alias uniqueness and disambiguates colliding PascalCase suffixes', () {
+      for (final className in [
+        'InvalidDuplicateAliasInField',
+        'InvalidAliasEqualsWireName',
+        'InvalidCrossFieldAliasCollision',
+        'InvalidCrossFieldAliasToAliasCollision',
+      ]) {
+        check(() => visit(className)).throws<InvalidGenerationSourceError>();
+      }
+
+      final disambiguated = visit('EnumCollectionsAndAliasesModel');
+      final slug = disambiguated.fields.firstWhere((f) => f.name == 'slug');
+      check(slug.aliasSchemaSuffixes)
+          .deepEquals(['SlugFooBar', 'SlugFooBar\$2']);
     });
   });
 }

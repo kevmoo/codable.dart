@@ -57,6 +57,12 @@ final class CoordinatePairCodable implements Codable<CoordinatePair> {
             location = null;
           } else {
             location = keyed.decodeFloat64List();
+            if (location.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "location", got ${location.length}',
+                actualValue: location.length,
+              );
+            }
           }
           break;
         default:

@@ -284,6 +284,12 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
             bounds = null;
           } else {
             bounds = keyed.decodeFloat64List();
+            if (bounds.length != 2) {
+              throw CodableException(
+                'Expected tuple of length 2 for "bounds", got ${bounds.length}',
+                actualValue: bounds.length,
+              );
+            }
           }
           break;
         case _$ServiceSpecSchema.keyTags:
@@ -316,10 +322,14 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
             final mDecoder = keyed.nestedDecoder().map();
             final m = <LogLevel, bool>{};
             while (mDecoder.moveNextEntry()) {
+              final rawEnum1 = mDecoder.keyDecoder().singleValue().readString();
               final enumIdx1 = _$ServiceSpecSchema.enumLogLevelKeyOptions
-                  .indexOf(mDecoder.keyDecoder().singleValue().readString());
+                  .indexOf(rawEnum1);
               if (enumIdx1 < 0) {
-                throw const CodableException('Unknown LogLevel value');
+                throw CodableException(
+                  'Unknown LogLevel value: "$rawEnum1"',
+                  actualValue: rawEnum1,
+                );
               }
               final key = LogLevel.values[enumIdx1];
               m[key] = mDecoder.valueDecoder().singleValue().readBool();

@@ -350,7 +350,7 @@ final class TypedFeaturesEnvelope {
     required this.binaryPayload,
     required this.emptyPayload,
     @CodableTuple(2) required this.coords,
-    @CodableTuple(3) this.normal,
+    @CodableTuple(4) this.normal,
   });
 }
 
