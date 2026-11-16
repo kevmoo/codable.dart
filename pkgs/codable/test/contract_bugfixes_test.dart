@@ -781,6 +781,25 @@ void _registerExceptionActualValueTests() {
             .throws<CodableException>()
             .has((e) => e.actualValue, 'actualValue')
             .equals('bad "int" key');
+        check(keyDec.readBytes)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        check(keyDec.readNull)
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals('bad "int" key');
+        for (final openContainer in <Object Function()>[
+          keyDec.keyed,
+          keyDec.mapped,
+          keyDec.map,
+          keyDec.unkeyed,
+        ]) {
+          check(openContainer)
+              .throws<CodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals('bad "int" key');
+        }
 
         final keyEnc = _CustomStringMapKeyEncoder(formatName: 'JSON');
         check(() => keyEnc.encodeDouble(double.infinity))
@@ -812,6 +831,40 @@ void _registerExceptionActualValueTests() {
             .throws<CodableException>()
             .has((e) => e.actualValue, 'actualValue')
             .equals(256);
+
+        check(
+              () => JsonCodableDecoder.fromString('{"b": [1, 1.5]}').keyed()
+                ..moveNextKey()
+                ..nextKey()
+                ..readBytes(),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(1.5);
+
+        check(
+              () => JsonCodableDecoder.fromString('{"b": 42}').keyed()
+                ..moveNextKey()
+                ..nextKey()
+                ..readBytes(),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
+
+        check(() => JsonCodableDecoder.fromString('42').map().moveNextEntry())
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
+
+        check(() {
+              final m = JsonCodableDecoder.fromString('{"k": 42}').map();
+              m.moveNextEntry();
+              m.valueDecoder().keyed();
+            })
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(42);
 
         check(
               () =>

@@ -255,6 +255,8 @@ Object? _jsToDart(JSAny? value) {
   if (value.isA<JSString>()) return (value as JSString).toDart;
   if (value.isA<JSNumber>()) return _jsNumberToNum(value as JSNumber);
   if (value.isA<JSBoolean>()) return (value as JSBoolean).toDart;
+  if (value.isA<JSUint8Array>()) return (value as JSUint8Array).toDart;
+  if (value.isA<JSFloat64Array>()) return (value as JSFloat64Array).toDart;
   if (value.isA<JSArray>()) {
     final arr = value as JSArray;
     final list = <Object?>[];
@@ -277,6 +279,33 @@ Object? _jsToDart(JSAny? value) {
 
 Never _throwJsMismatch(String message, JSAny? val) =>
     throw CodableException(message, actualValue: _jsToDart(val));
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSObject _requireJsObjectValue(JSAny? target, String containerName) {
+  if (target == null ||
+      !target.isA<JSObject>() ||
+      target.isA<JSArray>() ||
+      target.isA<JSUint8Array>()) {
+    _throwJsMismatch(
+      'Expected object for $containerName(), found $target',
+      target,
+    );
+  }
+  return target as JSObject;
+}
+
+@pragma('dart2js:prefer-inline')
+@pragma('wasm:prefer-inline')
+JSArray _requireJsArrayValue(JSAny? target, String containerName) {
+  if (target == null || !target.isA<JSArray>()) {
+    _throwJsMismatch(
+      'Expected array for $containerName(), found $target',
+      target,
+    );
+  }
+  return target as JSArray;
+}
 
 List<T> _decodeJsModelList<T>(
   JSAny? val,
@@ -469,19 +498,8 @@ final class JsonCodableDecoder implements Decoder {
 
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  JSObject _requireJsObject(String containerName) {
-    final target = _activeValue ?? _decoded;
-    if (target == null ||
-        !target.isA<JSObject>() ||
-        target.isA<JSArray>() ||
-        target.isA<JSUint8Array>()) {
-      _throwJsMismatch(
-        'Expected object for $containerName(), found $target',
-        target,
-      );
-    }
-    return target as JSObject;
-  }
+  JSObject _requireJsObject(String containerName) =>
+      _requireJsObjectValue(_activeValue ?? _decoded, containerName);
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -528,11 +546,10 @@ final class JsonCodableDecoder implements Decoder {
     if (_reader != null) {
       return StreamingUnkeyedDecoder(_reader, this);
     }
-    final target = _activeValue ?? _decoded;
-    if (target == null || !target.isA<JSArray>()) {
-      _throwJsMismatch('Expected array for unkeyed(), found $target', target);
-    }
-    return _JsonCodableUnkeyedDecoder(this, target as JSArray);
+    return _JsonCodableUnkeyedDecoder(
+      this,
+      _requireJsArrayValue(_activeValue ?? _decoded, 'unkeyed'),
+    );
   }
 
   @override
@@ -1129,28 +1146,29 @@ final class _JsonCodableJsMapValueDecoder
   @override
   @pragma('dart2js:prefer-inline')
   @pragma('wasm:prefer-inline')
-  KeyedDecoder keyed({KeyOptions? options}) =>
-      _JsonCodableMappedKeyedDecoder(_rootDecoder, _val as JSObject, options);
+  KeyedDecoder keyed({KeyOptions? options}) => _JsonCodableMappedKeyedDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'keyed'),
+    options,
+  );
 
   @override
-  MappedDecoder mapped() =>
-      _JsonCodableMappedDecoder(_rootDecoder, _val as JSObject);
+  MappedDecoder mapped() => _JsonCodableMappedDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'mapped'),
+  );
 
   @override
-  MapDecoder map() {
-    final target = _val;
-    if (target == null ||
-        !target.isA<JSObject>() ||
-        target.isA<JSArray>() ||
-        target.isA<JSUint8Array>()) {
-      _throwJsMismatch('Expected object for map(), found $target', target);
-    }
-    return _JsonCodableJsMapDecoder(_rootDecoder, target as JSObject);
-  }
+  MapDecoder map() => _JsonCodableJsMapDecoder(
+    _rootDecoder,
+    _requireJsObjectValue(_val, 'map'),
+  );
 
   @override
-  UnkeyedDecoder unkeyed() =>
-      _JsonCodableUnkeyedDecoder(_rootDecoder, _val as JSArray);
+  UnkeyedDecoder unkeyed() => _JsonCodableUnkeyedDecoder(
+    _rootDecoder,
+    _requireJsArrayValue(_val, 'unkeyed'),
+  );
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) {

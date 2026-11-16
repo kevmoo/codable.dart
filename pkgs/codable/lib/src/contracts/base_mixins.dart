@@ -786,21 +786,25 @@ final class StringMapKeyDecoder
   @override
   KeyedDecoder keyed({KeyOptions? options}) => throw CodableException(
     '$formatName map keys are scalar strings, not keyed objects',
+    actualValue: key,
   );
 
   @override
   MappedDecoder mapped() => throw CodableException(
     '$formatName map keys are scalar strings, not mapped objects',
+    actualValue: key,
   );
 
   @override
   MapDecoder map() => throw CodableException(
     '$formatName map keys are scalar strings, not maps',
+    actualValue: key,
   );
 
   @override
   UnkeyedDecoder unkeyed() => throw CodableException(
     '$formatName map keys are scalar strings, not arrays',
+    actualValue: key,
   );
 
   @override

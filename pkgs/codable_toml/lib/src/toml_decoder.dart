@@ -337,6 +337,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
     _trace.fail(
       'Expected TOML table for $containerName(), got ${_describeTomlNode(node)}',
       atOffset: node.offset,
+      actualValue: _tomlNodeActualValue(node),
     );
   }
 
@@ -369,6 +370,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
       _trace.fail(
         'Expected TOML array for unkeyed(), got ${_describeTomlNode(node)}',
         atOffset: node.offset,
+        actualValue: _tomlNodeActualValue(node),
       );
     }
     _checkDecoderDepth(_depth, _trace);

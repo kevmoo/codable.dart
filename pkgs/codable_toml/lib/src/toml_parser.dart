@@ -163,9 +163,17 @@ TomlTable parseTomlDocument(String source) => _TomlParser(source).parse();
 /// [TomlCodableException].
 TomlDateTime parseTomlDateTimeLiteral(String raw) {
   final parser = _TomlParser(raw);
-  if (_looksLikeLocalTime(raw)) return parser._parseLocalTime(0, raw).value;
-  if (_looksLikeDatePrefix(raw)) {
-    return parser._parseDateOrDateTime(0, raw).value;
+  try {
+    if (_looksLikeLocalTime(raw)) return parser._parseLocalTime(0, raw).value;
+    if (_looksLikeDatePrefix(raw)) {
+      return parser._parseDateOrDateTime(0, raw).value;
+    }
+  } on TomlCodableException catch (e) {
+    throw TomlCodableException(
+      e.message,
+      actualValue: e.actualValue ?? raw,
+      underlyingError: e.underlyingError,
+    );
   }
   throw TomlCodableException(
     'Invalid TOML date-time literal',

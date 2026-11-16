@@ -375,6 +375,35 @@ void _registerCursorDrainAndEncoderErrorTests() {
               }),
             ),
           ).throws<CodableException>();
+
+          check(
+                () => CborCodableEncoder.encode<void>(
+                  null,
+                  Encodable.fromFunction((_, e) {
+                    e.unkeyed(length: -1);
+                  }),
+                ),
+              )
+              .throws<CodableException>()
+              .has((e) => e.actualValue, 'actualValue')
+              .equals(-1);
+
+          if (identical(1, 1.0)) {
+            const overSafe = 0x200000 * 0x100000000;
+            for (final badInt in <int>[overSafe, -overSafe]) {
+              check(
+                    () => CborCodableEncoder.encode<int>(
+                      badInt,
+                      Encodable.fromFunction(
+                        (v, e) => e.singleValue().encodeInt(v),
+                      ),
+                    ),
+                  )
+                  .throws<CodableException>()
+                  .has((e) => e.actualValue, 'actualValue')
+                  .equals(badInt);
+            }
+          }
         },
       );
     },

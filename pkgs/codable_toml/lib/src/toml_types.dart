@@ -115,6 +115,11 @@ final class TomlDateTimeCodec implements Codable<DateTime> {
         isUtc: true,
       ),
       ValueKind.string => _parseIsoDateTimeString(sv.readString()),
+      ValueKind.boolean => throw CodableException(
+        'Expected DateTime literal, string, or epoch integer, '
+        'got ValueKind.boolean',
+        actualValue: sv.readBool(),
+      ),
       final kind => throw CodableException(
         'Expected DateTime literal, string, or epoch integer, got $kind',
       ),

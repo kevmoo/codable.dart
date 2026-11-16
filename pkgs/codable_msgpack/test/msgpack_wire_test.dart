@@ -484,6 +484,18 @@ void _registerSinglePassAndBackpatchTests() {
             requireKnownLength: true,
           ),
         ).throws<CodableException>();
+
+        check(
+              () => MsgPackCodableEncoder.encode<void>(
+                null,
+                Encodable.fromFunction((_, e) {
+                  e.unkeyed(length: -1);
+                }),
+              ),
+            )
+            .throws<CodableException>()
+            .has((e) => e.actualValue, 'actualValue')
+            .equals(-1);
       },
     );
 

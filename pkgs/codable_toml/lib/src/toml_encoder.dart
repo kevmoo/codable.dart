@@ -92,12 +92,18 @@ bool _needsBasicStringEscape(String value) {
   return false;
 }
 
-void _writeEscapedRune(int rune, StringBuffer out, List<Object> path) {
+void _writeEscapedRune(
+  int rune,
+  StringBuffer out,
+  String sourceValue,
+  List<Object> path,
+) {
   if (rune >= 0xd800 && rune <= 0xdfff) {
     throw TomlCodableException(
       'Invalid unpaired UTF-16 surrogate '
       '(U+${rune.toRadixString(16).toUpperCase()}) in TOML string',
       path: path,
+      actualValue: sourceValue,
     );
   }
   switch (rune) {
@@ -129,7 +135,7 @@ String _escapeTomlBasicString(String value, [List<Object> path = const []]) {
   if (!_needsBasicStringEscape(value)) return '"$value"';
   final out = StringBuffer('"');
   for (final rune in value.runes) {
-    _writeEscapedRune(rune, out, path);
+    _writeEscapedRune(rune, out, value, path);
   }
   out.write('"');
   return out.toString();
@@ -237,6 +243,7 @@ void _validateTableKey(
       throw TomlCodableException(
         'Invalid unpaired UTF-16 surrogate in TOML key',
         path: [...tablePath, key],
+        actualValue: key,
       );
     }
   }
@@ -244,6 +251,7 @@ void _validateTableKey(
     throw TomlCodableException(
       'Duplicate TOML key "$key"',
       path: [...tablePath, key],
+      actualValue: key,
     );
   }
 }

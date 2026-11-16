@@ -285,6 +285,32 @@ tags:
       }
       check(listErr).isNotNull();
       check(listErr!.formattedPath).equals('tags[1]');
+
+      check(
+        () => YamlCodableDecoder.decode<Uint8List>(
+          'b: 123\n',
+          Decodable.fromFunction((d) => d.mapped().readBytes('b')),
+        ),
+      ).throws<YamlCodableException>().which(
+        (it) => it
+          ..has((e) => e.formattedPath, 'formattedPath').equals('b')
+          ..has((e) => e.actualValue, 'actualValue').equals(123),
+      );
+
+      check(
+            () => YamlCodableDecoder.decode<Uint8List>(
+              'b: true\n',
+              Decodable.fromFunction((d) {
+                final k = d.keyed();
+                k.moveNextKey();
+                k.nextKey();
+                return k.readBytes();
+              }),
+            ),
+          )
+          .throws<YamlCodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals(true);
     });
   });
 }
