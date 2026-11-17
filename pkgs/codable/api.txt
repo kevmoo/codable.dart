@@ -307,6 +307,7 @@ package:codable/codable.dart:
     decodeSuper (method: T Function(Decoder))
 package:codable/codable_driver.dart:
   codable (see above)
+  enrichCodableException (function: CodableException Function(CodableException, {required CodableException? alreadyAttributed, required List<Object> Function() containerPath, required List<Object> Function() leafPath}))
   BaseKeyedDecoderMixin (mixin on Object implements KeyedDecoder):
     decodeBoolList (method: List<bool> Function())
     decodeDoubleList (method: List<double> Function())
@@ -458,11 +459,12 @@ package:codable/codable_driver.dart:
   SingleValueDecoder (see above)
   SingleValueEncoder (see above)
   StringMapKeyDecoder (class extends Object with BaseSingleValueDecoderMixin implements Decoder, SingleValueDecoder, final):
-    new (constructor: StringMapKeyDecoder Function(Map<Object, Object?>, {String formatName, String key}))
+    new (constructor: StringMapKeyDecoder Function(Map<Object, Object?>, {String formatName, String key, CodableException Function(CodableException)? onError}))
     formatName (getter: String)
     isHumanReadable (getter: bool)
     key (getter: String)
     key= (setter: String)
+    onError (getter: CodableException Function(CodableException)?)
     payload (getter: Uint8List?)
     userInfo (getter: Map<Object, Object?>)
     decodeUniformDoubleList (method: Float64List? Function(List<List<String>>))

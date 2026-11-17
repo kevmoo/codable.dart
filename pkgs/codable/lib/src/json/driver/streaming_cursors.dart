@@ -13,50 +13,202 @@ import '../../contracts/static_key.dart';
 import '../substrate/substrate.dart';
 import 'dart_object_decoder.dart';
 
-Object? _tryReadDiagnosticScalar(JsonTokenReader reader) {
-  try {
-    return switch (reader.peek()) {
-      JsonTokenType.number => reader.readNum(),
-      JsonTokenType.string => reader.readString(),
-      JsonTokenType.boolean => reader.readBool(),
-      _ => null,
-    };
-  } catch (_) {
-    return null;
+(String description, Object? scalar) _consumeAndDescribeValidToken(
+  JsonTokenReader reader,
+  FormatException originalError,
+) {
+  final token = reader.peek();
+  switch (token) {
+    case JsonTokenType.nullValue:
+      reader.readNull();
+      return ('null', null);
+    case JsonTokenType.boolean:
+      final v = reader.readBool();
+      return ('$v', v);
+    case JsonTokenType.number:
+      final v = reader.readNum();
+      return ('$v', v);
+    case JsonTokenType.string:
+      final v = reader.readString();
+      return ('"$v"', v);
+    case JsonTokenType.beginArray:
+      reader.skipValue();
+      return ('array', null);
+    case JsonTokenType.beginObject:
+      reader.skipValue();
+      return ('object', null);
+    default:
+      throw originalError;
   }
 }
 
-Uint8List _readByteListFromReader(JsonTokenReader reader) {
+(String description, Object? scalar) _describePeekTokenWithoutConsuming(
+  JsonTokenReader reader,
+  FormatException originalError,
+) => switch (reader.peek()) {
+  JsonTokenType.nullValue => ('null', null),
+  JsonTokenType.boolean => ('bool', null),
+  JsonTokenType.number => ('number', null),
+  JsonTokenType.string => ('string', null),
+  JsonTokenType.beginArray => ('array', null),
+  JsonTokenType.beginObject => ('object', null),
+  _ => throw originalError,
+};
+
+void _advanceRescanToExtra(
+  JsonTokenReader rescan,
+  Object? extraSegment,
+  String? extraObjectKey,
+) {
+  if (extraSegment is int) {
+    rescan.beginArray();
+    _skipPrecedingArrayElements(rescan, extraSegment);
+    if (!rescan.moveNext()) {
+      throw const FormatException('Unexpected end of array');
+    }
+  }
+  if (extraObjectKey != null) {
+    rescan.beginObject();
+    while (rescan.moveNext()) {
+      if (rescan.nextName() == extraObjectKey) return;
+      rescan.skipValue();
+    }
+    throw const FormatException('Property not found');
+  }
+}
+
+/// Validates whether [reader] sits at a syntactically well-formed RFC 8259
+/// value after [error] without mutating [reader]'s cursor position; rethrows
+/// [error] when the underlying input is malformed JSON or invalid UTF-8,
+/// otherwise throws an attributed [CodableException].
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never rethrowStreamingMismatch(
+  JsonTokenReader reader,
+  StreamingPathTracker? tracker,
+  FormatException error,
+  String expected, {
+  JsonTokenType? sameTokenMalformed,
+  Object? extraSegment,
+  String? extraObjectKey,
+}) {
+  final token = reader.peek();
+  if (sameTokenMalformed != null && token == sameTokenMalformed) {
+    throw error;
+  }
+  final (
+    String found,
+    Object? scalar,
+  ) = (tracker != null && tracker.startsAtZero)
+      ? _rescanAndDescribeValidToken(
+          reader.bytes,
+          tracker,
+          error,
+          extraSegment,
+          extraObjectKey,
+        )
+      : _consumeAndDescribeValidToken(reader, error);
+  throwStreamingError(
+    tracker,
+    'Expected $expected, found $found',
+    extraSegment: extraSegment,
+    actualValue: scalar,
+    underlyingError: error,
+  );
+}
+
+(String description, Object? scalar) _rescanAndDescribeValidToken(
+  Uint8List bytes,
+  StreamingPathTracker tracker,
+  FormatException originalError,
+  Object? extraSegment,
+  String? extraObjectKey,
+) {
+  final rescan = JsonTokenReader.fromBytes(bytes);
+  tracker.replayToActivePosition(rescan);
+  _advanceRescanToExtra(rescan, extraSegment, extraObjectKey);
+  return _consumeAndDescribeValidToken(rescan, originalError);
+}
+
+/// Constructs, records, and throws an attributed [CodableException] for a
+/// streaming JSON cursor.
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never throwStreamingError(
+  StreamingPathTracker? tracker,
+  String message, {
+  List<Object>? explicitPath,
+  Object? extraSegment,
+  Object? actualValue,
+  Object? underlyingError,
+}) {
+  final path =
+      explicitPath ??
+      (tracker != null
+          ? tracker.buildLeafPath(extraSegment)
+          : (extraSegment != null ? <Object>[extraSegment] : const <Object>[]));
+  final ex = CodableException(
+    message,
+    path: List<Object>.unmodifiable(path),
+    actualValue: actualValue,
+    underlyingError: underlyingError,
+  );
+  tracker?.record(ex);
+  throw ex;
+}
+
+Uint8List _readByteListFromReader(
+  JsonTokenReader reader,
+  StreamingPathTracker? tracker,
+) {
+  final builder = BytesBuilder(copy: false);
+  var started = false;
   try {
     reader.beginArray();
-    final builder = BytesBuilder(copy: false);
-    while (reader.moveNext()) {
-      final b = reader.readInt();
-      if (b < 0 || b > 255) {
-        throw CodableException(
-          'Byte value out of range 0..255: $b',
-          actualValue: b,
-        );
-      }
-      builder.addByte(b);
-    }
-    reader.endArray();
-    return builder.takeBytes();
-  } on CodableException {
-    rethrow;
+    started = true;
   } on FormatException catch (e) {
-    throw CodableException(
-      'Invalid byte array element: ${e.message}',
-      actualValue: _tryReadDiagnosticScalar(reader),
-      underlyingError: e,
+    rethrowStreamingMismatch(
+      reader,
+      tracker,
+      e,
+      'byte array',
+      sameTokenMalformed: JsonTokenType.beginArray,
     );
   }
+  while (reader.moveNext()) {
+    final int b;
+    try {
+      b = reader.readInt();
+    } on FormatException catch (e) {
+      rethrowStreamingMismatch(
+        reader,
+        tracker,
+        e,
+        'byte 0..255 in array',
+        extraSegment: builder.length,
+      );
+    }
+    if (b < 0 || b > 255) {
+      throwStreamingError(
+        tracker,
+        'Byte value out of range 0..255: $b',
+        extraSegment: builder.length,
+        actualValue: b,
+      );
+    }
+    builder.addByte(b);
+  }
+  if (started) reader.endArray();
+  return builder.takeBytes();
 }
 
 /// Maps a [JsonTokenType] from a pull reader to a format-agnostic [ValueKind].
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
-ValueKind streamingTokenTypeToValueKind(JsonTokenType type) {
+ValueKind streamingTokenTypeToValueKind(
+  JsonTokenType type, [
+  StreamingPathTracker? tracker,
+]) {
   return switch (type) {
     JsonTokenType.nullValue => ValueKind.nullValue,
     JsonTokenType.boolean => ValueKind.boolean,
@@ -64,8 +216,476 @@ ValueKind streamingTokenTypeToValueKind(JsonTokenType type) {
     JsonTokenType.string => ValueKind.string,
     JsonTokenType.beginArray => ValueKind.list,
     JsonTokenType.beginObject => ValueKind.map,
-    _ => throw CodableException('Unexpected JSON token type: $type'),
+    _ => throwStreamingError(tracker, 'Unexpected JSON token type: $type'),
   };
+}
+
+int _activeMappedHandoffCount = 0;
+
+/// Flat integer-stack path tracker for streaming JSON decoding.
+///
+/// Cursors (`StreamingKeyedDecoder`, `StreamingUnkeyedDecoder`) never store
+/// `this` into [StreamingPathTracker], preserving Dart VM AOT scalar
+/// replacement (`AllocationSinking`) of short-lived cursor instances.
+final class StreamingPathTracker {
+  static const int _stride = 6;
+  static const int _objStride = 2;
+  static const int _flagStarted = 1;
+  static const int _flagInChild = 2;
+
+  static StreamingPathTracker? _pool;
+
+  final bool startsAtZero;
+  Uint8List? sourceBytes;
+  Int32List _ints = Int32List(8 * _stride);
+  List<Object?> _objs = List<Object?>.filled(8 * _objStride, null);
+  int _depth = 0;
+  int activePrimKind = 0;
+  bool atSyntaxBoundary = false;
+  JsonKeyOptions? uniformOptions;
+  List<List<String>>? uniformAliases;
+  DartObjectErrorState? mappedErrorState;
+  CodableException? attributedError;
+
+  StreamingPathTracker({this.startsAtZero = true, this.sourceBytes});
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  static StreamingPathTracker acquire(Uint8List bytes) {
+    final pooled = _pool;
+    if (pooled != null) {
+      _pool = null;
+      pooled.sourceBytes = bytes;
+      return pooled;
+    }
+    return StreamingPathTracker(sourceBytes: bytes);
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void release() {
+    sourceBytes = null;
+    final clearLen = (_depth + 2) * _objStride;
+    final limit = clearLen < _objs.length ? clearLen : _objs.length;
+    for (var i = 0; i < limit; i++) {
+      _objs[i] = null;
+    }
+    _depth = 0;
+    activePrimKind = 0;
+    atSyntaxBoundary = false;
+    uniformOptions = null;
+    uniformAliases = null;
+    if (mappedErrorState != null) clearMappedHandoff();
+    attributedError = null;
+    _pool = this;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void beginUniform(JsonKeyOptions options, List<List<String>> aliases) {
+    uniformOptions = options;
+    uniformAliases = aliases;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void endUniform() {
+    uniformOptions = null;
+    uniformAliases = null;
+  }
+
+  CodableException record(CodableException error) {
+    attributedError = error;
+    return error;
+  }
+
+  void _grow() {
+    final nextCap = (_ints.length ~/ _stride) * 2;
+    final nextInts = Int32List(nextCap * _stride)
+      ..setRange(0, _ints.length, _ints);
+    final nextObjs = List<Object?>.filled(nextCap * _objStride, null)
+      ..setRange(0, _objs.length, _objs);
+    _ints = nextInts;
+    _objs = nextObjs;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  int pushFrame(int kind, [KeyOptions? options]) {
+    final f = _depth;
+    final base = f * _stride;
+    if (base >= _ints.length) _grow();
+    _ints[base] = kind;
+    _ints[base + 1] = -1; // ordinal
+    _ints[base + 2] = -1; // keyIndex
+    _ints[base + 3] = -1; // listElem
+    _ints[base + 4] = 0; // unused
+    _ints[base + 5] = 0; // flags
+    final ob = f * _objStride;
+    _objs[ob] = options;
+    _objs[ob + 1] = null;
+    _depth = f + 1;
+    return f;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void markStarted(int frame) {
+    final idx = frame * _stride + 5;
+    _ints[idx] |= _flagStarted;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void popFrame(int frame) {
+    atSyntaxBoundary = false;
+    if (_depth > frame) _depth = frame;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void beforeMoveNextKey(int frame) {
+    if (_depth != frame + 1) _depth = frame + 1;
+    atSyntaxBoundary = true;
+    final base = frame * _stride;
+    _ints[base + 5] = _flagStarted;
+    final ob = frame * _objStride;
+    if (_objs[ob + 1] != null) _objs[ob + 1] = null;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void afterMoveNextKey(int frame) {
+    _ints[frame * _stride + 1]++;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void recordKeyIndex(int frame, int idx, [KeyOptions? overrideOptions]) {
+    atSyntaxBoundary = false;
+    _ints[frame * _stride + 2] = idx;
+    if (overrideOptions != null) {
+      _objs[frame * _objStride] = overrideOptions;
+    }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void recordKeyName(int frame, String name) {
+    atSyntaxBoundary = false;
+    _ints[frame * _stride + 2] = -1;
+    _objs[frame * _objStride + 1] = name;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void beforeMoveNextElem(int frame, bool hadChild) {
+    atSyntaxBoundary = true;
+    if (_depth != frame + 1) _depth = frame + 1;
+    if (hadChild) {
+      final base = frame * _stride;
+      _ints[base + 3] = -1;
+      _ints[base + 5] = _flagStarted;
+    }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void finishMoveNextElem(int frame, int ord) {
+    atSyntaxBoundary = false;
+    _ints[frame * _stride + 1] = ord;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void beginMoveNextMapEntry(int frame) {
+    atSyntaxBoundary = true;
+    if (_depth != frame + 1) _depth = frame + 1;
+    _ints[frame * _stride + 5] = _flagStarted;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void finishMoveNextMapEntry(int frame, String key) {
+    atSyntaxBoundary = false;
+    final base = frame * _stride;
+    _ints[base + 1]++;
+    _ints[base + 2] = 0;
+    _objs[frame * _objStride + 1] = key;
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void setInChild(int frame, bool value) {
+    if (_depth != frame + 1) _depth = frame + 1;
+    final idx = frame * _stride + 5;
+    if (value) {
+      _ints[idx] |= _flagInChild;
+    } else {
+      _ints[idx] &= ~_flagInChild;
+    }
+  }
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void setListElem(int frame, int elemIdx) {
+    if (_depth != frame + 1) _depth = frame + 1;
+    atSyntaxBoundary = elemIdx == -3;
+    final base = frame * _stride;
+    _ints[base + 3] = elemIdx;
+    if (elemIdx >= 0) {
+      _ints[base + 5] |= _flagInChild;
+    } else {
+      _ints[base + 5] &= ~_flagInChild;
+    }
+  }
+
+  int get topDepth => _depth;
+
+  bool get isTopStarted =>
+      _depth > 0 && (_ints[(_depth - 1) * _stride + 5] & _flagStarted) != 0;
+
+  int get topPrimitiveListKind => activePrimKind;
+
+  bool get isTopAtSyntaxBoundary => isTopStarted && atSyntaxBoundary;
+
+  DartObjectErrorState beginMappedHandoff() {
+    final basePath = _buildFramesPath(_depth, includeTopLeaf: true);
+    if (mappedErrorState == null) {
+      mappedErrorState = DartObjectErrorState();
+      _activeMappedHandoffCount++;
+    }
+    mappedErrorState!.setContainer(basePath);
+    return mappedErrorState!;
+  }
+
+  void clearMappedHandoff() {
+    if (mappedErrorState != null) {
+      mappedErrorState = null;
+      _activeMappedHandoffCount--;
+    }
+  }
+
+  List<Object> buildContainerPath() {
+    final mapped = mappedErrorState;
+    if (mapped != null) return mapped.containerPath;
+    if (_depth == 0) return const [];
+    final topBase = (_depth - 1) * _stride;
+    final inChild =
+        (_ints[topBase + 5] & _flagInChild) != 0 || _ints[topBase + 3] >= 0;
+    return _buildFramesPath(_depth, includeTopLeaf: inChild);
+  }
+
+  List<Object> buildLeafPath([Object? extraSegment]) {
+    final mapped = mappedErrorState;
+    if (mapped != null) {
+      final base = mapped.buildLeafPath();
+      return extraSegment != null ? <Object>[...base, extraSegment] : base;
+    }
+    final base = _buildFramesPath(_depth, includeTopLeaf: true);
+    return extraSegment != null ? <Object>[...base, extraSegment] : base;
+  }
+
+  List<Object> buildParentLeafPath() => _depth <= 1
+      ? const []
+      : _buildFramesPath(_depth - 1, includeTopLeaf: true);
+
+  List<Object> _buildFramesPath(int count, {required bool includeTopLeaf}) {
+    if (count <= 0) return const [];
+    final out = <Object>[];
+    for (var f = 0; f < count; f++) {
+      if (f == count - 1 && !includeTopLeaf) break;
+      _appendFrameSegments(f, out);
+    }
+    return out;
+  }
+
+  void _appendFrameSegments(int frame, List<Object> out) {
+    final base = frame * _stride;
+    if ((_ints[base + 5] & _flagStarted) == 0) return;
+    final kind = _ints[base];
+    final ord = _ints[base + 1];
+    if (kind == 2) {
+      if (ord >= 0) out.add(ord);
+    } else {
+      final key = _resolveFrameKeyName(frame, ord, _ints[base + 2]);
+      if (key != null) out.add(key);
+    }
+    final listElem = _ints[base + 3];
+    if (listElem >= 0) out.add(listElem);
+  }
+
+  String? _resolveFrameKeyName(int frame, int ord, int keyIdx) {
+    final ob = frame * _objStride;
+    final explicit = _objs[ob + 1] as String?;
+    if (explicit != null) return explicit;
+    final opts = _objs[ob] as KeyOptions?;
+    if (keyIdx >= 0 && opts != null) return opts[keyIdx];
+    if (ord < 0 || sourceBytes == null || !startsAtZero) return null;
+    return _rescanFrameKeySlow(frame, ord);
+  }
+
+  String _rescanFrameKeySlow(int frame, int ord) {
+    try {
+      final rescan = JsonTokenReader.fromBytes(sourceBytes!);
+      replayFrames(rescan, frame);
+      rescan.beginObject();
+      _skipPrecedingObjectEntries(rescan, ord);
+      rescan.moveNext();
+      return rescan.nextName();
+    } on Object {
+      return '?';
+    }
+  }
+
+  void replayToActivePosition(JsonTokenReader rescan) {
+    replayFrames(rescan, _depth);
+  }
+
+  void replayFrames(JsonTokenReader rescan, int count) {
+    for (var f = 0; f < count; f++) {
+      _replaySingleFrame(rescan, f);
+    }
+  }
+
+  void _replaySingleFrame(JsonTokenReader rescan, int f) {
+    final base = f * _stride;
+    if ((_ints[base + 5] & _flagStarted) == 0) return;
+    final kind = _ints[base];
+    final ord = _ints[base + 1];
+    if (kind == 2) {
+      rescan.beginArray();
+      if (ord < 0) return;
+      _skipPrecedingArrayElements(rescan, ord);
+      rescan.moveNext();
+    } else {
+      rescan.beginObject();
+      if (ord < 0) return;
+      _skipPrecedingObjectEntries(rescan, ord);
+      rescan.moveNext();
+      rescan.nextName();
+    }
+    final listElem = _ints[base + 3];
+    if (listElem >= 0) {
+      rescan.beginArray();
+      _skipPrecedingArrayElements(rescan, listElem);
+      rescan.moveNext();
+    }
+  }
+}
+
+void _consumePrimElement(JsonTokenReader r, int primKind) {
+  switch (primKind) {
+    case 1:
+      r.readInt();
+    case 2:
+      r.readDouble();
+    case 3:
+      r.readString();
+    default:
+      r.readBool();
+  }
+}
+
+Never _rethrowPrimElementAt(
+  JsonTokenReader rescan,
+  StreamingPathTracker tracker,
+  int primKind,
+  int elemIdx,
+  FormatException error,
+) {
+  final tok = rescan.peek();
+  if ((primKind == 2 && tok == JsonTokenType.number) ||
+      (primKind == 3 && tok == JsonTokenType.string) ||
+      (primKind == 4 && tok == JsonTokenType.boolean)) {
+    throw error;
+  }
+  final (found, scalar) = _consumeAndDescribeValidToken(rescan, error);
+  throwStreamingError(
+    tracker,
+    'Invalid list element: found $found',
+    extraSegment: elemIdx,
+    actualValue: scalar,
+    underlyingError: error,
+  );
+}
+
+Never _rethrowPrimitiveListFormatException(
+  JsonTokenReader rescan,
+  StreamingPathTracker tracker,
+  int primKind,
+  FormatException error,
+) {
+  if (rescan.peek() != JsonTokenType.beginArray) {
+    final (found, scalar) = _consumeAndDescribeValidToken(rescan, error);
+    throwStreamingError(
+      tracker,
+      'Expected List, found $found',
+      actualValue: scalar,
+      underlyingError: error,
+    );
+  }
+  rescan.beginArray();
+  var elemIdx = 0;
+  while (rescan.moveNext()) {
+    try {
+      _consumePrimElement(rescan, primKind);
+    } on FormatException {
+      _rethrowPrimElementAt(rescan, tracker, primKind, elemIdx, error);
+    }
+    elemIdx++;
+  }
+  rescan.endArray();
+  throw error;
+}
+
+/// Converts a [FormatException] thrown by [reader] on syntactically valid JSON
+/// into an attributed [CodableException], or rethrows [error] when the input is
+/// malformed JSON or invalid UTF-8.
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never rethrowStreamingFormatException(
+  JsonTokenReader reader,
+  StreamingPathTracker tracker,
+  FormatException error,
+) {
+  if (tracker.mappedErrorState != null || tracker.isTopAtSyntaxBoundary) {
+    throw error;
+  }
+  if (!tracker.startsAtZero) {
+    final (found, scalar) = _describePeekTokenWithoutConsuming(reader, error);
+    throwStreamingError(
+      tracker,
+      'Unexpected $found',
+      actualValue: scalar,
+      underlyingError: error,
+    );
+  }
+  if (tracker.topDepth > 0 && !tracker.isTopStarted) {
+    final rescan = JsonTokenReader.fromBytes(reader.bytes);
+    tracker.replayFrames(rescan, tracker.topDepth - 1);
+    final (found, scalar) = _consumeAndDescribeValidToken(rescan, error);
+    throwStreamingError(
+      tracker,
+      'Expected container, found $found',
+      explicitPath: tracker.buildParentLeafPath(),
+      actualValue: scalar,
+      underlyingError: error,
+    );
+  }
+  final rescan = JsonTokenReader.fromBytes(reader.bytes);
+  tracker.replayToActivePosition(rescan);
+  final primKind = tracker.topPrimitiveListKind;
+  if (primKind != 0) {
+    _rethrowPrimitiveListFormatException(rescan, tracker, primKind, error);
+  }
+  final (found, scalar) = _consumeAndDescribeValidToken(rescan, error);
+  throwStreamingError(
+    tracker,
+    'Unexpected $found',
+    actualValue: scalar,
+    underlyingError: error,
+  );
 }
 
 int _activeMappedBufferCount = 0;
@@ -101,9 +721,25 @@ Map<String, Object?>? takeStreamingBufferedObject(Decoder decoder) {
 /// Clears any unconsumed `mapped()` object attached to [decoder].
 @pragma('vm:prefer-inline')
 @pragma('wasm:prefer-inline')
-void clearStreamingBufferedObject(Decoder decoder) {
+void clearStreamingBufferedObject(
+  Decoder decoder, [
+  StreamingPathTracker? tracker,
+]) {
+  if ((_activeMappedBufferCount | _activeMappedHandoffCount) == 0) return;
+  _clearStreamingBufferedObjectSlow(decoder, tracker);
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+void _clearStreamingBufferedObjectSlow(
+  Decoder decoder,
+  StreamingPathTracker? tracker,
+) {
   if (_activeMappedBufferCount != 0) {
     takeStreamingBufferedObject(decoder);
+  }
+  if (tracker != null && tracker.mappedErrorState != null) {
+    tracker.clearMappedHandoff();
   }
 }
 
@@ -112,13 +748,25 @@ void clearStreamingBufferedObject(Decoder decoder) {
 Map<String, Object?> bufferStreamingObject(
   Decoder decoder,
   JsonTokenReader reader,
-  Map<String, Object?> Function(JsonTokenReader) parseObject,
-) {
+  Map<String, Object?> Function(JsonTokenReader) parseObject, [
+  StreamingPathTracker? tracker,
+]) {
   final existing = _activeMappedBufferCount != 0
       ? _mappedBuffers[decoder]
       : null;
   if (existing != null) return existing;
-  final map = parseObject(reader);
+  final Map<String, Object?> map;
+  try {
+    map = parseObject(reader);
+  } on FormatException catch (e) {
+    rethrowStreamingMismatch(
+      reader,
+      tracker,
+      e,
+      'object for mapped()',
+      sameTokenMalformed: JsonTokenType.beginObject,
+    );
+  }
   _mappedBuffers[decoder] = map;
   _activeMappedBufferCount++;
   return map;
@@ -126,13 +774,18 @@ Map<String, Object?> bufferStreamingObject(
 
 mixin _JsonPrimitiveDecoderMixin {
   JsonTokenReader get _reader;
+  StreamingPathTracker? get _pathTracker;
   void _ensureStarted();
+
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _setPrimitiveListKind(int kind) {}
 
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   ValueKind peekKind() {
     _ensureStarted();
-    return streamingTokenTypeToValueKind(_reader.peek());
+    return streamingTokenTypeToValueKind(_reader.peek(), _pathTracker);
   }
 
   @pragma('vm:prefer-inline')
@@ -260,13 +913,32 @@ mixin _JsonPrimitiveDecoderMixin {
   Uint8List readBytes() {
     _ensureStarted();
     return switch (_reader.peek()) {
-      JsonTokenType.string => decodeJsonBase64Bytes(_reader.readString()),
-      JsonTokenType.beginArray => _readByteListFromReader(_reader),
-      final token => throw CodableException(
-        'Expected base64 string or byte array for Uint8List, found $token',
-        actualValue: _tryReadDiagnosticScalar(_reader),
+      JsonTokenType.string => _readBase64Bytes(),
+      JsonTokenType.beginArray => _readByteListFromReader(
+        _reader,
+        _pathTracker,
+      ),
+      _ => rethrowStreamingMismatch(
+        _reader,
+        _pathTracker,
+        const FormatException('Expected base64 string or byte array'),
+        'base64 string or byte array for Uint8List',
       ),
     };
+  }
+
+  Uint8List _readBase64Bytes() {
+    final s = _reader.readString();
+    try {
+      return decodeJsonBase64Bytes(s);
+    } on CodableException catch (e) {
+      throwStreamingError(
+        _pathTracker,
+        e.message,
+        actualValue: e.actualValue,
+        underlyingError: e.underlyingError,
+      );
+    }
   }
 
   Uint8List? readNullableBytes() {
@@ -282,23 +954,27 @@ mixin _JsonPrimitiveDecoderMixin {
 mixin _JsonListDecoderMixin on _JsonPrimitiveDecoderMixin {
   List<int> decodeIntList() {
     _ensureStarted();
+    _setPrimitiveListKind(1);
     final list = <int>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
       list.add(_reader.readInt());
     }
     _reader.endArray();
+    _setPrimitiveListKind(0);
     return list;
   }
 
   List<double> decodeDoubleList() {
     _ensureStarted();
+    _setPrimitiveListKind(2);
     final list = <double>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
       list.add(_reader.readDouble());
     }
     _reader.endArray();
+    _setPrimitiveListKind(0);
     return list;
   }
 
@@ -306,23 +982,27 @@ mixin _JsonListDecoderMixin on _JsonPrimitiveDecoderMixin {
 
   List<String> decodeStringList() {
     _ensureStarted();
+    _setPrimitiveListKind(3);
     final list = <String>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
       list.add(_reader.readString());
     }
     _reader.endArray();
+    _setPrimitiveListKind(0);
     return list;
   }
 
   List<bool> decodeBoolList() {
     _ensureStarted();
+    _setPrimitiveListKind(4);
     final list = <bool>[];
     _reader.beginArray();
     while (_reader.moveNext()) {
       list.add(_reader.readBool());
     }
     _reader.endArray();
+    _setPrimitiveListKind(0);
     return list;
   }
 }
@@ -341,6 +1021,21 @@ JsonKeyOptions _compileJsonKeyOptions(KeyOptions options) {
 JsonKeyOptions _compileJsonKeyOptionsSlow(KeyOptions options) =>
     options.compiled<JsonKeyOptions>(JsonKeyOptions.of);
 
+void _skipPrecedingObjectEntries(JsonTokenReader r, int count) {
+  for (var i = 0; i < count; i++) {
+    r.moveNext();
+    r.nextName();
+    r.skipValue();
+  }
+}
+
+void _skipPrecedingArrayElements(JsonTokenReader r, int count) {
+  for (var i = 0; i < count; i++) {
+    r.moveNext();
+    r.skipValue();
+  }
+}
+
 /// Pull-based [KeyedDecoder] cursor over a [JsonTokenReader], shared across
 /// native streaming and Wasm/JS reader drivers.
 final class StreamingKeyedDecoder
@@ -351,14 +1046,34 @@ final class StreamingKeyedDecoder
   final Decoder _rootDecoder;
   final KeyOptions? _options;
   final JsonKeyOptions? _compiledOptions;
+  final StreamingPathTracker? _tracker;
+  final int _frame;
   bool _started = false;
   bool _ended = false;
 
-  StreamingKeyedDecoder(this._reader, this._rootDecoder, {KeyOptions? options})
-    : _options = options,
-      _compiledOptions = (options == null || options.length == 0)
-          ? null
-          : _compileJsonKeyOptions(options);
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  StreamingKeyedDecoder(
+    this._reader,
+    this._rootDecoder, {
+    KeyOptions? options,
+    StreamingPathTracker? tracker,
+  }) : _options = options,
+       _compiledOptions = (options == null || options.length == 0)
+           ? null
+           : _compileJsonKeyOptions(options),
+       _tracker = tracker,
+       _frame = tracker != null ? tracker.pushFrame(1, options) : -1;
+
+  @override
+  StreamingPathTracker? get _pathTracker => _tracker;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _setPrimitiveListKind(int kind) {
+    _tracker?.activePrimKind = kind;
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -367,6 +1082,7 @@ final class StreamingKeyedDecoder
     if (!_started) {
       _reader.beginObject();
       _started = true;
+      _tracker?.markStarted(_frame);
     }
   }
 
@@ -376,11 +1092,16 @@ final class StreamingKeyedDecoder
   bool moveNextKey() {
     if (_ended) return false;
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
+    final t = _tracker;
+    t?.beforeMoveNextKey(_frame);
     final has = _reader.moveNext();
     if (!has) {
       _reader.endObject();
       _ended = true;
+      t?.popFrame(_frame);
+    } else {
+      t?.afterMoveNextKey(_frame);
     }
     return has;
   }
@@ -390,7 +1111,9 @@ final class StreamingKeyedDecoder
   @pragma('wasm:prefer-inline')
   String nextKey() {
     _ensureStarted();
-    return _reader.nextName();
+    final name = _reader.nextName();
+    _tracker?.recordKeyName(_frame, name);
+    return name;
   }
 
   @override
@@ -413,10 +1136,17 @@ final class StreamingKeyedDecoder
     _ensureStarted();
     final compiled = _resolveOptions(options);
     if (compiled == null) {
-      _reader.nextName();
+      final name = _reader.nextName();
+      _tracker?.recordKeyName(_frame, name);
       return -1;
     }
-    return _reader.selectName(compiled);
+    final idx = _reader.selectName(compiled);
+    _tracker?.recordKeyIndex(
+      _frame,
+      idx,
+      identical(options, _options) ? null : options,
+    );
+    return idx;
   }
 
   @override
@@ -433,19 +1163,25 @@ final class StreamingKeyedDecoder
   @override
   void skipValue() {
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
     _reader.skipValue();
   }
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  Decoder nestedDecoder() => _rootDecoder;
+  Decoder nestedDecoder() {
+    _tracker?.setInChild(_frame, true);
+    return _rootDecoder;
+  }
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  T decodeValue<T>(Decodable<T> decodable) => decodable.decode(_rootDecoder);
+  T decodeValue<T>(Decodable<T> decodable) {
+    _tracker?.setInChild(_frame, true);
+    return decodable.decode(_rootDecoder);
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -461,14 +1197,20 @@ final class StreamingKeyedDecoder
   @override
   List<T> decodeList<T>(Decodable<T> decodable) {
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
-    final list = <T>[];
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
+    final t = _tracker;
+    t?.setListElem(_frame, -2);
     _reader.beginArray();
+    final list = <T>[];
+    t?.setListElem(_frame, -3);
     while (_reader.moveNext()) {
-      clearStreamingBufferedObject(_rootDecoder);
+      clearStreamingBufferedObject(_rootDecoder, t);
+      t?.setListElem(_frame, list.length);
       list.add(decodable.decode(_rootDecoder));
+      t?.setListElem(_frame, -3);
     }
     _reader.endArray();
+    t?.setListElem(_frame, -1);
     return list;
   }
 
@@ -486,41 +1228,74 @@ final class StreamingKeyedDecoder
 final class StreamingMapDecoder implements MapDecoder {
   final JsonTokenReader _reader;
   final Decoder _rootDecoder;
-  final StringMapKeyDecoder _keyDecoder;
-  final _StreamingMapValueDecoder _valueDecoder;
+  final StreamingPathTracker? _tracker;
+  final int _frame;
+  late final StringMapKeyDecoder _keyDecoder = StringMapKeyDecoder(
+    _rootDecoder.userInfo,
+    onError: _enrichMapKeyError,
+  );
+  late final _StreamingMapValueDecoder _valueDecoder =
+      _StreamingMapValueDecoder(_reader, _rootDecoder, _tracker);
   bool _started = false;
   bool _ended = false;
   bool _hasActiveEntry = false;
 
-  StreamingMapDecoder(JsonTokenReader reader, Decoder rootDecoder)
-    : _reader = reader,
-      _rootDecoder = rootDecoder,
-      _keyDecoder = StringMapKeyDecoder(rootDecoder.userInfo),
-      _valueDecoder = _StreamingMapValueDecoder(reader, rootDecoder);
+  StreamingMapDecoder(
+    this._reader,
+    this._rootDecoder, [
+    StreamingPathTracker? tracker,
+  ]) : _tracker = tracker,
+       _frame = tracker != null ? tracker.pushFrame(3) : -1;
 
   @override
   int? get length => null;
 
+  CodableException _enrichMapKeyError(CodableException e) {
+    final path = List<Object>.unmodifiable(
+      _tracker != null ? _tracker.buildLeafPath() : const <Object>[],
+    );
+    final enriched = CodableException(
+      e.message,
+      path: path,
+      actualValue: e.actualValue,
+      underlyingError: e.underlyingError,
+    );
+    _tracker?.record(enriched);
+    return enriched;
+  }
+
+  @pragma('vm:never-inline')
+  @pragma('wasm:never-inline')
   void _startObject() {
-    final token = _reader.peek();
-    if (token != JsonTokenType.beginObject) {
-      throw CodableException(
-        'Expected JSON object for map(), found $token',
-        actualValue: _tryReadDiagnosticScalar(_reader),
+    try {
+      _reader.beginObject();
+      _started = true;
+      _tracker?.markStarted(_frame);
+    } on FormatException catch (e) {
+      _ended = true;
+      _tracker?.popFrame(_frame);
+      rethrowStreamingMismatch(
+        _reader,
+        _tracker,
+        e,
+        'JSON object for map()',
+        sameTokenMalformed: JsonTokenType.beginObject,
       );
     }
-    _reader.beginObject();
-    _started = true;
   }
 
   void _endObject() {
     _reader.endObject();
     _ended = true;
     _hasActiveEntry = false;
+    _tracker?.popFrame(_frame);
   }
 
-  static Never _throwNoActiveEntry() =>
-      throw const CodableException('No active map entry');
+  Never _throwNoActiveEntry() => throwStreamingError(
+    _tracker,
+    'No active map entry',
+    explicitPath: _tracker?.buildContainerPath() ?? const <Object>[],
+  );
 
   @override
   @pragma('vm:prefer-inline')
@@ -528,12 +1303,16 @@ final class StreamingMapDecoder implements MapDecoder {
   bool moveNextEntry() {
     if (_ended) return false;
     if (!_started) _startObject();
-    clearStreamingBufferedObject(_rootDecoder);
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
+    _hasActiveEntry = false;
+    _tracker?.beginMoveNextMapEntry(_frame);
     if (!_reader.moveNext()) {
       _endObject();
       return false;
     }
-    _keyDecoder.key = _reader.nextName();
+    final key = _reader.nextName();
+    _tracker?.finishMoveNextMapEntry(_frame, key);
+    _keyDecoder.key = key;
     _hasActiveEntry = true;
     return true;
   }
@@ -543,6 +1322,7 @@ final class StreamingMapDecoder implements MapDecoder {
   @pragma('wasm:prefer-inline')
   Decoder keyDecoder() {
     if (!_hasActiveEntry) _throwNoActiveEntry();
+    _tracker?.setInChild(_frame, false);
     return _keyDecoder;
   }
 
@@ -551,6 +1331,7 @@ final class StreamingMapDecoder implements MapDecoder {
   @pragma('wasm:prefer-inline')
   Decoder valueDecoder() {
     if (!_hasActiveEntry) _throwNoActiveEntry();
+    _tracker?.setInChild(_frame, true);
     return _valueDecoder;
   }
 }
@@ -561,8 +1342,10 @@ final class _StreamingMapValueDecoder
   @override
   final JsonTokenReader _reader;
   final Decoder _rootDecoder;
+  @override
+  final StreamingPathTracker? _pathTracker;
 
-  _StreamingMapValueDecoder(this._reader, this._rootDecoder);
+  _StreamingMapValueDecoder(this._reader, this._rootDecoder, this._pathTracker);
 
   @override
   bool get isHumanReadable => true;
@@ -578,8 +1361,8 @@ final class _StreamingMapValueDecoder
   @pragma('wasm:prefer-inline')
   void _ensureStarted() {
     if (hasStreamingBufferedObject(_rootDecoder)) {
-      clearStreamingBufferedObject(_rootDecoder);
-      throw const CodableException('Expected scalar value, found object');
+      clearStreamingBufferedObject(_rootDecoder, _pathTracker);
+      throwStreamingError(_pathTracker, 'Expected scalar value, found object');
     }
   }
 
@@ -588,7 +1371,7 @@ final class _StreamingMapValueDecoder
   @pragma('wasm:prefer-inline')
   ValueKind peekKind() {
     if (hasStreamingBufferedObject(_rootDecoder)) return ValueKind.map;
-    return streamingTokenTypeToValueKind(_reader.peek());
+    return streamingTokenTypeToValueKind(_reader.peek(), _pathTracker);
   }
 
   @override
@@ -658,12 +1441,34 @@ final class StreamingUnkeyedDecoder
   @override
   final JsonTokenReader _reader;
   final Decoder _rootDecoder;
+  final StreamingPathTracker? _tracker;
+  final int _frame;
+  int _index = -1;
   bool _started = false;
+  bool _ended = false;
+  bool _hadChild = false;
 
-  StreamingUnkeyedDecoder(this._reader, this._rootDecoder);
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  StreamingUnkeyedDecoder(
+    this._reader,
+    this._rootDecoder, [
+    StreamingPathTracker? tracker,
+  ]) : _tracker = tracker,
+       _frame = tracker != null ? tracker.pushFrame(2) : -1;
+
+  @override
+  StreamingPathTracker? get _pathTracker => _tracker;
 
   @override
   int? get length => null;
+
+  @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
+  void _setPrimitiveListKind(int kind) {
+    _tracker?.activePrimKind = kind;
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -672,6 +1477,7 @@ final class StreamingUnkeyedDecoder
     if (!_started) {
       _reader.beginArray();
       _started = true;
+      _tracker?.markStarted(_frame);
     }
   }
 
@@ -679,11 +1485,22 @@ final class StreamingUnkeyedDecoder
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
   bool moveNext() {
+    if (_ended) return false;
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
+    final t = _tracker;
+    if (t != null) {
+      t.beforeMoveNextElem(_frame, _hadChild);
+      _hadChild = false;
+    }
     final has = _reader.moveNext();
     if (!has) {
       _reader.endArray();
+      _ended = true;
+      t?.popFrame(_frame);
+    } else {
+      final ord = ++_index;
+      t?.finishMoveNextElem(_frame, ord);
     }
     return has;
   }
@@ -691,19 +1508,27 @@ final class StreamingUnkeyedDecoder
   @override
   void skipElement() {
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
     _reader.skipValue();
   }
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  Decoder nestedDecoder() => _rootDecoder;
+  Decoder nestedDecoder() {
+    _hadChild = true;
+    _tracker?.setInChild(_frame, true);
+    return _rootDecoder;
+  }
 
   @override
   @pragma('vm:prefer-inline')
   @pragma('wasm:prefer-inline')
-  T decodeElement<T>(Decodable<T> decodable) => decodable.decode(_rootDecoder);
+  T decodeElement<T>(Decodable<T> decodable) {
+    _hadChild = true;
+    _tracker?.setInChild(_frame, true);
+    return decodable.decode(_rootDecoder);
+  }
 
   @override
   @pragma('vm:prefer-inline')
@@ -719,14 +1544,20 @@ final class StreamingUnkeyedDecoder
   @override
   List<T> decodeList<T>(Decodable<T> decodable) {
     _ensureStarted();
-    clearStreamingBufferedObject(_rootDecoder);
-    final list = <T>[];
+    clearStreamingBufferedObject(_rootDecoder, _tracker);
+    final t = _tracker;
+    t?.setListElem(_frame, -2);
     _reader.beginArray();
+    final list = <T>[];
+    t?.setListElem(_frame, -3);
     while (_reader.moveNext()) {
-      clearStreamingBufferedObject(_rootDecoder);
+      clearStreamingBufferedObject(_rootDecoder, t);
+      t?.setListElem(_frame, list.length);
       list.add(decodable.decode(_rootDecoder));
+      t?.setListElem(_frame, -3);
     }
     _reader.endArray();
+    t?.setListElem(_frame, -1);
     return list;
   }
 
@@ -747,8 +1578,14 @@ final class StreamingSingleValueDecoder
   @override
   final JsonTokenReader _reader;
   final Decoder _rootDecoder;
+  @override
+  final StreamingPathTracker? _pathTracker;
 
-  StreamingSingleValueDecoder(this._reader, this._rootDecoder);
+  StreamingSingleValueDecoder(
+    this._reader,
+    this._rootDecoder, [
+    this._pathTracker,
+  ]);
 
   @override
   @pragma('vm:prefer-inline')

@@ -9,31 +9,51 @@ import 'package:yaml/yaml.dart';
 
 import 'yaml_exception.dart';
 
-bool _startsWithPath(List<Object> full, List<Object> prefix) {
-  if (full.length < prefix.length) return false;
-  for (var i = 0; i < prefix.length; i++) {
-    if (full[i] != prefix[i]) return false;
+List<Object> _resolveYamlErrorPath(_YamlTrace trace, CodableException e) {
+  if (identical(e, trace.attributedError)) {
+    return List<Object>.unmodifiable(e.path);
   }
-  return true;
-}
-
-List<Object> _mergePaths(List<Object> prefix, List<Object> suffix) {
-  if (suffix.isEmpty) return List<Object>.unmodifiable(prefix);
-  if (prefix.isEmpty || _startsWithPath(suffix, prefix)) {
-    return List<Object>.unmodifiable(suffix);
+  if (e.path.isEmpty) {
+    return List<Object>.unmodifiable(trace.path);
   }
-  return List<Object>.unmodifiable([...prefix, ...suffix]);
+  return List<Object>.unmodifiable(<Object>[...trace.containerPath, ...e.path]);
 }
 
 final class _YamlTrace {
   YamlNode node;
+  List<Object> containerPath = const [];
   List<Object> path = const [];
+  CodableException? attributedError;
 
   _YamlTrace(this.node);
 
-  void set(YamlNode nextNode, List<Object> nextPath) {
+  void setContainer(YamlNode nextNode, List<Object> nextContainerPath) {
     node = nextNode;
-    path = nextPath;
+    containerPath = nextContainerPath;
+    path = nextContainerPath;
+  }
+
+  void setLeaf(
+    YamlNode nextNode,
+    List<Object> nextContainerPath,
+    List<Object> nextLeafPath,
+  ) {
+    node = nextNode;
+    containerPath = nextContainerPath;
+    path = nextLeafPath;
+  }
+
+  Never fail(CodableException error) {
+    final withPath = error.path.isNotEmpty || path.isEmpty
+        ? error
+        : CodableException(
+            error.message,
+            path: List<Object>.unmodifiable(path),
+            actualValue: error.actualValue,
+            underlyingError: error.underlyingError,
+          );
+    attributedError = withPath;
+    throw withPath;
   }
 }
 
@@ -293,7 +313,7 @@ final class YamlCodableDecoder implements Decoder {
       throw YamlCodableException(
         e.message,
         decoder._trace.node.span,
-        path: _mergePaths(decoder._trace.path, e.path),
+        path: _resolveYamlErrorPath(decoder._trace, e),
         actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
         source: yaml,
@@ -309,17 +329,20 @@ final class YamlCodableDecoder implements Decoder {
 
   @override
   ValueKind peekKind() {
-    _trace.set(_node, _path);
+    _trace.setContainer(_node, _path);
     return _yamlNodeKind(_node);
   }
 
   YamlMap _requireMap() {
-    _trace.set(_node, _path);
+    _trace.setContainer(_node, _path);
     return switch (_node) {
       final YamlMap map => map,
-      final node => throw CodableException.typeMismatch(
-        expectedType: YamlMap,
-        actualValue: _scalarValue(node),
+      final node => _trace.fail(
+        CodableException.typeMismatch(
+          expectedType: YamlMap,
+          actualValue: _scalarValue(node),
+          path: _path,
+        ),
       ),
     };
   }
@@ -337,19 +360,27 @@ final class YamlCodableDecoder implements Decoder {
 
   @override
   UnkeyedDecoder unkeyed() {
-    _trace.set(_node, _path);
+    _trace.setContainer(_node, _path);
     return switch (_node) {
       final YamlList list => _YamlUnkeyedDecoder(list, _path, _trace, userInfo),
-      final node => throw CodableException.typeMismatch(
-        expectedType: YamlList,
-        actualValue: _scalarValue(node),
+      final node => _trace.fail(
+        CodableException.typeMismatch(
+          expectedType: YamlList,
+          actualValue: _scalarValue(node),
+          path: _path,
+        ),
       ),
     };
   }
 
   @override
   SingleValueDecoder singleValue() {
-    _trace.set(_node, _path);
+    if (_isMapKey) {
+      _trace.node = _node;
+      _trace.path = _path;
+    } else {
+      _trace.setContainer(_node, _path);
+    }
     return _YamlSingleValueDecoder(
       _node,
       _path,
@@ -379,36 +410,73 @@ mixin _YamlSequentialCursorMixin {
     return node;
   }
 
-  ValueKind peekKind() => _yamlNodeKind(_peekNode());
+  T _runScalarRead<T>(T Function() fn) {
+    try {
+      return fn();
+    } on CodableException catch (e) {
+      _trace.fail(e);
+    }
+  }
+
+  ValueKind peekKind() => _runScalarRead(() => _yamlNodeKind(_peekNode()));
 
   void readNull() {
     final node = _peekNode();
     if (_scalarValue(node) != null) {
-      throw CodableException.typeMismatch(
-        expectedType: Null,
-        actualValue: _scalarValue(node),
+      _trace.fail(
+        CodableException.typeMismatch(
+          expectedType: Null,
+          actualValue: _scalarValue(node),
+        ),
       );
     }
     _consumeCurrent();
   }
 
-  int readInt() =>
-      _readYamlInt(_takeNode(), coerceString: _coerceStringScalars);
+  int readInt() {
+    final v = _runScalarRead(
+      () => _readYamlInt(_peekNode(), coerceString: _coerceStringScalars),
+    );
+    _consumeCurrent();
+    return v;
+  }
 
-  double readDouble() =>
-      _readYamlDouble(_takeNode(), coerceString: _coerceStringScalars);
+  double readDouble() {
+    final v = _runScalarRead(
+      () => _readYamlDouble(_peekNode(), coerceString: _coerceStringScalars),
+    );
+    _consumeCurrent();
+    return v;
+  }
 
-  num readNum() =>
-      _readYamlNum(_takeNode(), coerceString: _coerceStringScalars);
+  num readNum() {
+    final v = _runScalarRead(
+      () => _readYamlNum(_peekNode(), coerceString: _coerceStringScalars),
+    );
+    _consumeCurrent();
+    return v;
+  }
 
-  String readString() => _readYamlString(_takeNode());
+  String readString() {
+    final v = _runScalarRead(() => _readYamlString(_peekNode()));
+    _consumeCurrent();
+    return v;
+  }
 
-  bool readBool() =>
-      _readYamlBool(_takeNode(), coerceString: _coerceStringScalars);
+  bool readBool() {
+    final v = _runScalarRead(
+      () => _readYamlBool(_peekNode(), coerceString: _coerceStringScalars),
+    );
+    _consumeCurrent();
+    return v;
+  }
 
   Decoder nestedDecoder() {
     final path = _peekPath();
     final node = _takeNode();
+    if (!_coerceStringScalars) {
+      _trace.setContainer(node, path);
+    }
     return YamlCodableDecoder._(
       node,
       path,
@@ -445,7 +513,7 @@ final class _YamlKeyedDecoder
     if (_phase == 1) return true;
     _phase = 0;
     if (_index >= _entries.length) {
-      _trace.set(_map, _parentPath);
+      _trace.setContainer(_map, _parentPath);
       return false;
     }
     final entry = _entries[_index++];
@@ -456,23 +524,25 @@ final class _YamlKeyedDecoder
     _activeValueNode = entry.value;
     _activePath = [..._parentPath, _activeKey ?? (rawKey ?? '?')];
     _phase = 1;
-    _trace.set(entry.value, _activePath);
+    _trace.setLeaf(entry.value, _parentPath, _activePath);
     return true;
   }
 
   @override
   YamlNode _peekNode() {
     if (_phase == 0 && !moveNextKey()) {
-      throw const CodableException('No more keys in YAML map');
+      _trace.setContainer(_map, _parentPath);
+      _trace.fail(const CodableException('No more keys in YAML map'));
     }
-    _trace.set(_activeValueNode!, _activePath);
+    _trace.setLeaf(_activeValueNode!, _parentPath, _activePath);
     return _activeValueNode!;
   }
 
   @override
   List<Object> _peekPath() {
     if (_phase == 0 && !moveNextKey()) {
-      throw const CodableException('No more keys in YAML map');
+      _trace.setContainer(_map, _parentPath);
+      _trace.fail(const CodableException('No more keys in YAML map'));
     }
     return _activePath;
   }
@@ -485,17 +555,20 @@ final class _YamlKeyedDecoder
   @override
   String nextKey() {
     if (!moveNextKey()) {
-      throw const CodableException('No more keys in YAML map');
+      _trace.setContainer(_map, _parentPath);
+      _trace.fail(const CodableException('No more keys in YAML map'));
     }
     final key = _activeKey;
     if (key != null) {
       _phase = 2;
       return key;
     }
-    _trace.set(_activeKeyNode!, _parentPath);
-    throw CodableException.typeMismatch(
-      expectedType: String,
-      actualValue: _scalarValue(_activeKeyNode!),
+    _trace.setContainer(_activeKeyNode!, _parentPath);
+    _trace.fail(
+      CodableException.typeMismatch(
+        expectedType: String,
+        actualValue: _scalarValue(_activeKeyNode!),
+      ),
     );
   }
 
@@ -532,9 +605,9 @@ final class _YamlMappedDecoder
   YamlNode? _lookupNode(String key) {
     final node = _map.nodes[key];
     if (node != null) {
-      _trace.set(node, [..._parentPath, key]);
+      _trace.setLeaf(node, _parentPath, [..._parentPath, key]);
     } else {
-      _trace.set(_map, _parentPath);
+      _trace.setContainer(_map, _parentPath);
     }
     return node;
   }
@@ -542,7 +615,15 @@ final class _YamlMappedDecoder
   YamlNode _requireNode(String key) {
     final node = _lookupNode(key);
     if (node != null) return node;
-    throw CodableException.missingKey(key);
+    _trace.fail(CodableException.missingKey(key, path: _parentPath));
+  }
+
+  T _runMappedRead<T>(T Function() fn) {
+    try {
+      return fn();
+    } on CodableException catch (e) {
+      _trace.fail(e);
+    }
   }
 
   @override
@@ -551,33 +632,37 @@ final class _YamlMappedDecoder
   @override
   ValueKind peekKind(String key) {
     final node = _lookupNode(key);
-    return node == null ? ValueKind.nullValue : _yamlNodeKind(node);
+    return node == null
+        ? ValueKind.nullValue
+        : _runMappedRead(() => _yamlNodeKind(node));
   }
 
   @override
-  int readInt(String key) => _readYamlInt(_requireNode(key));
+  int readInt(String key) =>
+      _runMappedRead(() => _readYamlInt(_requireNode(key)));
 
   @override
-  double readDouble(String key) => _readYamlDouble(_requireNode(key));
+  double readDouble(String key) =>
+      _runMappedRead(() => _readYamlDouble(_requireNode(key)));
 
   @override
-  num readNum(String key) => _readYamlNum(_requireNode(key));
+  num readNum(String key) =>
+      _runMappedRead(() => _readYamlNum(_requireNode(key)));
 
   @override
-  String readString(String key) => _readYamlString(_requireNode(key));
+  String readString(String key) =>
+      _runMappedRead(() => _readYamlString(_requireNode(key)));
 
   @override
-  bool readBool(String key) => _readYamlBool(_requireNode(key));
+  bool readBool(String key) =>
+      _runMappedRead(() => _readYamlBool(_requireNode(key)));
 
   @override
   Decoder nestedDecoder(String key) {
     final node = _requireNode(key);
-    return YamlCodableDecoder._(
-      node,
-      [..._parentPath, key],
-      _trace,
-      userInfo: _userInfo,
-    );
+    final nextPath = [..._parentPath, key];
+    _trace.setContainer(node, nextPath);
+    return YamlCodableDecoder._(node, nextPath, _trace, userInfo: _userInfo);
   }
 }
 
@@ -600,7 +685,7 @@ final class _YamlMapDecoder implements MapDecoder {
   bool moveNextEntry() {
     final next = _index + 1;
     if (next >= _entries.length) {
-      _trace.set(_map, _parentPath);
+      _trace.setContainer(_map, _parentPath);
       return false;
     }
     _index = next;
@@ -609,8 +694,9 @@ final class _YamlMapDecoder implements MapDecoder {
 
   MapEntry<dynamic, YamlNode> _currentEntry() {
     if (_index < 0 || _index >= _entries.length) {
-      throw const CodableException(
-        'MapDecoder cursor not positioned at an entry',
+      _trace.setContainer(_map, _parentPath);
+      _trace.fail(
+        const CodableException('MapDecoder cursor not positioned at an entry'),
       );
     }
     return _entries[_index];
@@ -621,7 +707,7 @@ final class _YamlMapDecoder implements MapDecoder {
     final entry = _currentEntry();
     final keyNode = entry.key as YamlNode;
     final keyPath = [..._parentPath, _scalarValue(keyNode) ?? '?'];
-    _trace.set(keyNode, keyPath);
+    _trace.setLeaf(keyNode, _parentPath, keyPath);
     return YamlCodableDecoder._(
       keyNode,
       keyPath,
@@ -637,7 +723,7 @@ final class _YamlMapDecoder implements MapDecoder {
     final keyNode = entry.key as YamlNode;
     final valNode = entry.value;
     final valPath = [..._parentPath, _scalarValue(keyNode) ?? '?'];
-    _trace.set(valNode, valPath);
+    _trace.setContainer(valNode, valPath);
     return YamlCodableDecoder._(valNode, valPath, _trace, userInfo: _userInfo);
   }
 }
@@ -670,22 +756,23 @@ final class _YamlUnkeyedDecoder
     if (!_consumed) return true;
     final next = _index + 1;
     if (next >= _list.nodes.length) {
-      _trace.set(_list, _parentPath);
+      _trace.setContainer(_list, _parentPath);
       return false;
     }
     _index = next;
     _consumed = false;
-    _trace.set(_list.nodes[_index], [..._parentPath, _index]);
+    _trace.setLeaf(_list.nodes[_index], _parentPath, [..._parentPath, _index]);
     return true;
   }
 
   @override
   YamlNode _peekNode() {
     if (_index < 0 || _index >= _list.nodes.length || _consumed) {
-      throw const CodableException('No active element in YAML list');
+      _trace.setContainer(_list, _parentPath);
+      _trace.fail(const CodableException('No active element in YAML list'));
     }
     final node = _list.nodes[_index];
-    _trace.set(node, [..._parentPath, _index]);
+    _trace.setLeaf(node, _parentPath, [..._parentPath, _index]);
     return node;
   }
 
@@ -728,7 +815,12 @@ final class _YamlSingleValueDecoder
 
   @override
   YamlNode _peekNode() {
-    _trace.set(_node, _path);
+    if (_coerceStringScalars) {
+      _trace.node = _node;
+      _trace.path = _path;
+    } else {
+      _trace.setContainer(_node, _path);
+    }
     return _node;
   }
 
@@ -741,13 +833,19 @@ final class _YamlSingleValueDecoder
   @override
   Uint8List readBytes() {
     final node = _peekNode();
-    final kind = _yamlNodeKind(node);
+    final kind = _runScalarRead(() => _yamlNodeKind(node));
     if (kind != ValueKind.string && kind != ValueKind.list) {
-      throw CodableException(
-        'Expected base64 string or byte list, got $kind',
-        actualValue: node is YamlScalar ? node.value : null,
+      _trace.fail(
+        CodableException(
+          'Expected base64 string or byte list, got $kind',
+          actualValue: node is YamlScalar ? node.value : null,
+        ),
       );
     }
-    return super.readBytes();
+    try {
+      return super.readBytes();
+    } on CodableException catch (e) {
+      _trace.fail(e);
+    }
   }
 }

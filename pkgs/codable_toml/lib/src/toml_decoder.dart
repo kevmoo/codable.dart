@@ -14,27 +14,22 @@ Map<String, int> _compileTomlKeyMap(List<String> keys) => <String, int>{
   for (var i = 0; i < keys.length; i++) keys[i]: i,
 };
 
-bool _startsWithPath(List<Object> full, List<Object> prefix) {
-  if (full.length < prefix.length) return false;
-  for (var i = 0; i < prefix.length; i++) {
-    if (full[i] != prefix[i]) return false;
+List<Object> _resolveTomlErrorPath(_TomlTrace trace, List<Object> errorPath) {
+  if (errorPath.isEmpty) {
+    return List<Object>.unmodifiable(trace.path);
   }
-  return true;
-}
-
-List<Object> _mergePaths(List<Object> prefix, List<Object> suffix) {
-  if (suffix.isEmpty) return List<Object>.unmodifiable(prefix);
-  if (prefix.isEmpty || _startsWithPath(suffix, prefix)) {
-    return List<Object>.unmodifiable(suffix);
-  }
-  return List<Object>.unmodifiable(<Object>[...prefix, ...suffix]);
+  return List<Object>.unmodifiable(<Object>[
+    ...trace.containerPath,
+    ...errorPath,
+  ]);
 }
 
 TomlCodableException _enrichTomlException(
   TomlCodableException e,
   _TomlTrace trace,
 ) {
-  final mergedPath = _mergePaths(trace.path, e.path);
+  if (identical(e, trace.attributedError)) return e;
+  final mergedPath = _resolveTomlErrorPath(trace, e.path);
   if (e.line != null &&
       e.column != null &&
       mergedPath.length == e.path.length) {
@@ -84,13 +79,26 @@ String _describeTomlNode(TomlNode node) => switch (node) {
 final class _TomlTrace {
   final String source;
   int offset;
+  List<Object> containerPath = const <Object>[];
   List<Object> path = const <Object>[];
+  TomlCodableException? attributedError;
 
   _TomlTrace(this.source, {this.offset = 0});
 
-  void set(int nextOffset, List<Object> nextPath) {
+  void setContainer(int nextOffset, List<Object> nextContainerPath) {
     offset = nextOffset;
-    path = nextPath;
+    containerPath = nextContainerPath;
+    path = nextContainerPath;
+  }
+
+  void setLeaf(
+    int nextOffset,
+    List<Object> nextContainerPath,
+    List<Object> nextLeafPath,
+  ) {
+    offset = nextOffset;
+    containerPath = nextContainerPath;
+    path = nextLeafPath;
   }
 
   Never fail(
@@ -101,7 +109,7 @@ final class _TomlTrace {
     Object? underlyingError,
   }) {
     final (line, column) = computeTomlLineColumn(source, atOffset ?? offset);
-    throw TomlCodableException(
+    final ex = TomlCodableException(
       message,
       line: line,
       column: column,
@@ -109,6 +117,8 @@ final class _TomlTrace {
       actualValue: actualValue,
       underlyingError: underlyingError,
     );
+    attributedError = ex;
+    throw ex;
   }
 }
 
@@ -298,7 +308,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
     } on CodableException catch (e) {
       decoder._trace.fail(
         e.message,
-        atPath: _mergePaths(decoder._trace.path, e.path),
+        atPath: _resolveTomlErrorPath(decoder._trace, e.path),
         actualValue: e.actualValue,
         underlyingError: e.underlyingError ?? e,
       );
@@ -319,19 +329,19 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
 
   @override
   ValueKind peekKind() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     return _tomlNodeKind(_node);
   }
 
   @override
   TomlDateTime? tryReadTomlDateTime() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     final node = _node;
     return node is TomlDateTimeValue ? node.value : null;
   }
 
   TomlTable _requireTable(String containerName) {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     final node = _node;
     if (node is TomlTable) return node;
     _trace.fail(
@@ -364,7 +374,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
 
   @override
   UnkeyedDecoder unkeyed() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     final node = _node;
     if (node is! TomlArray) {
       _trace.fail(
@@ -379,7 +389,7 @@ final class TomlCodableDecoder implements Decoder, TomlNativeDateTimeSource {
 
   @override
   SingleValueDecoder singleValue() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     return _TomlSingleValueDecoder(_node, _path, _trace, _depth, userInfo);
   }
 }
@@ -434,6 +444,7 @@ mixin _TomlSequentialValueMixin {
   Decoder nestedDecoder() {
     final path = _peekPath();
     final node = _takeNode();
+    _trace.setContainer(node.offset, path);
     return TomlCodableDecoder._(
       node,
       path,
@@ -477,14 +488,14 @@ final class _TomlKeyedDecoder
     if (_phase == 1) return true;
     _phase = 0;
     if (_index >= _entries.length) {
-      _trace.set(_table.offset, _parentPath);
+      _trace.setContainer(_table.offset, _parentPath);
       return false;
     }
     final entry = _entries[_index++];
     _activeEntry = entry;
     _activePath = <Object>[..._parentPath, entry.key];
     _phase = 1;
-    _trace.set(entry.value.offset, _activePath);
+    _trace.setLeaf(entry.value.offset, _parentPath, _activePath);
     return true;
   }
 
@@ -514,7 +525,7 @@ final class _TomlKeyedDecoder
       _trace.fail('No more keys in TOML table', atOffset: _table.offset);
     }
     final node = _activeEntry!.value;
-    _trace.set(node.offset, _activePath);
+    _trace.setLeaf(node.offset, _parentPath, _activePath);
     return node;
   }
 
@@ -557,9 +568,12 @@ final class _TomlMappedDecoder
   TomlEntry? _lookupEntry(String key) {
     final entry = _table.entries[key];
     if (entry != null) {
-      _trace.set(entry.value.offset, <Object>[..._parentPath, key]);
+      _trace.setLeaf(entry.value.offset, _parentPath, <Object>[
+        ..._parentPath,
+        key,
+      ]);
     } else {
-      _trace.set(_table.offset, _parentPath);
+      _trace.setContainer(_table.offset, _parentPath);
     }
     return entry;
   }
@@ -609,9 +623,11 @@ final class _TomlMappedDecoder
   @override
   Decoder nestedDecoder(String key) {
     final entry = _requireEntry(key);
+    final nextPath = <Object>[..._parentPath, key];
+    _trace.setContainer(entry.value.offset, nextPath);
     return TomlCodableDecoder._(
       entry.value,
-      <Object>[..._parentPath, key],
+      nextPath,
       _trace,
       _childDepth,
       userInfo: _userInfo,
@@ -631,6 +647,7 @@ final class _TomlMapDecoder implements MapDecoder {
   late final StringMapKeyDecoder _keyDecoder = StringMapKeyDecoder(
     _userInfo,
     formatName: 'TOML',
+    onError: _enrichKeyError,
   );
 
   int _index = -1;
@@ -643,6 +660,20 @@ final class _TomlMapDecoder implements MapDecoder {
     this._userInfo,
   );
 
+  CodableException _enrichKeyError(CodableException e) {
+    final (line, column) = computeTomlLineColumn(_trace.source, _trace.offset);
+    final ex = TomlCodableException(
+      e.message,
+      line: line,
+      column: column,
+      path: List<Object>.unmodifiable(_trace.path),
+      actualValue: e.actualValue,
+      underlyingError: e.underlyingError,
+    );
+    _trace.attributedError = ex;
+    return ex;
+  }
+
   @override
   int get length => _entries.length;
 
@@ -650,7 +681,7 @@ final class _TomlMapDecoder implements MapDecoder {
   bool moveNextEntry() {
     final next = _index + 1;
     if (next >= _entries.length) {
-      _trace.set(_table.offset, _parentPath);
+      _trace.setContainer(_table.offset, _parentPath);
       return false;
     }
     _index = next;
@@ -672,7 +703,7 @@ final class _TomlMapDecoder implements MapDecoder {
   Decoder keyDecoder() {
     final entry = _currentEntry();
     final path = <Object>[..._parentPath, entry.key];
-    _trace.set(entry.keyOffset, path);
+    _trace.setLeaf(entry.keyOffset, _parentPath, path);
     _keyDecoder.key = entry.key;
     return _keyDecoder;
   }
@@ -681,7 +712,7 @@ final class _TomlMapDecoder implements MapDecoder {
   Decoder valueDecoder() {
     final entry = _currentEntry();
     final path = <Object>[..._parentPath, entry.key];
-    _trace.set(entry.value.offset, path);
+    _trace.setContainer(entry.value.offset, path);
     return TomlCodableDecoder._(
       entry.value,
       path,
@@ -723,12 +754,15 @@ final class _TomlUnkeyedDecoder
     if (_hasActive) return true;
     final next = _index + 1;
     if (next >= _array.items.length) {
-      _trace.set(_array.offset, _parentPath);
+      _trace.setContainer(_array.offset, _parentPath);
       return false;
     }
     _index = next;
     _hasActive = true;
-    _trace.set(_array.items[_index].offset, <Object>[..._parentPath, _index]);
+    _trace.setLeaf(_array.items[_index].offset, _parentPath, <Object>[
+      ..._parentPath,
+      _index,
+    ]);
     return true;
   }
 
@@ -738,7 +772,7 @@ final class _TomlUnkeyedDecoder
       _trace.fail('No more elements in TOML array', atOffset: _array.offset);
     }
     final node = _array.items[_index];
-    _trace.set(node.offset, <Object>[..._parentPath, _index]);
+    _trace.setLeaf(node.offset, _parentPath, <Object>[..._parentPath, _index]);
     return node;
   }
 
@@ -783,14 +817,14 @@ final class _TomlSingleValueDecoder
 
   @override
   TomlDateTime? tryReadTomlDateTime() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     final node = _node;
     return node is TomlDateTimeValue ? node.value : null;
   }
 
   @override
   TomlNode _peekNode() {
-    _trace.set(_node.offset, _path);
+    _trace.setContainer(_node.offset, _path);
     return _node;
   }
 

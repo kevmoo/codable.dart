@@ -21,12 +21,114 @@ const int msgPackJsMaxSafeHi = 0x1fffff;
 /// Exact `Number.MAX_SAFE_INTEGER` (`2^53 - 1`, `9007199254740991`).
 const int msgPackJsMaxSafeInt = 0x1fffff * msgPackTwoPow32 + 0xffffffff;
 
-/// Enforces the anti-DoS container nesting limit of [_maxMsgPackDepth].
-void checkMsgPackDepth(int depth) {
-  if (depth >= _maxMsgPackDepth) {
-    throw const CodableException(
-      'MessagePack nesting depth exceeds limit of 64',
+/// Linked cursor frame for zero-allocation MessagePack diagnostic path
+/// recovery.
+abstract base class MsgPackPathNode {
+  final MsgPackPathNode? parent;
+  bool ended = false;
+  bool inChild = false;
+
+  MsgPackPathNode(this.parent);
+
+  void appendSegment(List<Object> out);
+}
+
+/// Per-decode error-attribution and cursor stack state for MessagePack
+/// decoding.
+final class MsgPackPathState {
+  MsgPackPathNode? activeNode;
+  List<Object> mappedContainerPath = const [];
+  bool hasMappedLeaf = false;
+  Object? mappedLeaf;
+  bool inMapped = false;
+  CodableException? attributedError;
+
+  void enterMappedContainer(List<Object> path) {
+    inMapped = true;
+    mappedContainerPath = path;
+    hasMappedLeaf = false;
+    mappedLeaf = null;
+  }
+
+  void enterMappedLeaf(List<Object> containerPath, Object key) {
+    inMapped = true;
+    mappedContainerPath = containerPath;
+    hasMappedLeaf = true;
+    mappedLeaf = key;
+  }
+
+  void clearMapped() {
+    if (!inMapped) return;
+    inMapped = false;
+    hasMappedLeaf = false;
+    mappedLeaf = null;
+  }
+
+  MsgPackPathNode? _liveNode() {
+    var c = activeNode;
+    while (c != null && c.ended) {
+      c = c.parent;
+    }
+    return c;
+  }
+
+  List<Object> buildNodePath(MsgPackPathNode? leafNode) {
+    if (leafNode == null) return const [];
+    final chain = <MsgPackPathNode>[];
+    MsgPackPathNode? curr = leafNode;
+    while (curr != null) {
+      chain.add(curr);
+      curr = curr.parent;
+    }
+    final out = <Object>[];
+    for (var i = chain.length - 1; i >= 0; i--) {
+      if (!chain[i].ended) chain[i].appendSegment(out);
+    }
+    return out;
+  }
+
+  List<Object> buildContainerPath() {
+    if (inMapped) return mappedContainerPath;
+    final c = _liveNode();
+    if (c == null) return const [];
+    return buildNodePath(c.inChild ? c : c.parent);
+  }
+
+  List<Object> buildLeafPath([Object? extraSegment]) {
+    final List<Object> base;
+    if (inMapped) {
+      base = hasMappedLeaf
+          ? <Object>[...mappedContainerPath, mappedLeaf!]
+          : mappedContainerPath;
+    } else {
+      base = buildNodePath(_liveNode());
+    }
+    return extraSegment != null ? <Object>[...base, extraSegment] : base;
+  }
+
+  Never fail(
+    String message, {
+    Object? extraSegment,
+    Object? actualValue,
+    Object? underlyingError,
+  }) {
+    final ex = CodableException(
+      message,
+      path: List<Object>.unmodifiable(buildLeafPath(extraSegment)),
+      actualValue: actualValue,
+      underlyingError: underlyingError,
     );
+    attributedError = ex;
+    throw ex;
+  }
+}
+
+/// Enforces the anti-DoS container nesting limit of [_maxMsgPackDepth].
+void checkMsgPackDepth(int depth, [MsgPackPathState? pathState]) {
+  if (depth >= _maxMsgPackDepth) {
+    const msg = 'MessagePack nesting depth exceeds limit of 64';
+    if (pathState != null) pathState.fail(msg);
+    throw const CodableException(msg);
   }
 }
 
@@ -124,7 +226,7 @@ final class _MsgPackCompiledKeys {
   }
 }
 
-ValueKind _peekTaggedKind(int b) => switch (b) {
+ValueKind _peekTaggedKind(int b, MsgPackReader reader) => switch (b) {
   0xc0 => ValueKind.nullValue,
   0xc2 || 0xc3 => ValueKind.boolean,
   0xc4 || 0xc5 || 0xc6 => ValueKind.bytes,
@@ -132,10 +234,8 @@ ValueKind _peekTaggedKind(int b) => switch (b) {
   0xd9 || 0xda || 0xdb => ValueKind.string,
   0xdc || 0xdd => ValueKind.list,
   0xde || 0xdf => ValueKind.map,
-  0xc1 => throw const CodableException(
-    'Invalid MessagePack byte 0xc1 (never used)',
-  ),
-  _ => throw CodableException(
+  0xc1 => reader.fail('Invalid MessagePack byte 0xc1 (never used)'),
+  _ => reader.fail(
     'Unsupported MessagePack extension type: 0x${b.toRadixString(16)}',
   ),
 };
@@ -143,15 +243,43 @@ ValueKind _peekTaggedKind(int b) => switch (b) {
 /// Low-level single-pass cursor over MessagePack bytes.
 final class MsgPackReader {
   final Uint8List bytes;
+  final MsgPackPathState? pathState;
   late final ByteData _bd = ByteData.sublistView(bytes);
   late final Int32List _skipStack = Int32List(_maxMsgPackDepth);
   int offset;
 
-  MsgPackReader(this.bytes, [this.offset = 0]);
+  MsgPackReader(this.bytes, [this.offset = 0, this.pathState]);
+
+  @pragma('vm:never-inline')
+  @pragma('wasm:never-inline')
+  Never fail(
+    String message, {
+    Object? extraSegment,
+    Object? actualValue,
+    Object? underlyingError,
+  }) {
+    final state = pathState;
+    if (state != null) {
+      state.fail(
+        message,
+        extraSegment: extraSegment,
+        actualValue: actualValue,
+        underlyingError: underlyingError,
+      );
+    }
+    throw CodableException(
+      message,
+      path: extraSegment != null
+          ? List<Object>.unmodifiable(<Object>[extraSegment])
+          : const [],
+      actualValue: actualValue,
+      underlyingError: underlyingError,
+    );
+  }
 
   void _require(int count) {
     if (count < 0 || count > bytes.length - offset) {
-      throw const CodableException('Unexpected end of MessagePack payload');
+      fail('Unexpected end of MessagePack payload');
     }
   }
 
@@ -173,7 +301,7 @@ final class MsgPackReader {
       if (b <= 0x9f) return ValueKind.list;
       return ValueKind.string;
     }
-    return _peekTaggedKind(b);
+    return _peekTaggedKind(b, this);
   }
 
   int _readUint16() {
@@ -216,14 +344,12 @@ final class MsgPackReader {
     offset += 8;
     if (identical(1.0, 1)) {
       if (hi > msgPackJsMaxSafeHi) {
-        throw const CodableException(
+        fail(
           'MessagePack uint64 exceeds 53-bit safe integer range on JavaScript',
         );
       }
     } else if (hi >= 0x80000000) {
-      throw const CodableException(
-        'MessagePack uint64 overflows signed 64-bit int',
-      );
+      fail('MessagePack uint64 overflows signed 64-bit int');
     }
     return hi * msgPackTwoPow32 + lo;
   }
@@ -235,7 +361,7 @@ final class MsgPackReader {
     offset += 8;
     if (hi < 0x80000000) {
       if (identical(1.0, 1) && hi > msgPackJsMaxSafeHi) {
-        throw const CodableException(
+        fail(
           'MessagePack int64 exceeds 53-bit safe integer range on JavaScript',
         );
       }
@@ -246,9 +372,7 @@ final class MsgPackReader {
     if (identical(1.0, 1) &&
         (notHi > msgPackJsMaxSafeHi ||
             (notHi == msgPackJsMaxSafeHi && notLo == 0xffffffff))) {
-      throw const CodableException(
-        'MessagePack int64 exceeds 53-bit safe integer range on JavaScript',
-      );
+      fail('MessagePack int64 exceeds 53-bit safe integer range on JavaScript');
     }
     return -1 - (notHi * msgPackTwoPow32 + notLo);
   }
@@ -269,17 +393,18 @@ final class MsgPackReader {
 
   void _checkMapRemaining(int pairs) {
     if (pairs > (bytes.length - offset) ~/ 2) {
-      throw const CodableException('Unexpected end of MessagePack payload');
+      fail('Unexpected end of MessagePack payload');
     }
   }
 
   void _checkArrayRemaining(int len) {
     if (len > bytes.length - offset) {
-      throw const CodableException('Unexpected end of MessagePack payload');
+      fail('Unexpected end of MessagePack payload');
     }
   }
 
   int readMapLength() {
+    final saved = offset;
     final b = readByte();
     final int pairs;
     if (b >= 0x80 && b <= 0x8f) {
@@ -289,15 +414,15 @@ final class MsgPackReader {
     } else if (b == 0xdf) {
       pairs = _readUint32();
     } else {
-      throw CodableException(
-        'Expected MessagePack map, got 0x${b.toRadixString(16)}',
-      );
+      offset = saved;
+      fail('Expected MessagePack map, got 0x${b.toRadixString(16)}');
     }
     _checkMapRemaining(pairs);
     return pairs;
   }
 
   int readArrayLength() {
+    final saved = offset;
     final b = readByte();
     final int len;
     if (b >= 0x90 && b <= 0x9f) {
@@ -307,33 +432,36 @@ final class MsgPackReader {
     } else if (b == 0xdd) {
       len = _readUint32();
     } else {
-      throw CodableException(
-        'Expected MessagePack array, got 0x${b.toRadixString(16)}',
-      );
+      offset = saved;
+      fail('Expected MessagePack array, got 0x${b.toRadixString(16)}');
     }
     _checkArrayRemaining(len);
     return len;
   }
 
   void readNull() {
-    final b = readByte();
+    final b = peekByte();
     if (b != 0xc0) {
-      throw CodableException(
-        'Expected MessagePack nil (0xc0), got 0x${b.toRadixString(16)}',
-      );
+      fail('Expected MessagePack nil (0xc0), got 0x${b.toRadixString(16)}');
     }
+    offset++;
   }
 
   bool readBool() {
-    final b = readByte();
-    if (b == 0xc2) return false;
-    if (b == 0xc3) return true;
-    throw CodableException(
-      'Expected MessagePack bool, got 0x${b.toRadixString(16)}',
-    );
+    final b = peekByte();
+    if (b == 0xc2) {
+      offset++;
+      return false;
+    }
+    if (b == 0xc3) {
+      offset++;
+      return true;
+    }
+    fail('Expected MessagePack bool, got 0x${b.toRadixString(16)}');
   }
 
   int readInt() {
+    final saved = offset;
     final b = readByte();
     if (b <= 0x7f) return b;
     if (b >= 0xe0) return b - 0x100;
@@ -346,10 +474,13 @@ final class MsgPackReader {
       0xd1 => _readInt16(),
       0xd2 => _readInt32(),
       0xd3 => _readInt64(),
-      _ => throw CodableException(
-        'Expected MessagePack integer, got 0x${b.toRadixString(16)}',
-      ),
+      _ => _restoreAndFailInt(saved, b),
     };
+  }
+
+  Never _restoreAndFailInt(int saved, int b) {
+    offset = saved;
+    fail('Expected MessagePack integer, got 0x${b.toRadixString(16)}');
   }
 
   double readDouble() {
@@ -379,6 +510,7 @@ final class MsgPackReader {
   }
 
   (int start, int end) readTextStringSpan() {
+    final saved = offset;
     final b = readByte();
     final int len;
     if (b >= 0xa0 && b <= 0xbf) {
@@ -390,9 +522,8 @@ final class MsgPackReader {
     } else if (b == 0xdb) {
       len = _readUint32();
     } else {
-      throw CodableException(
-        'Expected MessagePack string, got 0x${b.toRadixString(16)}',
-      );
+      offset = saved;
+      fail('Expected MessagePack string, got 0x${b.toRadixString(16)}');
     }
     _require(len);
     final start = offset;
@@ -406,7 +537,7 @@ final class MsgPackReader {
     try {
       return utf8.decode(Uint8List.sublistView(bytes, start, end));
     } on FormatException catch (e) {
-      throw CodableException(
+      fail(
         'Invalid UTF-8 in MessagePack string: ${e.message}',
         underlyingError: e,
       );
@@ -437,7 +568,7 @@ final class MsgPackReader {
     if ((b >= 0x90 && b <= 0x9f) || b == 0xdc || b == 0xdd) {
       return _readByteArrayFallback();
     }
-    throw CodableException(
+    fail(
       'Expected MessagePack bin or byte array, got 0x${b.toRadixString(16)}',
     );
   }
@@ -446,10 +577,23 @@ final class MsgPackReader {
     final len = readArrayLength();
     final out = Uint8List(len);
     for (var i = 0; i < len; i++) {
-      final b = readInt();
+      final probe = MsgPackReader(bytes, offset);
+      final int b;
+      try {
+        b = probe.readInt();
+      } on CodableException catch (e) {
+        fail(
+          e.message,
+          extraSegment: i,
+          actualValue: e.actualValue,
+          underlyingError: e.underlyingError,
+        );
+      }
+      offset = probe.offset;
       if (b < 0 || b > 255) {
-        throw CodableException(
+        fail(
           'Expected byte in range 0..255, got $b',
+          extraSegment: i,
           actualValue: b,
         );
       }
@@ -461,7 +605,7 @@ final class MsgPackReader {
   void skipItem([int baseDepth = 0]) {
     final firstChildren = _consumeItemOrChildCount(readByte());
     if (firstChildren < 0) return;
-    checkMsgPackDepth(baseDepth);
+    checkMsgPackDepth(baseDepth, pathState);
     if (firstChildren == 0) return;
     final stack = _skipStack;
     var sp = 0;
@@ -475,7 +619,7 @@ final class MsgPackReader {
       stack[sp] = rem - 1;
       final nested = _consumeItemOrChildCount(readByte());
       if (nested >= 0) {
-        checkMsgPackDepth(baseDepth + sp + 1);
+        checkMsgPackDepth(baseDepth + sp + 1, pathState);
         if (nested > 0) stack[++sp] = nested;
       }
     }
@@ -509,9 +653,7 @@ final class MsgPackReader {
     0xdd => _skipArrayCount(_readUint32()),
     0xde => _skipMapCount(_readUint16()),
     0xdf => _skipMapCount(_readUint32()),
-    _ => throw const CodableException(
-      'Invalid MessagePack byte 0xc1 (never used)',
-    ),
+    _ => fail('Invalid MessagePack byte 0xc1 (never used)'),
   };
 
   int _skipScalarBytes(int len) {

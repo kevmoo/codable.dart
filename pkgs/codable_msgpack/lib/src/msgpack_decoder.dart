@@ -13,10 +13,44 @@ abstract interface class _MsgPackCursor {
   void drain();
 }
 
+final class _MsgPackFixedPathNode extends MsgPackPathNode {
+  final Object _segment;
+
+  _MsgPackFixedPathNode(super.parent, this._segment);
+
+  @override
+  void appendSegment(List<Object> out) {
+    out.add(_segment);
+  }
+}
+
+Object _decodeLazyMsgPackScalarOrFallback(
+  Uint8List bytes,
+  int offset,
+  Object fallback,
+) {
+  if (offset < 0 || offset >= bytes.length) return fallback;
+  try {
+    final probe = MsgPackReader(bytes, offset);
+    final b = probe.peekByte();
+    if (isMsgPackStringTag(b)) return probe.readString();
+    if (b == 0xc2 || b == 0xc3) return probe.readBool();
+    if (b == 0xca || b == 0xcb) return probe.readDouble();
+    if (b <= 0x7f || b >= 0xe0 || (b >= 0xcc && b <= 0xd3)) {
+      return probe.readInt();
+    }
+  } on Object {
+    return fallback;
+  }
+  return fallback;
+}
+
 /// Single-pass MessagePack [Decoder] (`isHumanReadable => false`).
 final class MsgPackCodableDecoder implements Decoder {
   final MsgPackReader _reader;
   final int _depth;
+  final MsgPackPathState _pathState;
+  final MsgPackPathNode? _parentNode;
   int? _bufferedMapOffset;
   _MsgPackCursor? _activeCursor;
 
@@ -24,11 +58,27 @@ final class MsgPackCodableDecoder implements Decoder {
   final Map<Object, Object?> userInfo;
 
   /// Creates a [MsgPackCodableDecoder] streaming over [bytes].
-  MsgPackCodableDecoder.fromBytes(Uint8List bytes, {this.userInfo = const {}})
-    : _reader = MsgPackReader(bytes),
-      _depth = 0;
+  factory MsgPackCodableDecoder.fromBytes(
+    Uint8List bytes, {
+    Map<Object, Object?> userInfo = const {},
+  }) {
+    final state = MsgPackPathState();
+    return MsgPackCodableDecoder._(
+      MsgPackReader(bytes, 0, state),
+      0,
+      state,
+      null,
+      userInfo: userInfo,
+    );
+  }
 
-  MsgPackCodableDecoder._(this._reader, this._depth, {required this.userInfo});
+  MsgPackCodableDecoder._(
+    this._reader,
+    this._depth,
+    this._pathState,
+    this._parentNode, {
+    required this.userInfo,
+  });
 
   /// Decodes [bytes] into [T] using [decodable].
   static T decode<T>(
@@ -37,9 +87,21 @@ final class MsgPackCodableDecoder implements Decoder {
     Map<Object, Object?> userInfo = const {},
   }) {
     final decoder = MsgPackCodableDecoder.fromBytes(bytes, userInfo: userInfo);
-    final result = decodable.decode(decoder);
-    decoder._drainActive();
-    return result;
+    final state = decoder._pathState;
+    try {
+      final result = decodable.decode(decoder);
+      decoder._drainActive();
+      return result;
+    } on CodableException catch (e) {
+      final enriched = enrichCodableException(
+        e,
+        alreadyAttributed: state.attributedError,
+        containerPath: state.buildContainerPath,
+        leafPath: state.buildLeafPath,
+      );
+      if (identical(enriched, e)) rethrow;
+      throw enriched;
+    }
   }
 
   void _drainActive() {
@@ -55,6 +117,13 @@ final class MsgPackCodableDecoder implements Decoder {
     }
   }
 
+  void _activateThisDecoderContext() {
+    _pathState.clearMapped();
+    final p = _parentNode;
+    if (p != null) p.inChild = true;
+    _pathState.activeNode = p;
+  }
+
   @override
   bool get isHumanReadable => false;
 
@@ -62,15 +131,25 @@ final class MsgPackCodableDecoder implements Decoder {
   Uint8List? get payload => _reader.bytes;
 
   @override
-  ValueKind peekKind() =>
-      _bufferedMapOffset != null ? ValueKind.map : _reader.peekKind();
+  ValueKind peekKind() {
+    if (_bufferedMapOffset != null) return ValueKind.map;
+    _activateThisDecoderContext();
+    return _reader.peekKind();
+  }
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
     _drainActive();
     _rewindIfBufferedMap();
-    checkMsgPackDepth(_depth);
-    final cursor = _MsgPackKeyedDecoder(_reader, userInfo, _depth + 1);
+    _activateThisDecoderContext();
+    checkMsgPackDepth(_depth, _pathState);
+    final cursor = _MsgPackKeyedDecoder(
+      _reader,
+      userInfo,
+      _depth + 1,
+      _pathState,
+      _parentNode,
+    );
     _activeCursor = cursor;
     return cursor;
   }
@@ -78,7 +157,8 @@ final class MsgPackCodableDecoder implements Decoder {
   @override
   MappedDecoder mapped() {
     _drainActive();
-    checkMsgPackDepth(_depth);
+    _activateThisDecoderContext();
+    checkMsgPackDepth(_depth, _pathState);
     final mapStart = _bufferedMapOffset ?? _reader.offset;
     _reader.offset = mapStart;
     final count = _reader.readMapLength();
@@ -86,12 +166,17 @@ final class MsgPackCodableDecoder implements Decoder {
     _reader.offset = mapStart;
     _reader.skipItem(_depth);
     _bufferedMapOffset = mapStart;
+    final basePath = _pathState.buildNodePath(_parentNode);
+    _pathState.enterMappedContainer(basePath);
     return _MsgPackMappedDecoder(
       _reader.bytes,
       entriesStart,
       count,
       userInfo,
       _depth + 1,
+      _pathState,
+      _parentNode,
+      basePath,
     );
   }
 
@@ -99,8 +184,15 @@ final class MsgPackCodableDecoder implements Decoder {
   MapDecoder map() {
     _drainActive();
     _rewindIfBufferedMap();
-    checkMsgPackDepth(_depth);
-    final cursor = _MsgPackMapDecoder(_reader, userInfo, _depth + 1);
+    _activateThisDecoderContext();
+    checkMsgPackDepth(_depth, _pathState);
+    final cursor = _MsgPackMapDecoder(
+      _reader,
+      userInfo,
+      _depth + 1,
+      _pathState,
+      _parentNode,
+    );
     _activeCursor = cursor;
     return cursor;
   }
@@ -109,8 +201,15 @@ final class MsgPackCodableDecoder implements Decoder {
   UnkeyedDecoder unkeyed() {
     _drainActive();
     _rewindIfBufferedMap();
-    checkMsgPackDepth(_depth);
-    final cursor = _MsgPackUnkeyedDecoder(_reader, userInfo, _depth + 1);
+    _activateThisDecoderContext();
+    checkMsgPackDepth(_depth, _pathState);
+    final cursor = _MsgPackUnkeyedDecoder(
+      _reader,
+      userInfo,
+      _depth + 1,
+      _pathState,
+      _parentNode,
+    );
     _activeCursor = cursor;
     return cursor;
   }
@@ -119,6 +218,7 @@ final class MsgPackCodableDecoder implements Decoder {
   SingleValueDecoder singleValue() {
     _drainActive();
     _rewindIfBufferedMap();
+    _activateThisDecoderContext();
     return _MsgPackSingleValueDecoder(this);
   }
 
@@ -193,21 +293,41 @@ mixin _MsgPackValueReaderMixin {
   }
 }
 
-final class _MsgPackKeyedDecoder
+final class _MsgPackKeyedDecoder extends MsgPackPathNode
     with BaseKeyedDecoderMixin, _MsgPackValueReaderMixin
     implements KeyedDecoder, _MsgPackCursor {
   @override
   final MsgPackReader _reader;
   final Map<Object, Object?> _userInfo;
   final int _childDepth;
+  final MsgPackPathState _pathState;
 
   int _remainingPairs;
   int _phase = 0; // 0 = idle, 1 = atKey, 2 = atValue
+  int _keyOffset = -1;
+  String? _decodedKey;
+  bool _hasKey = false;
   int _itemStartOffset = -1;
   MsgPackCodableDecoder? _pendingChild;
 
-  _MsgPackKeyedDecoder(this._reader, this._userInfo, this._childDepth)
-    : _remainingPairs = _reader.readMapLength();
+  _MsgPackKeyedDecoder(
+    this._reader,
+    this._userInfo,
+    this._childDepth,
+    this._pathState,
+    super.parent,
+  ) : _remainingPairs = _reader.readMapLength() {
+    _pathState.activeNode = this;
+  }
+
+  @override
+  void appendSegment(List<Object> out) {
+    if (!_hasKey) return;
+    out.add(
+      _decodedKey ??
+          _decodeLazyMsgPackScalarOrFallback(_reader.bytes, _keyOffset, '?'),
+    );
+  }
 
   void _finishPendingChild() {
     final child = _pendingChild;
@@ -235,28 +355,51 @@ final class _MsgPackKeyedDecoder
       _reader.skipItem(_childDepth);
       _reader.skipItem(_childDepth);
     }
+    ended = true;
+    _hasKey = false;
+    _decodedKey = null;
+    inChild = false;
+    _pathState.activeNode = parent;
   }
 
   @override
   bool moveNextKey() {
     _finishPendingChild();
+    _pathState.clearMapped();
     if (_phase == 1) return true;
     if (_phase == 2) {
       _reader.skipItem(_childDepth);
       _phase = 0;
     }
-    if (_remainingPairs <= 0) return false;
+    if (_remainingPairs <= 0) {
+      ended = true;
+      _hasKey = false;
+      _decodedKey = null;
+      inChild = false;
+      _pathState.activeNode = parent;
+      return false;
+    }
     _remainingPairs--;
+    _keyOffset = _reader.offset;
+    _decodedKey = null;
+    _hasKey = true;
+    inChild = false;
     _phase = 1;
+    _pathState.activeNode = this;
     return true;
   }
 
   @override
   String nextKey() {
     if (!moveNextKey()) {
-      throw const CodableException('No more keys in MessagePack map');
+      _hasKey = false;
+      _pathState.activeNode = this;
+      _reader.fail('No more keys in MessagePack map');
     }
+    _hasKey = false;
     final key = _reader.readString();
+    _decodedKey = key;
+    _hasKey = true;
     _phase = 2;
     return key;
   }
@@ -277,11 +420,16 @@ final class _MsgPackKeyedDecoder
   int selectKeyIndex(KeyOptions options) {
     if (!moveNextKey()) return -1;
     if (!isMsgPackStringTag(_reader.peekByte())) {
+      _hasKey = false;
       _reader.skipItem(_childDepth);
+      _hasKey = true;
       _phase = 2;
       return -1;
     }
+    _hasKey = false;
     final index = _reader.selectString(options);
+    if (index >= 0) _decodedKey = options[index];
+    _hasKey = true;
     _phase = 2;
     return index;
   }
@@ -297,14 +445,16 @@ final class _MsgPackKeyedDecoder
   @override
   void _prepareValueRead() {
     _finishPendingChild();
+    _pathState.clearMapped();
+    inChild = false;
+    _pathState.activeNode = this;
     if (_phase == 1) {
       _reader.skipItem(_childDepth);
       _phase = 2;
     }
     if (_phase != 2) {
-      throw const CodableException(
-        'MessagePack KeyedDecoder not positioned at value',
-      );
+      _hasKey = false;
+      _reader.fail('MessagePack KeyedDecoder not positioned at value');
     }
   }
 
@@ -324,10 +474,14 @@ final class _MsgPackKeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    inChild = true;
+    _pathState.activeNode = this;
     _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
+      _pathState,
+      this,
       userInfo: _userInfo,
     );
     _pendingChild = child;
@@ -345,6 +499,9 @@ final class _MsgPackMappedDecoder
   final int _count;
   final Map<Object, Object?> _userInfo;
   final int _childDepth;
+  final MsgPackPathState _pathState;
+  final MsgPackPathNode? _ownerNode;
+  final List<Object> _parentPath;
 
   _MsgPackMappedDecoder(
     this._bytes,
@@ -352,6 +509,9 @@ final class _MsgPackMappedDecoder
     this._count,
     this._userInfo,
     this._childDepth,
+    this._pathState,
+    this._ownerNode,
+    this._parentPath,
   );
 
   int _findValueOffset(String key) {
@@ -374,18 +534,36 @@ final class _MsgPackMappedDecoder
 
   MsgPackReader _readerAtKey(String key) {
     final offset = _findValueOffset(key);
-    if (offset < 0) throw CodableException.missingKey(key);
-    return MsgPackReader(_bytes, offset);
+    if (offset < 0) {
+      _pathState.enterMappedContainer(_parentPath);
+      final ex = CodableException.missingKey(key, path: _parentPath);
+      _pathState.attributedError = ex;
+      throw ex;
+    }
+    _pathState.enterMappedLeaf(_parentPath, key);
+    return MsgPackReader(_bytes, offset, _pathState);
   }
 
   @override
-  bool containsKey(String key) => _findValueOffset(key) >= 0;
+  bool containsKey(String key) {
+    final present = _findValueOffset(key) >= 0;
+    if (present) {
+      _pathState.enterMappedLeaf(_parentPath, key);
+    } else {
+      _pathState.enterMappedContainer(_parentPath);
+    }
+    return present;
+  }
 
   @override
   ValueKind peekKind(String key) {
     final offset = _findValueOffset(key);
-    if (offset < 0) return ValueKind.nullValue;
-    return MsgPackReader(_bytes, offset).peekKind();
+    if (offset < 0) {
+      _pathState.enterMappedContainer(_parentPath);
+      return ValueKind.nullValue;
+    }
+    _pathState.enterMappedLeaf(_parentPath, key);
+    return MsgPackReader(_bytes, offset, _pathState).peekKind();
   }
 
   @override
@@ -404,29 +582,60 @@ final class _MsgPackMappedDecoder
   bool readBool(String key) => _readerAtKey(key).readBool();
 
   @override
-  Decoder nestedDecoder(String key) => MsgPackCodableDecoder._(
-    _readerAtKey(key),
-    _childDepth,
-    userInfo: _userInfo,
-  );
+  Decoder nestedDecoder(String key) {
+    final r = _readerAtKey(key);
+    final keyNode = _MsgPackFixedPathNode(_ownerNode, key)..inChild = true;
+    _pathState.clearMapped();
+    _pathState.activeNode = keyNode;
+    return MsgPackCodableDecoder._(
+      r,
+      _childDepth,
+      _pathState,
+      keyNode,
+      userInfo: _userInfo,
+    );
+  }
 }
 
-final class _MsgPackMapDecoder implements MapDecoder, _MsgPackCursor {
+final class _MsgPackMapDecoder extends MsgPackPathNode
+    implements MapDecoder, _MsgPackCursor {
   final MsgPackReader _reader;
   final Map<Object, Object?> _userInfo;
   final int _childDepth;
+  final MsgPackPathState _pathState;
   @override
   final int length;
 
   int _remainingEntries;
   int _phase = 0; // 0 = idle, 1 = beforeKey, 2 = inKey, 3 = inValue
+  int _keyOffset = -1;
+  int _entryIndex = -1;
+  bool _hasEntry = false;
   int _itemStartOffset = -1;
   MsgPackCodableDecoder? _pendingChild;
 
-  _MsgPackMapDecoder(this._reader, this._userInfo, this._childDepth)
-    : length = _reader.readMapLength(),
+  _MsgPackMapDecoder(
+    this._reader,
+    this._userInfo,
+    this._childDepth,
+    this._pathState,
+    super.parent,
+  ) : length = _reader.readMapLength(),
       _remainingEntries = 0 {
     _remainingEntries = length;
+    _pathState.activeNode = this;
+  }
+
+  @override
+  void appendSegment(List<Object> out) {
+    if (!_hasEntry) return;
+    out.add(
+      _decodeLazyMsgPackScalarOrFallback(
+        _reader.bytes,
+        _keyOffset,
+        _entryIndex,
+      ),
+    );
   }
 
   void _finishPendingChild() {
@@ -456,30 +665,51 @@ final class _MsgPackMapDecoder implements MapDecoder, _MsgPackCursor {
       _reader.skipItem(_childDepth);
       _reader.skipItem(_childDepth);
     }
+    ended = true;
+    _hasEntry = false;
+    inChild = false;
+    _pathState.activeNode = parent;
   }
 
   @override
   bool moveNextEntry() {
     _advanceUnreadInCurrentEntry();
-    if (_remainingEntries <= 0) return false;
+    _pathState.clearMapped();
+    if (_remainingEntries <= 0) {
+      ended = true;
+      _hasEntry = false;
+      inChild = false;
+      _pathState.activeNode = parent;
+      return false;
+    }
+    _entryIndex = length - _remainingEntries;
     _remainingEntries--;
+    _keyOffset = _reader.offset;
+    _hasEntry = true;
+    inChild = false;
     _phase = 1;
+    _pathState.activeNode = this;
     return true;
   }
 
   @override
   Decoder keyDecoder() {
     _finishPendingChild();
+    _pathState.clearMapped();
     if (_phase != 1) {
-      throw const CodableException(
-        'MapDecoder.keyDecoder() called out of order',
-      );
+      _hasEntry = false;
+      _pathState.activeNode = this;
+      _reader.fail('MapDecoder.keyDecoder() called out of order');
     }
     _phase = 2;
+    inChild = false;
+    _pathState.activeNode = this;
     _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
+      _pathState,
+      this,
       userInfo: _userInfo,
     );
     _pendingChild = child;
@@ -489,6 +719,7 @@ final class _MsgPackMapDecoder implements MapDecoder, _MsgPackCursor {
   @override
   Decoder valueDecoder() {
     _finishPendingChild();
+    _pathState.clearMapped();
     if (_phase == 1) {
       _reader.skipItem(_childDepth);
       _phase = 2;
@@ -496,15 +727,19 @@ final class _MsgPackMapDecoder implements MapDecoder, _MsgPackCursor {
     } else if (_phase == 2 && _reader.offset == _itemStartOffset) {
       _reader.skipItem(_childDepth);
     } else if (_phase != 2) {
-      throw const CodableException(
-        'MapDecoder.valueDecoder() called out of order',
-      );
+      _hasEntry = false;
+      _pathState.activeNode = this;
+      _reader.fail('MapDecoder.valueDecoder() called out of order');
     }
     _phase = 3;
+    inChild = true;
+    _pathState.activeNode = this;
     _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
+      _pathState,
+      this,
       userInfo: _userInfo,
     );
     _pendingChild = child;
@@ -512,25 +747,38 @@ final class _MsgPackMapDecoder implements MapDecoder, _MsgPackCursor {
   }
 }
 
-final class _MsgPackUnkeyedDecoder
+final class _MsgPackUnkeyedDecoder extends MsgPackPathNode
     with BaseUnkeyedDecoderMixin, _MsgPackValueReaderMixin
     implements UnkeyedDecoder, _MsgPackCursor {
   @override
   final MsgPackReader _reader;
   final Map<Object, Object?> _userInfo;
   final int _childDepth;
+  final MsgPackPathState _pathState;
   @override
   final int length;
 
   int _remaining;
+  int _activeIndex = -1;
   bool _hasActive = false;
   int _itemStartOffset = -1;
   MsgPackCodableDecoder? _pendingChild;
 
-  _MsgPackUnkeyedDecoder(this._reader, this._userInfo, this._childDepth)
-    : length = _reader.readArrayLength(),
+  _MsgPackUnkeyedDecoder(
+    this._reader,
+    this._userInfo,
+    this._childDepth,
+    this._pathState,
+    super.parent,
+  ) : length = _reader.readArrayLength(),
       _remaining = 0 {
     _remaining = length;
+    _pathState.activeNode = this;
+  }
+
+  @override
+  void appendSegment(List<Object> out) {
+    if (_activeIndex >= 0) out.add(_activeIndex);
   }
 
   void _finishPendingChild() {
@@ -554,24 +802,43 @@ final class _MsgPackUnkeyedDecoder
       _remaining--;
       _reader.skipItem(_childDepth);
     }
+    ended = true;
+    _activeIndex = -1;
+    inChild = false;
+    _pathState.activeNode = parent;
   }
 
   @override
   bool moveNext() {
     _finishPendingChild();
+    _pathState.clearMapped();
     if (_hasActive) return true;
-    if (_remaining <= 0) return false;
+    if (_remaining <= 0) {
+      ended = true;
+      _activeIndex = -1;
+      inChild = false;
+      _pathState.activeNode = parent;
+      return false;
+    }
+    _activeIndex = length - _remaining;
     _remaining--;
     _hasActive = true;
+    inChild = false;
+    _pathState.activeNode = this;
     return true;
   }
 
   @override
   void _prepareValueRead() {
     _finishPendingChild();
+    _pathState.clearMapped();
     if (!_hasActive && !moveNext()) {
-      throw const CodableException('No more elements in MessagePack array');
+      _activeIndex = -1;
+      _pathState.activeNode = this;
+      _reader.fail('No more elements in MessagePack array');
     }
+    inChild = false;
+    _pathState.activeNode = this;
   }
 
   @override
@@ -590,10 +857,14 @@ final class _MsgPackUnkeyedDecoder
   Decoder nestedDecoder() {
     _prepareValueRead();
     _completeValueRead();
+    inChild = true;
+    _pathState.activeNode = this;
     _itemStartOffset = _reader.offset;
     final child = MsgPackCodableDecoder._(
       _reader,
       _childDepth,
+      _pathState,
+      this,
       userInfo: _userInfo,
     );
     _pendingChild = child;
@@ -612,7 +883,9 @@ final class _MsgPackSingleValueDecoder
   MsgPackReader get _reader => _parent._reader;
 
   @override
-  void _prepareValueRead() {}
+  void _prepareValueRead() {
+    _parent._activateThisDecoderContext();
+  }
 
   @override
   void _completeValueRead() {}
