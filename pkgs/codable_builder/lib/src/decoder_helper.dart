@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_helper/source_helper.dart';
 
@@ -11,6 +10,7 @@ import 'codec_expression_helper.dart';
 import 'encoder_helper.dart';
 import 'field_descriptor.dart';
 import 'type_helper.dart';
+import 'utils.dart';
 
 typedef _DecoderSlot = ({
   String target,
@@ -84,22 +84,7 @@ final class DecoderGeneratorHelper {
       raw.writeln();
       _writeListDecoder(raw);
     }
-    return _indentLines(raw.toString(), '  ');
-  }
-
-  static String _indentLines(String text, String indent) {
-    final lines = text.split('\n');
-    final buffer = StringBuffer();
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      if (i == lines.length - 1 && line.isEmpty) break;
-      if (line.isEmpty) {
-        buffer.writeln();
-      } else {
-        buffer.writeln('$indent$line');
-      }
-    }
-    return buffer.toString();
+    return indentLines(raw.toString(), '  ');
   }
 
   void _writeSchema(StringBuffer buffer) {
@@ -125,6 +110,16 @@ final class DecoderGeneratorHelper {
       _writeSchemaKeyOptionsTable(buffer, schemaName, nonIgnoredFields);
       _writeSchemaEnumOptions(buffer, nonIgnoredFields);
       _writeSchemaBitmaskValidation(buffer, schemaName);
+    }
+    if (model.closedCodecs.isNotEmpty) {
+      buffer
+        ..writeln()
+        ..writeln('  // Cached Closed Codecs');
+      for (final codec in model.closedCodecs) {
+        buffer.writeln(
+          '  static final ${codec.typeCode} ${codec.name} = ${codec.exprCode};',
+        );
+      }
     }
 
     buffer.writeln('}');
@@ -884,10 +879,12 @@ final class DecoderGeneratorHelper {
       final nonNull = typeSystem.promoteToNonNull(elemType);
       final codecExpr = _codecHelper.forType(nonNull, CodecMode.decodable);
       buffer.writeln(
-        _nullableDecodableUnkeyedBlock(
+        _conditionalNullUnkeyedBlock(
           field.name,
           elemDisplay,
           codecExpr,
+          nullGuard: 'u.isNextNull()',
+          nullExpr: 'null',
           indent: indent,
           isSet: isSet,
         ),
@@ -898,10 +895,12 @@ final class DecoderGeneratorHelper {
     if (elemType is TypeParameterType &&
         typeSystem.isPotentiallyNullable(elemType)) {
       buffer.writeln(
-        _potentiallyNullableUnkeyedBlock(
+        _conditionalNullUnkeyedBlock(
           field.name,
           elemDisplay,
           codecExpr,
+          nullGuard: 'null is $elemDisplay && u.isNextNull()',
+          nullExpr: 'null as $elemDisplay',
           indent: indent,
           isSet: isSet,
         ),
@@ -914,34 +913,12 @@ final class DecoderGeneratorHelper {
     );
   }
 
-  static String _nullableDecodableUnkeyedBlock(
-    String fieldName,
-    String elemTypeDisplay,
-    String nonNullCodecExpr, {
-    required String indent,
-    required bool isSet,
-  }) {
-    final varName = isSet ? 's' : 'l';
-    final literal = isSet ? '<$elemTypeDisplay>{}' : '<$elemTypeDisplay>[]';
-    return '$indent{\n'
-        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
-        '$indent  final $varName = $literal;\n'
-        '$indent  while (u.moveNext()) {\n'
-        '$indent    if (u.isNextNull()) {\n'
-        '$indent      u.readNull();\n'
-        '$indent      $varName.add(null);\n'
-        '$indent    } else {\n'
-        '$indent      $varName.add($nonNullCodecExpr.decode(u.nestedDecoder()));\n'
-        '$indent    }\n'
-        '$indent  }\n'
-        '$indent  $fieldName = $varName;\n'
-        '$indent}';
-  }
-
-  static String _potentiallyNullableUnkeyedBlock(
+  static String _conditionalNullUnkeyedBlock(
     String fieldName,
     String elemTypeDisplay,
     String codecExpr, {
+    required String nullGuard,
+    required String nullExpr,
     required String indent,
     required bool isSet,
   }) {
@@ -951,9 +928,9 @@ final class DecoderGeneratorHelper {
         '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
         '$indent  final $varName = $literal;\n'
         '$indent  while (u.moveNext()) {\n'
-        '$indent    if (null is $elemTypeDisplay && u.isNextNull()) {\n'
+        '$indent    if ($nullGuard) {\n'
         '$indent      u.readNull();\n'
-        '$indent      $varName.add(null as $elemTypeDisplay);\n'
+        '$indent      $varName.add($nullExpr);\n'
         '$indent    } else {\n'
         '$indent      $varName.add($codecExpr.decode(u.nestedDecoder()));\n'
         '$indent    }\n'
@@ -1169,17 +1146,12 @@ final class DecoderGeneratorHelper {
       ? ''
       : '${slot.depth}${slot.tag}';
 
-  static bool _isStringMapKey(DartType? keyType) =>
-      keyType != null &&
-      keyType.isDartCoreString &&
-      keyType.nullabilitySuffix == NullabilitySuffix.none;
-
   String _inlineMapDecodeCode(
     DartType? keyType,
     DartType? valType,
     _DecoderSlot slot,
   ) {
-    if (_isStringMapKey(keyType)) {
+    if (isStringMapKey(keyType)) {
       return _inlineStringMapDecodeCode(valType, slot);
     }
     return _inlineGenericMapDecodeCode(keyType, valType, slot);
@@ -1328,7 +1300,7 @@ final class DecoderGeneratorHelper {
     final isList = type.isDartCoreList || type.element?.name == 'List';
     final isSet = type.isDartCoreSet || type.element?.name == 'Set';
     if (!isList && !isSet) return null;
-    final inner = _typeArgAt(type, 0);
+    final inner = typeArgAt(type, 0);
     final fastCall = inner != null ? _fastPrimitiveListCall(inner) : null;
     if (fastCall == null) return null;
     return isSet ? '$kVar.$fastCall.toSet()' : '$kVar.$fastCall';
@@ -1509,11 +1481,6 @@ final class DecoderGeneratorHelper {
     return out.toString();
   }
 
-  static DartType? _typeArgAt(DartType type, int index) =>
-      type is InterfaceType && type.typeArguments.length > index
-      ? type.typeArguments[index]
-      : null;
-
   String _nonNullComplexDecoderValueCode(DartType type, _DecoderSlot slot) {
     final singleExpr = _nonNullComplexSingleExpr(type, slot.decoderExpr);
     final assignLhs = slot.declareType != null
@@ -1526,16 +1493,12 @@ final class DecoderGeneratorHelper {
     if (typedCode != null) return typedCode;
     final name = type.element?.name;
     if (type.isDartCoreMap || name == 'Map') {
-      return _inlineMapDecodeCode(
-        _typeArgAt(type, 0),
-        _typeArgAt(type, 1),
-        slot,
-      );
+      return _inlineMapDecodeCode(typeArgAt(type, 0), typeArgAt(type, 1), slot);
     }
     final isSet = type.isDartCoreSet || name == 'Set';
     if (isSet || type.isDartCoreList || name == 'List') {
       return _inlineCollectionDecodeCode(
-        _typeArgAt(type, 0),
+        typeArgAt(type, 0),
         slot,
         isSet: isSet,
       );
@@ -1556,7 +1519,7 @@ final class DecoderGeneratorHelper {
     final isList =
         nonNullType.isDartCoreList || nonNullType.element?.name == 'List';
     if (!isList && !isSet) return null;
-    final inner = _typeArgAt(nonNullType, 0);
+    final inner = typeArgAt(nonNullType, 0);
     if (inner == null || !_isNonNullListDecodable(inner)) return null;
     final suffix = isSet ? '.toSet()' : '';
     final codecExpr = _codecHelper.forType(inner, CodecMode.decodable);

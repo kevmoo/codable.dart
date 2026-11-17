@@ -1614,6 +1614,52 @@ void _registerGenericAndPolymorphicRoundtripTests() {
           .throws<CodableException>()
           .has((e) => e.actualValue, 'actualValue')
           .isA<UnregisteredSecretAction>();
+
+      // Concrete subclass (LuxurySedanVehicle extends SedanVehicle) must match
+      // before its concrete superclass even when declared after it in source.
+      final luxuryJson = JsonCodableEncoder.encode<TieredVehicle>(
+        const LuxurySedanVehicle(seats: 4, massageSeats: true),
+        const TieredVehicleCodable(),
+      );
+      check(luxuryJson).contains('"tier":"luxury_sedan"');
+      final decodedLuxury = JsonCodableDecoder.decode(
+        luxuryJson,
+        const TieredVehicleCodable(),
+      );
+      check(decodedLuxury)
+          .isA<LuxurySedanVehicle>()
+          .has((v) => (v.seats, v.massageSeats), 'luxury')
+          .equals((4, true));
+
+      final sedanJson = JsonCodableEncoder.encode<TieredVehicle>(
+        const SedanVehicle(seats: 5),
+        const TieredVehicleCodable(),
+      );
+      check(JsonCodableDecoder.decode(sedanJson, const TieredVehicleCodable()))
+          .isA<SedanVehicle>()
+          .has((v) => v.seats, 'seats')
+          .equals(5);
+
+      // Sealed base implemented by an un-annotated enum emits a fallback branch.
+      final classBranchJson = JsonCodableEncoder.encode<SealedWithEnumBranch>(
+        const ClassSealedBranch('main'),
+        const SealedWithEnumBranchCodable(),
+      );
+      check(
+        JsonCodableDecoder.decode(
+          classBranchJson,
+          const SealedWithEnumBranchCodable(),
+        ),
+      ).isA<ClassSealedBranch>().has((b) => b.label, 'label').equals('main');
+      check(
+            () => JsonCodableEncoder.encode<SealedWithEnumBranch>(
+              EnumSealedBranch.alpha,
+              const SealedWithEnumBranchCodable(),
+            ),
+          )
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals(EnumSealedBranch.alpha);
     });
   });
 }

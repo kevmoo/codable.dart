@@ -78,8 +78,7 @@ final class CanadaPropertiesCodable implements KeyedCodable<CanadaProperties> {
 
   @override
   void encode(CanadaProperties instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -187,13 +186,7 @@ final class CanadaGeometryCodable implements KeyedCodable<CanadaGeometry> {
 
   @override
   void encode(CanadaGeometry instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
-    keyed.encodeValue(
-      _$CanadaGeometrySchema.nameCoordinates,
-      instance.coordinates,
-      const CanadaCoordinatesDecoder(),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -345,18 +338,7 @@ final class CanadaFeatureCodable implements KeyedCodable<CanadaFeature> {
 
   @override
   void encode(CanadaFeature instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
-    keyed.encodeValue(
-      _$CanadaFeatureSchema.nameProperties,
-      instance.properties,
-      const CanadaPropertiesCodable(),
-    );
-    keyed.encodeValue(
-      _$CanadaFeatureSchema.nameGeometry,
-      instance.geometry,
-      const CanadaGeometryCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -476,12 +458,6 @@ final class CanadaFeatureCollectionCodable
 
   @override
   void encode(CanadaFeatureCollection instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
-    keyed.encodeList(
-      _$CanadaFeatureCollectionSchema.nameFeatures,
-      instance.features,
-      const CanadaFeatureCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

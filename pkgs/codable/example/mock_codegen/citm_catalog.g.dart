@@ -329,95 +329,7 @@ final class CitmCatalogCodable implements KeyedCodable<CitmCatalog> {
 
   @override
   void encode(CitmCatalog instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 11);
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameAreaNames)
-          .keyed(length: instance.areaNames.length);
-      for (final entry in instance.areaNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameAudienceSubCategoryNames)
-          .keyed(length: instance.audienceSubCategoryNames.length);
-      for (final entry in instance.audienceSubCategoryNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameBlockNames)
-          .keyed(length: instance.blockNames.length);
-      for (final entry in instance.blockNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameEvents)
-          .keyed(length: instance.events.length);
-      for (final entry in instance.events.entries) {
-        const CitmEventCodable().encode(
-          entry.value,
-          k.nestedEncoder(entry.key),
-        );
-      }
-    }
-    keyed.encodeList(
-      _$CitmCatalogSchema.namePerformances,
-      instance.performances,
-      const CitmPerformanceCodable(),
-    );
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameSeatCategoryNames)
-          .keyed(length: instance.seatCategoryNames.length);
-      for (final entry in instance.seatCategoryNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameSubTopicNames)
-          .keyed(length: instance.subTopicNames.length);
-      for (final entry in instance.subTopicNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameSubjectNames)
-          .keyed(length: instance.subjectNames.length);
-      for (final entry in instance.subjectNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameTopicNames)
-          .keyed(length: instance.topicNames.length);
-      for (final entry in instance.topicNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameTopicSynced)
-          .keyed(length: instance.topicSynced.length);
-      for (final entry in instance.topicSynced.entries) {
-        k.encodeBool(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$CitmCatalogSchema.nameVenueNames)
-          .keyed(length: instance.venueNames.length);
-      for (final entry in instance.venueNames.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 11));
   }
 }
 
@@ -1064,16 +976,7 @@ final class CitmPriceCodable implements KeyedCodable<CitmPrice> {
 
   @override
   void encode(CitmPrice instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
-    keyed.encodeInt(
-      _$CitmPriceSchema.nameAudienceSubCategoryId,
-      instance.audienceSubCategoryId,
-    );
-    keyed.encodeInt(
-      _$CitmPriceSchema.nameSeatCategoryId,
-      instance.seatCategoryId,
-    );
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1188,16 +1091,7 @@ final class CitmSeatCategoryCodable implements KeyedCodable<CitmSeatCategory> {
 
   @override
   void encode(CitmSeatCategory instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeList(
-      _$CitmSeatCategorySchema.nameAreas,
-      instance.areas,
-      const CitmAreaCodable(),
-    );
-    keyed.encodeInt(
-      _$CitmSeatCategorySchema.nameSeatCategoryId,
-      instance.seatCategoryId,
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -1301,8 +1195,6 @@ final class CitmAreaCodable implements KeyedCodable<CitmArea> {
 
   @override
   void encode(CitmArea instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
-    keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

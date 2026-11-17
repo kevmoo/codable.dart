@@ -1606,10 +1606,7 @@ final class PolygonNodeCodable implements KeyedCodable<PolygonNode> {
 
   @override
   void encode(PolygonNode instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeIntList(_$PolygonNodeSchema.nameVertices, instance.vertices);
-    keyed.encodeBool(_$PolygonNodeSchema.nameClosed, instance.closed);
-    keyed.encodeString(_$PolygonNodeSchema.nameKind, instance.kind);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1977,9 +1974,7 @@ final class MatrixCellCodable implements KeyedCodable<MatrixCell> {
 
   @override
   void encode(MatrixCell instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$MatrixCellSchema.nameX, instance.x);
-    keyed.encodeInt(_$MatrixCellSchema.nameY, instance.y);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -2099,34 +2094,6 @@ final class MatrixBoardCodable implements KeyedCodable<MatrixBoard> {
 
   @override
   void encode(MatrixBoard instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeList(
-      _$MatrixBoardSchema.nameCells,
-      instance.cells,
-      Encodable.fromFunction((List<MatrixCell> item, e) {
-        {
-          final u = e.unkeyed(length: item.length);
-          for (final elem in item) {
-            const MatrixCellCodable().encode(elem, u.nestedEncoder());
-          }
-        }
-      }),
-    );
-    keyed.encodeList(
-      _$MatrixBoardSchema.nameNullableRows,
-      instance.nullableRows,
-      Encodable.fromFunction((List<MatrixCell>? item, e) {
-        if (item case final val0?) {
-          {
-            final u1 = e.unkeyed(length: val0.length);
-            for (final elem1 in val0) {
-              const MatrixCellCodable().encode(elem1, u1.nestedEncoder());
-            }
-          }
-        } else {
-          e.singleValue().encodeNull();
-        }
-      }),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

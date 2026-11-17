@@ -3,7 +3,6 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_helper/source_helper.dart';
 
@@ -11,6 +10,7 @@ import 'codec_expression_helper.dart';
 import 'decoder_helper.dart';
 import 'field_descriptor.dart';
 import 'type_helper.dart';
+import 'utils.dart';
 
 typedef _EncoderSlot = ({
   String itemAccess,
@@ -72,7 +72,7 @@ final class EncoderGeneratorHelper {
     raw.writeln();
     _writeEncodeMethod(raw, nonIgnoredFields, dynamicCountFields);
 
-    return _indentLines(raw.toString(), '  ');
+    return indentLines(raw.toString(), '  ');
   }
 
   static bool _isDynamicallyOmittedField(FieldDescriptor f) =>
@@ -139,26 +139,32 @@ final class EncoderGeneratorHelper {
     List<FieldDescriptor> dynamicCountFields,
   ) {
     final targetType = model.instantiatedClassName;
-    final schemaName = '_\$${model.className}Schema';
     raw.writeln('@override');
     raw.writeln('void encode($targetType instance, Encoder encoder) {');
     if (nonIgnoredFields.isEmpty) {
       raw.writeln('  encoder.keyed(length: 0);');
-    } else if (dynamicCountFields.isEmpty) {
-      raw.writeln(
-        '  final keyed = encoder.keyed(length: ${nonIgnoredFields.length});',
-      );
-    } else {
-      final fixedNonNullCount =
-          nonIgnoredFields.length - dynamicCountFields.length;
-      raw.writeln('  var count\$ = $fixedNonNullCount;');
-      for (final field in dynamicCountFields) {
-        final suffix = field.schemaSuffix;
-        raw.writeln('  final v\$$suffix = instance.${field.name};');
-        raw.writeln('  if (v\$$suffix != null) count\$++;');
-      }
-      raw.writeln('  final keyed = encoder.keyed(length: count\$);');
+      raw.writeln('}');
+      return;
     }
+    if (dynamicCountFields.isEmpty) {
+      raw.writeln(
+        '  encodeFields(instance, '
+        'encoder.keyed(length: ${nonIgnoredFields.length}));',
+      );
+      raw.writeln('}');
+      return;
+    }
+
+    final schemaName = '_\$${model.className}Schema';
+    final fixedNonNullCount =
+        nonIgnoredFields.length - dynamicCountFields.length;
+    raw.writeln('  var count\$ = $fixedNonNullCount;');
+    for (final field in dynamicCountFields) {
+      final suffix = field.schemaSuffix;
+      raw.writeln('  final v\$$suffix = instance.${field.name};');
+      raw.writeln('  if (v\$$suffix != null) count\$++;');
+    }
+    raw.writeln('  final keyed = encoder.keyed(length: count\$);');
 
     for (final field in nonIgnoredFields) {
       final suffix = field.schemaSuffix;
@@ -180,21 +186,6 @@ final class EncoderGeneratorHelper {
     }
 
     raw.writeln('}');
-  }
-
-  static String _indentLines(String text, String indent) {
-    final lines = text.split('\n');
-    final buffer = StringBuffer();
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      if (i == lines.length - 1 && line.isEmpty) break;
-      if (line.isEmpty) {
-        buffer.writeln();
-      } else {
-        buffer.writeln('$indent$line');
-      }
-    }
-    return buffer.toString();
   }
 
   void _writeFieldEncode(
@@ -413,17 +404,12 @@ final class EncoderGeneratorHelper {
     );
   }
 
-  static bool _isStringMapKey(DartType? keyType) =>
-      keyType != null &&
-      keyType.isDartCoreString &&
-      keyType.nullabilitySuffix == NullabilitySuffix.none;
-
   String _inlineMapEncodeCode(
     DartType? keyType,
     DartType? valType,
     _EncoderSlot slot,
   ) {
-    if (_isStringMapKey(keyType)) {
+    if (isStringMapKey(keyType)) {
       return _inlineStringMapEncodeCode(valType, slot);
     }
     return _inlineGenericMapEncodeCode(keyType, valType, slot);
@@ -547,7 +533,7 @@ final class EncoderGeneratorHelper {
     final typed = _typedDataKeyedMethod(type);
     if (typed != null) return typed;
     if (type.isDartCoreList || type.element?.name == 'List') {
-      return _primitiveKeyedListMethod(_typeArgAt(type, 0));
+      return _primitiveKeyedListMethod(typeArgAt(type, 0));
     }
     return null;
   }
@@ -674,11 +660,6 @@ final class EncoderGeneratorHelper {
     return out.toString();
   }
 
-  static DartType? _typeArgAt(DartType type, int index) =>
-      type is InterfaceType && type.typeArguments.length > index
-      ? type.typeArguments[index]
-      : null;
-
   static String? _typedUnkeyedElementMethod(DartType type) =>
       switch (classifyTypedDataKind(type)) {
         TypedDataKind.float64 || TypedDataKind.float32 => 'encodeDouble',
@@ -691,8 +672,8 @@ final class EncoderGeneratorHelper {
     final name = nonNull.element?.name;
     if (nonNull.isDartCoreMap || name == 'Map') {
       return _inlineMapEncodeCode(
-        _typeArgAt(nonNull, 0),
-        _typeArgAt(nonNull, 1),
+        typeArgAt(nonNull, 0),
+        typeArgAt(nonNull, 1),
         slot,
       );
     }
@@ -700,7 +681,7 @@ final class EncoderGeneratorHelper {
         nonNull.isDartCoreSet ||
         name == 'List' ||
         name == 'Set') {
-      return _inlineUnkeyedEncodeCode(_typeArgAt(nonNull, 0), slot);
+      return _inlineUnkeyedEncodeCode(typeArgAt(nonNull, 0), slot);
     }
     final typedMethod = _typedUnkeyedElementMethod(nonNull);
     if (typedMethod != null) {

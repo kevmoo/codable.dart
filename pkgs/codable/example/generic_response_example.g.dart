@@ -425,8 +425,6 @@ final class UserCodable implements KeyedCodable<User> {
 
   @override
   void encode(User instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$UserSchema.nameId, instance.id);
-    keyed.encodeString(_$UserSchema.nameEmail, instance.email);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

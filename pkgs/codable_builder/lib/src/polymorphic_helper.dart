@@ -14,21 +14,21 @@ import 'field_descriptor.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
-/// Discovers and validates polymorphic `@Codable` hierarchies (such as `sealed`
-/// or `abstract` base classes with `@Codable(discriminatorKey: ...)`).
+/// Discovers, validates, and builds [ModelDescriptor] metadata for polymorphic
+/// `@Codable()` base classes (`sealed` hierarchies and explicit `subtypes`).
 final class PolymorphicModelVisitor {
   const PolymorphicModelVisitor();
 
-  /// Whether [element] with [annotation] should be synthesized as a polymorphic
-  /// discriminator base model.
+  /// Returns whether [element] with [annotation] should be generated as a
+  /// polymorphic discriminator base class rather than a concrete constructor
+  /// model.
   bool isPolymorphicClass(ClassElement element, ConstantReader annotation) {
-    if (element.isSealed) return true;
-    final hasKey = annotation.peek('discriminatorKey')?.isNull == false;
-    final hasSubtypes = annotation.peek('subtypes')?.isNull == false;
-    return hasKey || hasSubtypes;
+    final hasDiscKey = !(annotation.peek('discriminatorKey')?.isNull ?? true);
+    final hasSubtypes = !(annotation.peek('subtypes')?.isNull ?? true);
+    return element.isSealed || hasDiscKey || hasSubtypes;
   }
 
-  /// Builds a validated polymorphic [ModelDescriptor] for [element].
+  /// Visits a polymorphic base [element] and returns its [ModelDescriptor].
   ModelDescriptor visitPolymorphicClass({
     required ClassElement element,
     required ConstantReader annotation,
@@ -41,31 +41,39 @@ final class PolymorphicModelVisitor {
     Function(ClassElement subElement, FieldRename subRename)
     inspectSubtypeKeys,
   }) {
-    final discriminatorKey =
-        annotation.peek('discriminatorKey')?.stringValue ?? 'type';
-    final explicitSubtypes = _extractExplicitSubtypes(element, annotation);
-    final rawSubtypes =
-        explicitSubtypes ?? _discoverLibrarySubtypes(element, discriminatorKey);
-
-    if (rawSubtypes.isEmpty) {
+    final discKey = annotation.peek('discriminatorKey')?.stringValue ?? 'type';
+    if (discKey.isEmpty) {
       throw InvalidGenerationSourceError(
-        'Polymorphic @Codable class "${element.name}" has no concrete '
-        '@Codable() subtypes.',
+        '@Codable(discriminatorKey: ...) on "${element.name}" cannot be empty.',
         element: element,
       );
     }
 
-    final isExhaustivelySealed =
-        explicitSubtypes == null && _isExhaustivelySealedHierarchy(element);
-    final subtypes = _buildSubtypeDescriptors(
+    final explicitSubtypes = _extractExplicitSubtypes(element, annotation);
+    final rawSubtypes = _orderSubtypesMostSpecificFirst(
+      explicitSubtypes ?? _discoverLibrarySubtypes(element, discKey),
+    );
+    if (rawSubtypes.isEmpty) {
+      throw InvalidGenerationSourceError(
+        'Polymorphic @Codable class "${element.name}" has no concrete '
+        '@Codable() subtypes. Declare concrete subtypes in the same library '
+        'or list them in @Codable(subtypes: [...]).',
+        element: element,
+      );
+    }
+
+    final descriptors = _buildSubtypeDescriptors(
       baseElement: element,
       rawSubtypes: rawSubtypes,
-      discriminatorKey: discriminatorKey,
+      discriminatorKey: discKey,
       fieldRename: fieldRename,
       createDecoder: createDecoder,
       createEncoder: createEncoder,
       inspectSubtypeKeys: inspectSubtypeKeys,
     );
+
+    final isExhaustiveSealed =
+        explicitSubtypes == null && _isExhaustivelySealedHierarchy(element);
 
     return ModelDescriptor(
       element: element,
@@ -76,11 +84,11 @@ final class PolymorphicModelVisitor {
       fieldRename: fieldRename,
       fields: const [],
       requiredFields: const [],
-      allOptionsKeys: [discriminatorKey],
+      allOptionsKeys: const [],
       typeParameters: typeParameters,
-      discriminatorKey: discriminatorKey,
-      polymorphicSubtypes: subtypes,
-      isSealed: isExhaustivelySealed,
+      discriminatorKey: discKey,
+      polymorphicSubtypes: descriptors,
+      isSealed: isExhaustiveSealed,
     );
   }
 
@@ -138,14 +146,48 @@ final class PolymorphicModelVisitor {
     return (a.name ?? '').compareTo(b.name ?? '');
   }
 
+  /// Orders concrete subtypes so any subclass (`Child extends Parent`) precedes
+  /// its concrete superclass (`Parent`), preserving relative order otherwise.
+  static List<ClassElement> _orderSubtypesMostSpecificFirst(
+    List<ClassElement> candidates,
+  ) {
+    if (candidates.length <= 1) return candidates;
+    final remaining = List<ClassElement>.of(candidates);
+    final ordered = <ClassElement>[];
+    while (remaining.isNotEmpty) {
+      final idx = remaining.indexWhere(
+        (c) => !_hasProperSubtypeIn(c, remaining),
+      );
+      ordered.add(remaining.removeAt(idx < 0 ? 0 : idx));
+    }
+    return ordered;
+  }
+
+  static bool _hasProperSubtypeIn(
+    ClassElement candidate,
+    List<ClassElement> pool,
+  ) {
+    for (final other in pool) {
+      if (other != candidate &&
+          other.thisType.asInstanceOf(candidate) != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static bool _isExhaustivelySealedHierarchy(ClassElement baseElement) {
     if (!baseElement.isSealed) return false;
-    for (final cls in baseElement.library.classes) {
+    final lib = baseElement.library;
+    for (final cls in lib.classes) {
       if (cls == baseElement) continue;
       if (cls.thisType.asInstanceOf(baseElement) == null) continue;
       if (cls.isAbstract && !cls.isSealed) return false;
     }
-    return true;
+    return !lib.enums.any(
+          (e) => e.thisType.asInstanceOf(baseElement) != null,
+        ) &&
+        !lib.mixins.any((m) => m.thisType.asInstanceOf(baseElement) != null);
   }
 
   static List<PolymorphicSubtypeDescriptor> _buildSubtypeDescriptors({
@@ -192,7 +234,7 @@ final class PolymorphicModelVisitor {
       );
 
       final mappedTypeArgs = _resolveSubtypeTypeArguments(baseElement, sub);
-      final suffix = _allocateUniqueSuffix(
+      final suffix = allocateUniqueSuffix(
         toSafeIdentifierSuffix(subName),
         usedSuffixes,
       );
@@ -203,20 +245,13 @@ final class PolymorphicModelVisitor {
           discriminatorValue: discVal,
           schemaSuffix: suffix,
           typeArguments: mappedTypeArgs,
-          subtypeCreatesDecoder: subMeta.createsDecoder,
-          subtypeCreatesEncoder: subMeta.createsEncoder,
         ),
       );
     }
     return descriptors;
   }
 
-  static ({
-    String? discriminatorValue,
-    FieldRename fieldRename,
-    bool createsDecoder,
-    bool createsEncoder,
-  })
+  static ({String? discriminatorValue, FieldRename fieldRename})
   _validateAndReadSubtypeAnnotation({
     required ClassElement baseElement,
     required ClassElement sub,
@@ -238,9 +273,7 @@ final class PolymorphicModelVisitor {
         element: sub,
       );
     }
-    final reader = ConstantReader(annotation);
-    final subDec = reader.peek('createDecoder')?.boolValue ?? true;
-    final subEnc = reader.peek('createEncoder')?.boolValue ?? true;
+    final (subDec, subEnc) = readCodableFlags(sub);
     if (createDecoder && !subDec) {
       throw InvalidGenerationSourceError(
         'Subtype "${sub.name}" sets createDecoder: false, but polymorphic '
@@ -255,6 +288,7 @@ final class PolymorphicModelVisitor {
         element: sub,
       );
     }
+    final reader = ConstantReader(annotation);
     final renameIdx = reader.peek('fieldRename')?.peek('index')?.intValue;
     final subRename =
         renameIdx != null &&
@@ -265,8 +299,6 @@ final class PolymorphicModelVisitor {
     return (
       discriminatorValue: reader.peek('discriminatorValue')?.stringValue,
       fieldRename: subRename,
-      createsDecoder: subDec,
-      createsEncoder: subEnc,
     );
   }
 
@@ -324,8 +356,7 @@ final class PolymorphicModelVisitor {
         nullabilitySuffix: NullabilitySuffix.none,
       );
       final key = arg.element.baseElement;
-      final existing = subToBase[key];
-      if (existing != null && existing != baseParamType) {
+      if (subToBase.containsKey(key)) {
         throw InvalidGenerationSourceError(
           'Subtype "${sub.name}" binds type parameter "${arg.element.name}" '
           'to multiple distinct type parameters on "${baseElement.name}".',
@@ -347,16 +378,57 @@ final class PolymorphicModelVisitor {
       }
       resolved.add(mapped);
     }
+    _validateSubtypeTypeParamBounds(baseElement, sub, subToBase);
     return resolved;
   }
 
-  static String _allocateUniqueSuffix(String base, Set<String> used) {
-    if (used.add(base)) return base;
-    var index = 2;
-    while (!used.add('$base\$$index')) {
-      index++;
+  static void _validateSubtypeTypeParamBounds(
+    ClassElement baseElement,
+    ClassElement sub,
+    Map<Element, DartType> subToBase,
+  ) {
+    final typeSystem = baseElement.library.typeSystem;
+    for (final sp in sub.typeParameters) {
+      final bound = sp.bound;
+      if (bound == null) continue;
+      final mapped = subToBase[sp.baseElement]!;
+      final expectedBound = _substituteTypeParams(bound, subToBase);
+      if (!typeSystem.isSubtypeOf(mapped, expectedBound)) {
+        throw InvalidGenerationSourceError(
+          'Type parameter "${sp.name}" on subtype "${sub.name}" tightens '
+          'bound to "${bound.getDisplayString()}", which is not satisfied by '
+          'polymorphic @Codable base "${baseElement.name}".',
+          element: sub,
+        );
+      }
     }
-    return '$base\$$index';
+  }
+
+  static DartType _substituteTypeParams(
+    DartType type,
+    Map<Element, DartType> subst,
+  ) {
+    if (type is TypeParameterType) {
+      final replacement = subst[type.element.baseElement];
+      if (replacement == null) return type;
+      if (type.nullabilitySuffix == NullabilitySuffix.question &&
+          replacement is TypeParameterType) {
+        return replacement.element.instantiate(
+          nullabilitySuffix: NullabilitySuffix.question,
+        );
+      }
+      return replacement;
+    }
+    if (type is InterfaceType && type.typeArguments.isNotEmpty) {
+      return type.element.instantiate(
+        typeArguments: [
+          for (final arg in type.typeArguments)
+            _substituteTypeParams(arg, subst),
+        ],
+        nullabilitySuffix: type.nullabilitySuffix,
+      );
+    }
+    return type;
   }
 }
 
@@ -366,15 +438,8 @@ final class PolymorphicGeneratorHelper {
   final ModelDescriptor model;
   final CodecExpressionHelper _codecHelper;
 
-  PolymorphicGeneratorHelper(
-    this.model, {
-    required InlineValueDecodeBuilder decodeBuilder,
-    required InlineValueEncodeBuilder encodeBuilder,
-  }) : _codecHelper = CodecExpressionHelper(
-         model,
-         decodeBuilder: decodeBuilder,
-         encodeBuilder: encodeBuilder,
-       );
+  PolymorphicGeneratorHelper(this.model)
+    : _codecHelper = CodecExpressionHelper(model);
 
   /// Generates `extension type const _$<Base>Schema(int _value)`.
   String generateSchema() {
@@ -465,7 +530,7 @@ final class PolymorphicGeneratorHelper {
       ..writeln('  int encodedFieldCount($targetType instance) =>')
       ..writeln('      switch (instance) {');
     for (final sub in model.polymorphicSubtypes) {
-      final codec = _subtypeEncodableCode(sub);
+      final codec = _subtypeEncodableExpr(sub).code;
       out.writeln(
         '        final ${sub.instantiatedTypeCode} sub => '
         '1 + $codec.encodedFieldCount(sub),',
@@ -488,7 +553,7 @@ final class PolymorphicGeneratorHelper {
       )
       ..writeln('    switch (instance) {');
     for (final sub in model.polymorphicSubtypes) {
-      final codec = _subtypeEncodableCode(sub);
+      final codec = _subtypeEncodableExpr(sub).code;
       out
         ..writeln('      case final ${sub.instantiatedTypeCode} sub:')
         ..writeln(
@@ -517,20 +582,26 @@ final class PolymorphicGeneratorHelper {
       ..writeln('  void encode($targetType instance, Encoder encoder) {')
       ..writeln('    switch (instance) {');
     for (final sub in model.polymorphicSubtypes) {
-      final codec = _subtypeEncodableCode(sub);
+      final codecExpr = _subtypeEncodableExpr(sub);
+      out.writeln('      case final ${sub.instantiatedTypeCode} sub:');
+      final String codecRef;
+      if (codecExpr.isConst) {
+        codecRef = codecExpr.code;
+      } else {
+        out.writeln('        final subCodec = ${codecExpr.code};');
+        codecRef = 'subCodec';
+      }
       out
-        ..writeln('      case final ${sub.instantiatedTypeCode} sub:')
-        ..writeln('        final subCodec = $codec;')
         ..writeln(
           '        final keyed = encoder.keyed('
-          'length: 1 + subCodec.encodedFieldCount(sub));',
+          'length: 1 + $codecRef.encodedFieldCount(sub));',
         )
         ..writeln(
           '        keyed.encodeString('
           '$schemaName.discriminatorKey, '
           '$schemaName.subtype${sub.schemaSuffix});',
         )
-        ..writeln('        subCodec.encodeFields(sub, keyed);');
+        ..writeln('        $codecRef.encodeFields(sub, keyed);');
     }
     if (!model.isSealed) {
       out
@@ -543,9 +614,12 @@ final class PolymorphicGeneratorHelper {
     return out.toString();
   }
 
-  String _subtypeEncodableCode(PolymorphicSubtypeDescriptor sub) => _codecHelper
-      .buildClassCodecExpr(sub.element, sub.typeArguments, CodecMode.encodable)
-      .code;
+  CodecExpr _subtypeEncodableExpr(PolymorphicSubtypeDescriptor sub) =>
+      _codecHelper.buildClassCodecExpr(
+        sub.element,
+        sub.typeArguments,
+        CodecMode.encodable,
+      );
 
   String _unregisteredSubtypeThrowExpr() {
     final discEscaped = escapeDartString(model.discriminatorKey!);

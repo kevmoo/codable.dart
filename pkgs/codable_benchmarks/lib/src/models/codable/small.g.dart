@@ -166,11 +166,7 @@ final class SmallLocationCodable implements KeyedCodable<SmallLocation> {
 
   @override
   void encode(SmallLocation instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
-    keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
-    keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
-    keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
-    keyed.encodeString(_$SmallLocationSchema.nameCountry, instance.country);
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -316,14 +312,7 @@ final class SmallMetadataCodable implements KeyedCodable<SmallMetadata> {
 
   @override
   void encode(SmallMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
-    keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
-    keyed.encodeValue(
-      _$SmallMetadataSchema.nameLocation,
-      instance.location,
-      const SmallLocationCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -604,20 +593,6 @@ final class SmallDocumentCodable implements KeyedCodable<SmallDocument> {
 
   @override
   void encode(SmallDocument instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 10);
-    keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
-    keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
-    keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);
-    keyed.encodeString(_$SmallDocumentSchema.nameEmail, instance.email);
-    keyed.encodeBool(_$SmallDocumentSchema.nameIsActive, instance.isActive);
-    keyed.encodeDouble(_$SmallDocumentSchema.nameBalance, instance.balance);
-    keyed.encodeInt(_$SmallDocumentSchema.nameAge, instance.age);
-    keyed.encodeStringList(_$SmallDocumentSchema.nameRoles, instance.roles);
-    keyed.encodeValue(
-      _$SmallDocumentSchema.nameMetadata,
-      instance.metadata,
-      const SmallMetadataCodable(),
-    );
-    keyed.encodeStringList(_$SmallDocumentSchema.nameTags, instance.tags);
+    encodeFields(instance, encoder.keyed(length: 10));
   }
 }

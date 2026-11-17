@@ -119,9 +119,7 @@ final class GridCoordCodable implements KeyedCodable<GridCoord> {
 
   @override
   void encode(GridCoord instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$GridCoordSchema.nameRow, instance.row);
-    keyed.encodeInt(_$GridCoordSchema.nameCol, instance.col);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 

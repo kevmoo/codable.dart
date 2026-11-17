@@ -1033,29 +1033,14 @@ final class _HandwrittenEventSuperCodable
   ];
 }
 
-final class _HandwrittenEventSuperEncodable
-    extends SuperEncodable<_HandwrittenEvent> {
-  const _HandwrittenEventSuperEncodable();
-
-  @override
-  String get discriminatorKey => 'event';
-
-  @override
-  List<PolymorphicEncodableSubtype<_HandwrittenEvent>> get subtypes => const [
-    SubtypeEncodable('start', _StartEventCodable()),
-    SubtypeEncodable('stop', _StopEventCodable()),
-  ];
-}
-
 void _registerSuperCodableAndNullableAdapterTests() {
-  group('SuperCodable, SuperEncodable, and nullable codec adapters', () {
-    test('roundtrips second subtype via SuperCodable & SuperEncodable without TypeError', () {
+  group('SuperCodable and nullable codec adapters', () {
+    test('roundtrips second subtype via SuperCodable without TypeError', () {
       const codec = _HandwrittenEventSuperCodable();
-      const encOnly = _HandwrittenEventSuperEncodable();
 
       final stopJson = JsonCodableEncoder.encode<_HandwrittenEvent>(
         const _StopEvent('graceful', exitCode: 0),
-        encOnly,
+        codec,
       );
       check(stopJson)
           .equals('{"event":"stop","reason":"graceful","exitCode":0}');

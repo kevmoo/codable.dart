@@ -24,7 +24,7 @@ final class CodableAnnotation implements Codable<Never> {
 
   /// Wire property name used as the subtype discriminator when annotating a
   /// polymorphic `sealed` or `abstract` base class (defaults to `'type'` on
-  /// `sealed` classes when omitted).
+  /// `sealed` classes or whenever [subtypes] is provided).
   final String? discriminatorKey;
 
   /// Explicit wire value identifying this concrete subtype under an enclosing

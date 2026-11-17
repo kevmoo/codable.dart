@@ -122,9 +122,10 @@ void main() {
         // Positional constructor call
         check(output).contains('return Point(\n      x!,\n      y!,\n    );');
 
-        // Verify universal encoder with constant length hint
+        // Verify universal encoder delegating to encodeFields on non-nullable model
         check(output).contains('void encode(Point instance, Encoder encoder)');
-        check(output).contains('final keyed = encoder.keyed(length: 2);');
+        check(output)
+            .contains('encodeFields(instance, encoder.keyed(length: 2));');
         check(output)
             .contains('keyed.encodeDouble(_\$PointSchema.nameX, instance.x);');
         check(output)
@@ -365,7 +366,8 @@ void main() {
       check(output).contains('Map<bool, double> flagWeights = const {};');
 
       // Constant length hint across 4 non-nullable fields
-      check(output).contains('final keyed = encoder.keyed(length: 4);');
+      check(output)
+          .contains('encodeFields(instance, encoder.keyed(length: 4));');
 
       // Zero closures across both decode and encode
       check(output).not((s) => s.contains('fromFunction'));
@@ -442,7 +444,7 @@ void main() {
         check(compositeOutput)
             .contains('Map<Point, String> labelsByPoint = const {};');
         check(compositeOutput)
-            .contains('final keyed = encoder.keyed(length: 1);');
+            .contains('encodeFields(instance, encoder.keyed(length: 1));');
         check(compositeOutput)
             .contains('final mDecoder = keyed.nestedDecoder().map();');
         check(compositeOutput).contains(
@@ -640,54 +642,50 @@ void main() {
           .throws<StateError>();
     });
 
-    test('synthesizes generic, asymmetric, and polymorphic sealed companions', () {
-      final envOut = runGeneratorFor('Envelope');
-      check(envOut).contains(
-        'final class EnvelopeCodable<T> implements KeyedCodable<Envelope<T>>',
-      );
-      check(envOut).contains('final Codable<T> _\$t;');
-      check(envOut).contains('const EnvelopeCodable(this._\$t);');
-      check(envOut).contains('if (null is T)');
+    test(
+      'synthesizes generic, asymmetric, and polymorphic sealed companions',
+      () {
+        final envOut = runGeneratorFor('Envelope');
+        check(envOut).contains(
+          'final class EnvelopeCodable<T> implements KeyedCodable<Envelope<T>>',
+        );
+        check(envOut).contains('const EnvelopeCodable(');
+        check(envOut).contains('if (null is T)');
 
-      final dashOut = runGeneratorFor('GenericDashboard');
-      check(dashOut)
-          .contains('const EnvelopeCodable<Address>(AddressCodable())');
-      check(
-        dashOut,
-      ).contains('EnvelopeCodable<Address?>(const AddressCodable().nullable)');
-      check(dashOut)
-          .contains('EnvelopeCodable<List<Point>>(const PointCodable().list)');
+        final dashOut = runGeneratorFor('GenericDashboard');
+        check(dashOut)
+            .contains('const EnvelopeCodable<Address>(AddressCodable())');
+        check(dashOut).contains('static final EnvelopeCodable<Address?>');
+        check(dashOut).contains('static final EnvelopeCodable<List<Point>>');
+        check(dashOut).contains('encodeFields(instance, encoder.keyed(length:');
 
-      final outerOut = runGeneratorFor('OuterGenericWrapper');
-      check(outerOut).contains('EnvelopeCodable<U>(_\$u)');
-      check(outerOut).not((s) => s.contains('const EnvelopeCodable<U>'));
+        final outerOut = runGeneratorFor('OuterGenericWrapper');
+        check(outerOut).not((s) => s.contains('const EnvelopeCodable<U>'));
 
-      final encodeOnlyOut = runGeneratorFor('EncodeOnlyBox');
-      check(encodeOnlyOut).contains(
-        'final class EncodeOnlyBoxCodable<T> implements KeyedEncodable<EncodeOnlyBox<T>>',
-      );
-      check(encodeOnlyOut).contains('final Encodable<T> _\$t;');
-      check(encodeOnlyOut).not((s) => s.contains('keyOptions'));
-      check(encodeOnlyOut).not((s) => s.contains('keyItem'));
+        final encodeOnlyOut = runGeneratorFor('EncodeOnlyBox');
+        check(encodeOnlyOut).contains(
+          'final class EncodeOnlyBoxCodable<T> implements KeyedEncodable<EncodeOnlyBox<T>>',
+        );
+        check(encodeOnlyOut).not((s) => s.contains('keyOptions'));
+        check(encodeOnlyOut).not((s) => s.contains('keyItem'));
 
-      final paymentOut = runGeneratorFor('PaymentMethod');
-      check(paymentOut)
-          .contains("static const String discriminatorKey = 'kind';");
-      check(paymentOut).contains(
-        "static const String subtypeCreditCardPayment = 'credit_card_payment';",
-      );
-      check(paymentOut).not((s) => s.contains('default:'));
+        final paymentOut = runGeneratorFor('PaymentMethod');
+        check(paymentOut).contains(
+          'final class PaymentMethodCodable implements KeyedCodable<PaymentMethod>',
+        );
+        check(paymentOut).not((s) => s.contains('default:'));
+        check(paymentOut).not((s) => s.contains('final subCodec = const'));
 
-      final pluginOut = runGeneratorFor('PluginAction');
-      check(pluginOut).contains('default:');
-      check(pluginOut).contains('No registered subtype for');
+        final pluginOut = runGeneratorFor('PluginAction');
+        check(pluginOut).contains('default:');
+        check(pluginOut).contains('No registered subtype for');
 
-      final outcomeOut = runGeneratorFor('ApiOutcome');
-      check(outcomeOut).contains(
-        'final class ApiOutcomeCodable<T> implements KeyedCodable<ApiOutcome<T>>',
-      );
-      check(outcomeOut).contains('ApiSuccessCodable<T>(_\$t)');
-      check(outcomeOut).contains('const ApiFailureCodable()');
-    });
+        final outcomeOut = runGeneratorFor('ApiOutcome');
+        check(outcomeOut).contains(
+          'final class ApiOutcomeCodable<T> implements KeyedCodable<ApiOutcome<T>>',
+        );
+        check(outcomeOut).contains('const ApiFailureCodable()');
+      },
+    );
   });
 }

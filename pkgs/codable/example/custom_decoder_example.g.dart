@@ -108,11 +108,6 @@ final class DateTimeExampleCodable implements KeyedCodable<DateTimeExample> {
 
   @override
   void encode(DateTimeExample instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeValue(
-      _$DateTimeExampleSchema.nameWhen,
-      instance.when,
-      const DateTimeEpochDecoder(),
-    );
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }

@@ -154,9 +154,7 @@ final class CoordinateCodable implements KeyedCodable<Coordinate> {
 
   @override
   void encode(Coordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
-    keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -338,16 +336,7 @@ final class UserProfileCodable implements KeyedCodable<UserProfile> {
 
   @override
   void encode(UserProfile instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
-    keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
-    keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
-    keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
-    keyed.encodeValue(
-      _$UserProfileSchema.nameZip,
-      instance.zip,
-      const ZipCodeDecoder(),
-    );
-    keyed.encodeStringList(_$UserProfileSchema.nameTags, instance.tags);
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -460,9 +449,7 @@ final class CarCodable implements KeyedCodable<Car> {
 
   @override
   void encode(Car instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
-    keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -577,9 +564,7 @@ final class BicycleCodable implements KeyedCodable<Bicycle> {
 
   @override
   void encode(Bicycle instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
-    keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -1063,16 +1048,6 @@ final class UserWithLocationCodable implements KeyedCodable<UserWithLocation> {
 
   @override
   void encode(UserWithLocation instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeValue(
-      _$UserWithLocationSchema.nameProfile,
-      instance.profile,
-      const UserProfileCodable(),
-    );
-    keyed.encodeValue(
-      _$UserWithLocationSchema.nameLocation,
-      instance.location,
-      const CoordinateCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

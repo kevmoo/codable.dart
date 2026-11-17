@@ -95,15 +95,7 @@ final class TwitterMetadataCodable implements KeyedCodable<TwitterMetadata> {
 
   @override
   void encode(TwitterMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(
-      _$TwitterMetadataSchema.nameResultType,
-      instance.resultType,
-    );
-    keyed.encodeString(
-      _$TwitterMetadataSchema.nameIsoLanguageCode,
-      instance.isoLanguageCode,
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -281,18 +273,7 @@ final class TwitterUserMentionCodable
 
   @override
   void encode(TwitterUserMention instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
-    keyed.encodeString(
-      _$TwitterUserMentionSchema.nameScreenName,
-      instance.screenName,
-    );
-    keyed.encodeString(_$TwitterUserMentionSchema.nameName, instance.name);
-    keyed.encodeInt(_$TwitterUserMentionSchema.nameId, instance.id);
-    keyed.encodeString(_$TwitterUserMentionSchema.nameIdStr, instance.idStr);
-    keyed.encodeIntList(
-      _$TwitterUserMentionSchema.nameIndices,
-      instance.indices,
-    );
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -444,14 +425,7 @@ final class TwitterUrlCodable implements KeyedCodable<TwitterUrl> {
 
   @override
   void encode(TwitterUrl instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
-    keyed.encodeString(_$TwitterUrlSchema.nameUrl, instance.url);
-    keyed.encodeString(
-      _$TwitterUrlSchema.nameExpandedUrl,
-      instance.expandedUrl,
-    );
-    keyed.encodeString(_$TwitterUrlSchema.nameDisplayUrl, instance.displayUrl);
-    keyed.encodeIntList(_$TwitterUrlSchema.nameIndices, instance.indices);
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -532,12 +506,7 @@ final class TwitterEntitiesUrlsCodable
 
   @override
   void encode(TwitterEntitiesUrls instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeList(
-      _$TwitterEntitiesUrlsSchema.nameUrls,
-      instance.urls,
-      const TwitterUrlCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -764,17 +733,7 @@ final class TwitterEntitiesCodable implements KeyedCodable<TwitterEntities> {
 
   @override
   void encode(TwitterEntities instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeList(
-      _$TwitterEntitiesSchema.nameUrls,
-      instance.urls,
-      const TwitterUrlCodable(),
-    );
-    keyed.encodeList(
-      _$TwitterEntitiesSchema.nameUserMentions,
-      instance.userMentions,
-      const TwitterUserMentionCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -2332,34 +2291,7 @@ final class TwitterSearchMetadataCodable
 
   @override
   void encode(TwitterSearchMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 9);
-    keyed.encodeDouble(
-      _$TwitterSearchMetadataSchema.nameCompletedIn,
-      instance.completedIn,
-    );
-    keyed.encodeInt(_$TwitterSearchMetadataSchema.nameMaxId, instance.maxId);
-    keyed.encodeString(
-      _$TwitterSearchMetadataSchema.nameMaxIdStr,
-      instance.maxIdStr,
-    );
-    keyed.encodeString(
-      _$TwitterSearchMetadataSchema.nameNextResults,
-      instance.nextResults,
-    );
-    keyed.encodeString(_$TwitterSearchMetadataSchema.nameQuery, instance.query);
-    keyed.encodeString(
-      _$TwitterSearchMetadataSchema.nameRefreshUrl,
-      instance.refreshUrl,
-    );
-    keyed.encodeInt(_$TwitterSearchMetadataSchema.nameCount, instance.count);
-    keyed.encodeInt(
-      _$TwitterSearchMetadataSchema.nameSinceId,
-      instance.sinceId,
-    );
-    keyed.encodeString(
-      _$TwitterSearchMetadataSchema.nameSinceIdStr,
-      instance.sinceIdStr,
-    );
+    encodeFields(instance, encoder.keyed(length: 9));
   }
 }
 
@@ -2480,16 +2412,6 @@ final class TwitterResponseCodable implements KeyedCodable<TwitterResponse> {
 
   @override
   void encode(TwitterResponse instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeList(
-      _$TwitterResponseSchema.nameStatuses,
-      instance.statuses,
-      const TwitterStatusCodable(),
-    );
-    keyed.encodeValue(
-      _$TwitterResponseSchema.nameSearchMetadata,
-      instance.searchMetadata,
-      const TwitterSearchMetadataCodable(),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

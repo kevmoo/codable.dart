@@ -130,9 +130,7 @@ final class TelemetryCoordinateCodable
 
   @override
   void encode(TelemetryCoordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$TelemetryCoordinateSchema.nameRack, instance.rack);
-    keyed.encodeInt(_$TelemetryCoordinateSchema.nameSlot, instance.slot);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -304,21 +302,6 @@ final class TelemetryBatchCodable implements KeyedCodable<TelemetryBatch> {
 
   @override
   void encode(TelemetryBatch instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
-    keyed.encodeInt(_$TelemetryBatchSchema.nameBatchId, instance.batchId);
-    keyed.encodeBytes(_$TelemetryBatchSchema.nameRawSample, instance.rawSample);
-    keyed.encodeDoubleList(
-      _$TelemetryBatchSchema.nameReadings,
-      instance.readings,
-    );
-    {
-      final m = keyed
-          .nestedEncoder(_$TelemetryBatchSchema.nameCalibrationOffsets)
-          .map(length: instance.calibrationOffsets.length);
-      for (final entry in instance.calibrationOffsets.entries) {
-        const TelemetryCoordinateCodable().encode(entry.key, m.keyEncoder());
-        m.valueEncoder().singleValue().encodeDouble(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }

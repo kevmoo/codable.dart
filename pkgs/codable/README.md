@@ -27,9 +27,8 @@ models from how the JSON payload is represented in memory.
 
 - `package:codable/codable.dart` — Format-agnostic companion contracts
   (`Codable<T>`, `KeyedCodable<T>`, `Decodable<T>`, `Encodable<T>`,
-  `KeyedEncodable<T>`, `SuperCodable<T>`, `SuperDecodable<T>`,
-  `SuperEncodable<T>`, `Decoder`, `Encoder`, `KeyOptions`, and `@Codable`
-  annotations).
+  `KeyedEncodable<T>`, `SuperCodable<T>`, `SuperDecodable<T>`, `Decoder`,
+  `Encoder`, `KeyOptions`, and `@Codable` annotations).
 - `package:codable/codable_json.dart` — Re-exports
   `package:codable/codable.dart` plus the JSON drivers (`JsonCodableDecoder`,
   `JsonCodableEncoder`) and low-level UTF-8 token streaming primitives
@@ -61,6 +60,9 @@ abstract interface class Codable<T> implements Decodable<T>, Encodable<T> {
     bool createDecoder,
     bool useGoldenMask,
     FieldRename fieldRename,
+    String? discriminatorKey,
+    String? discriminatorValue,
+    List<Type>? subtypes,
   }) = CodableAnnotation;
 
   const factory Codable.fromFunctions({
@@ -397,12 +399,58 @@ class Event {
 Annotate a `sealed` class with `@Codable(discriminatorKey: 'type')` (or
 `@Codable()`, which defaults `discriminatorKey` to `'type'`) and each concrete
 subtype with `@Codable()` (optionally overriding `discriminatorValue:`) to
-generate a bidirectional polymorphic companion with `1 + subCount` single-pass
-container framing. For hand-written or cross-library hierarchies, extend
-`SuperCodable<T>` (with `SubtypeCodable`), `SuperEncodable<T>`, or
-`SuperDecodable<T>`. See
+generate a bidirectional polymorphic companion with single-pass `1 + subCount`
+container framing:
+
+```dart
+@Codable(discriminatorKey: 'type')
+sealed class Vehicle {
+  final int maxSpeed;
+  const Vehicle({required this.maxSpeed});
+}
+
+@Codable()
+class Car extends Vehicle {
+  final int doors;
+  const Car({required super.maxSpeed, required this.doors});
+}
+
+@Codable(discriminatorValue: 'cargo_van')
+class CargoVan extends Vehicle {
+  final double payloadTons;
+  const CargoVan({required super.maxSpeed, required this.payloadTons});
+}
+
+final fleet = JsonCodableDecoder.decode(json, const VehicleCodable().list);
+final outJson = JsonCodableEncoder.encode(fleet, const VehicleCodable().list);
+```
+
+For hand-written or cross-library hierarchies, extend `SuperCodable<T>` (with
+`SubtypeCodable`) or `SuperDecodable<T>`. See
 [`example/polymorphic_example.dart`](example/polymorphic_example.dart) for a
 complete working example.
+
+### D. Generic Models
+
+Annotate a generic class with `@Codable()` to synthesize a parameterized
+companion `<Model>Codable<T>(...)` that wires inner `Codable<T>`,
+`Decodable<T>`, or `Encodable<T>` codecs across concrete models, `.list`
+collections, and `.nullable` payloads:
+
+```dart
+@Codable()
+class BaseResponse<T> {
+  final int status;
+  final T data;
+  const BaseResponse({required this.status, required this.data});
+}
+
+const articleEnvelope = BaseResponseCodable<Article>(ArticleCodable());
+final usersEnvelope = BaseResponseCodable<List<User>>(const UserCodable().list);
+final optionalEnvelope = BaseResponseCodable<Article?>(
+  const ArticleCodable().nullable,
+);
+```
 
 ## Complete Runnable Examples
 
@@ -411,13 +459,15 @@ See the [`example/`](example/) directory for self-contained examples:
 - [`example/basic_example.dart`](example/basic_example.dart) — `@Codable()`,
   `@CodableKey()` aliases, nested models, and `Codable<DateTime>`.
 - [`example/generic_response_example.dart`](example/generic_response_example.dart)
-  — Generic `@Codable()` envelope (`BaseResponse<T>`) with parameterized
-  `BaseResponseCodable<T>` synthesis.
+  — Generic `@Codable()` envelope (`BaseResponse<T>`) across concrete, `.list`,
+  and `.nullable` payloads.
 - [`example/custom_decoder_example.dart`](example/custom_decoder_example.dart) —
   Multi-representation field normalization (epoch integer vs. ISO-8601 string).
 - [`example/polymorphic_example.dart`](example/polymorphic_example.dart) —
-  Sealed class polymorphic decoding and encoding (`Vehicle` / `Car` /
-  `Bicycle`).
+  Sealed class polymorphic decoding and encoding (`Vehicle` / `Car` / `Bicycle`
+  / `CargoVan`).
+- [`example/nested_values_example.dart`](example/nested_values_example.dart) —
+  Direct streaming nested array extraction without intermediate wrappers.
 - [`example/tuple_example.dart`](example/tuple_example.dart) — Fixed-length
   numeric tuple decoding into `Float64List` via `@CodableTuple(2)`.
 - [`example/zero_copy_streaming_example.dart`](example/zero_copy_streaming_example.dart)

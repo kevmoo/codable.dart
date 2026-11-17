@@ -3,11 +3,38 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
+
+/// Reads `(createDecoder, createEncoder)` flags from `@Codable(...)` on
+/// [element], defaulting both to `true`.
+(bool createDecoder, bool createEncoder) readCodableFlags(
+  ClassElement element,
+) {
+  final annotation = codableTypeChecker.firstAnnotationOf(element);
+  if (annotation == null) return (true, true);
+  final reader = ConstantReader(annotation);
+  final dec = reader.peek('createDecoder')?.boolValue ?? true;
+  final enc = reader.peek('createEncoder')?.boolValue ?? true;
+  return (dec, enc);
+}
+
+/// Whether [keyType] is a non-nullable `dart:core.String` map key.
+bool isStringMapKey(DartType? keyType) =>
+    keyType != null &&
+    keyType.isDartCoreString &&
+    keyType.nullabilitySuffix == NullabilitySuffix.none;
+
+/// Returns the [index]-th type argument of [type] when it is an [InterfaceType]
+/// with sufficient arguments, or `null` otherwise.
+DartType? typeArgAt(DartType type, int index) =>
+    type is InterfaceType && type.typeArguments.length > index
+    ? type.typeArguments[index]
+    : null;
 
 /// TypeChecker for [@Codable].
 const codableTypeChecker = TypeChecker.fromUrl(

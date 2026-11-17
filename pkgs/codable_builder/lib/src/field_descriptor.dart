@@ -215,20 +215,12 @@ final class PolymorphicSubtypeDescriptor {
   /// empty for `Err extends Result<Never>`).
   final List<DartType> typeArguments;
 
-  /// Whether the subtype's `@Codable` generates a decoder.
-  final bool subtypeCreatesDecoder;
-
-  /// Whether the subtype's `@Codable` generates an encoder.
-  final bool subtypeCreatesEncoder;
-
   const PolymorphicSubtypeDescriptor({
     required this.element,
     required this.className,
     required this.discriminatorValue,
     required this.schemaSuffix,
     this.typeArguments = const [],
-    this.subtypeCreatesDecoder = true,
-    this.subtypeCreatesEncoder = true,
   });
 
   /// Type application suffix (`''` or `'<T>'`).
@@ -282,9 +274,15 @@ final class ModelDescriptor {
   /// Registered concrete subtypes when [isPolymorphic] is `true`.
   final List<PolymorphicSubtypeDescriptor> polymorphicSubtypes;
 
-  /// Whether [element] is a Dart `sealed class` (enabling exhaustive switches
-  /// without a wildcard branch).
+  /// Whether [element] is an exhaustively sealed Dart class hierarchy.
   final bool isSealed;
+
+  /// Closed non-`const` codec expressions hoisted to `static final` fields on
+  /// `_$<Model>Schema`.
+  final List<({String name, String typeCode, String exprCode})> closedCodecs =
+      [];
+
+  final Map<String, String> _closedCodecRefByKey = {};
 
   ModelDescriptor({
     required this.element,
@@ -327,11 +325,27 @@ final class ModelDescriptor {
     if (paramElement == null) return null;
     final target = paramElement.baseElement;
     for (final tp in typeParameters) {
-      if (tp.element.baseElement == target || tp.name == paramElement.name) {
+      if (tp.element.baseElement == target) {
         return tp.codecFieldName;
       }
     }
     return null;
+  }
+
+  /// Registers or deduplicates a closed non-`const` codec expression on
+  /// `_$<Model>Schema` and returns its static field reference.
+  String registerClosedCodec({
+    required String typeCode,
+    required String exprCode,
+  }) {
+    final key = '$typeCode::$exprCode';
+    final existing = _closedCodecRefByKey[key];
+    if (existing != null) return existing;
+    final fieldName = 'codec${closedCodecs.length}';
+    closedCodecs.add((name: fieldName, typeCode: typeCode, exprCode: exprCode));
+    final ref = '_\$${className}Schema.$fieldName';
+    _closedCodecRefByKey[key] = ref;
+    return ref;
   }
 
   /// Whether all non-ignored fields in this model are homogeneous, non-nullable

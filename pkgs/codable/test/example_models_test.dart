@@ -60,10 +60,15 @@ void main() {
       );
       check(roundtripped.firstName).equals('Alice');
       check(roundtripped.lastName).equals('Smith');
+      check(roundtripped.dateOfBirth)
+          .equals(DateTime.parse('1995-03-20T00:00:00.000Z'));
       check(roundtripped.orders.length).equals(1);
+      check(roundtripped.orders.first.count).equals(5);
+      check(roundtripped.orders.first.isRushed).equals(true);
+      check(roundtripped.orders.first.item?.itemNumber).equals(101);
     });
 
-    test('GenericResponseExample: BaseResponse<Article> roundtrip', () {
+    test('GenericResponseExample: BaseResponse<T> concrete, list, and nullable roundtrips', () {
       const json = '''
       {
         "status": 200,
@@ -80,9 +85,7 @@ void main() {
       ''';
 
       const codec = BaseResponseCodable<Article>(ArticleCodable());
-      final bytes = Uint8List.fromList(utf8.encode(json));
-      final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final response = codec.decode(decoder);
+      final response = JsonCodableDecoder.decode(json, codec);
 
       check(response.status).equals(200);
       check(response.message).equals('OK');
@@ -90,13 +93,45 @@ void main() {
       check(response.data.title).equals('Dart 4 Zero-Allocation');
       check(response.data.author?.email).equals('alice@dart.dev');
 
-      final encoded = JsonCodableEncoder.toBytes(response, codec);
-      final roundtripped = codec.decode(JsonCodableDecoder.fromBytes(encoded));
+      final encoded = JsonCodableEncoder.encode(response, codec);
+      final roundtripped = JsonCodableDecoder.decode(encoded, codec);
       check(roundtripped.status).equals(200);
       check(roundtripped.message).equals('OK');
       check(roundtripped.data.id).equals(42);
       check(roundtripped.data.title).equals('Dart 4 Zero-Allocation');
       check(roundtripped.data.author?.email).equals('alice@dart.dev');
+
+      final listCodec = BaseResponseCodable<List<User>>(
+        const UserCodable().list,
+      );
+      const usersEnv = BaseResponse<List<User>>(
+        status: 200,
+        message: 'OK',
+        data: [
+          User(id: 1, email: 'a@b.dev'),
+          User(id: 2, email: 'c@d.dev'),
+        ],
+      );
+      final usersRoundtrip = JsonCodableDecoder.decode(
+        JsonCodableEncoder.encode(usersEnv, listCodec),
+        listCodec,
+      );
+      check(usersRoundtrip.data.map((u) => u.email))
+          .deepEquals(['a@b.dev', 'c@d.dev']);
+
+      final nullableCodec = BaseResponseCodable<Article?>(
+        const ArticleCodable().nullable,
+      );
+      const emptyEnv = BaseResponse<Article?>(
+        status: 204,
+        message: 'No Content',
+        data: null,
+      );
+      final emptyJson = JsonCodableEncoder.encode(emptyEnv, nullableCodec);
+      check(emptyJson).equals('{"status":204,"message":"No Content"}');
+      final emptyDecoded = JsonCodableDecoder.decode(emptyJson, nullableCodec);
+      check(emptyDecoded.status).equals(204);
+      check(emptyDecoded.data).isNull();
     });
 
     test('CustomDecoderExample: DateTimeEpochDecoder', () {
@@ -160,44 +195,44 @@ void main() {
       const jsonArray = '''
       [
         {"type": "car", "maxSpeed": 120, "doors": 4},
-        {"type": "bicycle", "maxSpeed": 25, "hasBell": true}
+        {"maxSpeed": 25, "hasBell": true, "type": "bicycle"},
+        {"type": "cargo_van", "maxSpeed": 95, "payloadTons": 3.5}
       ]
       ''';
 
-      final bytes = Uint8List.fromList(utf8.encode(jsonArray));
-      final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final vehicles = const VehicleCodable().decodeList(decoder);
+      final vehicles = JsonCodableDecoder.decode(
+        jsonArray,
+        const VehicleCodable().list,
+      );
 
-      check(vehicles.length).equals(2);
-      check(vehicles[0]).isA<Car>();
-      check((vehicles[0] as Car).maxSpeed).equals(120);
-      check((vehicles[0] as Car).doors).equals(4);
-      check(vehicles[1]).isA<Bicycle>();
-      check((vehicles[1] as Bicycle).maxSpeed).equals(25);
-      check((vehicles[1] as Bicycle).hasBell).isTrue();
+      check(vehicles.length).equals(3);
+      check(vehicles[0])
+          .isA<Car>()
+          .has((c) => (c.maxSpeed, c.doors), 'car')
+          .equals((120, 4));
+      check(vehicles[1])
+          .isA<Bicycle>()
+          .has((b) => (b.maxSpeed, b.hasBell), 'bicycle')
+          .equals((25, true));
+      check(vehicles[2])
+          .isA<CargoVan>()
+          .has((v) => (v.maxSpeed, v.payloadTons), 'van')
+          .equals((95, 3.5));
 
-      final carJson = JsonCodableEncoder.encode<Vehicle>(
-        vehicles[0],
-        const VehicleCodable(),
+      final roundtrippedJson = JsonCodableEncoder.encode(
+        vehicles,
+        const VehicleCodable().list,
       );
-      check(carJson).contains('"type":"car"');
-      final roundtrippedCar = const VehicleCodable().decode(
-        JsonCodableDecoder.fromString(carJson),
+      check(roundtrippedJson).contains('"type":"cargo_van"');
+      final roundtripped = JsonCodableDecoder.decode(
+        roundtrippedJson,
+        const VehicleCodable().list,
       );
-      check(roundtrippedCar).isA<Car>();
-      check((roundtrippedCar as Car).maxSpeed).equals(120);
-      check(roundtrippedCar.doors).equals(4);
-
-      final bikeBytes = JsonCodableEncoder.toBytes<Vehicle>(
-        vehicles[1],
-        const VehicleCodable(),
-      );
-      final roundtrippedBike = const VehicleCodable().decode(
-        JsonCodableDecoder.fromBytes(bikeBytes),
-      );
-      check(roundtrippedBike).isA<Bicycle>();
-      check((roundtrippedBike as Bicycle).maxSpeed).equals(25);
-      check(roundtrippedBike.hasBell).isTrue();
+      check(roundtripped.length).equals(3);
+      check(roundtripped[2])
+          .isA<CargoVan>()
+          .has((v) => v.payloadTons, 'payloadTons')
+          .equals(3.5);
     });
   });
 }

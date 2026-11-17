@@ -189,10 +189,7 @@ final class GridCellCodable implements KeyedCodable<GridCell> {
 
   @override
   void encode(GridCell instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeInt(_$GridCellSchema.nameRow, instance.row);
-    keyed.encodeInt(_$GridCellSchema.nameCol, instance.col);
-    keyed.encodeString(_$GridCellSchema.nameLabel, instance.label);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -312,34 +309,6 @@ final class GridBoardCodable implements KeyedCodable<GridBoard> {
 
   @override
   void encode(GridBoard instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeList(
-      _$GridBoardSchema.nameCells,
-      instance.cells,
-      Encodable.fromFunction((List<GridCell> item, e) {
-        {
-          final u = e.unkeyed(length: item.length);
-          for (final elem in item) {
-            const GridCellCodable().encode(elem, u.nestedEncoder());
-          }
-        }
-      }),
-    );
-    keyed.encodeList(
-      _$GridBoardSchema.nameNullableRows,
-      instance.nullableRows,
-      Encodable.fromFunction((List<GridCell>? item, e) {
-        if (item case final val0?) {
-          {
-            final u1 = e.unkeyed(length: val0.length);
-            for (final elem1 in val0) {
-              const GridCellCodable().encode(elem1, u1.nestedEncoder());
-            }
-          }
-        } else {
-          e.singleValue().encodeNull();
-        }
-      }),
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

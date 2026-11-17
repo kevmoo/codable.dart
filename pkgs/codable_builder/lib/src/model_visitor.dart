@@ -128,7 +128,7 @@ final class ModelVisitor {
     for (final tp in element.typeParameters) {
       final tpName = tp.name ?? 'T';
       final rawCamel = toLowerCamelCase(tpName);
-      final fieldSuffix = _allocateUniqueSuffix(
+      final fieldSuffix = allocateUniqueSuffix(
         rawCamel.isEmpty ? 't' : rawCamel,
         usedNames,
       );
@@ -713,12 +713,13 @@ final class ModelVisitor {
     final needsNativeDecode = createDecoder && customDecoderCode == null;
     final needsNativeEncode = createEncoder && customEncoderCode == null;
     if (needsNativeDecode || needsNativeEncode) {
-      _validateNativeTypeSupport(
-        element,
-        param,
-        param.type,
-        enclosingTypeParams,
-      );
+      _validateNativeTypeSupport(param.type, (
+        enclosingClass: element,
+        param: param,
+        enclosingTypeParams: enclosingTypeParams,
+        needsDecode: needsNativeDecode,
+        needsEncode: needsNativeEncode,
+      ));
     }
   }
 
@@ -755,67 +756,81 @@ final class ModelVisitor {
     }
   }
 
-  void _validateNativeTypeSupport(
-    ClassElement enclosingClass,
-    FormalParameterElement param,
-    DartType type,
-    Set<Element> enclosingTypeParams,
-  ) {
+  void _validateNativeTypeSupport(DartType type, _TypeValidationCtx ctx) {
     if (_isUnsupportedSpecialType(type)) {
-      throw _unsupportedTypeError(param, type);
+      throw _unsupportedTypeError(ctx.param, type);
     }
     if (type is TypeParameterType) {
-      if (!enclosingTypeParams.contains(type.element.baseElement)) {
-        throw _unsupportedTypeError(param, type);
+      if (!ctx.enclosingTypeParams.contains(type.element.baseElement)) {
+        throw _unsupportedTypeError(ctx.param, type);
       }
       return;
     }
     if (_isScalarOrTypedData(type)) return;
     final typeElement = type.element;
     if (typeElement != null && _typeClassifier.isCodableElement(typeElement)) {
-      _validateCodableInterfaceType(
-        enclosingClass,
-        param,
-        type,
-        typeElement,
-        enclosingTypeParams,
-      );
+      _validateCodableInterfaceType(type, typeElement, ctx);
       return;
     }
     if (_isLinearCollectionType(type, typeElement)) {
-      _validateLinearCollectionType(
-        enclosingClass,
-        param,
-        type,
-        enclosingTypeParams,
-      );
+      _validateLinearCollectionType(type, ctx);
       return;
     }
     if (type.isDartCoreMap || typeElement?.name == 'Map') {
-      _validateMapType(enclosingClass, param, type, enclosingTypeParams);
+      _validateMapType(type, ctx);
       return;
     }
-    throw _unsupportedTypeError(param, type);
+    throw _unsupportedTypeError(ctx.param, type);
   }
 
   void _validateCodableInterfaceType(
-    ClassElement enclosingClass,
-    FormalParameterElement param,
     DartType type,
     Element typeElement,
-    Set<Element> enclosingTypeParams,
+    _TypeValidationCtx ctx,
   ) {
-    if (type is! InterfaceType) return;
-    if (typeElement is ClassElement &&
-        type.typeArguments.length != typeElement.typeParameters.length) {
-      throw _unsupportedTypeError(param, type);
+    if (type is! InterfaceType || typeElement is! ClassElement) return;
+    if (type.typeArguments.length != typeElement.typeParameters.length) {
+      throw _unsupportedTypeError(ctx.param, type);
     }
+    final (subDec, subEnc) = readCodableFlags(typeElement);
+    _validateNestedCodableDirection(typeElement, subDec, subEnc, ctx);
+    final argCtx = (
+      enclosingClass: ctx.enclosingClass,
+      param: ctx.param,
+      enclosingTypeParams: ctx.enclosingTypeParams,
+      needsDecode: ctx.needsDecode && subDec,
+      needsEncode: ctx.needsEncode && subEnc,
+    );
     for (final arg in type.typeArguments) {
-      _validateNativeTypeSupport(
-        enclosingClass,
-        param,
-        arg,
-        enclosingTypeParams,
+      _validateNativeTypeSupport(arg, argCtx);
+    }
+  }
+
+  static void _validateNestedCodableDirection(
+    ClassElement nested,
+    bool subDec,
+    bool subEnc,
+    _TypeValidationCtx ctx,
+  ) {
+    if (!subDec && !subEnc) {
+      throw InvalidGenerationSourceError(
+        'Parameter "${ctx.param.name}" references "${nested.name}", which '
+        'disables both createDecoder and createEncoder.',
+        element: ctx.param,
+      );
+    }
+    if (ctx.needsDecode && !subDec) {
+      throw InvalidGenerationSourceError(
+        'Parameter "${ctx.param.name}" references "${nested.name}", which '
+        'sets createDecoder: false on a class requiring decoding.',
+        element: ctx.param,
+      );
+    }
+    if (ctx.needsEncode && !subEnc) {
+      throw InvalidGenerationSourceError(
+        'Parameter "${ctx.param.name}" references "${nested.name}", which '
+        'sets createEncoder: false on a class requiring encoding.',
+        element: ctx.param,
       );
     }
   }
@@ -846,54 +861,29 @@ final class ModelVisitor {
     return classifyTypedDataKind(type) != null;
   }
 
-  void _validateLinearCollectionType(
-    ClassElement enclosingClass,
-    FormalParameterElement param,
-    DartType type,
-    Set<Element> enclosingTypeParams,
-  ) {
+  void _validateLinearCollectionType(DartType type, _TypeValidationCtx ctx) {
     final elemType = type is InterfaceType && type.typeArguments.length == 1
         ? type.typeArguments.first
         : null;
-    if (elemType == null) throw _unsupportedTypeError(param, type);
-    _validateNativeTypeSupport(
-      enclosingClass,
-      param,
-      elemType,
-      enclosingTypeParams,
-    );
+    if (elemType == null) throw _unsupportedTypeError(ctx.param, type);
+    _validateNativeTypeSupport(elemType, ctx);
   }
 
-  void _validateMapType(
-    ClassElement enclosingClass,
-    FormalParameterElement param,
-    DartType type,
-    Set<Element> enclosingTypeParams,
-  ) {
+  void _validateMapType(DartType type, _TypeValidationCtx ctx) {
     if (type is! InterfaceType || type.typeArguments.length != 2) {
-      throw _unsupportedTypeError(param, type);
+      throw _unsupportedTypeError(ctx.param, type);
     }
     final keyType = type.typeArguments[0];
     final valType = type.typeArguments[1];
-    if (!_isValidMapKeyType(enclosingClass, keyType, enclosingTypeParams)) {
-      throw _unsupportedMapKeyError(param, keyType);
+    if (!_isValidMapKeyType(
+      ctx.enclosingClass,
+      keyType,
+      ctx.enclosingTypeParams,
+    )) {
+      throw _unsupportedMapKeyError(ctx.param, keyType);
     }
-    if (keyType is InterfaceType) {
-      for (final arg in keyType.typeArguments) {
-        _validateNativeTypeSupport(
-          enclosingClass,
-          param,
-          arg,
-          enclosingTypeParams,
-        );
-      }
-    }
-    _validateNativeTypeSupport(
-      enclosingClass,
-      param,
-      valType,
-      enclosingTypeParams,
-    );
+    _validateNativeTypeSupport(keyType, ctx);
+    _validateNativeTypeSupport(valType, ctx);
   }
 
   bool _isValidMapKeyType(
@@ -965,7 +955,7 @@ final class ModelVisitor {
       var aliasSuffixes = const <String>[];
       int? reqBitIndex;
       if (!raw.ignore) {
-        fieldSuffix = _allocateUniqueSuffix(fieldSuffix, usedFieldSuffixes);
+        fieldSuffix = allocateUniqueSuffix(fieldSuffix, usedFieldSuffixes);
         keyIndex = allOptionsKeys.length;
         allOptionsKeys.add(raw.wireName);
         aliasIndices = [
@@ -973,7 +963,7 @@ final class ModelVisitor {
         ];
         aliasSuffixes = [
           for (final alias in raw.aliases)
-            _allocateUniqueSuffix(
+            allocateUniqueSuffix(
               '$fieldSuffix${toSafeIdentifierSuffix(alias)}',
               usedAliasSuffixes,
             ),
@@ -1012,15 +1002,6 @@ final class ModelVisitor {
       );
     }
     return processedFields;
-  }
-
-  static String _allocateUniqueSuffix(String base, Set<String> usedSuffixes) {
-    if (usedSuffixes.add(base)) return base;
-    var index = 2;
-    while (!usedSuffixes.add('$base\$$index')) {
-      index++;
-    }
-    return '$base\$$index';
   }
 
   int _addOptionKey(List<String> allOptionsKeys, String key) {
@@ -1136,6 +1117,14 @@ final class ModelVisitor {
     return null;
   }
 }
+
+typedef _TypeValidationCtx = ({
+  ClassElement enclosingClass,
+  FormalParameterElement param,
+  Set<Element> enclosingTypeParams,
+  bool needsDecode,
+  bool needsEncode,
+});
 
 final class _RawFieldData {
   final FormalParameterElement param;

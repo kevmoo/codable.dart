@@ -2,16 +2,20 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-// ignore_for_file: unreachable_from_main
-
-import 'dart:convert';
-import 'dart:typed_data';
+/// Demonstrates single-pass polymorphic `@Codable()` decoding and encoding over
+/// a `sealed` class hierarchy with default and explicit discriminator values.
+library;
 
 import 'package:codable/codable_json.dart';
 
 part 'polymorphic_example.g.dart';
 
-/// Base sealed class for polymorphic vehicle hierarchy.
+/// Sealed base class dispatched on wire key `'type'`.
+///
+/// `codable_builder` discovers all concrete `@Codable()` subtypes in this
+/// library and generates `const VehicleCodable()` with single-pass
+/// `[discriminatorKey, ...subtypeFields]` encoding and exhaustive `switch`
+/// dispatch.
 @Codable(discriminatorKey: 'type')
 sealed class Vehicle {
   final int maxSpeed;
@@ -19,6 +23,7 @@ sealed class Vehicle {
   const Vehicle({required this.maxSpeed});
 }
 
+/// Uses the default discriminator value `'car'` (derived from class name).
 @Codable()
 class Car extends Vehicle {
   final int doors;
@@ -26,6 +31,7 @@ class Car extends Vehicle {
   const Car({required super.maxSpeed, required this.doors});
 }
 
+/// Uses the default discriminator value `'bicycle'`.
 @Codable()
 class Bicycle extends Vehicle {
   final bool hasBell;
@@ -33,24 +39,36 @@ class Bicycle extends Vehicle {
   const Bicycle({required super.maxSpeed, required this.hasBell});
 }
 
+/// Overrides the wire discriminator value explicitly with `'cargo_van'`.
+@Codable(discriminatorValue: 'cargo_van')
+class CargoVan extends Vehicle {
+  final double payloadTons;
+
+  const CargoVan({required super.maxSpeed, required this.payloadTons});
+}
+
 void main() {
   const jsonArray = '''
   [
     {"type": "car", "maxSpeed": 120, "doors": 4},
-    {"type": "bicycle", "maxSpeed": 25, "hasBell": true}
+    {"maxSpeed": 25, "hasBell": true, "type": "bicycle"},
+    {"type": "cargo_van", "maxSpeed": 95, "payloadTons": 3.5}
   ]
   ''';
 
-  final bytes = Uint8List.fromList(utf8.encode(jsonArray));
-  final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final vehicles = const VehicleCodable().decodeList(decoder);
+  final fleetCodec = const VehicleCodable().list;
+  final vehicles = JsonCodableDecoder.decode(jsonArray, fleetCodec);
 
-  for (final v in vehicles) {
-    print('Vehicle: ${v.runtimeType} (maxSpeed: ${v.maxSpeed})');
-    final outBytes = JsonCodableEncoder.toBytes<Vehicle>(
-      v,
-      const VehicleCodable(),
-    );
-    print('Serialized: ${utf8.decode(outBytes)}');
+  for (final vehicle in vehicles) {
+    final summary = switch (vehicle) {
+      Car(:final doors, :final maxSpeed) =>
+        'Car ($doors doors, $maxSpeed km/h)',
+      Bicycle(:final hasBell, :final maxSpeed) =>
+        'Bicycle (bell: $hasBell, $maxSpeed km/h)',
+      CargoVan(:final payloadTons, :final maxSpeed) =>
+        'CargoVan (${payloadTons}t, $maxSpeed km/h)',
+    };
+    final encoded = JsonCodableEncoder.encode(vehicle, const VehicleCodable());
+    print('$summary -> $encoded');
   }
 }

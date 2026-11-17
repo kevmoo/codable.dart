@@ -171,13 +171,12 @@ package:codable/codable.dart:
     readNullableString (method: String? Function(String))
     readNum (method: num Function(String))
     readString (method: String Function(String))
-  PolymorphicEncodableSubtype (class<Base> extends Object, abstract, interface):
+  PolymorphicSubtype (class<Base> extends Object, abstract, interface):
     discriminatorValue (getter: String)
+    decode (method: Base Function(Decoder))
     encodeFields (method: void Function(Base, KeyedEncoder))
     encodedFieldCount (method: int? Function(Base))
     matches (method: bool Function(Base))
-  PolymorphicSubtype (class<Base> extends Object implements PolymorphicEncodableSubtype<Base>, abstract, interface):
-    decode (method: Base Function(Decoder))
   SingleValueDecoder (class extends Object, abstract, interface):
     decode (method: T Function<T>(Decodable<T>))
     decodeNullable (method: T? Function<T>(Decodable<T>))
@@ -221,29 +220,19 @@ package:codable/codable.dart:
     encodeFields (method: void Function(Base, KeyedEncoder))
     encodedFieldCount (method: int? Function(Base))
     matches (method: bool Function(Base))
-  SubtypeEncodable (class<Base, Sub extends Base> extends Object implements PolymorphicEncodableSubtype<Base>, final):
-    new (const constructor: SubtypeEncodable<Base, Sub> Function(String, KeyedEncodable<Sub>))
-    discriminatorValue (getter: String)
-    encodable (getter: KeyedEncodable<Sub>)
-    encodeFields (method: void Function(Base, KeyedEncoder))
-    encodedFieldCount (method: int? Function(Base))
-    matches (method: bool Function(Base))
-  SuperCodable (class<T> extends SuperEncodable<T> implements KeyedCodable<T>, abstract):
+  SuperCodable (class<T> extends Object implements KeyedCodable<T>, abstract):
     new (const constructor: SuperCodable<T> Function())
+    discriminatorKey (getter: String)
     subtypes (getter: List<PolymorphicSubtype<T>>)
     decode (method: T Function(Decoder))
+    encode (method: void Function(T, Encoder))
+    encodeFields (method: void Function(T, KeyedEncoder))
+    encodedFieldCount (method: int? Function(T))
   SuperDecodable (class<T> extends Object implements Decodable<T>, abstract):
     new (const constructor: SuperDecodable<T> Function())
     discriminatorKey (getter: String)
     subtypes (getter: Map<String, Decodable<T>>)
     decode (method: T Function(Decoder))
-  SuperEncodable (class<T> extends Object implements KeyedEncodable<T>, abstract):
-    new (const constructor: SuperEncodable<T> Function())
-    discriminatorKey (getter: String)
-    subtypes (getter: List<PolymorphicEncodableSubtype<T>>)
-    encode (method: void Function(T, Encoder))
-    encodeFields (method: void Function(T, KeyedEncoder))
-    encodedFieldCount (method: int? Function(T))
   UnkeyedDecoder (class extends Object, abstract, interface):
     length (getter: int?)
     decodeBoolList (method: List<bool> Function())
@@ -314,12 +303,8 @@ package:codable/codable.dart:
     encodeList (method: void Function(Iterable<T>, Encoder))
   EncodableNullableExtension (extension on Encodable<T>):
     nullable (getter: Encodable<T?>)
-  SuperCodableExtension (extension on SuperCodable<T>):
-    decodeSuper (method: T Function(Decoder))
   SuperDecodableExtension (extension on SuperDecodable<T>):
     decodeSuper (method: T Function(Decoder))
-  SuperEncodableExtension (extension on SuperEncodable<T>):
-    encodeSuper (method: void Function(T, Encoder))
 package:codable/codable_driver.dart:
   codable (see above)
   BaseKeyedDecoderMixin (mixin on Object implements KeyedDecoder):
@@ -469,7 +454,6 @@ package:codable/codable_driver.dart:
   MapDecoder (see above)
   MapEncoder (see above)
   MappedDecoder (see above)
-  PolymorphicEncodableSubtype (see above)
   PolymorphicSubtype (see above)
   SingleValueDecoder (see above)
   SingleValueEncoder (see above)
@@ -499,10 +483,8 @@ package:codable/codable_driver.dart:
     singleValue (method: SingleValueDecoder Function())
     unkeyed (method: UnkeyedDecoder Function())
   SubtypeCodable (see above)
-  SubtypeEncodable (see above)
   SuperCodable (see above)
   SuperDecodable (see above)
-  SuperEncodable (see above)
   UnkeyedDecoder (see above)
   UnkeyedEncoder (see above)
   ValueKind (see above)
@@ -512,9 +494,7 @@ package:codable/codable_driver.dart:
   DecodableNullableExtension (see above)
   EncodableListExtension (see above)
   EncodableNullableExtension (see above)
-  SuperCodableExtension (see above)
   SuperDecodableExtension (see above)
-  SuperEncodableExtension (see above)
 package:codable/codable_json.dart:
   codable (see above)
   jsonUtf8 (static const getter: JsonUtf8Codec)
@@ -691,15 +671,12 @@ package:codable/codable_json.dart:
   MapDecoder (see above)
   MapEncoder (see above)
   MappedDecoder (see above)
-  PolymorphicEncodableSubtype (see above)
   PolymorphicSubtype (see above)
   SingleValueDecoder (see above)
   SingleValueEncoder (see above)
   SubtypeCodable (see above)
-  SubtypeEncodable (see above)
   SuperCodable (see above)
   SuperDecodable (see above)
-  SuperEncodable (see above)
   UnkeyedDecoder (see above)
   UnkeyedEncoder (see above)
   ValueKind (see above)
@@ -711,9 +688,7 @@ package:codable/codable_json.dart:
   EncodableNullableExtension (see above)
   JsonTokenReaderCodableExtension (extension on JsonTokenReader):
     isNextNull (method: bool Function())
-  SuperCodableExtension (see above)
   SuperDecodableExtension (see above)
-  SuperEncodableExtension (see above)
 dart:_internal:
   BytesBuilder (referenced)
 dart:convert:

@@ -129,10 +129,7 @@ final class EndpointConfigCodable implements KeyedCodable<EndpointConfig> {
 
   @override
   void encode(EndpointConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeString(_$EndpointConfigSchema.nameHost, instance.host);
-    keyed.encodeInt(_$EndpointConfigSchema.namePort, instance.port);
-    keyed.encodeBool(_$EndpointConfigSchema.nameTls, instance.tls);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -321,30 +318,6 @@ final class GatewayManifestCodable implements KeyedCodable<GatewayManifest> {
 
   @override
   void encode(GatewayManifest instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
-    keyed.encodeString(_$GatewayManifestSchema.nameService, instance.service);
-    keyed.encodeValue(
-      _$GatewayManifestSchema.namePrimary,
-      instance.primary,
-      const EndpointConfigCodable(),
-    );
-    keyed.encodeValue(
-      _$GatewayManifestSchema.nameFallback,
-      instance.fallback,
-      const EndpointConfigCodable(),
-    );
-    {
-      final m = keyed
-          .nestedEncoder(_$GatewayManifestSchema.nameStatusRoutes)
-          .map(length: instance.statusRoutes.length);
-      for (final entry in instance.statusRoutes.entries) {
-        m.keyEncoder().singleValue().encodeInt(entry.key);
-        m.valueEncoder().singleValue().encodeString(entry.value);
-      }
-    }
-    keyed.encodeStringList(
-      _$GatewayManifestSchema.nameAllowedOrigins,
-      instance.allowedOrigins,
-    );
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }

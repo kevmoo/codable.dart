@@ -33,12 +33,7 @@ extension SuperDecodableExtension<T> on SuperDecodable<T> {
   /// Decodes a polymorphic value of type [T] from [decoder] using
   /// [discriminatorKey] and [subtypes].
   T decodeSuper(Decoder decoder) {
-    final mapped = decoder.mapped();
-    if (!mapped.containsKey(discriminatorKey) ||
-        mapped.isNull(discriminatorKey)) {
-      throw CodableException.missingKey(discriminatorKey);
-    }
-    final subtypeValue = mapped.readString(discriminatorKey);
+    final subtypeValue = _readDiscriminatorValue(decoder, discriminatorKey);
     final subtype = subtypes[subtypeValue];
     if (subtype == null) {
       throw CodableException.unknownSubtype(
@@ -50,13 +45,16 @@ extension SuperDecodableExtension<T> on SuperDecodable<T> {
   }
 }
 
-/// Covariant subtype encoder binding used by [SuperEncodable].
-abstract interface class PolymorphicEncodableSubtype<Base> {
+/// Bidirectional subtype binding used by [SuperCodable].
+abstract interface class PolymorphicSubtype<Base> {
   /// Wire value written for the enclosing `discriminatorKey`.
   String get discriminatorValue;
 
   /// Whether [value] is an instance handled by this subtype binding.
   bool matches(Base value);
+
+  /// Decodes an instance of this subtype from [decoder].
+  Base decode(Decoder decoder);
 
   /// Exact number of keyed entries [encodeFields] will write for [value], or
   /// `null` when unknown upfront.
@@ -64,38 +62,6 @@ abstract interface class PolymorphicEncodableSubtype<Base> {
 
   /// Writes [value]'s fields into an already-open [keyed] container.
   void encodeFields(Base value, KeyedEncoder keyed);
-}
-
-/// Bidirectional subtype binding used by [SuperCodable].
-abstract interface class PolymorphicSubtype<Base>
-    implements PolymorphicEncodableSubtype<Base> {
-  /// Decodes an instance of this subtype from [decoder].
-  Base decode(Decoder decoder);
-}
-
-/// Constant binding from a [discriminatorValue] to a concrete [KeyedEncodable]
-/// for [Sub] within [Base].
-final class SubtypeEncodable<Base, Sub extends Base>
-    implements PolymorphicEncodableSubtype<Base> {
-  @override
-  final String discriminatorValue;
-
-  /// Concrete [KeyedEncodable] companion for [Sub].
-  final KeyedEncodable<Sub> encodable;
-
-  /// Creates a constant polymorphic subtype encoder binding.
-  const SubtypeEncodable(this.discriminatorValue, this.encodable);
-
-  @override
-  bool matches(Base value) => value is Sub;
-
-  @override
-  int? encodedFieldCount(Base value) =>
-      encodable.encodedFieldCount(value as Sub);
-
-  @override
-  void encodeFields(Base value, KeyedEncoder keyed) =>
-      encodable.encodeFields(value as Sub, keyed);
 }
 
 /// Constant binding from a [discriminatorValue] to a concrete [KeyedCodable]
@@ -125,21 +91,33 @@ final class SubtypeCodable<Base, Sub extends Base>
       codable.encodeFields(value as Sub, keyed);
 }
 
-/// Tagged polymorphic subtype encoder contract complementing [SuperDecodable].
-///
-/// Splices `[discriminatorKey: subtype.discriminatorValue]` ahead of the
-/// matched subtype's [KeyedEncodable.encodeFields] inside a single
-/// [KeyedEncoder] container with exact `1 + subCount` framing.
-abstract class SuperEncodable<T> implements KeyedEncodable<T> {
-  /// Creates a constant [SuperEncodable] descriptor.
-  const SuperEncodable();
+/// Bidirectional polymorphic companion contract combining single-pass
+/// `[discriminatorKey: discriminatorValue, ...subtypeFields]` encoding with
+/// discriminator-based subtype decoding.
+abstract class SuperCodable<T> implements KeyedCodable<T> {
+  /// Creates a constant [SuperCodable] descriptor.
+  const SuperCodable();
 
   /// The property name used as the subtype discriminator (e.g. `'type'`).
   String get discriminatorKey;
 
-  /// Ordered subtype encoder bindings checked via
-  /// [PolymorphicEncodableSubtype.matches].
-  List<PolymorphicEncodableSubtype<T>> get subtypes;
+  /// Ordered subtype bindings checked via [PolymorphicSubtype.matches] on
+  /// encode and [PolymorphicSubtype.discriminatorValue] on decode.
+  List<PolymorphicSubtype<T>> get subtypes;
+
+  @override
+  T decode(Decoder decoder) {
+    final subtypeValue = _readDiscriminatorValue(decoder, discriminatorKey);
+    for (final subtype in subtypes) {
+      if (subtype.discriminatorValue == subtypeValue) {
+        return subtype.decode(decoder);
+      }
+    }
+    throw CodableException.unknownSubtype(
+      discriminatorKey: discriminatorKey,
+      subtypeValue: subtypeValue,
+    );
+  }
 
   @override
   int? encodedFieldCount(T value) {
@@ -155,9 +133,15 @@ abstract class SuperEncodable<T> implements KeyedEncodable<T> {
   }
 
   @override
-  void encode(T value, Encoder encoder) => encodeSuper(value, encoder);
+  void encode(T value, Encoder encoder) {
+    final subtype = _matchSubtype(value);
+    final subCount = subtype.encodedFieldCount(value);
+    final keyed = encoder.keyed(length: subCount == null ? null : 1 + subCount);
+    keyed.encodeString(discriminatorKey, subtype.discriminatorValue);
+    subtype.encodeFields(value, keyed);
+  }
 
-  PolymorphicEncodableSubtype<T> _matchSubtype(T value) {
+  PolymorphicSubtype<T> _matchSubtype(T value) {
     for (final subtype in subtypes) {
       if (subtype.matches(value)) return subtype;
     }
@@ -169,54 +153,11 @@ abstract class SuperEncodable<T> implements KeyedEncodable<T> {
   }
 }
 
-/// Extension providing polymorphic encoding for classes that implement or
-/// extend [SuperEncodable].
-extension SuperEncodableExtension<T> on SuperEncodable<T> {
-  /// Encodes [value] into [encoder] as a single keyed container carrying
-  /// [discriminatorKey] and the matched subtype's fields.
-  void encodeSuper(T value, Encoder encoder) {
-    final subtype = _matchSubtype(value);
-    final subCount = subtype.encodedFieldCount(value);
-    final keyed = encoder.keyed(length: subCount == null ? null : 1 + subCount);
-    keyed.encodeString(discriminatorKey, subtype.discriminatorValue);
-    subtype.encodeFields(value, keyed);
+String _readDiscriminatorValue(Decoder decoder, String discriminatorKey) {
+  final mapped = decoder.mapped();
+  if (!mapped.containsKey(discriminatorKey) ||
+      mapped.isNull(discriminatorKey)) {
+    throw CodableException.missingKey(discriminatorKey);
   }
-}
-
-/// Unified bidirectional polymorphic companion contract combining
-/// [SuperEncodable] and discriminator-based subtype decoding.
-abstract class SuperCodable<T> extends SuperEncodable<T>
-    implements KeyedCodable<T> {
-  /// Creates a constant [SuperCodable] descriptor.
-  const SuperCodable();
-
-  @override
-  List<PolymorphicSubtype<T>> get subtypes;
-
-  @override
-  T decode(Decoder decoder) => decodeSuper(decoder);
-}
-
-/// Extension providing polymorphic decoding for classes that implement or
-/// extend [SuperCodable].
-extension SuperCodableExtension<T> on SuperCodable<T> {
-  /// Decodes a polymorphic value of type [T] from [decoder] using
-  /// [discriminatorKey] and [subtypes].
-  T decodeSuper(Decoder decoder) {
-    final mapped = decoder.mapped();
-    if (!mapped.containsKey(discriminatorKey) ||
-        mapped.isNull(discriminatorKey)) {
-      throw CodableException.missingKey(discriminatorKey);
-    }
-    final subtypeValue = mapped.readString(discriminatorKey);
-    for (final subtype in subtypes) {
-      if (subtype.discriminatorValue == subtypeValue) {
-        return subtype.decode(decoder);
-      }
-    }
-    throw CodableException.unknownSubtype(
-      discriminatorKey: discriminatorKey,
-      subtypeValue: subtypeValue,
-    );
-  }
+  return mapped.readString(discriminatorKey);
 }

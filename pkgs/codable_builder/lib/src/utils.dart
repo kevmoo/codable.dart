@@ -96,3 +96,29 @@ String toSafeIdentifierSuffix(String name) {
   final pascal = toPascalCase(sanitized);
   return pascal.isEmpty ? 'Empty' : pascal;
 }
+
+/// Allocates a collision-free identifier suffix from [base] against [used].
+String allocateUniqueSuffix(String base, Set<String> used) {
+  if (used.add(base)) return base;
+  var index = 2;
+  while (!used.add('$base\$$index')) {
+    index++;
+  }
+  return '$base\$$index';
+}
+
+/// Indents every non-empty line in [text] by [indent].
+String indentLines(String text, String indent) {
+  final lines = text.split('\n');
+  final buffer = StringBuffer();
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (i == lines.length - 1 && line.isEmpty) break;
+    if (line.isEmpty) {
+      buffer.writeln();
+    } else {
+      buffer.writeln('$indent$line');
+    }
+  }
+  return buffer.toString();
+}

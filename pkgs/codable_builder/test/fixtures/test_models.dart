@@ -1227,3 +1227,63 @@ final class ExtraTypeParamSub<T, U> extends InvalidGenericSealedExtraParam<T> {
 
   const ExtraTypeParamSub(this.first, this.extra);
 }
+
+@Codable(discriminatorKey: 'tier')
+sealed class TieredVehicle {
+  const TieredVehicle();
+}
+
+@Codable()
+class SedanVehicle extends TieredVehicle {
+  final int seats;
+
+  const SedanVehicle({required this.seats});
+}
+
+@Codable(discriminatorValue: 'luxury_sedan')
+final class LuxurySedanVehicle extends SedanVehicle {
+  final bool massageSeats;
+
+  const LuxurySedanVehicle({required super.seats, required this.massageSeats});
+}
+
+@Codable(discriminatorKey: 'branch')
+sealed class SealedWithEnumBranch {
+  const SealedWithEnumBranch();
+}
+
+@Codable()
+final class ClassSealedBranch implements SealedWithEnumBranch {
+  final String label;
+
+  const ClassSealedBranch(this.label);
+}
+
+enum EnumSealedBranch implements SealedWithEnumBranch { alpha }
+
+@Codable(createDecoder: false)
+final class EncodeOnlyLeaf {
+  final int code;
+
+  const EncodeOnlyLeaf(this.code);
+}
+
+@Codable()
+final class InvalidNestedEncodeOnlyInBidirectional {
+  final EncodeOnlyLeaf leaf;
+
+  const InvalidNestedEncodeOnlyInBidirectional(this.leaf);
+}
+
+@Codable()
+sealed class InvalidTightenedSubtypeBound<T> {
+  const InvalidTightenedSubtypeBound();
+}
+
+@Codable()
+final class TightenedNumericSub<T extends num>
+    extends InvalidTightenedSubtypeBound<T> {
+  final T number;
+
+  const TightenedNumericSub(this.number);
+}

@@ -428,6 +428,13 @@ void main() {
       check(plugin.isSealed).isFalse();
       check(plugin.polymorphicSubtypes.map((s) => s.className))
           .deepEquals(['PingAction', 'EchoAction']);
+
+      final tiered = visit('TieredVehicle');
+      check(tiered.polymorphicSubtypes.map((s) => s.className))
+          .deepEquals(['LuxurySedanVehicle', 'SedanVehicle']);
+
+      final withEnum = visit('SealedWithEnumBranch');
+      check(withEnum.isSealed).isFalse();
     });
 
     test('rejects invalid generic type arguments and invalid polymorphic hierarchies', () {
@@ -450,6 +457,8 @@ void main() {
         ),
         ('InvalidGenericSealedConcreteArg', 'must forward type parameters'),
         ('InvalidGenericSealedExtraParam', 'not bound by polymorphic'),
+        ('InvalidTightenedSubtypeBound', 'tightens bound'),
+        ('InvalidNestedEncodeOnlyInBidirectional', 'createDecoder: false'),
       ]) {
         check(() => visit(className))
             .throws<InvalidGenerationSourceError>()

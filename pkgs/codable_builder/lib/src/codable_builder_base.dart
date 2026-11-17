@@ -49,23 +49,6 @@ class CodableGenerator extends GeneratorForAnnotation<Codable> {
 /// Generates the schema extension type and companion `*Codable` class for
 /// [model].
 String generateForModel(ModelDescriptor model) {
-  final decoderHelper = DecoderGeneratorHelper(model);
-  final encoderHelper = EncoderGeneratorHelper(model);
-  final polyHelper = model.isPolymorphic
-      ? PolymorphicGeneratorHelper(
-          model,
-          decodeBuilder: decoderHelper.inlineValueDecodeCode,
-          encodeBuilder: encoderHelper.inlineValueEncodeCode,
-        )
-      : null;
-
-  final buffer = StringBuffer();
-  buffer.write(
-    polyHelper != null
-        ? polyHelper.generateSchema()
-        : decoderHelper.generateSchema(),
-  );
-
   final targetType = model.instantiatedClassName;
   final interfaceName = switch ((model.createDecoder, model.createEncoder)) {
     (true, true) => 'KeyedCodable<$targetType>',
@@ -74,6 +57,25 @@ String generateForModel(ModelDescriptor model) {
     (false, false) => null,
   };
 
+  final String schemaCode;
+  var decodeMethods = '';
+  var encodeMethods = '';
+
+  if (model.isPolymorphic) {
+    final polyHelper = PolymorphicGeneratorHelper(model);
+    decodeMethods = polyHelper.generateDecodeMethod();
+    encodeMethods = polyHelper.generateEncodeMethods();
+    schemaCode = polyHelper.generateSchema();
+  } else {
+    final decoderHelper = DecoderGeneratorHelper(model);
+    if (model.createDecoder) decodeMethods = decoderHelper.generateMethods();
+    if (model.createEncoder) {
+      encodeMethods = EncoderGeneratorHelper(model).generateMethod();
+    }
+    schemaCode = decoderHelper.generateSchema();
+  }
+
+  final buffer = StringBuffer(schemaCode);
   if (interfaceName != null) {
     buffer
       ..writeln()
@@ -89,26 +91,13 @@ String generateForModel(ModelDescriptor model) {
         'implements $interfaceName {',
       );
     _writeCompanionFieldsAndConstructor(buffer, model);
-
-    if (model.createDecoder) {
-      buffer
-        ..writeln()
-        ..write(
-          polyHelper != null
-              ? polyHelper.generateDecodeMethod()
-              : decoderHelper.generateMethods(),
-        );
+    for (final section in [decodeMethods, encodeMethods]) {
+      if (section.isNotEmpty) {
+        buffer
+          ..writeln()
+          ..write(section);
+      }
     }
-    if (model.createEncoder) {
-      buffer
-        ..writeln()
-        ..write(
-          polyHelper != null
-              ? polyHelper.generateEncodeMethods()
-              : encoderHelper.generateMethod(),
-        );
-    }
-
     buffer.writeln('}');
   }
 

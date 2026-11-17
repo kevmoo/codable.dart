@@ -602,9 +602,7 @@ final class PointKeyCodable implements KeyedCodable<PointKey> {
 
   @override
   void encode(PointKey instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$PointKeySchema.nameX, instance.x);
-    keyed.encodeInt(_$PointKeySchema.nameY, instance.y);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -1011,16 +1009,7 @@ final class GridOverlayModelCodable implements KeyedCodable<GridOverlayModel> {
 
   @override
   void encode(GridOverlayModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    {
-      final m = keyed
-          .nestedEncoder(_$GridOverlayModelSchema.nameCells)
-          .map(length: instance.cells.length);
-      for (final entry in instance.cells.entries) {
-        const PointKeyCodable().encode(entry.key, m.keyEncoder());
-        m.valueEncoder().singleValue().encodeString(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -1248,43 +1237,7 @@ final class StringMapBundleCodable implements KeyedCodable<StringMapBundle> {
 
   @override
   void encode(StringMapBundle instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
-    {
-      final k = keyed
-          .nestedEncoder(_$StringMapBundleSchema.nameEmptyLabels)
-          .keyed(length: instance.emptyLabels.length);
-      for (final entry in instance.emptyLabels.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$StringMapBundleSchema.nameBulkAttributes)
-          .keyed(length: instance.bulkAttributes.length);
-      for (final entry in instance.bulkAttributes.entries) {
-        k.encodeString(entry.key, entry.value);
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$StringMapBundleSchema.nameNullableScores)
-          .keyed(length: instance.nullableScores.length);
-      for (final entry in instance.nullableScores.entries) {
-        if (entry.value case final val1?) {
-          k.encodeInt(entry.key, val1);
-        } else {
-          k.encodeNull(entry.key);
-        }
-      }
-    }
-    {
-      final k = keyed
-          .nestedEncoder(_$StringMapBundleSchema.nameSeriesByTag)
-          .keyed(length: instance.seriesByTag.length);
-      for (final entry in instance.seriesByTag.entries) {
-        k.encodeIntList(entry.key, entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -1388,9 +1341,7 @@ final class CircleShapeCodable implements KeyedCodable<CircleShape> {
 
   @override
   void encode(CircleShape instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeDouble(_$CircleShapeSchema.nameRadius, instance.radius);
-    keyed.encodeString(_$CircleShapeSchema.nameKind, instance.kind);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -1513,10 +1464,7 @@ final class RectShapeCodable implements KeyedCodable<RectShape> {
 
   @override
   void encode(RectShape instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeInt(_$RectShapeSchema.nameWidth, instance.width);
-    keyed.encodeInt(_$RectShapeSchema.nameHeight, instance.height);
-    keyed.encodeString(_$RectShapeSchema.nameKind, instance.kind);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1656,17 +1604,6 @@ final class AuditEventCodable implements KeyedCodable<AuditEvent> {
 
   @override
   void encode(AuditEvent instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeValue(
-      _$AuditEventSchema.nameId,
-      instance.id,
-      const AdaptiveUuidCodable(),
-    );
-    keyed.encodeValue(
-      _$AuditEventSchema.nameTimestamp,
-      instance.timestamp,
-      const AdaptiveDateTimeCodable(),
-    );
-    keyed.encodeString(_$AuditEventSchema.nameAction, instance.action);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }

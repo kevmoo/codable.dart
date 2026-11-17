@@ -132,12 +132,7 @@ final class RetryPolicyCodable implements KeyedCodable<RetryPolicy> {
 
   @override
   void encode(RetryPolicy instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$RetryPolicySchema.nameMaxAttempts, instance.maxAttempts);
-    keyed.encodeDouble(
-      _$RetryPolicySchema.nameBackoffMultiplier,
-      instance.backoffMultiplier,
-    );
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -269,10 +264,7 @@ final class SubtableSpecCodable implements KeyedCodable<SubtableSpec> {
 
   @override
   void encode(SubtableSpec instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeString(_$SubtableSpecSchema.nameHost, instance.host);
-    keyed.encodeInt(_$SubtableSpecSchema.namePort, instance.port);
-    keyed.encodeBool(_$SubtableSpecSchema.nameTls, instance.tls);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -410,14 +402,7 @@ final class EndpointItemCodable implements KeyedCodable<EndpointItem> {
 
   @override
   void encode(EndpointItem instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeValue(
-      _$EndpointItemSchema.nameRetry,
-      instance.retry,
-      const RetryPolicyCodable(),
-    );
-    keyed.encodeString(_$EndpointItemSchema.namePath, instance.path);
-    keyed.encodeInt(_$EndpointItemSchema.nameRateLimit, instance.rateLimit);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -626,29 +611,7 @@ final class InterleavedServiceConfigCodable
 
   @override
   void encode(InterleavedServiceConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
-    keyed.encodeValue(
-      _$InterleavedServiceConfigSchema.nameSubtable,
-      instance.subtable,
-      const SubtableSpecCodable(),
-    );
-    keyed.encodeList(
-      _$InterleavedServiceConfigSchema.nameItems,
-      instance.items,
-      const EndpointItemCodable(),
-    );
-    keyed.encodeInt(
-      _$InterleavedServiceConfigSchema.nameVersion,
-      instance.version,
-    );
-    keyed.encodeString(
-      _$InterleavedServiceConfigSchema.nameServiceName,
-      instance.serviceName,
-    );
-    keyed.encodeBool(
-      _$InterleavedServiceConfigSchema.nameEnabled,
-      instance.enabled,
-    );
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -825,9 +788,7 @@ final class LevelCCodable implements KeyedCodable<LevelC> {
 
   @override
   void encode(LevelC instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(_$LevelCSchema.nameRegion, instance.region);
-    keyed.encodeInt(_$LevelCSchema.nameReplicas, instance.replicas);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -921,8 +882,7 @@ final class LevelBCodable implements KeyedCodable<LevelB> {
 
   @override
   void encode(LevelB instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeValue(_$LevelBSchema.nameC, instance.c, const LevelCCodable());
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -1016,8 +976,7 @@ final class LevelACodable implements KeyedCodable<LevelA> {
 
   @override
   void encode(LevelA instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeValue(_$LevelASchema.nameB, instance.b, const LevelBCodable());
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -1149,10 +1108,7 @@ final class GridCellCodable implements KeyedCodable<GridCell> {
 
   @override
   void encode(GridCell instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeInt(_$GridCellSchema.nameX, instance.x);
-    keyed.encodeInt(_$GridCellSchema.nameY, instance.y);
-    keyed.encodeString(_$GridCellSchema.nameTag, instance.tag);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1449,55 +1405,7 @@ final class StructuralHierarchyModelCodable
 
   @override
   void encode(StructuralHierarchyModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 7);
-    keyed.encodeValue(
-      _$StructuralHierarchyModelSchema.nameA,
-      instance.a,
-      const LevelACodable(),
-    );
-    keyed.encodeValue(
-      _$StructuralHierarchyModelSchema.nameEmpty,
-      instance.empty,
-      const AllOptionalPatchCodable(),
-    );
-    keyed.encodeList(
-      _$StructuralHierarchyModelSchema.nameEmptyItems,
-      instance.emptyItems,
-      const GridCellCodable(),
-    );
-    keyed.encodeList(
-      _$StructuralHierarchyModelSchema.nameActiveItems,
-      instance.activeItems,
-      const GridCellCodable(),
-    );
-    keyed.encodeList(
-      _$StructuralHierarchyModelSchema.nameMatrix,
-      instance.matrix,
-      Encodable.fromFunction((List<GridCell> item, e) {
-        {
-          final u = e.unkeyed(length: item.length);
-          for (final elem in item) {
-            const GridCellCodable().encode(elem, u.nestedEncoder());
-          }
-        }
-      }),
-    );
-    keyed.encodeList(
-      _$StructuralHierarchyModelSchema.nameEmptyMatrix,
-      instance.emptyMatrix,
-      Encodable.fromFunction((List<AllOptionalPatch> item, e) {
-        {
-          final u = e.unkeyed(length: item.length);
-          for (final elem in item) {
-            const AllOptionalPatchCodable().encode(elem, u.nestedEncoder());
-          }
-        }
-      }),
-    );
-    keyed.encodeString(
-      _$StructuralHierarchyModelSchema.nameTitle,
-      instance.title,
-    );
+    encodeFields(instance, encoder.keyed(length: 7));
   }
 }
 
@@ -2794,10 +2702,7 @@ final class PolygonSpecCodable implements KeyedCodable<PolygonSpec> {
 
   @override
   void encode(PolygonSpec instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
-    keyed.encodeIntList(_$PolygonSpecSchema.nameVertices, instance.vertices);
-    keyed.encodeBool(_$PolygonSpecSchema.nameClosed, instance.closed);
-    keyed.encodeString(_$PolygonSpecSchema.nameKind, instance.kind);
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -3543,14 +3448,7 @@ final class NullableElementListModelCodable
 
   @override
   void encode(NullableElementListModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeList(
-      _$NullableElementListModelSchema.nameValues,
-      instance.values,
-      Encodable.fromFunction((int? item, e) {
-        e.singleValue().encodeNullableInt(item);
-      }),
-    );
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3673,19 +3571,7 @@ final class NullableStringMapModelCodable
 
   @override
   void encode(NullableStringMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    {
-      final k = keyed
-          .nestedEncoder(_$NullableStringMapModelSchema.nameScores)
-          .keyed(length: instance.scores.length);
-      for (final entry in instance.scores.entries) {
-        if (entry.value case final val1?) {
-          k.encodeInt(entry.key, val1);
-        } else {
-          k.encodeNull(entry.key);
-        }
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3805,16 +3691,7 @@ final class NullableIntMapModelCodable
 
   @override
   void encode(NullableIntMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    {
-      final m = keyed
-          .nestedEncoder(_$NullableIntMapModelSchema.nameBuckets)
-          .map(length: instance.buckets.length);
-      for (final entry in instance.buckets.entries) {
-        m.keyEncoder().singleValue().encodeInt(entry.key);
-        m.valueEncoder().singleValue().encodeNullableInt(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3933,16 +3810,7 @@ final class CompositeMapKeyModelCodable
 
   @override
   void encode(CompositeMapKeyModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    {
-      final m = keyed
-          .nestedEncoder(_$CompositeMapKeyModelSchema.nameCells)
-          .map(length: instance.cells.length);
-      for (final entry in instance.cells.entries) {
-        const GridCellCodable().encode(entry.key, m.keyEncoder());
-        m.valueEncoder().singleValue().encodeString(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -4275,25 +4143,23 @@ final class PipelineStageCodable implements KeyedCodable<PipelineStage> {
   void encode(PipelineStage instance, Encoder encoder) {
     switch (instance) {
       case final FetchStage sub:
-        final subCodec = const FetchStageCodable();
         final keyed = encoder.keyed(
-          length: 1 + subCodec.encodedFieldCount(sub),
+          length: 1 + const FetchStageCodable().encodedFieldCount(sub),
         );
         keyed.encodeString(
           _$PipelineStageSchema.discriminatorKey,
           _$PipelineStageSchema.subtypeFetchStage,
         );
-        subCodec.encodeFields(sub, keyed);
+        const FetchStageCodable().encodeFields(sub, keyed);
       case final FilterStage sub:
-        final subCodec = const FilterStageCodable();
         final keyed = encoder.keyed(
-          length: 1 + subCodec.encodedFieldCount(sub),
+          length: 1 + const FilterStageCodable().encodedFieldCount(sub),
         );
         keyed.encodeString(
           _$PipelineStageSchema.discriminatorKey,
           _$PipelineStageSchema.subtypeFilterStage,
         );
-        subCodec.encodeFields(sub, keyed);
+        const FilterStageCodable().encodeFields(sub, keyed);
     }
   }
 }
@@ -4558,12 +4424,7 @@ final class FilterStageCodable implements KeyedCodable<FilterStage> {
 
   @override
   void encode(FilterStage instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeStringList(
-      _$FilterStageSchema.namePredicates,
-      instance.predicates,
-    );
-    keyed.encodeBool(_$FilterStageSchema.nameDropEmpty, instance.dropEmpty);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -4646,15 +4507,14 @@ final class StageResultCodable<T> implements KeyedCodable<StageResult<T>> {
         );
         subCodec.encodeFields(sub, keyed);
       case final StageFailed sub:
-        final subCodec = const StageFailedCodable();
         final keyed = encoder.keyed(
-          length: 1 + subCodec.encodedFieldCount(sub),
+          length: 1 + const StageFailedCodable().encodedFieldCount(sub),
         );
         keyed.encodeString(
           _$StageResultSchema.discriminatorKey,
           _$StageResultSchema.subtypeStageFailed,
         );
-        subCodec.encodeFields(sub, keyed);
+        const StageFailedCodable().encodeFields(sub, keyed);
     }
   }
 }
@@ -4892,8 +4752,7 @@ final class StageFailedCodable implements KeyedCodable<StageFailed> {
 
   @override
   void encode(StageFailed instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
-    keyed.encodeString(_$StageFailedSchema.nameErrorCode, instance.errorCode);
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -4986,6 +4845,19 @@ extension type const _$PipelineManifestSchema(int _value) {
       'Missing required fields for PipelineManifest: ${missing.join(", ")}',
     );
   }
+
+  // Cached Closed Codecs
+  static final StageResultCodable<int> codec0 = StageResultCodable<int>(
+    Codable<int>.fromFunctions(
+      decode: (d) {
+        final res = d.singleValue().readInt();
+        return res;
+      },
+      encode: (int v, e) {
+        e.singleValue().encodeInt(v);
+      },
+    ),
+  );
 }
 
 // =============================================================================
@@ -5065,17 +4937,9 @@ final class PipelineManifestCodable implements KeyedCodable<PipelineManifest> {
               0) {
             throw const CodableException('Duplicate field "retryStatus"');
           }
-          retryStatus = StageResultCodable<int>(
-            Codable<int>.fromFunctions(
-              decode: (d) {
-                final res = d.singleValue().readInt();
-                return res;
-              },
-              encode: (int v, e) {
-                e.singleValue().encodeInt(v);
-              },
-            ),
-          ).decode(keyed.nestedDecoder());
+          retryStatus = _$PipelineManifestSchema.codec0.decode(
+            keyed.nestedDecoder(),
+          );
           seen |= _$PipelineManifestSchema.retryStatus;
           break;
         default:
@@ -5149,17 +5013,7 @@ final class PipelineManifestCodable implements KeyedCodable<PipelineManifest> {
     keyed.encodeValue(
       _$PipelineManifestSchema.nameRetryStatus,
       instance.retryStatus,
-      StageResultCodable<int>(
-        Codable<int>.fromFunctions(
-          decode: (d) {
-            final res = d.singleValue().readInt();
-            return res;
-          },
-          encode: (int v, e) {
-            e.singleValue().encodeInt(v);
-          },
-        ),
-      ),
+      _$PipelineManifestSchema.codec0,
     );
   }
 
@@ -5210,17 +5064,7 @@ final class PipelineManifestCodable implements KeyedCodable<PipelineManifest> {
     keyed.encodeValue(
       _$PipelineManifestSchema.nameRetryStatus,
       instance.retryStatus,
-      StageResultCodable<int>(
-        Codable<int>.fromFunctions(
-          decode: (d) {
-            final res = d.singleValue().readInt();
-            return res;
-          },
-          encode: (int v, e) {
-            e.singleValue().encodeInt(v);
-          },
-        ),
-      ),
+      _$PipelineManifestSchema.codec0,
     );
   }
 }

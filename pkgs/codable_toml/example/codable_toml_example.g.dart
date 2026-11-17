@@ -110,9 +110,7 @@ final class DatabaseConfigCodable implements KeyedCodable<DatabaseConfig> {
 
   @override
   void encode(DatabaseConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(_$DatabaseConfigSchema.nameHost, instance.host);
-    keyed.encodeInt(_$DatabaseConfigSchema.namePort, instance.port);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -229,9 +227,7 @@ final class EndpointRuleCodable implements KeyedCodable<EndpointRule> {
 
   @override
   void encode(EndpointRule instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeString(_$EndpointRuleSchema.namePath, instance.path);
-    keyed.encodeInt(_$EndpointRuleSchema.nameRateLimit, instance.rateLimit);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -423,31 +419,6 @@ final class ServiceManifestCodable implements KeyedCodable<ServiceManifest> {
 
   @override
   void encode(ServiceManifest instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
-    keyed.encodeValue(
-      _$ServiceManifestSchema.nameDatabase,
-      instance.database,
-      const DatabaseConfigCodable(),
-    );
-    keyed.encodeList(
-      _$ServiceManifestSchema.nameEndpoints,
-      instance.endpoints,
-      const EndpointRuleCodable(),
-    );
-    keyed.encodeString(_$ServiceManifestSchema.nameService, instance.service);
-    keyed.encodeValue(
-      _$ServiceManifestSchema.nameDeployedAt,
-      instance.deployedAt,
-      const TomlDateTimeCodec(),
-    );
-    {
-      final m = keyed
-          .nestedEncoder(_$ServiceManifestSchema.nameStatusLabels)
-          .map(length: instance.statusLabels.length);
-      for (final entry in instance.statusLabels.entries) {
-        m.keyEncoder().singleValue().encodeInt(entry.key);
-        m.valueEncoder().singleValue().encodeString(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }

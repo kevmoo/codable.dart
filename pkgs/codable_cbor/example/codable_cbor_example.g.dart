@@ -125,9 +125,7 @@ final class SensorCoordinateCodable implements KeyedCodable<SensorCoordinate> {
 
   @override
   void encode(SensorCoordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
-    keyed.encodeInt(_$SensorCoordinateSchema.nameRack, instance.rack);
-    keyed.encodeInt(_$SensorCoordinateSchema.nameSlot, instance.slot);
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -292,18 +290,6 @@ final class SensorBatchCodable implements KeyedCodable<SensorBatch> {
 
   @override
   void encode(SensorBatch instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
-    keyed.encodeInt(_$SensorBatchSchema.nameBatchId, instance.batchId);
-    keyed.encodeBytes(_$SensorBatchSchema.nameRawSample, instance.rawSample);
-    keyed.encodeDoubleList(_$SensorBatchSchema.nameReadings, instance.readings);
-    {
-      final m = keyed
-          .nestedEncoder(_$SensorBatchSchema.nameCalibrationOffsets)
-          .map(length: instance.calibrationOffsets.length);
-      for (final entry in instance.calibrationOffsets.entries) {
-        const SensorCoordinateCodable().encode(entry.key, m.keyEncoder());
-        m.valueEncoder().singleValue().encodeDouble(entry.value);
-      }
-    }
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
