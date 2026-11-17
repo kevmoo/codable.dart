@@ -55,5 +55,29 @@ void main() {
       check(toSafeIdentifierSuffix('')).equals('Empty');
       check(toSafeIdentifierSuffix('---')).equals('Empty');
     });
+
+    test(
+      'toLowerCamelCase and defaultDiscriminatorValue convert subtype names',
+      () {
+        check(toLowerCamelCase('Car')).equals('car');
+        check(toLowerCamelCase('Bicycle')).equals('bicycle');
+        check(toLowerCamelCase('CreditCard')).equals('creditCard');
+        check(toLowerCamelCase('HTTPRequest')).equals('httpRequest');
+        check(toLowerCamelCase('circle_shape')).equals('circleShape');
+        check(toLowerCamelCase('')).equals('');
+
+        check(defaultDiscriminatorValue('CreditCard', FieldRename.none))
+            .equals('creditCard');
+        check(defaultDiscriminatorValue('CreditCard', FieldRename.snake))
+            .equals('credit_card');
+        check(defaultDiscriminatorValue('CreditCard', FieldRename.kebab))
+            .equals('credit-card');
+        check(defaultDiscriminatorValue('CreditCard', FieldRename.pascal))
+            .equals('CreditCard');
+        check(
+          defaultDiscriminatorValue('CreditCard', FieldRename.screamingSnake),
+        ).equals('CREDIT_CARD');
+      },
+    );
   });
 }

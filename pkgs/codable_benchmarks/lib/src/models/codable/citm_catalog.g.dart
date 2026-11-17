@@ -71,7 +71,7 @@ extension type const _$CitmCatalogSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmCatalog
 // =============================================================================
-final class CitmCatalogCodable implements Codable<CitmCatalog> {
+final class CitmCatalogCodable implements KeyedCodable<CitmCatalog> {
   const CitmCatalogCodable();
 
   @override
@@ -230,6 +230,101 @@ final class CitmCatalogCodable implements Codable<CitmCatalog> {
       topicSynced: topicSynced,
       venueNames: venueNames,
     );
+  }
+
+  @override
+  int encodedFieldCount(CitmCatalog instance) => 11;
+
+  @override
+  void encodeFields(CitmCatalog instance, KeyedEncoder keyed) {
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameAreaNames)
+          .keyed(length: instance.areaNames.length);
+      for (final entry in instance.areaNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameAudienceSubCategoryNames)
+          .keyed(length: instance.audienceSubCategoryNames.length);
+      for (final entry in instance.audienceSubCategoryNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameBlockNames)
+          .keyed(length: instance.blockNames.length);
+      for (final entry in instance.blockNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameEvents)
+          .keyed(length: instance.events.length);
+      for (final entry in instance.events.entries) {
+        const CitmEventCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
+    keyed.encodeList(
+      _$CitmCatalogSchema.namePerformances,
+      instance.performances,
+      const CitmPerformanceCodable(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSeatCategoryNames)
+          .keyed(length: instance.seatCategoryNames.length);
+      for (final entry in instance.seatCategoryNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSubTopicNames)
+          .keyed(length: instance.subTopicNames.length);
+      for (final entry in instance.subTopicNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameSubjectNames)
+          .keyed(length: instance.subjectNames.length);
+      for (final entry in instance.subjectNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameTopicNames)
+          .keyed(length: instance.topicNames.length);
+      for (final entry in instance.topicNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameTopicSynced)
+          .keyed(length: instance.topicSynced.length);
+      for (final entry in instance.topicSynced.entries) {
+        k.encodeBool(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$CitmCatalogSchema.nameVenueNames)
+          .keyed(length: instance.venueNames.length);
+      for (final entry in instance.venueNames.entries) {
+        k.encodeString(entry.key, entry.value);
+      }
+    }
   }
 
   @override
@@ -403,7 +498,7 @@ extension type const _$CitmEventSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmEvent
 // =============================================================================
-final class CitmEventCodable implements Codable<CitmEvent> {
+final class CitmEventCodable implements KeyedCodable<CitmEvent> {
   const CitmEventCodable();
 
   @override
@@ -493,6 +588,43 @@ final class CitmEventCodable implements Codable<CitmEvent> {
       subtitle: subtitle,
       topicIds: topicIds,
     );
+  }
+
+  @override
+  int encodedFieldCount(CitmEvent instance) {
+    var count$ = 4;
+    if (instance.description != null) count$++;
+    if (instance.logo != null) count$++;
+    if (instance.subjectCode != null) count$++;
+    if (instance.subtitle != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CitmEvent instance, KeyedEncoder keyed) {
+    final v$Description = instance.description;
+    if (v$Description != null) {
+      keyed.encodeString(_$CitmEventSchema.nameDescription, v$Description);
+    }
+    keyed.encodeInt(_$CitmEventSchema.nameId, instance.id);
+    final v$Logo = instance.logo;
+    if (v$Logo != null) {
+      keyed.encodeString(_$CitmEventSchema.nameLogo, v$Logo);
+    }
+    keyed.encodeString(_$CitmEventSchema.nameName, instance.name);
+    keyed.encodeIntList(
+      _$CitmEventSchema.nameSubTopicIds,
+      instance.subTopicIds,
+    );
+    final v$SubjectCode = instance.subjectCode;
+    if (v$SubjectCode != null) {
+      keyed.encodeInt(_$CitmEventSchema.nameSubjectCode, v$SubjectCode);
+    }
+    final v$Subtitle = instance.subtitle;
+    if (v$Subtitle != null) {
+      keyed.encodeString(_$CitmEventSchema.nameSubtitle, v$Subtitle);
+    }
+    keyed.encodeIntList(_$CitmEventSchema.nameTopicIds, instance.topicIds);
   }
 
   @override
@@ -624,7 +756,7 @@ extension type const _$CitmPerformanceSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmPerformance
 // =============================================================================
-final class CitmPerformanceCodable implements Codable<CitmPerformance> {
+final class CitmPerformanceCodable implements KeyedCodable<CitmPerformance> {
   const CitmPerformanceCodable();
 
   @override
@@ -713,6 +845,43 @@ final class CitmPerformanceCodable implements Codable<CitmPerformance> {
       seatCategories: seatCategories,
       start: start!,
       venueCode: venueCode!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(CitmPerformance instance) {
+    var count$ = 6;
+    if (instance.logo != null) count$++;
+    if (instance.name != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CitmPerformance instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CitmPerformanceSchema.nameEventId, instance.eventId);
+    keyed.encodeInt(_$CitmPerformanceSchema.nameId, instance.id);
+    final v$Logo = instance.logo;
+    if (v$Logo != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameLogo, v$Logo);
+    }
+    final v$Name = instance.name;
+    if (v$Name != null) {
+      keyed.encodeString(_$CitmPerformanceSchema.nameName, v$Name);
+    }
+    keyed.encodeList(
+      _$CitmPerformanceSchema.namePrices,
+      instance.prices,
+      const CitmPriceCodable(),
+    );
+    keyed.encodeList(
+      _$CitmPerformanceSchema.nameSeatCategories,
+      instance.seatCategories,
+      const CitmSeatCategoryCodable(),
+    );
+    keyed.encodeInt(_$CitmPerformanceSchema.nameStart, instance.start);
+    keyed.encodeString(
+      _$CitmPerformanceSchema.nameVenueCode,
+      instance.venueCode,
     );
   }
 
@@ -823,7 +992,7 @@ extension type const _$CitmPriceSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmPrice
 // =============================================================================
-final class CitmPriceCodable implements Codable<CitmPrice> {
+final class CitmPriceCodable implements KeyedCodable<CitmPrice> {
   const CitmPriceCodable();
 
   @override
@@ -874,6 +1043,22 @@ final class CitmPriceCodable implements Codable<CitmPrice> {
       amount: amount!,
       audienceSubCategoryId: audienceSubCategoryId!,
       seatCategoryId: seatCategoryId!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(CitmPrice instance) => 3;
+
+  @override
+  void encodeFields(CitmPrice instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CitmPriceSchema.nameAmount, instance.amount);
+    keyed.encodeInt(
+      _$CitmPriceSchema.nameAudienceSubCategoryId,
+      instance.audienceSubCategoryId,
+    );
+    keyed.encodeInt(
+      _$CitmPriceSchema.nameSeatCategoryId,
+      instance.seatCategoryId,
     );
   }
 
@@ -949,7 +1134,7 @@ extension type const _$CitmSeatCategorySchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmSeatCategory
 // =============================================================================
-final class CitmSeatCategoryCodable implements Codable<CitmSeatCategory> {
+final class CitmSeatCategoryCodable implements KeyedCodable<CitmSeatCategory> {
   const CitmSeatCategoryCodable();
 
   @override
@@ -983,6 +1168,22 @@ final class CitmSeatCategoryCodable implements Codable<CitmSeatCategory> {
     seen.validate();
 
     return CitmSeatCategory(areas: areas, seatCategoryId: seatCategoryId!);
+  }
+
+  @override
+  int encodedFieldCount(CitmSeatCategory instance) => 2;
+
+  @override
+  void encodeFields(CitmSeatCategory instance, KeyedEncoder keyed) {
+    keyed.encodeList(
+      _$CitmSeatCategorySchema.nameAreas,
+      instance.areas,
+      const CitmAreaCodable(),
+    );
+    keyed.encodeInt(
+      _$CitmSeatCategorySchema.nameSeatCategoryId,
+      instance.seatCategoryId,
+    );
   }
 
   @override
@@ -1054,7 +1255,7 @@ extension type const _$CitmAreaSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CitmArea
 // =============================================================================
-final class CitmAreaCodable implements Codable<CitmArea> {
+final class CitmAreaCodable implements KeyedCodable<CitmArea> {
   const CitmAreaCodable();
 
   @override
@@ -1087,6 +1288,15 @@ final class CitmAreaCodable implements Codable<CitmArea> {
     seen.validate();
 
     return CitmArea(areaId: areaId!, blockIds: blockIds);
+  }
+
+  @override
+  int encodedFieldCount(CitmArea instance) => 2;
+
+  @override
+  void encodeFields(CitmArea instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CitmAreaSchema.nameAreaId, instance.areaId);
+    keyed.encodeIntList(_$CitmAreaSchema.nameBlockIds, instance.blockIds);
   }
 
   @override

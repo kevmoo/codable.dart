@@ -77,7 +77,7 @@ extension type const _$CoordinateSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Coordinate
 // =============================================================================
-final class CoordinateCodable implements Codable<Coordinate> {
+final class CoordinateCodable implements KeyedCodable<Coordinate> {
   const CoordinateCodable();
 
   @override
@@ -141,6 +141,15 @@ final class CoordinateCodable implements Codable<Coordinate> {
       list.add(decode(unkeyed.nestedDecoder()));
     }
     return list;
+  }
+
+  @override
+  int encodedFieldCount(Coordinate instance) => 2;
+
+  @override
+  void encodeFields(Coordinate instance, KeyedEncoder keyed) {
+    keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+    keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }
 
   @override
@@ -239,7 +248,7 @@ extension type const _$UserProfileSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for UserProfile
 // =============================================================================
-final class UserProfileCodable implements Codable<UserProfile> {
+final class UserProfileCodable implements KeyedCodable<UserProfile> {
   const UserProfileCodable();
 
   @override
@@ -309,6 +318,22 @@ final class UserProfileCodable implements Codable<UserProfile> {
       zip: zip!,
       tags: tags,
     );
+  }
+
+  @override
+  int encodedFieldCount(UserProfile instance) => 5;
+
+  @override
+  void encodeFields(UserProfile instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$UserProfileSchema.nameId, instance.id);
+    keyed.encodeString(_$UserProfileSchema.nameEmail, instance.email);
+    keyed.encodeString(_$UserProfileSchema.nameRole, instance.role.name);
+    keyed.encodeValue(
+      _$UserProfileSchema.nameZip,
+      instance.zip,
+      const ZipCodeDecoder(),
+    );
+    keyed.encodeStringList(_$UserProfileSchema.nameTags, instance.tags);
   }
 
   @override
@@ -385,7 +410,7 @@ extension type const _$CarSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Car
 // =============================================================================
-final class CarCodable implements Codable<Car> {
+final class CarCodable implements KeyedCodable<Car> {
   const CarCodable();
 
   @override
@@ -422,6 +447,15 @@ final class CarCodable implements Codable<Car> {
     seen.validate();
 
     return Car(maxSpeed: maxSpeed!, doors: doors!);
+  }
+
+  @override
+  int encodedFieldCount(Car instance) => 2;
+
+  @override
+  void encodeFields(Car instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
 
   @override
@@ -493,7 +527,7 @@ extension type const _$BicycleSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Bicycle
 // =============================================================================
-final class BicycleCodable implements Codable<Bicycle> {
+final class BicycleCodable implements KeyedCodable<Bicycle> {
   const BicycleCodable();
 
   @override
@@ -530,6 +564,15 @@ final class BicycleCodable implements Codable<Bicycle> {
     seen.validate();
 
     return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
+  }
+
+  @override
+  int encodedFieldCount(Bicycle instance) => 2;
+
+  @override
+  void encodeFields(Bicycle instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
 
   @override
@@ -647,7 +690,7 @@ extension type const _$TelemetryPacketSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TelemetryPacket
 // =============================================================================
-final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
+final class TelemetryPacketCodable implements KeyedCodable<TelemetryPacket> {
   const TelemetryPacketCodable();
 
   @override
@@ -754,6 +797,78 @@ final class TelemetryPacketCodable implements Codable<TelemetryPacket> {
       vehicle: vehicle!,
       notes: notes,
     );
+  }
+
+  @override
+  int encodedFieldCount(TelemetryPacket instance) {
+    var count$ = 7;
+    if (instance.delta != null) count$++;
+    if (instance.notes != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TelemetryPacket instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$TelemetryPacketSchema.namePacketId, instance.packetId);
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameRegionZip,
+      instance.regionZip,
+      const ZipCodeDecoder(),
+    );
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameStatusCode,
+      instance.statusCode,
+      const UpperCodeEncoder(),
+    );
+    switch (instance.reading) {
+      case final int v:
+        keyed.encodeInt(_$TelemetryPacketSchema.nameReading, v);
+      case final v:
+        keyed.encodeDouble(_$TelemetryPacketSchema.nameReading, v.toDouble());
+    }
+    final v$Delta = instance.delta;
+    if (v$Delta != null) {
+      switch (v$Delta) {
+        case final int v:
+          keyed.encodeInt(_$TelemetryPacketSchema.nameDelta, v);
+        case final v:
+          keyed.encodeDouble(_$TelemetryPacketSchema.nameDelta, v.toDouble());
+      }
+    }
+    keyed.encodeList(
+      _$TelemetryPacketSchema.nameHistory,
+      instance.history,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$TelemetryPacketSchema.nameCounters)
+          .keyed(length: instance.counters.length);
+      for (final entry in instance.counters.entries) {
+        switch (entry.value) {
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
+        }
+      }
+    }
+    keyed.encodeValue(
+      _$TelemetryPacketSchema.nameVehicle,
+      instance.vehicle,
+      const VehicleCodable(),
+    );
+    final v$Notes = instance.notes;
+    if (v$Notes != null) {
+      keyed.encodeString(_$TelemetryPacketSchema.nameNotes, v$Notes);
+    }
   }
 
   @override
@@ -890,7 +1005,7 @@ extension type const _$UserWithLocationSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for UserWithLocation
 // =============================================================================
-final class UserWithLocationCodable implements Codable<UserWithLocation> {
+final class UserWithLocationCodable implements KeyedCodable<UserWithLocation> {
   const UserWithLocationCodable();
 
   @override
@@ -927,6 +1042,23 @@ final class UserWithLocationCodable implements Codable<UserWithLocation> {
     seen.validate();
 
     return UserWithLocation(profile: profile!, location: location!);
+  }
+
+  @override
+  int encodedFieldCount(UserWithLocation instance) => 2;
+
+  @override
+  void encodeFields(UserWithLocation instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$UserWithLocationSchema.nameProfile,
+      instance.profile,
+      const UserProfileCodable(),
+    );
+    keyed.encodeValue(
+      _$UserWithLocationSchema.nameLocation,
+      instance.location,
+      const CoordinateCodable(),
+    );
   }
 
   @override

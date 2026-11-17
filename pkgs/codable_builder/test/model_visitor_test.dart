@@ -359,5 +359,103 @@ void main() {
       check(slug.aliasSchemaSuffixes)
           .deepEquals(['SlugFooBar', 'SlugFooBar\$2']);
     });
+
+    test(
+      'extracts generic type parameters, bounds, and unbounded nullability',
+      () {
+        final envelope = visit('Envelope');
+        check(envelope.isGeneric).isTrue();
+        check(envelope.isPolymorphic).isFalse();
+        check(envelope.instantiatedClassName).equals('Envelope<T>');
+        check(envelope.typeParamsDeclaration).equals('<T>');
+        check(envelope.typeParameters.single.codecFieldName).equals('_\$t');
+        check(envelope.typeParameters.single.boundCode).isNull();
+        final dataField = envelope.fields.firstWhere((f) => f.name == 'data');
+        check(dataField.category).equals(TypeCategory.typeParameter);
+        check(dataField.isUnboundedTypeParameter).isTrue();
+        check(dataField.participatesInGoldenMask).isTrue();
+
+        final pair = visit('Pair');
+        check(pair.typeParamsDeclaration).equals('<A, B extends num>');
+        check(pair.instantiatedClassName).equals('Pair<A, B>');
+        check(pair.typeParameters.map((p) => p.codecFieldName))
+            .deepEquals(['_\$a', '_\$b']);
+        final secondField = pair.fields.firstWhere((f) => f.name == 'second');
+        check(secondField.isUnboundedTypeParameter).isFalse();
+
+        final bucket = visit('KeyedBucket');
+        check(bucket.typeParamsDeclaration).equals('<K extends Object, V>');
+      },
+    );
+
+    test('extracts sealed, multi-level sealed, generic sealed, and abstract polymorphic descriptors', () {
+      final shape = visit('ShapeEvent');
+      check(shape.isPolymorphic).isTrue();
+      check(shape.isSealed).isTrue();
+      check(shape.discriminatorKey).equals('type');
+      check(
+        shape.polymorphicSubtypes.map(
+          (s) => (s.className, s.discriminatorValue),
+        ),
+      ).deepEquals([('CircleEvent', 'circleEvent'), ('RectEvent', 'rect_box')]);
+
+      final payment = visit('PaymentMethod');
+      check(payment.isPolymorphic).isTrue();
+      check(payment.isSealed).isTrue();
+      check(payment.discriminatorKey).equals('kind');
+      check(
+        payment.polymorphicSubtypes.map(
+          (s) => (s.className, s.discriminatorValue),
+        ),
+      ).deepEquals([
+        ('CreditCardPayment', 'credit_card_payment'),
+        ('DebitCardPayment', 'debit_card_payment'),
+        ('WireTransferPayment', 'wire_transfer_payment'),
+      ]);
+
+      final outcome = visit('ApiOutcome');
+      check(outcome.isGeneric).isTrue();
+      check(outcome.isPolymorphic).isTrue();
+      check(outcome.discriminatorKey).equals('status');
+      check(
+        outcome.polymorphicSubtypes.map(
+          (s) => (s.instantiatedTypeCode, s.discriminatorValue),
+        ),
+      ).deepEquals([('ApiSuccess<T>', 'ok'), ('ApiFailure', 'error')]);
+
+      final plugin = visit('PluginAction');
+      check(plugin.isPolymorphic).isTrue();
+      check(plugin.isSealed).isFalse();
+      check(plugin.polymorphicSubtypes.map((s) => s.className))
+          .deepEquals(['PingAction', 'EchoAction']);
+    });
+
+    test('rejects invalid generic type arguments and invalid polymorphic hierarchies', () {
+      for (final (className, expectedSnippet) in [
+        ('InvalidGenericNestedUnsupportedType', 'DateTime'),
+        ('InvalidUnboundedGenericMapKey', 'Map keys must be non-nullable'),
+        ('InvalidSealedMissingSubtypeAnnotation', 'UnannotatedSealedLeaf'),
+        (
+          'InvalidSealedDuplicateDiscriminator',
+          'Duplicate discriminator value',
+        ),
+        (
+          'InvalidSealedDiscriminatorFieldCollision',
+          'collides with discriminatorKey',
+        ),
+        ('InvalidConcreteWithDiscriminator', 'without @Codable(subtypes: ...)'),
+        (
+          'InvalidUnsealedAbstractWithoutDiscriminator',
+          'cannot be instantiated directly',
+        ),
+        ('InvalidGenericSealedConcreteArg', 'must forward type parameters'),
+        ('InvalidGenericSealedExtraParam', 'not bound by polymorphic'),
+      ]) {
+        check(() => visit(className))
+            .throws<InvalidGenerationSourceError>()
+            .has((e) => e.message, 'message')
+            .contains(expectedSnippet);
+      }
+    });
   });
 }

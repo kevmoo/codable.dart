@@ -7,6 +7,8 @@ import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_helper/source_helper.dart';
 
+import 'codec_expression_helper.dart';
+import 'encoder_helper.dart';
 import 'field_descriptor.dart';
 import 'type_helper.dart';
 
@@ -23,8 +25,36 @@ typedef _DecoderSlot = ({
 /// `decode` / `decodeList` methods.
 final class DecoderGeneratorHelper {
   final ModelDescriptor model;
+  late final CodecExpressionHelper _codecHelper = CodecExpressionHelper(
+    model,
+    decodeBuilder: inlineValueDecodeCode,
+    encodeBuilder:
+        (type, {required valueExpr, required encoderExpr, required indent}) =>
+            EncoderGeneratorHelper(model).inlineValueEncodeCode(
+              type,
+              valueExpr: valueExpr,
+              encoderExpr: encoderExpr,
+              indent: indent,
+            ),
+  );
 
   DecoderGeneratorHelper(this.model);
+
+  /// Renders inline statements decoding a value of [type] from [decoderExpr]
+  /// into a newly declared `final $targetVar` binding.
+  String inlineValueDecodeCode(
+    DartType type, {
+    required String targetVar,
+    required String decoderExpr,
+    required String indent,
+  }) => _decoderValueCode(type, (
+    target: targetVar,
+    declareType: type.getDisplayString(),
+    decoderExpr: decoderExpr,
+    indent: indent,
+    depth: 0,
+    tag: '',
+  ));
 
   /// Generates the schema extension type and decoder methods for [model].
   String generate() {
@@ -85,18 +115,26 @@ final class DecoderGeneratorHelper {
 
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
 
-    _writeSchemaNameAndIndexConstants(buffer, nonIgnoredFields);
-    _writeSchemaKeyOptionsTable(buffer, schemaName, nonIgnoredFields);
-    _writeSchemaEnumOptions(buffer, nonIgnoredFields);
-    _writeSchemaBitmaskValidation(buffer, schemaName);
+    _writeSchemaNameConstants(
+      buffer,
+      nonIgnoredFields,
+      includeAliases: model.createDecoder,
+    );
+    if (model.createDecoder) {
+      _writeSchemaIndexConstants(buffer, nonIgnoredFields);
+      _writeSchemaKeyOptionsTable(buffer, schemaName, nonIgnoredFields);
+      _writeSchemaEnumOptions(buffer, nonIgnoredFields);
+      _writeSchemaBitmaskValidation(buffer, schemaName);
+    }
 
     buffer.writeln('}');
   }
 
-  static void _writeSchemaNameAndIndexConstants(
+  static void _writeSchemaNameConstants(
     StringBuffer buffer,
-    List<FieldDescriptor> nonIgnoredFields,
-  ) {
+    List<FieldDescriptor> nonIgnoredFields, {
+    required bool includeAliases,
+  }) {
     buffer.writeln('  // String Name Constants');
     for (final field in nonIgnoredFields) {
       final suffix = field.schemaSuffix;
@@ -104,15 +142,22 @@ final class DecoderGeneratorHelper {
         '  static const String name$suffix = '
         '${escapeDartString(field.wireName)};',
       );
-      for (var i = 0; i < field.aliases.length; i++) {
-        final aliasCombo = field.aliasSchemaSuffixes[i];
-        buffer.writeln(
-          '  static const String alias$aliasCombo = '
-          '${escapeDartString(field.aliases[i])};',
-        );
+      if (includeAliases) {
+        for (var i = 0; i < field.aliases.length; i++) {
+          final aliasCombo = field.aliasSchemaSuffixes[i];
+          buffer.writeln(
+            '  static const String alias$aliasCombo = '
+            '${escapeDartString(field.aliases[i])};',
+          );
+        }
       }
     }
+  }
 
+  static void _writeSchemaIndexConstants(
+    StringBuffer buffer,
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
     buffer.writeln();
     buffer.writeln('  // Key Indices for selectKeyIndex()');
     for (final field in nonIgnoredFields) {
@@ -314,7 +359,7 @@ final class DecoderGeneratorHelper {
     final schemaName = '_\$${model.className}Schema';
 
     buffer.writeln('@override');
-    buffer.writeln('${model.className} decode(Decoder decoder) {');
+    buffer.writeln('${model.instantiatedClassName} decode(Decoder decoder) {');
     buffer.writeln(
       '  final keyed = decoder.keyed(options: $schemaName.keyOptions);',
     );
@@ -372,6 +417,14 @@ final class DecoderGeneratorHelper {
     buffer.writeln('    }');
     buffer.writeln('  }');
     buffer.writeln();
+    for (final reqField in model.requiredFields) {
+      if (reqField.isUnboundedTypeParameter) {
+        final typeStr = reqField.type.getDisplayString();
+        buffer.writeln('  if (null is $typeStr) {');
+        buffer.writeln('    seen |= $schemaName.${reqField.name};');
+        buffer.writeln('  }');
+      }
+    }
     buffer.writeln('  // Inlined fast-path check');
     buffer.writeln('  seen.validate();');
     buffer.writeln();
@@ -404,10 +457,18 @@ final class DecoderGeneratorHelper {
       buffer.writeln('          ${field.name} = null;');
       buffer.writeln('        } else {');
       _writeKeyedFieldRead(buffer, field, indent: '          ');
-      if (field.participatesInGoldenMask) {
-        buffer.writeln('          seen |= $schemaName.${field.name};');
-      }
       buffer.writeln('        }');
+    } else if (field.isUnboundedTypeParameter) {
+      final typeStr = field.type.getDisplayString();
+      buffer.writeln('        if (keyed.isNextNull() && null is $typeStr) {');
+      buffer.writeln('          keyed.readNull();');
+      buffer.writeln('          ${field.name} = null as $typeStr;');
+      buffer.writeln('        } else {');
+      _writeKeyedFieldRead(buffer, field, indent: '          ');
+      buffer.writeln('        }');
+      if (field.participatesInGoldenMask) {
+        buffer.writeln('        seen |= $schemaName.${field.name};');
+      }
     } else {
       _writeKeyedFieldRead(buffer, field, indent: '        ');
       if (field.participatesInGoldenMask) {
@@ -460,11 +521,25 @@ final class DecoderGeneratorHelper {
       case TypeCategory.map:
         _writeKeyedMapRead(buffer, field, indent: indent);
       case TypeCategory.nestedCodable:
-        final nestedName = field.type.element!.name;
-        buffer.writeln(
-          '$indent${field.name} = '
-          'const ${nestedName}Codable().decode(keyed.nestedDecoder());',
+        final nonNullType = field.isNullable
+            ? model.element.library.typeSystem.promoteToNonNull(field.type)
+            : field.type;
+        final codecExpr = _codecHelper.forType(
+          nonNullType,
+          CodecMode.decodable,
         );
+        buffer.writeln(
+          '$indent${field.name} = $codecExpr.decode(keyed.nestedDecoder());',
+        );
+      case TypeCategory.typeParameter:
+        final nonNullType = field.isNullable
+            ? model.element.library.typeSystem.promoteToNonNull(field.type)
+            : field.type;
+        final codecExpr = _codecHelper.forType(
+          nonNullType,
+          CodecMode.decodable,
+        );
+        buffer.writeln('$indent${field.name} = keyed.decodeValue($codecExpr);');
       case TypeCategory.unknown:
         throw StateError(
           'Unsupported unknown field type '
@@ -573,9 +648,16 @@ final class DecoderGeneratorHelper {
       _writeEnumListRead(buffer, field, elemType, indent: indent);
       return;
     }
-    if (elemType.element != null &&
-        const TypeClassifier().isCodableElement(elemType.element!)) {
-      _writeCodableListRead(buffer, field, elemType, indent: indent);
+    if (elemType is TypeParameterType ||
+        (elemType.element != null &&
+            const TypeClassifier().isCodableElement(elemType.element!))) {
+      _writeDecodableCollectionRead(
+        buffer,
+        field,
+        elemType,
+        indent: indent,
+        isSet: false,
+      );
       return;
     }
     if (isNullable &&
@@ -789,38 +871,58 @@ final class DecoderGeneratorHelper {
         'return $enumName.values[idx]; })';
   }
 
-  void _writeCodableListRead(
+  void _writeDecodableCollectionRead(
     StringBuffer buffer,
     FieldDescriptor field,
     DartType elemType, {
     required String indent,
+    required bool isSet,
   }) {
-    final nestedName = elemType.element!.name!;
+    final typeSystem = model.element.library.typeSystem;
+    final elemDisplay = elemType.getDisplayString();
     if (elemType.isNullableType) {
+      final nonNull = typeSystem.promoteToNonNull(elemType);
+      final codecExpr = _codecHelper.forType(nonNull, CodecMode.decodable);
       buffer.writeln(
-        _nullableCodableUnkeyedBlock(
+        _nullableDecodableUnkeyedBlock(
           field.name,
-          nestedName,
+          elemDisplay,
+          codecExpr,
           indent: indent,
-          isSet: false,
+          isSet: isSet,
         ),
       );
-    } else {
-      buffer.writeln(
-        '$indent${field.name} = '
-        'const ${nestedName}Codable().decodeList(keyed.nestedDecoder());',
-      );
+      return;
     }
+    final codecExpr = _codecHelper.forType(elemType, CodecMode.decodable);
+    if (elemType is TypeParameterType &&
+        typeSystem.isPotentiallyNullable(elemType)) {
+      buffer.writeln(
+        _potentiallyNullableUnkeyedBlock(
+          field.name,
+          elemDisplay,
+          codecExpr,
+          indent: indent,
+          isSet: isSet,
+        ),
+      );
+      return;
+    }
+    final suffix = isSet ? '.toSet()' : '';
+    buffer.writeln(
+      '$indent${field.name} = $codecExpr.decodeList(keyed.nestedDecoder())$suffix;',
+    );
   }
 
-  static String _nullableCodableUnkeyedBlock(
+  static String _nullableDecodableUnkeyedBlock(
     String fieldName,
-    String nestedName, {
+    String elemTypeDisplay,
+    String nonNullCodecExpr, {
     required String indent,
     required bool isSet,
   }) {
     final varName = isSet ? 's' : 'l';
-    final literal = isSet ? '<$nestedName?>{}' : '<$nestedName?>[]';
+    final literal = isSet ? '<$elemTypeDisplay>{}' : '<$elemTypeDisplay>[]';
     return '$indent{\n'
         '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
         '$indent  final $varName = $literal;\n'
@@ -829,7 +931,31 @@ final class DecoderGeneratorHelper {
         '$indent      u.readNull();\n'
         '$indent      $varName.add(null);\n'
         '$indent    } else {\n'
-        '$indent      $varName.add(const ${nestedName}Codable().decode(u.nestedDecoder()));\n'
+        '$indent      $varName.add($nonNullCodecExpr.decode(u.nestedDecoder()));\n'
+        '$indent    }\n'
+        '$indent  }\n'
+        '$indent  $fieldName = $varName;\n'
+        '$indent}';
+  }
+
+  static String _potentiallyNullableUnkeyedBlock(
+    String fieldName,
+    String elemTypeDisplay,
+    String codecExpr, {
+    required String indent,
+    required bool isSet,
+  }) {
+    final varName = isSet ? 's' : 'l';
+    final literal = isSet ? '<$elemTypeDisplay>{}' : '<$elemTypeDisplay>[]';
+    return '$indent{\n'
+        '$indent  final u = keyed.nestedDecoder().unkeyed();\n'
+        '$indent  final $varName = $literal;\n'
+        '$indent  while (u.moveNext()) {\n'
+        '$indent    if (null is $elemTypeDisplay && u.isNextNull()) {\n'
+        '$indent      u.readNull();\n'
+        '$indent      $varName.add(null as $elemTypeDisplay);\n'
+        '$indent    } else {\n'
+        '$indent      $varName.add($codecExpr.decode(u.nestedDecoder()));\n'
         '$indent    }\n'
         '$indent  }\n'
         '$indent  $fieldName = $varName;\n'
@@ -867,12 +993,10 @@ final class DecoderGeneratorHelper {
       ));
       return 'Decodable.fromFunction((d) {\n$body  return res;\n})';
     }
-    if (type.element != null &&
-        const TypeClassifier().isCodableElement(type.element!)) {
-      final nestedName = type.element!.name;
-      return type.isNullableType
-          ? 'Decodable.fromFunction((d) { final sv = d.singleValue(); if (sv.isNull()) { sv.readNull(); return null; } return const ${nestedName}Codable().decode(d); })'
-          : 'const ${nestedName}Codable()';
+    if (type is TypeParameterType ||
+        (type.element != null &&
+            const TypeClassifier().isCodableElement(type.element!))) {
+      return _unkeyedDecodableElementExpr(type);
     }
     if (type.element is EnumElement) {
       return _enumDecodableExpr(
@@ -881,6 +1005,26 @@ final class DecoderGeneratorHelper {
       );
     }
     return _generatePrimitiveUnkeyedElementExpr(type);
+  }
+
+  String _unkeyedDecodableElementExpr(DartType type) {
+    final typeSystem = model.element.library.typeSystem;
+    if (type.isNullableType) {
+      final nonNull = typeSystem.promoteToNonNull(type);
+      final codecExpr = _codecHelper.forType(nonNull, CodecMode.decodable);
+      return 'Decodable.fromFunction((d) { final sv = d.singleValue(); '
+          'if (sv.isNull()) { sv.readNull(); return null; } '
+          'return $codecExpr.decode(d); })';
+    }
+    final codecExpr = _codecHelper.forType(type, CodecMode.decodable);
+    if (type is TypeParameterType && typeSystem.isPotentiallyNullable(type)) {
+      final typeStr = type.getDisplayString();
+      return 'Decodable.fromFunction((d) { '
+          'if (null is $typeStr) { final sv = d.singleValue(); '
+          'if (sv.isNull()) { sv.readNull(); return null as $typeStr; } } '
+          'return $codecExpr.decode(d); })';
+    }
+    return codecExpr;
   }
 
   String _generateUnkeyedListElementExpr(DartType type) {
@@ -967,19 +1111,16 @@ final class DecoderGeneratorHelper {
       );
       return;
     }
-    if (elemType.element != null &&
-        const TypeClassifier().isCodableElement(elemType.element!)) {
-      final nestedName = elemType.element!.name!;
-      final code = elemType.isNullableType
-          ? _nullableCodableUnkeyedBlock(
-              field.name,
-              nestedName,
-              indent: indent,
-              isSet: true,
-            )
-          : '$indent${field.name} = '
-                'const ${nestedName}Codable().decodeList(keyed.nestedDecoder()).toSet();';
-      buffer.writeln(code);
+    if (elemType is TypeParameterType ||
+        (elemType.element != null &&
+            const TypeClassifier().isCodableElement(elemType.element!))) {
+      _writeDecodableCollectionRead(
+        buffer,
+        field,
+        elemType,
+        indent: indent,
+        isSet: true,
+      );
       return;
     }
     throw StateError(
@@ -1093,6 +1234,28 @@ final class DecoderGeneratorHelper {
       return '${slot.indent}${slot.target} = $kVar.$scalarMethod();\n';
     }
     if (!type.isNullableType) {
+      if (type is TypeParameterType &&
+          model.element.library.typeSystem.isPotentiallyNullable(type)) {
+        final typeStr = type.getDisplayString();
+        final indent = slot.indent;
+        final out = StringBuffer()
+          ..writeln('${indent}if (null is $typeStr && $kVar.isNextNull()) {')
+          ..writeln('$indent  $kVar.readNull();')
+          ..writeln('$indent  ${slot.target} = null as $typeStr;')
+          ..writeln('$indent} else {')
+          ..write(
+            _nonNullKeyedMapValueDecodeCode(type, kVar, (
+              target: slot.target,
+              declareType: null,
+              decoderExpr: '$kVar.nestedDecoder()',
+              indent: '$indent  ',
+              depth: slot.depth + 1,
+              tag: slot.tag,
+            )),
+          )
+          ..writeln('$indent}');
+        return out.toString();
+      }
       return _nonNullKeyedMapValueDecodeCode(type, kVar, slot);
     }
     final indent = slot.indent;
@@ -1238,6 +1401,10 @@ final class DecoderGeneratorHelper {
       return _enumDecoderValueCode(type, slot);
     }
     if (!type.isNullableType) {
+      if (type is TypeParameterType &&
+          model.element.library.typeSystem.isPotentiallyNullable(type)) {
+        return _potentiallyNullableDecoderValueCode(type, slot);
+      }
       return _nonNullComplexDecoderValueCode(type, slot);
     }
     final sfx = _slotSuffix(slot);
@@ -1265,6 +1432,36 @@ final class DecoderGeneratorHelper {
           tag: slot.tag,
         )),
       )
+      ..writeln('$indent}');
+    return out.toString();
+  }
+
+  String _potentiallyNullableDecoderValueCode(
+    TypeParameterType type,
+    _DecoderSlot slot,
+  ) {
+    final sfx = _slotSuffix(slot);
+    final decVar = 'dec$sfx';
+    final svVar = 'sv$sfx';
+    final indent = slot.indent;
+    final typeStr = type.getDisplayString();
+    final codecExpr = _codecHelper.forType(type, CodecMode.decodable);
+    final out = StringBuffer();
+    if (slot.declareType != null) {
+      out.writeln('$indent${slot.declareType} ${slot.target};');
+    }
+    out
+      ..writeln('${indent}final $decVar = ${slot.decoderExpr};')
+      ..writeln('${indent}if (null is $typeStr) {')
+      ..writeln('$indent  final $svVar = $decVar.singleValue();')
+      ..writeln('$indent  if ($svVar.isNull()) {')
+      ..writeln('$indent    $svVar.readNull();')
+      ..writeln('$indent    ${slot.target} = null as $typeStr;')
+      ..writeln('$indent  } else {')
+      ..writeln('$indent    ${slot.target} = $codecExpr.decode($decVar);')
+      ..writeln('$indent  }')
+      ..writeln('$indent} else {')
+      ..writeln('$indent  ${slot.target} = $codecExpr.decode($decVar);')
       ..writeln('$indent}');
     return out.toString();
   }
@@ -1348,22 +1545,36 @@ final class DecoderGeneratorHelper {
     );
   }
 
-  static String? _nonNullComplexSingleExpr(DartType type, String decExpr) {
-    if (type.element != null &&
-        const TypeClassifier().isCodableElement(type.element!)) {
-      return 'const ${type.element!.name}Codable().decode($decExpr)';
+  String? _nonNullComplexSingleExpr(DartType type, String decExpr) {
+    final nonNullType = model.element.library.typeSystem.promoteToNonNull(type);
+    if (_isDirectSingleDecodable(nonNullType)) {
+      final codecExpr = _codecHelper.forType(nonNullType, CodecMode.decodable);
+      return '$codecExpr.decode($decExpr)';
     }
-    final isSet = type.isDartCoreSet || type.element?.name == 'Set';
-    final isList = type.isDartCoreList || type.element?.name == 'List';
-    final inner = (isList || isSet) ? _typeArgAt(type, 0) : null;
-    if (inner != null &&
-        !inner.isNullableType &&
-        inner.element != null &&
-        const TypeClassifier().isCodableElement(inner.element!)) {
-      final suffix = isSet ? '.toSet()' : '';
-      return 'const ${inner.element!.name}Codable().decodeList($decExpr)$suffix';
+    final isSet =
+        nonNullType.isDartCoreSet || nonNullType.element?.name == 'Set';
+    final isList =
+        nonNullType.isDartCoreList || nonNullType.element?.name == 'List';
+    if (!isList && !isSet) return null;
+    final inner = _typeArgAt(nonNullType, 0);
+    if (inner == null || !_isNonNullListDecodable(inner)) return null;
+    final suffix = isSet ? '.toSet()' : '';
+    final codecExpr = _codecHelper.forType(inner, CodecMode.decodable);
+    return '$codecExpr.decodeList($decExpr)$suffix';
+  }
+
+  static bool _isDirectSingleDecodable(DartType nonNullType) =>
+      nonNullType is TypeParameterType ||
+      (nonNullType.element != null &&
+          const TypeClassifier().isCodableElement(nonNullType.element!));
+
+  bool _isNonNullListDecodable(DartType inner) {
+    if (inner.isNullableType) return false;
+    if (inner is TypeParameterType) {
+      return !model.element.library.typeSystem.isPotentiallyNullable(inner);
     }
-    return null;
+    return inner.element != null &&
+        const TypeClassifier().isCodableElement(inner.element!);
   }
 
   static String? _tryTypedDataDecodeCode(DartType type, _DecoderSlot slot) {
@@ -1459,16 +1670,21 @@ final class DecoderGeneratorHelper {
   }
 
   void _writeDecoderReturn(StringBuffer buffer) {
+    final instantiated = model.instantiatedClassName;
     if (model.fields.isEmpty) {
       final constPrefix = model.isConstConstructor ? 'const ' : '';
-      buffer.writeln('  return $constPrefix${model.className}();');
+      buffer.writeln('  return $constPrefix$instantiated();');
       buffer.writeln('}');
       return;
     }
-    buffer.writeln('  return ${model.className}(');
+    buffer.writeln('  return $instantiated(');
     for (final field in model.fields) {
       final isNullableOrHasDefault = field.isNullable || field.hasDefaultValue;
-      final argValue = isNullableOrHasDefault ? field.name : '${field.name}!';
+      final argValue = isNullableOrHasDefault
+          ? field.name
+          : (field.isUnboundedTypeParameter
+                ? '${field.name} as ${field.type.getDisplayString()}'
+                : '${field.name}!');
 
       if (field.isPositional) {
         buffer.writeln('    $argValue,');
@@ -1483,8 +1699,9 @@ final class DecoderGeneratorHelper {
   void _writeListDecoder(StringBuffer buffer) {
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
     final isUniformDouble = model.isUniformDoubleModel;
+    final instantiated = model.instantiatedClassName;
 
-    buffer.writeln('List<${model.className}> decodeList(Decoder decoder) {');
+    buffer.writeln('List<$instantiated> decodeList(Decoder decoder) {');
 
     if (isUniformDouble) {
       final kCount = nonIgnoredFields.length;
@@ -1499,9 +1716,9 @@ final class DecoderGeneratorHelper {
       buffer.writeln('  ]);');
       buffer.writeln('  if (flatDoubles != null) {');
       buffer.writeln('    final count = flatDoubles.length ~/ $kCount;');
-      buffer.writeln('    return List<${model.className}>.generate(');
+      buffer.writeln('    return List<$instantiated>.generate(');
       buffer.writeln('      count,');
-      buffer.writeln('      (i) => ${model.className}(');
+      buffer.writeln('      (i) => $instantiated(');
       for (var k = 0; k < kCount; k++) {
         final field = nonIgnoredFields[k];
         final access = 'flatDoubles[i * $kCount + $k]';
@@ -1519,7 +1736,7 @@ final class DecoderGeneratorHelper {
     }
 
     buffer.writeln('  final unkeyed = decoder.unkeyed();');
-    buffer.writeln('  final list = <${model.className}>[];');
+    buffer.writeln('  final list = <$instantiated>[];');
     buffer.writeln('  while (unkeyed.moveNext()) {');
     buffer.writeln('    list.add(decode(unkeyed.nestedDecoder()));');
     buffer.writeln('  }');

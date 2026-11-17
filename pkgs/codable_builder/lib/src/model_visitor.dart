@@ -11,14 +11,19 @@ import 'package:source_gen/source_gen.dart';
 import 'package:source_helper/source_helper.dart';
 
 import 'field_descriptor.dart';
+import 'polymorphic_helper.dart';
 import 'type_helper.dart';
 import 'utils.dart';
 
 /// Visitor and metadata extractor for [@Codable] annotated classes.
 final class ModelVisitor {
   final TypeClassifier _typeClassifier;
+  final PolymorphicModelVisitor _polymorphicVisitor;
 
-  const ModelVisitor({this._typeClassifier = const TypeClassifier()});
+  const ModelVisitor({
+    this._typeClassifier = const TypeClassifier(),
+    this._polymorphicVisitor = const PolymorphicModelVisitor(),
+  });
 
   /// Inspects [element] and [annotation], returning a validated
   /// [ModelDescriptor].
@@ -27,9 +32,34 @@ final class ModelVisitor {
     final createDecoder = annotation.peek('createDecoder')?.boolValue ?? true;
     final useGoldenMask = annotation.peek('useGoldenMask')?.boolValue ?? true;
     final fieldRename = _extractFieldRename(annotation);
+    final typeParameters = _extractTypeParameters(element);
+
+    if (_polymorphicVisitor.isPolymorphicClass(element, annotation)) {
+      return _polymorphicVisitor.visitPolymorphicClass(
+        element: element,
+        annotation: annotation,
+        createEncoder: createEncoder,
+        createDecoder: createDecoder,
+        useGoldenMask: useGoldenMask,
+        fieldRename: fieldRename,
+        typeParameters: typeParameters,
+        inspectSubtypeKeys: _inspectClassWireKeys,
+      );
+    }
 
     final constructor = _selectConstructor(element);
+    if (element.isAbstract && !constructor.isFactory) {
+      throw InvalidGenerationSourceError(
+        'Abstract class "${element.name}" cannot be instantiated directly. '
+        'Mark it "sealed" or specify @Codable(discriminatorKey: ...) for '
+        'polymorphic serialization.',
+        element: element,
+      );
+    }
 
+    final enclosingTypeParams = {
+      for (final tp in element.typeParameters) tp.baseElement,
+    };
     final rawFields = [
       for (final param in constructor.formalParameters)
         _visitParameter(
@@ -38,6 +68,7 @@ final class ModelVisitor {
           createEncoder: createEncoder,
           createDecoder: createDecoder,
           fieldRename: fieldRename,
+          enclosingTypeParams: enclosingTypeParams,
         ),
     ];
 
@@ -45,7 +76,10 @@ final class ModelVisitor {
 
     // Required fields participating in golden mask (P0.1)
     final requiredFields = rawFields
-        .where((f) => !f.ignore && f.isRequired && !f.hasDefaultValue)
+        .where(
+          (f) =>
+              !f.ignore && f.isRequired && !f.isNullable && !f.hasDefaultValue,
+        )
         .toList();
 
     // P0.1 Fail-Fast 62-Bit Limit
@@ -84,7 +118,68 @@ final class ModelVisitor {
       requiredFields: processedRequiredFields,
       allOptionsKeys: allOptionsKeys,
       isConstConstructor: constructor.isConst,
+      typeParameters: typeParameters,
     );
+  }
+
+  List<TypeParameterDescriptor> _extractTypeParameters(ClassElement element) {
+    final usedNames = <String>{};
+    final result = <TypeParameterDescriptor>[];
+    for (final tp in element.typeParameters) {
+      final tpName = tp.name ?? 'T';
+      final rawCamel = toLowerCamelCase(tpName);
+      final fieldSuffix = _allocateUniqueSuffix(
+        rawCamel.isEmpty ? 't' : rawCamel,
+        usedNames,
+      );
+      final bound = tp.bound;
+      final boundCode =
+          bound != null && !(bound.isDartCoreObject && bound.isNullableType)
+          ? bound.getDisplayString()
+          : null;
+      result.add(
+        TypeParameterDescriptor(
+          element: tp,
+          name: tpName,
+          boundCode: boundCode,
+          codecFieldName: '_\$$fieldSuffix',
+        ),
+      );
+    }
+    return result;
+  }
+
+  List<({String name, String wireName, List<String> aliases})>
+  _inspectClassWireKeys(ClassElement subElement, FieldRename subRename) {
+    if (subElement.isSealed) return const [];
+    final constructor = _selectConstructor(subElement);
+    final keys = <({String name, String wireName, List<String> aliases})>[];
+    for (final param in constructor.formalParameters) {
+      final paramName = param.name ?? '';
+      final keyReader =
+          _readerFromElementAnnotation(
+            _findParameterElementAnnotation(
+              subElement,
+              param,
+              paramName,
+              codableKeyTypeChecker,
+            ),
+          ) ??
+          _readParameterAnnotation(
+            subElement,
+            param,
+            paramName,
+            codableKeyTypeChecker,
+          );
+      if (keyReader?.peek('ignore')?.boolValue ?? false) continue;
+      final customName = keyReader?.peek('name')?.stringValue;
+      keys.add((
+        name: paramName,
+        wireName: customName ?? applyFieldRename(paramName, subRename),
+        aliases: _extractAliases(keyReader),
+      ));
+    }
+    return keys;
   }
 
   _RawFieldData _visitParameter(
@@ -93,6 +188,7 @@ final class ModelVisitor {
     required bool createEncoder,
     required bool createDecoder,
     required FieldRename fieldRename,
+    required Set<Element> enclosingTypeParams,
   }) {
     final paramName = param.name ?? '';
     final keyElementAnnotation = _findParameterElementAnnotation(
@@ -175,14 +271,21 @@ final class ModelVisitor {
 
     if (!ignore) {
       _validateFieldTypeSupport(
+        element: element,
         param: param,
         classified: classified,
         createEncoder: createEncoder,
         createDecoder: createDecoder,
         customEncoderCode: customEncoderCode,
         customDecoderCode: customDecoderCode,
+        enclosingTypeParams: enclosingTypeParams,
       );
     }
+
+    final isNullable = param.type.isNullableType;
+    final isPotentiallyNullable =
+        isNullable ||
+        element.library.typeSystem.isPotentiallyNullable(param.type);
 
     return _RawFieldData(
       param: param,
@@ -195,7 +298,8 @@ final class ModelVisitor {
       isPositional: param.isPositional,
       isNamed: param.isNamed,
       isRequired: isRequired,
-      isNullable: param.type.isNullableType,
+      isNullable: isNullable,
+      isPotentiallyNullable: isPotentiallyNullable,
       hasDefaultValue: hasDefaultValue,
       defaultValueCode: defaultValueCode,
       ignore: ignore,
@@ -587,12 +691,14 @@ final class ModelVisitor {
   }
 
   void _validateFieldTypeSupport({
+    required ClassElement element,
     required FormalParameterElement param,
     required TypeClassification classified,
     required bool createEncoder,
     required bool createDecoder,
     required String? customEncoderCode,
     required String? customDecoderCode,
+    required Set<Element> enclosingTypeParams,
   }) {
     if (classified.category == TypeCategory.custom) {
       _validateCustomNativeFallback(
@@ -607,7 +713,12 @@ final class ModelVisitor {
     final needsNativeDecode = createDecoder && customDecoderCode == null;
     final needsNativeEncode = createEncoder && customEncoderCode == null;
     if (needsNativeDecode || needsNativeEncode) {
-      _validateNativeTypeSupport(param, param.type);
+      _validateNativeTypeSupport(
+        element,
+        param,
+        param.type,
+        enclosingTypeParams,
+      );
     }
   }
 
@@ -644,24 +755,76 @@ final class ModelVisitor {
     }
   }
 
-  void _validateNativeTypeSupport(FormalParameterElement param, DartType type) {
+  void _validateNativeTypeSupport(
+    ClassElement enclosingClass,
+    FormalParameterElement param,
+    DartType type,
+    Set<Element> enclosingTypeParams,
+  ) {
     if (_isUnsupportedSpecialType(type)) {
       throw _unsupportedTypeError(param, type);
     }
-    if (_isScalarOrLeafCodableType(type)) return;
-    if (type.isDartCoreList ||
-        type.isDartCoreSet ||
-        type.element?.name == 'List' ||
-        type.element?.name == 'Set') {
-      _validateLinearCollectionType(param, type);
+    if (type is TypeParameterType) {
+      if (!enclosingTypeParams.contains(type.element.baseElement)) {
+        throw _unsupportedTypeError(param, type);
+      }
       return;
     }
-    if (type.isDartCoreMap || type.element?.name == 'Map') {
-      _validateMapType(param, type);
+    if (_isScalarOrTypedData(type)) return;
+    final typeElement = type.element;
+    if (typeElement != null && _typeClassifier.isCodableElement(typeElement)) {
+      _validateCodableInterfaceType(
+        enclosingClass,
+        param,
+        type,
+        typeElement,
+        enclosingTypeParams,
+      );
+      return;
+    }
+    if (_isLinearCollectionType(type, typeElement)) {
+      _validateLinearCollectionType(
+        enclosingClass,
+        param,
+        type,
+        enclosingTypeParams,
+      );
+      return;
+    }
+    if (type.isDartCoreMap || typeElement?.name == 'Map') {
+      _validateMapType(enclosingClass, param, type, enclosingTypeParams);
       return;
     }
     throw _unsupportedTypeError(param, type);
   }
+
+  void _validateCodableInterfaceType(
+    ClassElement enclosingClass,
+    FormalParameterElement param,
+    DartType type,
+    Element typeElement,
+    Set<Element> enclosingTypeParams,
+  ) {
+    if (type is! InterfaceType) return;
+    if (typeElement is ClassElement &&
+        type.typeArguments.length != typeElement.typeParameters.length) {
+      throw _unsupportedTypeError(param, type);
+    }
+    for (final arg in type.typeArguments) {
+      _validateNativeTypeSupport(
+        enclosingClass,
+        param,
+        arg,
+        enclosingTypeParams,
+      );
+    }
+  }
+
+  static bool _isLinearCollectionType(DartType type, Element? typeElement) =>
+      type.isDartCoreList ||
+      type.isDartCoreSet ||
+      typeElement?.name == 'List' ||
+      typeElement?.name == 'Set';
 
   static bool _isUnsupportedSpecialType(DartType type) =>
       type is DynamicType ||
@@ -669,10 +832,9 @@ final class ModelVisitor {
       type is NeverType ||
       type is InvalidType ||
       type is RecordType ||
-      type is FunctionType ||
-      type is TypeParameterType;
+      type is FunctionType;
 
-  bool _isScalarOrLeafCodableType(DartType type) {
+  static bool _isScalarOrTypedData(DartType type) {
     if (type.isDartCoreInt ||
         type.isDartCoreDouble ||
         type.isDartCoreNum ||
@@ -681,37 +843,70 @@ final class ModelVisitor {
         type.isEnum) {
       return true;
     }
-    if (classifyTypedDataKind(type) != null) return true;
-    final element = type.element;
-    return element != null && _typeClassifier.isCodableElement(element);
+    return classifyTypedDataKind(type) != null;
   }
 
   void _validateLinearCollectionType(
+    ClassElement enclosingClass,
     FormalParameterElement param,
     DartType type,
+    Set<Element> enclosingTypeParams,
   ) {
     final elemType = type is InterfaceType && type.typeArguments.length == 1
         ? type.typeArguments.first
         : null;
     if (elemType == null) throw _unsupportedTypeError(param, type);
-    _validateNativeTypeSupport(param, elemType);
+    _validateNativeTypeSupport(
+      enclosingClass,
+      param,
+      elemType,
+      enclosingTypeParams,
+    );
   }
 
-  void _validateMapType(FormalParameterElement param, DartType type) {
+  void _validateMapType(
+    ClassElement enclosingClass,
+    FormalParameterElement param,
+    DartType type,
+    Set<Element> enclosingTypeParams,
+  ) {
     if (type is! InterfaceType || type.typeArguments.length != 2) {
       throw _unsupportedTypeError(param, type);
     }
     final keyType = type.typeArguments[0];
     final valType = type.typeArguments[1];
-    if (!_isValidMapKeyType(keyType)) {
+    if (!_isValidMapKeyType(enclosingClass, keyType, enclosingTypeParams)) {
       throw _unsupportedMapKeyError(param, keyType);
     }
-    _validateNativeTypeSupport(param, valType);
+    if (keyType is InterfaceType) {
+      for (final arg in keyType.typeArguments) {
+        _validateNativeTypeSupport(
+          enclosingClass,
+          param,
+          arg,
+          enclosingTypeParams,
+        );
+      }
+    }
+    _validateNativeTypeSupport(
+      enclosingClass,
+      param,
+      valType,
+      enclosingTypeParams,
+    );
   }
 
-  bool _isValidMapKeyType(DartType keyType) {
+  bool _isValidMapKeyType(
+    ClassElement enclosingClass,
+    DartType keyType,
+    Set<Element> enclosingTypeParams,
+  ) {
     if (_isUnsupportedSpecialType(keyType) || keyType.isNullableType) {
       return false;
+    }
+    if (keyType is TypeParameterType) {
+      return enclosingTypeParams.contains(keyType.element.baseElement) &&
+          !enclosingClass.library.typeSystem.isPotentiallyNullable(keyType);
     }
     if (keyType.isDartCoreString ||
         keyType.isDartCoreInt ||
@@ -797,6 +992,7 @@ final class ModelVisitor {
           isNamed: raw.isNamed,
           isRequired: raw.isRequired,
           isNullable: raw.isNullable,
+          isPotentiallyNullable: raw.isPotentiallyNullable,
           hasDefaultValue: raw.hasDefaultValue,
           defaultValueCode: raw.defaultValueCode,
           ignore: raw.ignore,
@@ -953,6 +1149,7 @@ final class _RawFieldData {
   final bool isNamed;
   final bool isRequired;
   final bool isNullable;
+  final bool isPotentiallyNullable;
   final bool hasDefaultValue;
   final String? defaultValueCode;
   final bool ignore;
@@ -976,6 +1173,7 @@ final class _RawFieldData {
     required this.isNamed,
     required this.isRequired,
     required this.isNullable,
+    required this.isPotentiallyNullable,
     required this.hasDefaultValue,
     this.defaultValueCode,
     required this.ignore,

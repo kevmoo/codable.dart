@@ -1341,6 +1341,280 @@ void main() {
         }
       });
     });
+
+    _registerGenericAndPolymorphicRoundtripTests();
+  });
+}
+
+void _registerGenericAndPolymorphicRoundtripTests() {
+  group('Generic @Codable() & Polymorphic Sealed Hierarchies', () {
+    test('roundtrips Envelope<T>, nullable T, recursive TreeNode<T>, and KeyedBucket<K, V>', () {
+      const addrCodec = EnvelopeCodable<Address>(AddressCodable());
+      const env = Envelope<Address>(
+        status: 200,
+        data: Address(city: 'Seattle', street: 'Pike St'),
+        history: [Address(city: 'Portland', street: 'Burnside')],
+        lookup: {
+          'home': Address(city: 'Tacoma', street: 'Pacific'),
+          'away': null,
+        },
+        fallback: Address(city: 'Olympia', street: 'Capitol'),
+      );
+      final spy = _StrictKnownLengthSpyEncoder();
+      addrCodec.encode(env, spy);
+      spy.verifyAllCountsMatch();
+
+      final encoded = JsonCodableEncoder.encode(env, addrCodec);
+      final decoded = addrCodec.decode(JsonCodableDecoder.fromString(encoded));
+      check(decoded.status).equals(200);
+      check(decoded.data.city).equals('Seattle');
+      check(decoded.history.single.city).equals('Portland');
+      check(decoded.lookup['home']?.city).equals('Tacoma');
+      check(decoded.lookup['away']).isNull();
+      check(decoded.fallback?.city).equals('Olympia');
+
+      final nullableCodec = EnvelopeCodable<Address?>(
+        const AddressCodable().nullable,
+      );
+      const nullEnv = Envelope<Address?>(
+        status: 204,
+        data: null,
+        history: [
+          Address(city: 'Boise', street: 'Main'),
+          null,
+        ],
+      );
+      final nullJson = JsonCodableEncoder.encode(nullEnv, nullableCodec);
+      check(nullJson).not((s) => s.contains('"data"'));
+      final roundtrippedNull = nullableCodec.decode(
+        JsonCodableDecoder.fromString(nullJson),
+      );
+      check(roundtrippedNull.status).equals(204);
+      check(roundtrippedNull.data).isNull();
+      check(roundtrippedNull.history.length).equals(2);
+      check(roundtrippedNull.history[0]?.city).equals('Boise');
+      check(roundtrippedNull.history[1]).isNull();
+
+      final explicitNull = nullableCodec.decode(
+        JsonCodableDecoder.fromString('{"status": 204, "data": null}'),
+      );
+      check(explicitNull.data).isNull();
+
+      const treeCodec = TreeNodeCodable<Point>(PointCodable());
+      const root = TreeNode<Point>(
+        Point(0, 0),
+        children: [
+          TreeNode(Point(1, 2), children: [TreeNode(Point(3, 4))]),
+          TreeNode(Point(5, 6)),
+        ],
+      );
+      final treeSpy = _StrictKnownLengthSpyEncoder();
+      treeCodec.encode(root, treeSpy);
+      treeSpy.verifyAllCountsMatch();
+      final decodedTree = treeCodec.decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(root, treeCodec),
+        ),
+      );
+      check(decodedTree.value.x).equals(0);
+      check(decodedTree.children[0].children.single.value.y).equals(4);
+
+      final intCodec = Codable<int>.fromFunctions(
+        decode: (d) => d.singleValue().readInt(),
+        encode: (v, e) => e.singleValue().encodeInt(v),
+      );
+      final bucketCodec = KeyedBucketCodable<int, Address>(
+        intCodec,
+        const AddressCodable(),
+      );
+      const bucket = KeyedBucket<int, Address>(
+        entries: {10: Address(city: 'Austin', street: 'Congress')},
+        activeKeys: {10, 20},
+      );
+      final decodedBucket = bucketCodec.decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(bucket, bucketCodec),
+        ),
+      );
+      check(decodedBucket.entries[10]?.city).equals('Austin');
+      check(decodedBucket.activeKeys).deepEquals({10, 20});
+    });
+
+    test('roundtrips GenericDashboard, OuterGenericWrapper<U>, and asymmetric generic boxes', () {
+      const dashboard = GenericDashboard(
+        mainLocation: Envelope(
+          status: 200,
+          data: Address(city: 'SF', street: 'Market'),
+        ),
+        fallbackLocation: Envelope(status: 204, data: null),
+        route: Envelope(status: 200, data: [Point(1.5, 2.5), Point(3.5, 4.5)]),
+        totalCount: Envelope(status: 200, data: 42),
+        roleMetric: Pair(UserRole.admin, 99.5),
+        notifications: [Envelope(status: 201, data: 'deployed')],
+      );
+      final spy = _StrictKnownLengthSpyEncoder();
+      const GenericDashboardCodable().encode(dashboard, spy);
+      spy.verifyAllCountsMatch();
+
+      final decodedDash = const GenericDashboardCodable().decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(dashboard, const GenericDashboardCodable()),
+        ),
+      );
+      check(decodedDash.mainLocation.data.city).equals('SF');
+      check(decodedDash.fallbackLocation.data).isNull();
+      check(decodedDash.route.data.length).equals(2);
+      check(decodedDash.totalCount.data).equals(42);
+      check(decodedDash.roleMetric.first).equals(UserRole.admin);
+      check(decodedDash.roleMetric.second).equals(99.5);
+      check(decodedDash.notifications.single.data).equals('deployed');
+
+      const outerCodec = OuterGenericWrapperCodable<Address>(AddressCodable());
+      const outer = OuterGenericWrapper<Address>(
+        primary: Envelope(
+          status: 200,
+          data: Address(city: 'NY', street: '5th'),
+        ),
+        forest: [TreeNode(Address(city: 'Boston', street: 'Boylston'))],
+        taggedCount: Pair(Address(city: 'LA', street: 'Sunset'), 7),
+      );
+      final decodedOuter = outerCodec.decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(outer, outerCodec),
+        ),
+      );
+      check(decodedOuter.primary.data.city).equals('NY');
+      check(decodedOuter.forest.single.value.city).equals('Boston');
+      check(decodedOuter.taggedCount.second).equals(7);
+
+      const encOnly = EncodeOnlyBoxCodable<Address>(AddressCodable());
+      const decOnly = DecodeOnlyBoxCodable<Address>(AddressCodable());
+      final boxJson = JsonCodableEncoder.encode(
+        const EncodeOnlyBox(
+          item: Address(city: 'Denver', street: 'Colfax'),
+          wrapped: Envelope(
+            status: 200,
+            data: Address(city: 'Boulder', street: 'Pearl'),
+          ),
+        ),
+        encOnly,
+      );
+      final decodedBox = decOnly.decode(JsonCodableDecoder.fromString(boxJson));
+      check(decodedBox.item.city).equals('Denver');
+      check(decodedBox.wrapped.data.city).equals('Boulder');
+    });
+
+    test('roundtrips sealed ShapeEvent, multi-level PaymentMethod, generic ApiOutcome<T>, and PluginAction', () {
+      for (final event in const <ShapeEvent>[
+        CircleEvent(radius: 5.5),
+        CircleEvent(radius: 9.0, label: 'ring'),
+        RectEvent(width: 10, height: 20),
+      ]) {
+        final spy = _StrictKnownLengthSpyEncoder();
+        const ShapeEventCodable().encode(event, spy);
+        spy.verifyAllCountsMatch();
+      }
+      final rectJson = JsonCodableEncoder.encode<ShapeEvent>(
+        const RectEvent(width: 10, height: 20),
+        const ShapeEventCodable(),
+      );
+      check(rectJson).contains('"type":"rect_box"');
+      final trailingDisc = const ShapeEventCodable().decode(
+        JsonCodableDecoder.fromString(
+          '{"radius": 4.25, "label": "late", "type": "circleEvent"}',
+        ),
+      );
+      check(trailingDisc)
+          .isA<CircleEvent>()
+          .has((c) => c.label, 'label')
+          .equals('late');
+
+      check(
+        () => const ShapeEventCodable().decode(
+          JsonCodableDecoder.fromString('{"radius": 1.0}'),
+        ),
+      ).throws<CodableException>();
+      check(
+            () => const ShapeEventCodable().decode(
+              JsonCodableDecoder.fromString('{"type": "triangle"}'),
+            ),
+          )
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('triangle');
+
+      const session = CheckoutSession(
+        primary: CreditCardPayment(last4: '4242', expMonth: 12),
+        backup: DebitCardPayment(last4: '1111', pinVerified: true),
+        savedMethods: [WireTransferPayment(routingCode: 'ABA-999')],
+        methodsByAlias: {'corp': CreditCardPayment(last4: '8888', expMonth: 6)},
+      );
+      final sessionSpy = _StrictKnownLengthSpyEncoder();
+      const CheckoutSessionCodable().encode(session, sessionSpy);
+      sessionSpy.verifyAllCountsMatch();
+      final decodedSession = const CheckoutSessionCodable().decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(session, const CheckoutSessionCodable()),
+        ),
+      );
+      check(decodedSession.primary)
+          .isA<CreditCardPayment>()
+          .has((c) => c.last4, 'last4')
+          .equals('4242');
+      check(decodedSession.backup)
+          .isA<DebitCardPayment>()
+          .has((d) => d.pinVerified, 'pinVerified')
+          .isTrue();
+      check(decodedSession.savedMethods.single)
+          .isA<WireTransferPayment>()
+          .has((w) => w.routingCode, 'routingCode')
+          .equals('ABA-999');
+      check(decodedSession.methodsByAlias['corp']).isA<CreditCardPayment>();
+
+      const bundle = OutcomeBundle(
+        locationOutcome: ApiSuccess(
+          Address(city: 'Chicago', street: 'Michigan Ave'),
+          requestId: 'req-1',
+        ),
+        countOutcome: ApiFailure(code: 503, reason: 'unavailable'),
+      );
+      final bundleSpy = _StrictKnownLengthSpyEncoder();
+      const OutcomeBundleCodable().encode(bundle, bundleSpy);
+      bundleSpy.verifyAllCountsMatch();
+      final decodedBundle = const OutcomeBundleCodable().decode(
+        JsonCodableDecoder.fromString(
+          JsonCodableEncoder.encode(bundle, const OutcomeBundleCodable()),
+        ),
+      );
+      check(decodedBundle.locationOutcome)
+          .isA<ApiSuccess<Address>>()
+          .has((s) => s.payload.city, 'city')
+          .equals('Chicago');
+      check(decodedBundle.countOutcome)
+          .isA<ApiFailure>()
+          .has((f) => f.code, 'code')
+          .equals(503);
+
+      final echoJson = JsonCodableEncoder.encode<PluginAction>(
+        const EchoAction('hello'),
+        const PluginActionCodable(),
+      );
+      check(
+        const PluginActionCodable().decode(
+          JsonCodableDecoder.fromString(echoJson),
+        ),
+      ).isA<EchoAction>().has((e) => e.text, 'text').equals('hello');
+
+      check(
+            () => JsonCodableEncoder.encode<PluginAction>(
+              const UnregisteredSecretAction(),
+              const PluginActionCodable(),
+            ),
+          )
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .isA<UnregisteredSecretAction>();
+    });
   });
 }
 

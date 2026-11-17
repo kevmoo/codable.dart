@@ -11,8 +11,9 @@ import 'package:codable/codable_json.dart';
 
 part 'generic_response_example.g.dart';
 
-/// Generic payload envelope demonstrating parameterized type decoding
+/// Generic payload envelope demonstrating parameterized `@Codable()` synthesis
 /// without intermediate object tree map structures.
+@Codable()
 class BaseResponse<T> {
   final int status;
   final String message;
@@ -23,44 +24,6 @@ class BaseResponse<T> {
     required this.message,
     required this.data,
   });
-}
-
-/// Companion [Decodable] for [BaseResponse].
-final class BaseResponseCodable<T> implements Decodable<BaseResponse<T>> {
-  final Decodable<T> dataDecodable;
-
-  const BaseResponseCodable(this.dataDecodable);
-
-  @override
-  BaseResponse<T> decode(Decoder decoder) {
-    final keyed = decoder.keyed();
-    int? status;
-    String? message;
-    T? data;
-
-    while (keyed.moveNextKey()) {
-      final key = keyed.nextKey();
-      switch (key) {
-        case 'status':
-          status = keyed.readInt();
-          break;
-        case 'message':
-          message = keyed.readString();
-          break;
-        case 'data':
-          data = keyed.decodeValue(dataDecodable);
-          break;
-        default:
-          keyed.skipValue();
-          break;
-      }
-    }
-
-    if (status == null || message == null || data == null) {
-      throw const CodableException('Missing required fields for BaseResponse');
-    }
-    return BaseResponse(status: status, message: message, data: data);
-  }
 }
 
 @Codable()
@@ -96,16 +59,13 @@ void main() {
   }
   ''';
 
+  const responseCodable = BaseResponseCodable<Article>(ArticleCodable());
   final bytes = Uint8List.fromList(utf8.encode(json));
-  final decoder = JsonCodableDecoder.fromBytes(bytes);
-  final response = const BaseResponseCodable(ArticleCodable()).decode(decoder);
+  final response = responseCodable.decode(JsonCodableDecoder.fromBytes(bytes));
 
   print('Response: ${response.status} - ${response.message}');
   print('Article: ${response.data.title} by ${response.data.author?.email}');
 
-  final outBytes = JsonCodableEncoder.toBytes(
-    response.data,
-    const ArticleCodable(),
-  );
-  print('Serialized article: ${utf8.decode(outBytes)}');
+  final outBytes = JsonCodableEncoder.toBytes(response, responseCodable);
+  print('Serialized response: ${utf8.decode(outBytes)}');
 }

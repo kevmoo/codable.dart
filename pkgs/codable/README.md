@@ -26,8 +26,10 @@ models from how the JSON payload is represented in memory.
 ### Library Imports
 
 - `package:codable/codable.dart` — Format-agnostic companion contracts
-  (`Codable<T>`, `Decodable<T>`, `Encodable<T>`, `SuperDecodable<T>`, `Decoder`,
-  `Encoder`, `KeyOptions`, and `@Codable` annotations).
+  (`Codable<T>`, `KeyedCodable<T>`, `Decodable<T>`, `Encodable<T>`,
+  `KeyedEncodable<T>`, `SuperCodable<T>`, `SuperDecodable<T>`,
+  `SuperEncodable<T>`, `Decoder`, `Encoder`, `KeyOptions`, and `@Codable`
+  annotations).
 - `package:codable/codable_json.dart` — Re-exports
   `package:codable/codable.dart` plus the JSON drivers (`JsonCodableDecoder`,
   `JsonCodableEncoder`) and low-level UTF-8 token streaming primitives
@@ -392,10 +394,13 @@ class Event {
 
 ### C. Polymorphic Subtype Dispatch
 
-To decode a sealed or abstract class hierarchy based on a discriminator field
-(such as `{"type": "car", ...}` vs. `{"type": "bicycle", ...}`), implement a
-companion `VehicleCodable implements Codable<Vehicle>` or provide a
-`SuperDecodable<T>` descriptor. See
+Annotate a `sealed` class with `@Codable(discriminatorKey: 'type')` (or
+`@Codable()`, which defaults `discriminatorKey` to `'type'`) and each concrete
+subtype with `@Codable()` (optionally overriding `discriminatorValue:`) to
+generate a bidirectional polymorphic companion with `1 + subCount` single-pass
+container framing. For hand-written or cross-library hierarchies, extend
+`SuperCodable<T>` (with `SubtypeCodable`), `SuperEncodable<T>`, or
+`SuperDecodable<T>`. See
 [`example/polymorphic_example.dart`](example/polymorphic_example.dart) for a
 complete working example.
 
@@ -405,6 +410,9 @@ See the [`example/`](example/) directory for self-contained examples:
 
 - [`example/basic_example.dart`](example/basic_example.dart) — `@Codable()`,
   `@CodableKey()` aliases, nested models, and `Codable<DateTime>`.
+- [`example/generic_response_example.dart`](example/generic_response_example.dart)
+  — Generic `@Codable()` envelope (`BaseResponse<T>`) with parameterized
+  `BaseResponseCodable<T>` synthesis.
 - [`example/custom_decoder_example.dart`](example/custom_decoder_example.dart) —
   Multi-representation field normalization (epoch integer vs. ISO-8601 string).
 - [`example/polymorphic_example.dart`](example/polymorphic_example.dart) —

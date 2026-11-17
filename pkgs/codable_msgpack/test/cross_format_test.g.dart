@@ -47,7 +47,7 @@ extension type const _$AllOptionalPatchSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for AllOptionalPatch
 // =============================================================================
-final class AllOptionalPatchCodable implements Codable<AllOptionalPatch> {
+final class AllOptionalPatchCodable implements KeyedCodable<AllOptionalPatch> {
   const AllOptionalPatchCodable();
 
   @override
@@ -95,6 +95,31 @@ final class AllOptionalPatchCodable implements Codable<AllOptionalPatch> {
     seen.validate();
 
     return AllOptionalPatch(alpha: alpha, beta: beta, gamma: gamma);
+  }
+
+  @override
+  int encodedFieldCount(AllOptionalPatch instance) {
+    var count$ = 0;
+    if (instance.alpha != null) count$++;
+    if (instance.beta != null) count$++;
+    if (instance.gamma != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(AllOptionalPatch instance, KeyedEncoder keyed) {
+    final v$Alpha = instance.alpha;
+    if (v$Alpha != null) {
+      keyed.encodeInt(_$AllOptionalPatchSchema.nameAlpha, v$Alpha);
+    }
+    final v$Beta = instance.beta;
+    if (v$Beta != null) {
+      keyed.encodeString(_$AllOptionalPatchSchema.nameBeta, v$Beta);
+    }
+    final v$Gamma = instance.gamma;
+    if (v$Gamma != null) {
+      keyed.encodeBool(_$AllOptionalPatchSchema.nameGamma, v$Gamma);
+    }
   }
 
   @override
@@ -252,7 +277,8 @@ extension type const _$WideNullableRecordSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for WideNullableRecord
 // =============================================================================
-final class WideNullableRecordCodable implements Codable<WideNullableRecord> {
+final class WideNullableRecordCodable
+    implements KeyedCodable<WideNullableRecord> {
   const WideNullableRecordCodable();
 
   @override
@@ -473,6 +499,100 @@ final class WideNullableRecordCodable implements Codable<WideNullableRecord> {
   }
 
   @override
+  int encodedFieldCount(WideNullableRecord instance) {
+    var count$ = 4;
+    if (instance.f05 != null) count$++;
+    if (instance.f06 != null) count$++;
+    if (instance.f07 != null) count$++;
+    if (instance.f08 != null) count$++;
+    if (instance.f09 != null) count$++;
+    if (instance.f10 != null) count$++;
+    if (instance.f11 != null) count$++;
+    if (instance.f12 != null) count$++;
+    if (instance.f13 != null) count$++;
+    if (instance.f14 != null) count$++;
+    if (instance.f15 != null) count$++;
+    if (instance.f16 != null) count$++;
+    if (instance.f17 != null) count$++;
+    if (instance.f18 != null) count$++;
+    if (instance.f19 != null) count$++;
+    if (instance.f20 != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(WideNullableRecord instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$WideNullableRecordSchema.nameF01, instance.f01);
+    keyed.encodeString(_$WideNullableRecordSchema.nameF02, instance.f02);
+    keyed.encodeBool(_$WideNullableRecordSchema.nameF03, instance.f03);
+    keyed.encodeDouble(_$WideNullableRecordSchema.nameF04, instance.f04);
+    final v$F05 = instance.f05;
+    if (v$F05 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF05, v$F05);
+    }
+    final v$F06 = instance.f06;
+    if (v$F06 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF06, v$F06);
+    }
+    final v$F07 = instance.f07;
+    if (v$F07 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF07, v$F07);
+    }
+    final v$F08 = instance.f08;
+    if (v$F08 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF08, v$F08);
+    }
+    final v$F09 = instance.f09;
+    if (v$F09 != null) {
+      keyed.encodeString(_$WideNullableRecordSchema.nameF09, v$F09);
+    }
+    final v$F10 = instance.f10;
+    if (v$F10 != null) {
+      keyed.encodeString(_$WideNullableRecordSchema.nameF10, v$F10);
+    }
+    final v$F11 = instance.f11;
+    if (v$F11 != null) {
+      keyed.encodeString(_$WideNullableRecordSchema.nameF11, v$F11);
+    }
+    final v$F12 = instance.f12;
+    if (v$F12 != null) {
+      keyed.encodeString(_$WideNullableRecordSchema.nameF12, v$F12);
+    }
+    final v$F13 = instance.f13;
+    if (v$F13 != null) {
+      keyed.encodeBool(_$WideNullableRecordSchema.nameF13, v$F13);
+    }
+    final v$F14 = instance.f14;
+    if (v$F14 != null) {
+      keyed.encodeBool(_$WideNullableRecordSchema.nameF14, v$F14);
+    }
+    final v$F15 = instance.f15;
+    if (v$F15 != null) {
+      keyed.encodeDouble(_$WideNullableRecordSchema.nameF15, v$F15);
+    }
+    final v$F16 = instance.f16;
+    if (v$F16 != null) {
+      keyed.encodeDouble(_$WideNullableRecordSchema.nameF16, v$F16);
+    }
+    final v$F17 = instance.f17;
+    if (v$F17 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF17, v$F17);
+    }
+    final v$F18 = instance.f18;
+    if (v$F18 != null) {
+      keyed.encodeString(_$WideNullableRecordSchema.nameF18, v$F18);
+    }
+    final v$F19 = instance.f19;
+    if (v$F19 != null) {
+      keyed.encodeBool(_$WideNullableRecordSchema.nameF19, v$F19);
+    }
+    final v$F20 = instance.f20;
+    if (v$F20 != null) {
+      keyed.encodeInt(_$WideNullableRecordSchema.nameF20, v$F20);
+    }
+  }
+
+  @override
   void encode(WideNullableRecord instance, Encoder encoder) {
     var count$ = 4;
     final v$F05 = instance.f05;
@@ -627,7 +747,7 @@ extension type const _$NestedMetaSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for NestedMeta
 // =============================================================================
-final class NestedMetaCodable implements Codable<NestedMeta> {
+final class NestedMetaCodable implements KeyedCodable<NestedMeta> {
   const NestedMetaCodable();
 
   @override
@@ -673,6 +793,23 @@ final class NestedMetaCodable implements Codable<NestedMeta> {
     seen.validate();
 
     return NestedMeta(region: region!, revision: revision!, note: note);
+  }
+
+  @override
+  int encodedFieldCount(NestedMeta instance) {
+    var count$ = 2;
+    if (instance.note != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(NestedMeta instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$NestedMetaSchema.nameRegion, instance.region);
+    keyed.encodeInt(_$NestedMetaSchema.nameRevision, instance.revision);
+    final v$Note = instance.note;
+    if (v$Note != null) {
+      keyed.encodeString(_$NestedMetaSchema.nameNote, v$Note);
+    }
   }
 
   @override
@@ -831,7 +968,8 @@ extension type const _$CrossFormatEnvelopeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CrossFormatEnvelope
 // =============================================================================
-final class CrossFormatEnvelopeCodable implements Codable<CrossFormatEnvelope> {
+final class CrossFormatEnvelopeCodable
+    implements KeyedCodable<CrossFormatEnvelope> {
   const CrossFormatEnvelopeCodable();
 
   @override
@@ -1016,6 +1154,114 @@ final class CrossFormatEnvelopeCodable implements Codable<CrossFormatEnvelope> {
   }
 
   @override
+  int encodedFieldCount(CrossFormatEnvelope instance) {
+    var count$ = 12;
+    if (instance.backupMeta != null) count$++;
+    if (instance.signature != null) count$++;
+    if (instance.optionalMetric != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CrossFormatEnvelope instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CrossFormatEnvelopeSchema.nameId, instance.id);
+    keyed.encodeValue(
+      _$CrossFormatEnvelopeSchema.namePrimaryMeta,
+      instance.primaryMeta,
+      const NestedMetaCodable(),
+    );
+    final v$BackupMeta = instance.backupMeta;
+    if (v$BackupMeta != null) {
+      keyed.encodeValue(
+        _$CrossFormatEnvelopeSchema.nameBackupMeta,
+        v$BackupMeta,
+        const NestedMetaCodable(),
+      );
+    }
+    keyed.encodeList(
+      _$CrossFormatEnvelopeSchema.nameHistory,
+      instance.history,
+      const NestedMetaCodable(),
+    );
+    keyed.encodeStringList(
+      _$CrossFormatEnvelopeSchema.nameTags,
+      instance.tags.toList(),
+    );
+    keyed.encodeIntList(
+      _$CrossFormatEnvelopeSchema.namePorts,
+      instance.ports.toList(),
+    );
+    keyed.encodeBytes(
+      _$CrossFormatEnvelopeSchema.namePayload,
+      instance.payload,
+    );
+    final v$Signature = instance.signature;
+    if (v$Signature != null) {
+      keyed.encodeBytes(_$CrossFormatEnvelopeSchema.nameSignature, v$Signature);
+    }
+    keyed.encodeDoubleList(
+      _$CrossFormatEnvelopeSchema.nameSamples,
+      instance.samples,
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$CrossFormatEnvelopeSchema.nameCounters)
+          .keyed(length: instance.counters.length);
+      for (final entry in instance.counters.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$CrossFormatEnvelopeSchema.nameStatusLabels)
+          .map(length: instance.statusLabels.length);
+      for (final entry in instance.statusLabels.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$CrossFormatEnvelopeSchema.nameQuotas)
+          .map(length: instance.quotas.length);
+      for (final entry in instance.quotas.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    switch (instance.primaryMetric) {
+      case final int v:
+        keyed.encodeInt(_$CrossFormatEnvelopeSchema.namePrimaryMetric, v);
+      case final v:
+        keyed.encodeDouble(
+          _$CrossFormatEnvelopeSchema.namePrimaryMetric,
+          v.toDouble(),
+        );
+    }
+    switch (instance.secondaryMetric) {
+      case final int v:
+        keyed.encodeInt(_$CrossFormatEnvelopeSchema.nameSecondaryMetric, v);
+      case final v:
+        keyed.encodeDouble(
+          _$CrossFormatEnvelopeSchema.nameSecondaryMetric,
+          v.toDouble(),
+        );
+    }
+    final v$OptionalMetric = instance.optionalMetric;
+    if (v$OptionalMetric != null) {
+      switch (v$OptionalMetric) {
+        case final int v:
+          keyed.encodeInt(_$CrossFormatEnvelopeSchema.nameOptionalMetric, v);
+        case final v:
+          keyed.encodeDouble(
+            _$CrossFormatEnvelopeSchema.nameOptionalMetric,
+            v.toDouble(),
+          );
+      }
+    }
+  }
+
+  @override
   void encode(CrossFormatEnvelope instance, Encoder encoder) {
     var count$ = 12;
     final v$BackupMeta = instance.backupMeta;
@@ -1177,7 +1423,7 @@ extension type const _$CircleNodeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CircleNode
 // =============================================================================
-final class CircleNodeCodable implements Codable<CircleNode> {
+final class CircleNodeCodable implements KeyedCodable<CircleNode> {
   const CircleNodeCodable();
 
   @override
@@ -1219,6 +1465,23 @@ final class CircleNodeCodable implements Codable<CircleNode> {
     seen.validate();
 
     return CircleNode(radius!, label: label, kind: kind);
+  }
+
+  @override
+  int encodedFieldCount(CircleNode instance) {
+    var count$ = 2;
+    if (instance.label != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CircleNode instance, KeyedEncoder keyed) {
+    keyed.encodeDouble(_$CircleNodeSchema.nameRadius, instance.radius);
+    final v$Label = instance.label;
+    if (v$Label != null) {
+      keyed.encodeString(_$CircleNodeSchema.nameLabel, v$Label);
+    }
+    keyed.encodeString(_$CircleNodeSchema.nameKind, instance.kind);
   }
 
   @override
@@ -1292,7 +1555,7 @@ extension type const _$PolygonNodeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for PolygonNode
 // =============================================================================
-final class PolygonNodeCodable implements Codable<PolygonNode> {
+final class PolygonNodeCodable implements KeyedCodable<PolygonNode> {
   const PolygonNodeCodable();
 
   @override
@@ -1329,6 +1592,16 @@ final class PolygonNodeCodable implements Codable<PolygonNode> {
     seen.validate();
 
     return PolygonNode(vertices!, closed: closed, kind: kind);
+  }
+
+  @override
+  int encodedFieldCount(PolygonNode instance) => 3;
+
+  @override
+  void encodeFields(PolygonNode instance, KeyedEncoder keyed) {
+    keyed.encodeIntList(_$PolygonNodeSchema.nameVertices, instance.vertices);
+    keyed.encodeBool(_$PolygonNodeSchema.nameClosed, instance.closed);
+    keyed.encodeString(_$PolygonNodeSchema.nameKind, instance.kind);
   }
 
   @override
@@ -1417,7 +1690,8 @@ extension type const _$AdaptiveAuditEventSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for AdaptiveAuditEvent
 // =============================================================================
-final class AdaptiveAuditEventCodable implements Codable<AdaptiveAuditEvent> {
+final class AdaptiveAuditEventCodable
+    implements KeyedCodable<AdaptiveAuditEvent> {
   const AdaptiveAuditEventCodable();
 
   @override
@@ -1484,6 +1758,32 @@ final class AdaptiveAuditEventCodable implements Codable<AdaptiveAuditEvent> {
   }
 
   @override
+  int encodedFieldCount(AdaptiveAuditEvent instance) {
+    var count$ = 3;
+    if (instance.expiresAt != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(AdaptiveAuditEvent instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$AdaptiveAuditEventSchema.nameActor, instance.actor);
+    keyed.encodeValue(
+      _$AdaptiveAuditEventSchema.nameOccurredAt,
+      instance.occurredAt,
+      const AdaptiveEpochOrIsoDateTimeCodable(),
+    );
+    final v$ExpiresAt = instance.expiresAt;
+    if (v$ExpiresAt != null) {
+      keyed.encodeValue(
+        _$AdaptiveAuditEventSchema.nameExpiresAt,
+        v$ExpiresAt,
+        const AdaptiveEpochOrIsoDateTimeCodable(),
+      );
+    }
+    keyed.encodeBytes(_$AdaptiveAuditEventSchema.nameTraceId, instance.traceId);
+  }
+
+  @override
   void encode(AdaptiveAuditEvent instance, Encoder encoder) {
     var count$ = 3;
     final v$ExpiresAt = instance.expiresAt;
@@ -1533,7 +1833,7 @@ extension type const _$EmptyMarkerSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EmptyMarker
 // =============================================================================
-final class EmptyMarkerCodable implements Codable<EmptyMarker> {
+final class EmptyMarkerCodable implements KeyedCodable<EmptyMarker> {
   const EmptyMarkerCodable();
 
   @override
@@ -1555,6 +1855,12 @@ final class EmptyMarkerCodable implements Codable<EmptyMarker> {
 
     return const EmptyMarker();
   }
+
+  @override
+  int encodedFieldCount(EmptyMarker instance) => 0;
+
+  @override
+  void encodeFields(EmptyMarker instance, KeyedEncoder keyed) {}
 
   @override
   void encode(EmptyMarker instance, Encoder encoder) {
@@ -1621,7 +1927,7 @@ extension type const _$MatrixCellSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for MatrixCell
 // =============================================================================
-final class MatrixCellCodable implements Codable<MatrixCell> {
+final class MatrixCellCodable implements KeyedCodable<MatrixCell> {
   const MatrixCellCodable();
 
   @override
@@ -1658,6 +1964,15 @@ final class MatrixCellCodable implements Codable<MatrixCell> {
     seen.validate();
 
     return MatrixCell(x!, y!);
+  }
+
+  @override
+  int encodedFieldCount(MatrixCell instance) => 2;
+
+  @override
+  void encodeFields(MatrixCell instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$MatrixCellSchema.nameX, instance.x);
+    keyed.encodeInt(_$MatrixCellSchema.nameY, instance.y);
   }
 
   @override
@@ -1702,7 +2017,7 @@ extension type const _$MatrixBoardSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for MatrixBoard
 // =============================================================================
-final class MatrixBoardCodable implements Codable<MatrixBoard> {
+final class MatrixBoardCodable implements KeyedCodable<MatrixBoard> {
   const MatrixBoardCodable();
 
   @override
@@ -1745,6 +2060,41 @@ final class MatrixBoardCodable implements Codable<MatrixBoard> {
     seen.validate();
 
     return MatrixBoard(cells: cells, nullableRows: nullableRows);
+  }
+
+  @override
+  int encodedFieldCount(MatrixBoard instance) => 2;
+
+  @override
+  void encodeFields(MatrixBoard instance, KeyedEncoder keyed) {
+    keyed.encodeList(
+      _$MatrixBoardSchema.nameCells,
+      instance.cells,
+      Encodable.fromFunction((List<MatrixCell> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            const MatrixCellCodable().encode(elem, u.nestedEncoder());
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$MatrixBoardSchema.nameNullableRows,
+      instance.nullableRows,
+      Encodable.fromFunction((List<MatrixCell>? item, e) {
+        if (item case final val0?) {
+          {
+            final u1 = e.unkeyed(length: val0.length);
+            for (final elem1 in val0) {
+              const MatrixCellCodable().encode(elem1, u1.nestedEncoder());
+            }
+          }
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
   }
 
   @override

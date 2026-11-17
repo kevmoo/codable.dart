@@ -74,7 +74,7 @@ extension type const _$EndpointConfigSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EndpointConfig
 // =============================================================================
-final class EndpointConfigCodable implements Codable<EndpointConfig> {
+final class EndpointConfigCodable implements KeyedCodable<EndpointConfig> {
   const EndpointConfigCodable();
 
   @override
@@ -115,6 +115,16 @@ final class EndpointConfigCodable implements Codable<EndpointConfig> {
     seen.validate();
 
     return EndpointConfig(host: host!, port: port!, tls: tls);
+  }
+
+  @override
+  int encodedFieldCount(EndpointConfig instance) => 3;
+
+  @override
+  void encodeFields(EndpointConfig instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$EndpointConfigSchema.nameHost, instance.host);
+    keyed.encodeInt(_$EndpointConfigSchema.namePort, instance.port);
+    keyed.encodeBool(_$EndpointConfigSchema.nameTls, instance.tls);
   }
 
   @override
@@ -207,7 +217,7 @@ extension type const _$GatewayManifestSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GatewayManifest
 // =============================================================================
-final class GatewayManifestCodable implements Codable<GatewayManifest> {
+final class GatewayManifestCodable implements KeyedCodable<GatewayManifest> {
   const GatewayManifestCodable();
 
   @override
@@ -275,6 +285,37 @@ final class GatewayManifestCodable implements Codable<GatewayManifest> {
       fallback: fallback!,
       statusRoutes: statusRoutes,
       allowedOrigins: allowedOrigins,
+    );
+  }
+
+  @override
+  int encodedFieldCount(GatewayManifest instance) => 5;
+
+  @override
+  void encodeFields(GatewayManifest instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$GatewayManifestSchema.nameService, instance.service);
+    keyed.encodeValue(
+      _$GatewayManifestSchema.namePrimary,
+      instance.primary,
+      const EndpointConfigCodable(),
+    );
+    keyed.encodeValue(
+      _$GatewayManifestSchema.nameFallback,
+      instance.fallback,
+      const EndpointConfigCodable(),
+    );
+    {
+      final m = keyed
+          .nestedEncoder(_$GatewayManifestSchema.nameStatusRoutes)
+          .map(length: instance.statusRoutes.length);
+      for (final entry in instance.statusRoutes.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    keyed.encodeStringList(
+      _$GatewayManifestSchema.nameAllowedOrigins,
+      instance.allowedOrigins,
     );
   }
 

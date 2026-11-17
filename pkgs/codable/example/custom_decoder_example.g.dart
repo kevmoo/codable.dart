@@ -63,7 +63,7 @@ extension type const _$DateTimeExampleSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for DateTimeExample
 // =============================================================================
-final class DateTimeExampleCodable implements Codable<DateTimeExample> {
+final class DateTimeExampleCodable implements KeyedCodable<DateTimeExample> {
   const DateTimeExampleCodable();
 
   @override
@@ -92,6 +92,18 @@ final class DateTimeExampleCodable implements Codable<DateTimeExample> {
     seen.validate();
 
     return DateTimeExample(when!);
+  }
+
+  @override
+  int encodedFieldCount(DateTimeExample instance) => 1;
+
+  @override
+  void encodeFields(DateTimeExample instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$DateTimeExampleSchema.nameWhen,
+      instance.when,
+      const DateTimeEpochDecoder(),
+    );
   }
 
   @override

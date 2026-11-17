@@ -41,7 +41,7 @@ extension type const _$CanadaPropertiesSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaProperties
 // =============================================================================
-final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
+final class CanadaPropertiesCodable implements KeyedCodable<CanadaProperties> {
   const CanadaPropertiesCodable();
 
   @override
@@ -66,6 +66,14 @@ final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
     seen.validate();
 
     return CanadaProperties(name: name);
+  }
+
+  @override
+  int encodedFieldCount(CanadaProperties instance) => 1;
+
+  @override
+  void encodeFields(CanadaProperties instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
   }
 
   @override
@@ -129,7 +137,7 @@ extension type const _$CanadaGeometrySchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaGeometry
 // =============================================================================
-final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
+final class CanadaGeometryCodable implements KeyedCodable<CanadaGeometry> {
   const CanadaGeometryCodable();
 
   @override
@@ -162,6 +170,19 @@ final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
     seen.validate();
 
     return CanadaGeometry(type: type!, coordinates: coordinates);
+  }
+
+  @override
+  int encodedFieldCount(CanadaGeometry instance) => 2;
+
+  @override
+  void encodeFields(CanadaGeometry instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
+    keyed.encodeValue(
+      _$CanadaGeometrySchema.nameCoordinates,
+      instance.coordinates,
+      const CanadaCoordinatesDecoder(),
+    );
   }
 
   @override
@@ -249,7 +270,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaFeature
 // =============================================================================
-final class CanadaFeatureCodable implements Codable<CanadaFeature> {
+final class CanadaFeatureCodable implements KeyedCodable<CanadaFeature> {
   const CanadaFeatureCodable();
 
   @override
@@ -301,6 +322,24 @@ final class CanadaFeatureCodable implements Codable<CanadaFeature> {
       type: type!,
       properties: properties!,
       geometry: geometry!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(CanadaFeature instance) => 3;
+
+  @override
+  void encodeFields(CanadaFeature instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
+    keyed.encodeValue(
+      _$CanadaFeatureSchema.nameProperties,
+      instance.properties,
+      const CanadaPropertiesCodable(),
+    );
+    keyed.encodeValue(
+      _$CanadaFeatureSchema.nameGeometry,
+      instance.geometry,
+      const CanadaGeometryCodable(),
     );
   }
 
@@ -380,7 +419,7 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
 // 2. Companion Codable for CanadaFeatureCollection
 // =============================================================================
 final class CanadaFeatureCollectionCodable
-    implements Codable<CanadaFeatureCollection> {
+    implements KeyedCodable<CanadaFeatureCollection> {
   const CanadaFeatureCollectionCodable();
 
   @override
@@ -420,6 +459,19 @@ final class CanadaFeatureCollectionCodable
     seen.validate();
 
     return CanadaFeatureCollection(type: type!, features: features);
+  }
+
+  @override
+  int encodedFieldCount(CanadaFeatureCollection instance) => 2;
+
+  @override
+  void encodeFields(CanadaFeatureCollection instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
+    keyed.encodeList(
+      _$CanadaFeatureCollectionSchema.nameFeatures,
+      instance.features,
+      const CanadaFeatureCodable(),
+    );
   }
 
   @override

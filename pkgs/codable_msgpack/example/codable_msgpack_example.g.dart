@@ -77,7 +77,8 @@ extension type const _$TelemetryCoordinateSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TelemetryCoordinate
 // =============================================================================
-final class TelemetryCoordinateCodable implements Codable<TelemetryCoordinate> {
+final class TelemetryCoordinateCodable
+    implements KeyedCodable<TelemetryCoordinate> {
   const TelemetryCoordinateCodable();
 
   @override
@@ -116,6 +117,15 @@ final class TelemetryCoordinateCodable implements Codable<TelemetryCoordinate> {
     seen.validate();
 
     return TelemetryCoordinate(rack!, slot!);
+  }
+
+  @override
+  int encodedFieldCount(TelemetryCoordinate instance) => 2;
+
+  @override
+  void encodeFields(TelemetryCoordinate instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$TelemetryCoordinateSchema.nameRack, instance.rack);
+    keyed.encodeInt(_$TelemetryCoordinateSchema.nameSlot, instance.slot);
   }
 
   @override
@@ -204,7 +214,7 @@ extension type const _$TelemetryBatchSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TelemetryBatch
 // =============================================================================
-final class TelemetryBatchCodable implements Codable<TelemetryBatch> {
+final class TelemetryBatchCodable implements KeyedCodable<TelemetryBatch> {
   const TelemetryBatchCodable();
 
   @override
@@ -268,6 +278,28 @@ final class TelemetryBatchCodable implements Codable<TelemetryBatch> {
       readings: readings!,
       calibrationOffsets: calibrationOffsets,
     );
+  }
+
+  @override
+  int encodedFieldCount(TelemetryBatch instance) => 4;
+
+  @override
+  void encodeFields(TelemetryBatch instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$TelemetryBatchSchema.nameBatchId, instance.batchId);
+    keyed.encodeBytes(_$TelemetryBatchSchema.nameRawSample, instance.rawSample);
+    keyed.encodeDoubleList(
+      _$TelemetryBatchSchema.nameReadings,
+      instance.readings,
+    );
+    {
+      final m = keyed
+          .nestedEncoder(_$TelemetryBatchSchema.nameCalibrationOffsets)
+          .map(length: instance.calibrationOffsets.length);
+      for (final entry in instance.calibrationOffsets.entries) {
+        const TelemetryCoordinateCodable().encode(entry.key, m.keyEncoder());
+        m.valueEncoder().singleValue().encodeDouble(entry.value);
+      }
+    }
   }
 
   @override

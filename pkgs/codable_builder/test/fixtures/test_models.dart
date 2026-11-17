@@ -917,3 +917,313 @@ final class InvalidNestedPrivateRevivableDefault {
     this.secrets = const [],
   });
 }
+
+// =============================================================================
+// Generic @Codable() & Polymorphic Sealed Hierarchy Fixtures
+// =============================================================================
+
+@Codable()
+final class Envelope<T> {
+  final int status;
+  final T data;
+  final List<T> history;
+  final Map<String, T?> lookup;
+  final T? fallback;
+
+  const Envelope({
+    required this.status,
+    required this.data,
+    this.history = const [],
+    this.lookup = const {},
+    this.fallback,
+  });
+}
+
+@Codable()
+final class Pair<A, B extends num> {
+  final A first;
+  final B second;
+
+  const Pair(this.first, this.second);
+}
+
+@Codable()
+final class KeyedBucket<K extends Object, V> {
+  final Map<K, V> entries;
+  final Set<K> activeKeys;
+
+  const KeyedBucket({required this.entries, this.activeKeys = const {}});
+}
+
+@Codable()
+final class TreeNode<T> {
+  final T value;
+  final List<TreeNode<T>> children;
+
+  const TreeNode(this.value, {this.children = const []});
+}
+
+@Codable(createEncoder: false)
+final class DecodeOnlyBox<T> {
+  final T item;
+  final Envelope<T> wrapped;
+
+  const DecodeOnlyBox({required this.item, required this.wrapped});
+}
+
+@Codable(createDecoder: false)
+final class EncodeOnlyBox<T> {
+  final T item;
+  final Envelope<T> wrapped;
+
+  const EncodeOnlyBox({required this.item, required this.wrapped});
+}
+
+@Codable()
+final class GenericDashboard {
+  final Envelope<Address> mainLocation;
+  final Envelope<Address?> fallbackLocation;
+  final Envelope<List<Point>> route;
+  final Envelope<int> totalCount;
+  final Pair<UserRole, double> roleMetric;
+  final List<Envelope<String>> notifications;
+
+  const GenericDashboard({
+    required this.mainLocation,
+    required this.fallbackLocation,
+    required this.route,
+    required this.totalCount,
+    required this.roleMetric,
+    this.notifications = const [],
+  });
+}
+
+@Codable()
+final class OuterGenericWrapper<U> {
+  final Envelope<U> primary;
+  final List<TreeNode<U>> forest;
+  final Pair<U, int> taggedCount;
+
+  const OuterGenericWrapper({
+    required this.primary,
+    this.forest = const [],
+    required this.taggedCount,
+  });
+}
+
+@Codable()
+sealed class ShapeEvent {
+  const ShapeEvent();
+}
+
+@Codable()
+final class CircleEvent extends ShapeEvent {
+  final double radius;
+  final String? label;
+
+  const CircleEvent({required this.radius, this.label});
+}
+
+@Codable(discriminatorValue: 'rect_box')
+final class RectEvent extends ShapeEvent {
+  final int width;
+  final int height;
+
+  const RectEvent({required this.width, required this.height});
+}
+
+@Codable(discriminatorKey: 'kind', fieldRename: FieldRename.snake)
+sealed class PaymentMethod {
+  const PaymentMethod();
+}
+
+sealed class CardPayment extends PaymentMethod {
+  final String last4;
+
+  const CardPayment({required this.last4});
+}
+
+@Codable()
+final class CreditCardPayment extends CardPayment {
+  final int expMonth;
+
+  const CreditCardPayment({required super.last4, required this.expMonth});
+}
+
+@Codable()
+final class DebitCardPayment extends CardPayment {
+  final bool pinVerified;
+
+  const DebitCardPayment({required super.last4, required this.pinVerified});
+}
+
+@Codable()
+final class WireTransferPayment extends PaymentMethod {
+  final String routingCode;
+
+  const WireTransferPayment({required this.routingCode});
+}
+
+@Codable()
+final class CheckoutSession {
+  final PaymentMethod primary;
+  final PaymentMethod? backup;
+  final List<PaymentMethod> savedMethods;
+  final Map<String, PaymentMethod> methodsByAlias;
+
+  const CheckoutSession({
+    required this.primary,
+    this.backup,
+    this.savedMethods = const [],
+    this.methodsByAlias = const {},
+  });
+}
+
+@Codable(discriminatorKey: 'status')
+sealed class ApiOutcome<T> {
+  const ApiOutcome();
+}
+
+@Codable(discriminatorValue: 'ok')
+final class ApiSuccess<T> extends ApiOutcome<T> {
+  final T payload;
+  final String? requestId;
+
+  const ApiSuccess(this.payload, {this.requestId});
+}
+
+@Codable(discriminatorValue: 'error')
+final class ApiFailure extends ApiOutcome<Never> {
+  final int code;
+  final String reason;
+
+  const ApiFailure({required this.code, required this.reason});
+}
+
+@Codable()
+final class OutcomeBundle {
+  final ApiOutcome<Address> locationOutcome;
+  final ApiOutcome<int> countOutcome;
+
+  const OutcomeBundle({
+    required this.locationOutcome,
+    required this.countOutcome,
+  });
+}
+
+@Codable(discriminatorKey: 'action', subtypes: [PingAction, EchoAction])
+abstract class PluginAction {
+  const PluginAction();
+}
+
+@Codable(discriminatorValue: 'ping')
+final class PingAction extends PluginAction {
+  final int seq;
+
+  const PingAction(this.seq);
+}
+
+@Codable(discriminatorValue: 'echo')
+final class EchoAction extends PluginAction {
+  final String text;
+
+  const EchoAction(this.text);
+}
+
+final class UnregisteredSecretAction extends PluginAction {
+  const UnregisteredSecretAction();
+}
+
+// Negative validation fixtures for generic & polymorphic @Codable
+
+@Codable()
+final class InvalidGenericNestedUnsupportedType {
+  final Envelope<DateTime> bad;
+
+  const InvalidGenericNestedUnsupportedType({required this.bad});
+}
+
+@Codable()
+final class InvalidUnboundedGenericMapKey<K> {
+  final Map<K, int> bad;
+
+  const InvalidUnboundedGenericMapKey({this.bad = const {}});
+}
+
+@Codable()
+sealed class InvalidSealedMissingSubtypeAnnotation {
+  const InvalidSealedMissingSubtypeAnnotation();
+}
+
+final class UnannotatedSealedLeaf
+    extends InvalidSealedMissingSubtypeAnnotation {
+  final int x;
+
+  const UnannotatedSealedLeaf(this.x);
+}
+
+@Codable()
+sealed class InvalidSealedDuplicateDiscriminator {
+  const InvalidSealedDuplicateDiscriminator();
+}
+
+@Codable(discriminatorValue: 'dup')
+final class DupSubA extends InvalidSealedDuplicateDiscriminator {
+  const DupSubA();
+}
+
+@Codable(discriminatorValue: 'dup')
+final class DupSubB extends InvalidSealedDuplicateDiscriminator {
+  const DupSubB();
+}
+
+@Codable(discriminatorKey: 'type')
+sealed class InvalidSealedDiscriminatorFieldCollision {
+  const InvalidSealedDiscriminatorFieldCollision();
+}
+
+@Codable()
+final class CollidingFieldSub extends InvalidSealedDiscriminatorFieldCollision {
+  final String type;
+
+  const CollidingFieldSub({this.type = 'colliding'});
+}
+
+@Codable(discriminatorKey: 'type')
+final class InvalidConcreteWithDiscriminator {
+  final int id;
+
+  const InvalidConcreteWithDiscriminator(this.id);
+}
+
+@Codable()
+abstract class InvalidUnsealedAbstractWithoutDiscriminator {
+  final int id;
+
+  const InvalidUnsealedAbstractWithoutDiscriminator(this.id);
+}
+
+@Codable()
+sealed class InvalidGenericSealedConcreteArg<T> {
+  const InvalidGenericSealedConcreteArg();
+}
+
+@Codable()
+final class ConcreteIntOnlySub extends InvalidGenericSealedConcreteArg<int> {
+  final int value;
+
+  const ConcreteIntOnlySub(this.value);
+}
+
+@Codable()
+sealed class InvalidGenericSealedExtraParam<T> {
+  const InvalidGenericSealedExtraParam();
+}
+
+@Codable()
+final class ExtraTypeParamSub<T, U> extends InvalidGenericSealedExtraParam<T> {
+  final T first;
+  final U extra;
+
+  const ExtraTypeParamSub(this.first, this.extra);
+}

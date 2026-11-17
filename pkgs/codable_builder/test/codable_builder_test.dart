@@ -97,9 +97,13 @@ void main() {
         check(output).contains('_throwMissingFields()');
 
         // Verify companion class and universal decoder
-        check(output)
-            .contains('final class PointCodable implements Codable<Point>');
+        check(
+          output,
+        ).contains('final class PointCodable implements KeyedCodable<Point>');
         check(output).contains('const PointCodable();');
+        check(output).contains('int encodedFieldCount(Point instance) => 2;');
+        check(output)
+            .contains('void encodeFields(Point instance, KeyedEncoder keyed)');
         check(output).contains('Point decode(Decoder decoder)');
         check(output).contains(
           'final keyed = decoder.keyed(options: _\$PointSchema.keyOptions);',
@@ -634,6 +638,56 @@ void main() {
           .throws<StateError>();
       check(() => EncoderGeneratorHelper(syntheticUnknown).generateMethod())
           .throws<StateError>();
+    });
+
+    test('synthesizes generic, asymmetric, and polymorphic sealed companions', () {
+      final envOut = runGeneratorFor('Envelope');
+      check(envOut).contains(
+        'final class EnvelopeCodable<T> implements KeyedCodable<Envelope<T>>',
+      );
+      check(envOut).contains('final Codable<T> _\$t;');
+      check(envOut).contains('const EnvelopeCodable(this._\$t);');
+      check(envOut).contains('if (null is T)');
+
+      final dashOut = runGeneratorFor('GenericDashboard');
+      check(dashOut)
+          .contains('const EnvelopeCodable<Address>(AddressCodable())');
+      check(
+        dashOut,
+      ).contains('EnvelopeCodable<Address?>(const AddressCodable().nullable)');
+      check(dashOut)
+          .contains('EnvelopeCodable<List<Point>>(const PointCodable().list)');
+
+      final outerOut = runGeneratorFor('OuterGenericWrapper');
+      check(outerOut).contains('EnvelopeCodable<U>(_\$u)');
+      check(outerOut).not((s) => s.contains('const EnvelopeCodable<U>'));
+
+      final encodeOnlyOut = runGeneratorFor('EncodeOnlyBox');
+      check(encodeOnlyOut).contains(
+        'final class EncodeOnlyBoxCodable<T> implements KeyedEncodable<EncodeOnlyBox<T>>',
+      );
+      check(encodeOnlyOut).contains('final Encodable<T> _\$t;');
+      check(encodeOnlyOut).not((s) => s.contains('keyOptions'));
+      check(encodeOnlyOut).not((s) => s.contains('keyItem'));
+
+      final paymentOut = runGeneratorFor('PaymentMethod');
+      check(paymentOut)
+          .contains("static const String discriminatorKey = 'kind';");
+      check(paymentOut).contains(
+        "static const String subtypeCreditCardPayment = 'credit_card_payment';",
+      );
+      check(paymentOut).not((s) => s.contains('default:'));
+
+      final pluginOut = runGeneratorFor('PluginAction');
+      check(pluginOut).contains('default:');
+      check(pluginOut).contains('No registered subtype for');
+
+      final outcomeOut = runGeneratorFor('ApiOutcome');
+      check(outcomeOut).contains(
+        'final class ApiOutcomeCodable<T> implements KeyedCodable<ApiOutcome<T>>',
+      );
+      check(outcomeOut).contains('ApiSuccessCodable<T>(_\$t)');
+      check(outcomeOut).contains('const ApiFailureCodable()');
     });
   });
 }

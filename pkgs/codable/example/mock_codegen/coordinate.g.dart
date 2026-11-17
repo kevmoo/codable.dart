@@ -77,7 +77,7 @@ extension type const _$CoordinateSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Coordinate
 // =============================================================================
-final class CoordinateCodable implements Codable<Coordinate> {
+final class CoordinateCodable implements KeyedCodable<Coordinate> {
   const CoordinateCodable();
 
   @override
@@ -141,6 +141,15 @@ final class CoordinateCodable implements Codable<Coordinate> {
       list.add(decode(unkeyed.nestedDecoder()));
     }
     return list;
+  }
+
+  @override
+  int encodedFieldCount(Coordinate instance) => 2;
+
+  @override
+  void encodeFields(Coordinate instance, KeyedEncoder keyed) {
+    keyed.encodeDouble(_$CoordinateSchema.nameLatitude, instance.latitude);
+    keyed.encodeDouble(_$CoordinateSchema.nameLongitude, instance.longitude);
   }
 
   @override

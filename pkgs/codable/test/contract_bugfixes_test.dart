@@ -59,6 +59,7 @@ void main() {
   _registerByteListFloatRejectionTests();
   _registerStringMapKeyHelperTests();
   _registerExceptionActualValueTests();
+  _registerSuperCodableAndNullableAdapterTests();
 }
 
 void _registerNestedListBugfixTests() {
@@ -928,5 +929,188 @@ void _registerExceptionActualValueTests() {
         check(seenTag).deepEquals(<Object?>['s', 'b']);
       },
     );
+  });
+}
+
+abstract class _HandwrittenEvent {
+  const _HandwrittenEvent();
+}
+
+final class _StartEvent extends _HandwrittenEvent {
+  final int epochMs;
+  const _StartEvent(this.epochMs);
+}
+
+final class _StopEvent extends _HandwrittenEvent {
+  final String reason;
+  final int? exitCode;
+  const _StopEvent(this.reason, {this.exitCode});
+}
+
+final class _UnhandledEvent extends _HandwrittenEvent {
+  const _UnhandledEvent();
+}
+
+final class _StartEventCodable implements KeyedCodable<_StartEvent> {
+  const _StartEventCodable();
+
+  @override
+  _StartEvent decode(Decoder decoder) {
+    final k = decoder.keyed();
+    int? epochMs;
+    while (k.moveNextKey()) {
+      switch (k.nextKey()) {
+        case 'epochMs':
+          epochMs = k.readInt();
+        default:
+          k.skipValue();
+      }
+    }
+    return _StartEvent(epochMs!);
+  }
+
+  @override
+  int encodedFieldCount(_StartEvent value) => 1;
+
+  @override
+  void encodeFields(_StartEvent value, KeyedEncoder keyed) {
+    keyed.encodeInt('epochMs', value.epochMs);
+  }
+
+  @override
+  void encode(_StartEvent value, Encoder encoder) {
+    encodeFields(value, encoder.keyed(length: 1));
+  }
+}
+
+final class _StopEventCodable implements KeyedCodable<_StopEvent> {
+  const _StopEventCodable();
+
+  @override
+  _StopEvent decode(Decoder decoder) {
+    final k = decoder.keyed();
+    String? reason;
+    int? exitCode;
+    while (k.moveNextKey()) {
+      switch (k.nextKey()) {
+        case 'reason':
+          reason = k.readString();
+        case 'exitCode':
+          exitCode = k.readNullableInt();
+        default:
+          k.skipValue();
+      }
+    }
+    return _StopEvent(reason!, exitCode: exitCode);
+  }
+
+  @override
+  int encodedFieldCount(_StopEvent value) => value.exitCode == null ? 1 : 2;
+
+  @override
+  void encodeFields(_StopEvent value, KeyedEncoder keyed) {
+    keyed.encodeString('reason', value.reason);
+    keyed.encodeNullableInt('exitCode', value.exitCode);
+  }
+
+  @override
+  void encode(_StopEvent value, Encoder encoder) {
+    encodeFields(value, encoder.keyed(length: encodedFieldCount(value)));
+  }
+}
+
+final class _HandwrittenEventSuperCodable
+    extends SuperCodable<_HandwrittenEvent> {
+  const _HandwrittenEventSuperCodable();
+
+  @override
+  String get discriminatorKey => 'event';
+
+  @override
+  List<PolymorphicSubtype<_HandwrittenEvent>> get subtypes => const [
+    SubtypeCodable('start', _StartEventCodable()),
+    SubtypeCodable('stop', _StopEventCodable()),
+  ];
+}
+
+final class _HandwrittenEventSuperEncodable
+    extends SuperEncodable<_HandwrittenEvent> {
+  const _HandwrittenEventSuperEncodable();
+
+  @override
+  String get discriminatorKey => 'event';
+
+  @override
+  List<PolymorphicEncodableSubtype<_HandwrittenEvent>> get subtypes => const [
+    SubtypeEncodable('start', _StartEventCodable()),
+    SubtypeEncodable('stop', _StopEventCodable()),
+  ];
+}
+
+void _registerSuperCodableAndNullableAdapterTests() {
+  group('SuperCodable, SuperEncodable, and nullable codec adapters', () {
+    test('roundtrips second subtype via SuperCodable & SuperEncodable without TypeError', () {
+      const codec = _HandwrittenEventSuperCodable();
+      const encOnly = _HandwrittenEventSuperEncodable();
+
+      final stopJson = JsonCodableEncoder.encode<_HandwrittenEvent>(
+        const _StopEvent('graceful', exitCode: 0),
+        encOnly,
+      );
+      check(stopJson)
+          .equals('{"event":"stop","reason":"graceful","exitCode":0}');
+      check(codec.encodedFieldCount(const _StopEvent('fast'))).equals(2);
+      check(codec.encodedFieldCount(const _StopEvent('code', exitCode: 1)))
+          .equals(3);
+
+      final decodedStop = JsonCodableDecoder.decode(stopJson, codec);
+      check(decodedStop)
+          .isA<_StopEvent>()
+          .has((s) => (s.reason, s.exitCode), 'fields')
+          .equals(('graceful', 0));
+
+      final trailingJson = '{"epochMs": 1700, "event": "start"}';
+      final decodedStart = JsonCodableDecoder.decode(trailingJson, codec);
+      check(decodedStart)
+          .isA<_StartEvent>()
+          .has((s) => s.epochMs, 'epochMs')
+          .equals(1700);
+
+      check(() => JsonCodableDecoder.decode('{"epochMs": 1}', codec))
+          .throws<CodableException>();
+      check(() => JsonCodableDecoder.decode('{"event": "other"}', codec))
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .equals('other');
+      check(
+            () => JsonCodableEncoder.encode<_HandwrittenEvent>(
+              const _UnhandledEvent(),
+              codec,
+            ),
+          )
+          .throws<CodableException>()
+          .has((e) => e.actualValue, 'actualValue')
+          .isA<_UnhandledEvent>();
+    });
+
+    test('adapts Codable, Decodable, and Encodable with .nullable', () {
+      final nullableCell = const GridCellCodable().nullable;
+      check(JsonCodableEncoder.encode(null, nullableCell)).equals('null');
+      check(JsonCodableDecoder.decode('null', nullableCell)).isNull();
+
+      const cell = GridCell(row: 2, col: 3, label: 'hit');
+      final cellJson = JsonCodableEncoder.encode(cell, nullableCell);
+      check(JsonCodableDecoder.decode(cellJson, nullableCell)).equals(cell);
+
+      final decOnly = (const GridCellCodable() as Decodable<GridCell>).nullable;
+      final encOnly = (const GridCellCodable() as Encodable<GridCell>).nullable;
+      check(JsonCodableEncoder.encode(null, encOnly)).equals('null');
+      check(
+        JsonCodableDecoder.decode(
+          JsonCodableEncoder.encode(cell, encOnly),
+          decOnly,
+        ),
+      ).equals(cell);
+    });
   });
 }

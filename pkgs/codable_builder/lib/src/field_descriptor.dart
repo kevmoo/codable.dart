@@ -21,6 +21,7 @@ enum TypeCategory {
   set,
   map,
   nestedCodable,
+  typeParameter,
   custom,
   unknown,
 }
@@ -57,6 +58,11 @@ final class FieldDescriptor {
 
   /// Whether the field is nullable (`T?` or `dynamic`).
   final bool isNullable;
+
+  /// Whether the field type may evaluate to `null` at runtime (either
+  /// explicitly nullable `T?` or an unbounded/nullable-bounded type parameter
+  /// `T`).
+  final bool isPotentiallyNullable;
 
   /// Whether a default value is defined.
   final bool hasDefaultValue;
@@ -115,6 +121,7 @@ final class FieldDescriptor {
     required this.isNamed,
     required this.isRequired,
     required this.isNullable,
+    bool? isPotentiallyNullable,
     required this.hasDefaultValue,
     this.defaultValueCode,
     required this.ignore,
@@ -131,6 +138,7 @@ final class FieldDescriptor {
     String? schemaSuffix,
     List<String>? aliasSchemaSuffixes,
   }) : nativeCategory = nativeCategory ?? category,
+       isPotentiallyNullable = isPotentiallyNullable ?? isNullable,
        schemaSuffix = schemaSuffix ?? toSafeIdentifierSuffix(name),
        aliasSchemaSuffixes =
            aliasSchemaSuffixes ??
@@ -140,9 +148,96 @@ final class FieldDescriptor {
                    '${toSafeIdentifierSuffix(alias)}',
            ];
 
+  /// Whether this field is a type parameter without an explicit `?` suffix
+  /// whose bound still permits `null` (e.g. `final T data` on `Envelope<T>`).
+  bool get isUnboundedTypeParameter =>
+      !isNullable &&
+      isPotentiallyNullable &&
+      (category == TypeCategory.typeParameter ||
+          (category == TypeCategory.custom &&
+              nativeCategory == TypeCategory.typeParameter));
+
   /// Whether this field participates in golden mask validation.
   bool get participatesInGoldenMask =>
-      !ignore && isRequired && !hasDefaultValue && reqBitIndex != null;
+      !ignore &&
+      isRequired &&
+      !isNullable &&
+      !hasDefaultValue &&
+      reqBitIndex != null;
+}
+
+/// Metadata descriptor for a class type parameter on a generic `@Codable()`
+/// model.
+final class TypeParameterDescriptor {
+  /// The analyzer [TypeParameterElement].
+  final TypeParameterElement element;
+
+  /// The type parameter identifier (e.g. `T`).
+  final String name;
+
+  /// Explicit non-`Object?` bound display string (e.g. `num`), or `null` if
+  /// unbounded.
+  final String? boundCode;
+
+  /// Private codec field identifier on the generated companion class (e.g.
+  /// `_$t`).
+  final String codecFieldName;
+
+  const TypeParameterDescriptor({
+    required this.element,
+    required this.name,
+    this.boundCode,
+    required this.codecFieldName,
+  });
+
+  /// Formal type parameter declaration fragment (e.g. `T` or `T extends num`).
+  String get declarationCode =>
+      boundCode == null ? name : '$name extends $boundCode';
+}
+
+/// Metadata descriptor for a concrete subtype of a polymorphic `@Codable()`
+/// base class.
+final class PolymorphicSubtypeDescriptor {
+  /// The concrete subtype's [ClassElement].
+  final ClassElement element;
+
+  /// The concrete subtype's simple class name (e.g. `Car`).
+  final String className;
+
+  /// Wire string value written/matched under `discriminatorKey` (e.g. `'car'`).
+  final String discriminatorValue;
+
+  /// Disambiguated PascalCase identifier suffix for `_$Schema` constants.
+  final String schemaSuffix;
+
+  /// Type arguments passed to [className] in terms of the polymorphic base
+  /// class's type parameters (e.g. `[T]` for `Ok<T> extends Result<T>`, or
+  /// empty for `Err extends Result<Never>`).
+  final List<DartType> typeArguments;
+
+  /// Whether the subtype's `@Codable` generates a decoder.
+  final bool subtypeCreatesDecoder;
+
+  /// Whether the subtype's `@Codable` generates an encoder.
+  final bool subtypeCreatesEncoder;
+
+  const PolymorphicSubtypeDescriptor({
+    required this.element,
+    required this.className,
+    required this.discriminatorValue,
+    required this.schemaSuffix,
+    this.typeArguments = const [],
+    this.subtypeCreatesDecoder = true,
+    this.subtypeCreatesEncoder = true,
+  });
+
+  /// Type application suffix (`''` or `'<T>'`).
+  String get typeArgsCode => typeArguments.isEmpty
+      ? ''
+      : '<${typeArguments.map((t) => t.getDisplayString()).join(', ')}>';
+
+  /// Instantiated Dart type name (e.g. `Car` or `Ok<T>`).
+  String get instantiatedTypeCode => '$className$typeArgsCode';
 }
 
 /// Metadata descriptor for a `@Codable()` annotated class.
@@ -150,7 +245,7 @@ final class ModelDescriptor {
   /// The analyzer [ClassElement].
   final ClassElement element;
 
-  /// The Dart class name.
+  /// The Dart class name (without type parameters).
   final String className;
 
   /// Whether to generate encoder method.
@@ -177,6 +272,20 @@ final class ModelDescriptor {
   /// Whether the selected primary constructor is `const`.
   final bool isConstConstructor;
 
+  /// Declared type parameters on a generic `@Codable()` model.
+  final List<TypeParameterDescriptor> typeParameters;
+
+  /// Wire property name used as subtype discriminator when this model is a
+  /// polymorphic base class, or `null` for concrete models.
+  final String? discriminatorKey;
+
+  /// Registered concrete subtypes when [isPolymorphic] is `true`.
+  final List<PolymorphicSubtypeDescriptor> polymorphicSubtypes;
+
+  /// Whether [element] is a Dart `sealed class` (enabling exhaustive switches
+  /// without a wildcard branch).
+  final bool isSealed;
+
   ModelDescriptor({
     required this.element,
     required this.className,
@@ -188,11 +297,47 @@ final class ModelDescriptor {
     required this.requiredFields,
     required this.allOptionsKeys,
     this.isConstConstructor = false,
+    this.typeParameters = const [],
+    this.discriminatorKey,
+    this.polymorphicSubtypes = const [],
+    this.isSealed = false,
   });
+
+  /// Whether this class declares generic type parameters.
+  bool get isGeneric => typeParameters.isNotEmpty;
+
+  /// Whether this class is a polymorphic discriminator base class.
+  bool get isPolymorphic => discriminatorKey != null;
+
+  /// Type parameter declaration clause (`''` or `'<T, U extends num>'`).
+  String get typeParamsDeclaration => typeParameters.isEmpty
+      ? ''
+      : '<${typeParameters.map((p) => p.declarationCode).join(', ')}>';
+
+  /// Type argument application clause (`''` or `'<T, U>'`).
+  String get typeArgsApplication => typeParameters.isEmpty
+      ? ''
+      : '<${typeParameters.map((p) => p.name).join(', ')}>';
+
+  /// Instantiated class name (`Point` or `Envelope<T>`).
+  String get instantiatedClassName => '$className$typeArgsApplication';
+
+  /// Looks up the companion codec field name (e.g. `_$t`) for [paramElement].
+  String? codecFieldFor(Element? paramElement) {
+    if (paramElement == null) return null;
+    final target = paramElement.baseElement;
+    for (final tp in typeParameters) {
+      if (tp.element.baseElement == target || tp.name == paramElement.name) {
+        return tp.codecFieldName;
+      }
+    }
+    return null;
+  }
 
   /// Whether all non-ignored fields in this model are homogeneous, non-nullable
   /// double primitives.
   bool get isUniformDoubleModel {
+    if (isPolymorphic) return false;
     final activeFields = fields.where((f) => !f.ignore).toList();
     if (activeFields.isEmpty) return false;
     return activeFields.every(

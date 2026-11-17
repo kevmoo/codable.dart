@@ -137,6 +137,10 @@ final class TypeClassifier {
   }
 
   TypeClassification _classifyNative(DartType type, {int? tupleLength}) {
+    if (type is TypeParameterType) {
+      return _emptyClassification(TypeCategory.typeParameter);
+    }
+
     final primitive = _classifyPrimitive(type);
     if (primitive != null) {
       return _emptyClassification(primitive);

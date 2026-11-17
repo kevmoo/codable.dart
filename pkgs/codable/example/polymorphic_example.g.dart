@@ -11,6 +11,90 @@ part of 'polymorphic_example.dart';
 // ignore_for_file: omit_local_variable_types
 
 // =============================================================================
+// 1. Polymorphic Schema Descriptor for Vehicle
+// =============================================================================
+extension type const _$VehicleSchema(int _value) {
+  static const String discriminatorKey = 'type';
+  static const String subtypeCar = 'car';
+  static const String subtypeBicycle = 'bicycle';
+}
+
+// =============================================================================
+// 2. Companion Codable for Vehicle
+// =============================================================================
+final class VehicleCodable implements KeyedCodable<Vehicle> {
+  const VehicleCodable();
+
+  @override
+  Vehicle decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$VehicleSchema.discriminatorKey) ||
+        mapped.isNull(_$VehicleSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$VehicleSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(_$VehicleSchema.discriminatorKey);
+    return switch (discriminator) {
+      _$VehicleSchema.subtypeCar => const CarCodable().decode(decoder),
+      _$VehicleSchema.subtypeBicycle => const BicycleCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$VehicleSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(Vehicle instance) => switch (instance) {
+    final Car sub => 1 + const CarCodable().encodedFieldCount(sub),
+    final Bicycle sub => 1 + const BicycleCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(Vehicle instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final Car sub:
+        keyed.encodeString(
+          _$VehicleSchema.discriminatorKey,
+          _$VehicleSchema.subtypeCar,
+        );
+        const CarCodable().encodeFields(sub, keyed);
+      case final Bicycle sub:
+        keyed.encodeString(
+          _$VehicleSchema.discriminatorKey,
+          _$VehicleSchema.subtypeBicycle,
+        );
+        const BicycleCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(Vehicle instance, Encoder encoder) {
+    switch (instance) {
+      case final Car sub:
+        final subCodec = const CarCodable();
+        final keyed = encoder.keyed(
+          length: 1 + subCodec.encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$VehicleSchema.discriminatorKey,
+          _$VehicleSchema.subtypeCar,
+        );
+        subCodec.encodeFields(sub, keyed);
+      case final Bicycle sub:
+        final subCodec = const BicycleCodable();
+        final keyed = encoder.keyed(
+          length: 1 + subCodec.encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$VehicleSchema.discriminatorKey,
+          _$VehicleSchema.subtypeBicycle,
+        );
+        subCodec.encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
 // 1. Unified Schema Descriptor for Car
 // =============================================================================
 extension type const _$CarSchema(int _value) {
@@ -69,7 +153,7 @@ extension type const _$CarSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Car
 // =============================================================================
-final class CarCodable implements Codable<Car> {
+final class CarCodable implements KeyedCodable<Car> {
   const CarCodable();
 
   @override
@@ -106,6 +190,15 @@ final class CarCodable implements Codable<Car> {
     seen.validate();
 
     return Car(maxSpeed: maxSpeed!, doors: doors!);
+  }
+
+  @override
+  int encodedFieldCount(Car instance) => 2;
+
+  @override
+  void encodeFields(Car instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CarSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeInt(_$CarSchema.nameDoors, instance.doors);
   }
 
   @override
@@ -177,7 +270,7 @@ extension type const _$BicycleSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Bicycle
 // =============================================================================
-final class BicycleCodable implements Codable<Bicycle> {
+final class BicycleCodable implements KeyedCodable<Bicycle> {
   const BicycleCodable();
 
   @override
@@ -214,6 +307,15 @@ final class BicycleCodable implements Codable<Bicycle> {
     seen.validate();
 
     return Bicycle(maxSpeed: maxSpeed!, hasBell: hasBell!);
+  }
+
+  @override
+  int encodedFieldCount(Bicycle instance) => 2;
+
+  @override
+  void encodeFields(Bicycle instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$BicycleSchema.nameMaxSpeed, instance.maxSpeed);
+    keyed.encodeBool(_$BicycleSchema.nameHasBell, instance.hasBell);
   }
 
   @override

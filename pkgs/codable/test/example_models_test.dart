@@ -63,7 +63,7 @@ void main() {
       check(roundtripped.orders.length).equals(1);
     });
 
-    test('GenericResponseExample: BaseResponse<Article> decoding', () {
+    test('GenericResponseExample: BaseResponse<Article> roundtrip', () {
       const json = '''
       {
         "status": 200,
@@ -79,16 +79,24 @@ void main() {
       }
       ''';
 
+      const codec = BaseResponseCodable<Article>(ArticleCodable());
       final bytes = Uint8List.fromList(utf8.encode(json));
       final decoder = JsonCodableDecoder.fromBytes(bytes);
-      final response = const BaseResponseCodable<Article>(ArticleCodable())
-          .decode(decoder);
+      final response = codec.decode(decoder);
 
       check(response.status).equals(200);
       check(response.message).equals('OK');
       check(response.data.id).equals(42);
       check(response.data.title).equals('Dart 4 Zero-Allocation');
       check(response.data.author?.email).equals('alice@dart.dev');
+
+      final encoded = JsonCodableEncoder.toBytes(response, codec);
+      final roundtripped = codec.decode(JsonCodableDecoder.fromBytes(encoded));
+      check(roundtripped.status).equals(200);
+      check(roundtripped.message).equals('OK');
+      check(roundtripped.data.id).equals(42);
+      check(roundtripped.data.title).equals('Dart 4 Zero-Allocation');
+      check(roundtripped.data.author?.email).equals('alice@dart.dev');
     });
 
     test('CustomDecoderExample: DateTimeEpochDecoder', () {

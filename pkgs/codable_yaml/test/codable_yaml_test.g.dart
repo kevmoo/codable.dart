@@ -69,7 +69,7 @@ extension type const _$GridCoordSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GridCoord
 // =============================================================================
-final class GridCoordCodable implements Codable<GridCoord> {
+final class GridCoordCodable implements KeyedCodable<GridCoord> {
   const GridCoordCodable();
 
   @override
@@ -106,6 +106,15 @@ final class GridCoordCodable implements Codable<GridCoord> {
     seen.validate();
 
     return GridCoord(row!, col!);
+  }
+
+  @override
+  int encodedFieldCount(GridCoord instance) => 2;
+
+  @override
+  void encodeFields(GridCoord instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$GridCoordSchema.nameRow, instance.row);
+    keyed.encodeInt(_$GridCoordSchema.nameCol, instance.col);
   }
 
   @override
@@ -221,7 +230,7 @@ extension type const _$ServiceSpecSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for ServiceSpec
 // =============================================================================
-final class ServiceSpecCodable implements Codable<ServiceSpec> {
+final class ServiceSpecCodable implements KeyedCodable<ServiceSpec> {
   const ServiceSpecCodable();
 
   @override
@@ -377,6 +386,80 @@ final class ServiceSpecCodable implements Codable<ServiceSpec> {
       alertByLevel: alertByLevel,
       zoneLabels: zoneLabels,
     );
+  }
+
+  @override
+  int encodedFieldCount(ServiceSpec instance) {
+    var count$ = 8;
+    if (instance.sampleRate != null) count$++;
+    if (instance.tlsCertDer != null) count$++;
+    if (instance.bounds != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(ServiceSpec instance, KeyedEncoder keyed) {
+    keyed.encodeString(
+      _$ServiceSpecSchema.nameServiceName,
+      instance.serviceName,
+    );
+    keyed.encodeString(
+      _$ServiceSpecSchema.nameLogLevel,
+      instance.logLevel.name,
+    );
+    keyed.encodeInt(_$ServiceSpecSchema.nameMaxRetries, instance.maxRetries);
+    final v$SampleRate = instance.sampleRate;
+    if (v$SampleRate != null) {
+      keyed.encodeDouble(_$ServiceSpecSchema.nameSampleRate, v$SampleRate);
+    }
+    final v$TlsCertDer = instance.tlsCertDer;
+    if (v$TlsCertDer != null) {
+      keyed.encodeBytes(_$ServiceSpecSchema.nameTlsCertDer, v$TlsCertDer);
+    }
+    final v$Bounds = instance.bounds;
+    if (v$Bounds != null) {
+      keyed.encodeDoubleList(_$ServiceSpecSchema.nameBounds, v$Bounds);
+    }
+    keyed.encodeStringList(_$ServiceSpecSchema.nameTags, instance.tags);
+    {
+      final k = keyed
+          .nestedEncoder(_$ServiceSpecSchema.nameFeatureQuotas)
+          .keyed(length: instance.featureQuotas.length);
+      for (final entry in instance.featureQuotas.entries) {
+        if (entry.value case final val1?) {
+          k.encodeInt(entry.key, val1);
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$ServiceSpecSchema.nameHttpCodes)
+          .map(length: instance.httpCodes.length);
+      for (final entry in instance.httpCodes.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$ServiceSpecSchema.nameAlertByLevel)
+          .map(length: instance.alertByLevel.length);
+      for (final entry in instance.alertByLevel.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeBool(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$ServiceSpecSchema.nameZoneLabels)
+          .map(length: instance.zoneLabels.length);
+      for (final entry in instance.zoneLabels.entries) {
+        const GridCoordCodable().encode(entry.key, m.keyEncoder());
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
   }
 
   @override

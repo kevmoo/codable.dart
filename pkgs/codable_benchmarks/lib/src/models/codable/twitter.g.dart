@@ -44,7 +44,7 @@ extension type const _$TwitterMetadataSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterMetadata
 // =============================================================================
-final class TwitterMetadataCodable implements Codable<TwitterMetadata> {
+final class TwitterMetadataCodable implements KeyedCodable<TwitterMetadata> {
   const TwitterMetadataCodable();
 
   @override
@@ -75,6 +75,21 @@ final class TwitterMetadataCodable implements Codable<TwitterMetadata> {
     return TwitterMetadata(
       resultType: resultType,
       isoLanguageCode: isoLanguageCode,
+    );
+  }
+
+  @override
+  int encodedFieldCount(TwitterMetadata instance) => 2;
+
+  @override
+  void encodeFields(TwitterMetadata instance, KeyedEncoder keyed) {
+    keyed.encodeString(
+      _$TwitterMetadataSchema.nameResultType,
+      instance.resultType,
+    );
+    keyed.encodeString(
+      _$TwitterMetadataSchema.nameIsoLanguageCode,
+      instance.isoLanguageCode,
     );
   }
 
@@ -179,7 +194,8 @@ extension type const _$TwitterUserMentionSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterUserMention
 // =============================================================================
-final class TwitterUserMentionCodable implements Codable<TwitterUserMention> {
+final class TwitterUserMentionCodable
+    implements KeyedCodable<TwitterUserMention> {
   const TwitterUserMentionCodable();
 
   @override
@@ -242,6 +258,24 @@ final class TwitterUserMentionCodable implements Codable<TwitterUserMention> {
       id: id!,
       idStr: idStr!,
       indices: indices,
+    );
+  }
+
+  @override
+  int encodedFieldCount(TwitterUserMention instance) => 5;
+
+  @override
+  void encodeFields(TwitterUserMention instance, KeyedEncoder keyed) {
+    keyed.encodeString(
+      _$TwitterUserMentionSchema.nameScreenName,
+      instance.screenName,
+    );
+    keyed.encodeString(_$TwitterUserMentionSchema.nameName, instance.name);
+    keyed.encodeInt(_$TwitterUserMentionSchema.nameId, instance.id);
+    keyed.encodeString(_$TwitterUserMentionSchema.nameIdStr, instance.idStr);
+    keyed.encodeIntList(
+      _$TwitterUserMentionSchema.nameIndices,
+      instance.indices,
     );
   }
 
@@ -338,7 +372,7 @@ extension type const _$TwitterUrlSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterUrl
 // =============================================================================
-final class TwitterUrlCodable implements Codable<TwitterUrl> {
+final class TwitterUrlCodable implements KeyedCodable<TwitterUrl> {
   const TwitterUrlCodable();
 
   @override
@@ -395,6 +429,20 @@ final class TwitterUrlCodable implements Codable<TwitterUrl> {
   }
 
   @override
+  int encodedFieldCount(TwitterUrl instance) => 4;
+
+  @override
+  void encodeFields(TwitterUrl instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$TwitterUrlSchema.nameUrl, instance.url);
+    keyed.encodeString(
+      _$TwitterUrlSchema.nameExpandedUrl,
+      instance.expandedUrl,
+    );
+    keyed.encodeString(_$TwitterUrlSchema.nameDisplayUrl, instance.displayUrl);
+    keyed.encodeIntList(_$TwitterUrlSchema.nameIndices, instance.indices);
+  }
+
+  @override
   void encode(TwitterUrl instance, Encoder encoder) {
     final keyed = encoder.keyed(length: 4);
     keyed.encodeString(_$TwitterUrlSchema.nameUrl, instance.url);
@@ -440,7 +488,8 @@ extension type const _$TwitterEntitiesUrlsSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterEntitiesUrls
 // =============================================================================
-final class TwitterEntitiesUrlsCodable implements Codable<TwitterEntitiesUrls> {
+final class TwitterEntitiesUrlsCodable
+    implements KeyedCodable<TwitterEntitiesUrls> {
   const TwitterEntitiesUrlsCodable();
 
   @override
@@ -467,6 +516,18 @@ final class TwitterEntitiesUrlsCodable implements Codable<TwitterEntitiesUrls> {
     seen.validate();
 
     return TwitterEntitiesUrls(urls: urls);
+  }
+
+  @override
+  int encodedFieldCount(TwitterEntitiesUrls instance) => 1;
+
+  @override
+  void encodeFields(TwitterEntitiesUrls instance, KeyedEncoder keyed) {
+    keyed.encodeList(
+      _$TwitterEntitiesUrlsSchema.nameUrls,
+      instance.urls,
+      const TwitterUrlCodable(),
+    );
   }
 
   @override
@@ -516,7 +577,8 @@ extension type const _$TwitterUserEntitiesSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterUserEntities
 // =============================================================================
-final class TwitterUserEntitiesCodable implements Codable<TwitterUserEntities> {
+final class TwitterUserEntitiesCodable
+    implements KeyedCodable<TwitterUserEntities> {
   const TwitterUserEntitiesCodable();
 
   @override
@@ -561,6 +623,34 @@ final class TwitterUserEntitiesCodable implements Codable<TwitterUserEntities> {
     seen.validate();
 
     return TwitterUserEntities(url: url, description: description);
+  }
+
+  @override
+  int encodedFieldCount(TwitterUserEntities instance) {
+    var count$ = 0;
+    if (instance.url != null) count$++;
+    if (instance.description != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TwitterUserEntities instance, KeyedEncoder keyed) {
+    final v$Url = instance.url;
+    if (v$Url != null) {
+      keyed.encodeValue(
+        _$TwitterUserEntitiesSchema.nameUrl,
+        v$Url,
+        const TwitterEntitiesUrlsCodable(),
+      );
+    }
+    final v$Description = instance.description;
+    if (v$Description != null) {
+      keyed.encodeValue(
+        _$TwitterUserEntitiesSchema.nameDescription,
+        v$Description,
+        const TwitterEntitiesUrlsCodable(),
+      );
+    }
   }
 
   @override
@@ -622,7 +712,7 @@ extension type const _$TwitterEntitiesSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterEntities
 // =============================================================================
-final class TwitterEntitiesCodable implements Codable<TwitterEntities> {
+final class TwitterEntitiesCodable implements KeyedCodable<TwitterEntities> {
   const TwitterEntitiesCodable();
 
   @override
@@ -653,6 +743,23 @@ final class TwitterEntitiesCodable implements Codable<TwitterEntities> {
     seen.validate();
 
     return TwitterEntities(urls: urls, userMentions: userMentions);
+  }
+
+  @override
+  int encodedFieldCount(TwitterEntities instance) => 2;
+
+  @override
+  void encodeFields(TwitterEntities instance, KeyedEncoder keyed) {
+    keyed.encodeList(
+      _$TwitterEntitiesSchema.nameUrls,
+      instance.urls,
+      const TwitterUrlCodable(),
+    );
+    keyed.encodeList(
+      _$TwitterEntitiesSchema.nameUserMentions,
+      instance.userMentions,
+      const TwitterUserMentionCodable(),
+    );
   }
 
   @override
@@ -870,7 +977,7 @@ extension type const _$TwitterUserSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterUser
 // =============================================================================
-final class TwitterUserCodable implements Codable<TwitterUser> {
+final class TwitterUserCodable implements KeyedCodable<TwitterUser> {
   const TwitterUserCodable();
 
   @override
@@ -1138,6 +1245,152 @@ final class TwitterUserCodable implements Codable<TwitterUser> {
       following: following,
       followRequestSent: followRequestSent,
       notifications: notifications,
+    );
+  }
+
+  @override
+  int encodedFieldCount(TwitterUser instance) {
+    var count$ = 35;
+    if (instance.url != null) count$++;
+    if (instance.entities != null) count$++;
+    if (instance.utcOffset != null) count$++;
+    if (instance.timeZone != null) count$++;
+    if (instance.profileBannerUrl != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TwitterUser instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$TwitterUserSchema.nameId, instance.id);
+    keyed.encodeString(_$TwitterUserSchema.nameIdStr, instance.idStr);
+    keyed.encodeString(_$TwitterUserSchema.nameName, instance.name);
+    keyed.encodeString(_$TwitterUserSchema.nameScreenName, instance.screenName);
+    keyed.encodeString(_$TwitterUserSchema.nameLocation, instance.location);
+    keyed.encodeString(
+      _$TwitterUserSchema.nameDescription,
+      instance.description,
+    );
+    final v$Url = instance.url;
+    if (v$Url != null) {
+      keyed.encodeString(_$TwitterUserSchema.nameUrl, v$Url);
+    }
+    final v$Entities = instance.entities;
+    if (v$Entities != null) {
+      keyed.encodeValue(
+        _$TwitterUserSchema.nameEntities,
+        v$Entities,
+        const TwitterUserEntitiesCodable(),
+      );
+    }
+    keyed.encodeBool(_$TwitterUserSchema.nameProtected, instance.protected);
+    keyed.encodeInt(
+      _$TwitterUserSchema.nameFollowersCount,
+      instance.followersCount,
+    );
+    keyed.encodeInt(
+      _$TwitterUserSchema.nameFriendsCount,
+      instance.friendsCount,
+    );
+    keyed.encodeInt(_$TwitterUserSchema.nameListedCount, instance.listedCount);
+    keyed.encodeString(_$TwitterUserSchema.nameCreatedAt, instance.createdAt);
+    keyed.encodeInt(
+      _$TwitterUserSchema.nameFavouritesCount,
+      instance.favouritesCount,
+    );
+    final v$UtcOffset = instance.utcOffset;
+    if (v$UtcOffset != null) {
+      keyed.encodeInt(_$TwitterUserSchema.nameUtcOffset, v$UtcOffset);
+    }
+    final v$TimeZone = instance.timeZone;
+    if (v$TimeZone != null) {
+      keyed.encodeString(_$TwitterUserSchema.nameTimeZone, v$TimeZone);
+    }
+    keyed.encodeBool(_$TwitterUserSchema.nameGeoEnabled, instance.geoEnabled);
+    keyed.encodeBool(_$TwitterUserSchema.nameVerified, instance.verified);
+    keyed.encodeInt(
+      _$TwitterUserSchema.nameStatusesCount,
+      instance.statusesCount,
+    );
+    keyed.encodeString(_$TwitterUserSchema.nameLang, instance.lang);
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameContributorsEnabled,
+      instance.contributorsEnabled,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameIsTranslator,
+      instance.isTranslator,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameIsTranslationEnabled,
+      instance.isTranslationEnabled,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileBackgroundColor,
+      instance.profileBackgroundColor,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileBackgroundImageUrl,
+      instance.profileBackgroundImageUrl,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileBackgroundImageUrlHttps,
+      instance.profileBackgroundImageUrlHttps,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameProfileBackgroundTile,
+      instance.profileBackgroundTile,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileImageUrl,
+      instance.profileImageUrl,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileImageUrlHttps,
+      instance.profileImageUrlHttps,
+    );
+    final v$ProfileBannerUrl = instance.profileBannerUrl;
+    if (v$ProfileBannerUrl != null) {
+      keyed.encodeString(
+        _$TwitterUserSchema.nameProfileBannerUrl,
+        v$ProfileBannerUrl,
+      );
+    }
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileLinkColor,
+      instance.profileLinkColor,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileSidebarBorderColor,
+      instance.profileSidebarBorderColor,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileSidebarFillColor,
+      instance.profileSidebarFillColor,
+    );
+    keyed.encodeString(
+      _$TwitterUserSchema.nameProfileTextColor,
+      instance.profileTextColor,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameProfileUseBackgroundImage,
+      instance.profileUseBackgroundImage,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameDefaultProfile,
+      instance.defaultProfile,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameDefaultProfileImage,
+      instance.defaultProfileImage,
+    );
+    keyed.encodeBool(_$TwitterUserSchema.nameFollowing, instance.following);
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameFollowRequestSent,
+      instance.followRequestSent,
+    );
+    keyed.encodeBool(
+      _$TwitterUserSchema.nameNotifications,
+      instance.notifications,
     );
   }
 
@@ -1419,7 +1672,7 @@ extension type const _$TwitterStatusSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterStatus
 // =============================================================================
-final class TwitterStatusCodable implements Codable<TwitterStatus> {
+final class TwitterStatusCodable implements KeyedCodable<TwitterStatus> {
   const TwitterStatusCodable();
 
   @override
@@ -1622,6 +1875,117 @@ final class TwitterStatusCodable implements Codable<TwitterStatus> {
       lang: lang,
       retweetedStatus: retweetedStatus,
     );
+  }
+
+  @override
+  int encodedFieldCount(TwitterStatus instance) {
+    var count$ = 11;
+    if (instance.metadata != null) count$++;
+    if (instance.inReplyToStatusId != null) count$++;
+    if (instance.inReplyToStatusIdStr != null) count$++;
+    if (instance.inReplyToUserId != null) count$++;
+    if (instance.inReplyToUserIdStr != null) count$++;
+    if (instance.inReplyToScreenName != null) count$++;
+    if (instance.user != null) count$++;
+    if (instance.entities != null) count$++;
+    if (instance.possiblySensitive != null) count$++;
+    if (instance.retweetedStatus != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TwitterStatus instance, KeyedEncoder keyed) {
+    final v$Metadata = instance.metadata;
+    if (v$Metadata != null) {
+      keyed.encodeValue(
+        _$TwitterStatusSchema.nameMetadata,
+        v$Metadata,
+        const TwitterMetadataCodable(),
+      );
+    }
+    keyed.encodeString(_$TwitterStatusSchema.nameCreatedAt, instance.createdAt);
+    keyed.encodeInt(_$TwitterStatusSchema.nameId, instance.id);
+    keyed.encodeString(_$TwitterStatusSchema.nameIdStr, instance.idStr);
+    keyed.encodeString(_$TwitterStatusSchema.nameText, instance.text);
+    keyed.encodeString(_$TwitterStatusSchema.nameSource, instance.source);
+    keyed.encodeBool(_$TwitterStatusSchema.nameTruncated, instance.truncated);
+    final v$InReplyToStatusId = instance.inReplyToStatusId;
+    if (v$InReplyToStatusId != null) {
+      keyed.encodeInt(
+        _$TwitterStatusSchema.nameInReplyToStatusId,
+        v$InReplyToStatusId,
+      );
+    }
+    final v$InReplyToStatusIdStr = instance.inReplyToStatusIdStr;
+    if (v$InReplyToStatusIdStr != null) {
+      keyed.encodeString(
+        _$TwitterStatusSchema.nameInReplyToStatusIdStr,
+        v$InReplyToStatusIdStr,
+      );
+    }
+    final v$InReplyToUserId = instance.inReplyToUserId;
+    if (v$InReplyToUserId != null) {
+      keyed.encodeInt(
+        _$TwitterStatusSchema.nameInReplyToUserId,
+        v$InReplyToUserId,
+      );
+    }
+    final v$InReplyToUserIdStr = instance.inReplyToUserIdStr;
+    if (v$InReplyToUserIdStr != null) {
+      keyed.encodeString(
+        _$TwitterStatusSchema.nameInReplyToUserIdStr,
+        v$InReplyToUserIdStr,
+      );
+    }
+    final v$InReplyToScreenName = instance.inReplyToScreenName;
+    if (v$InReplyToScreenName != null) {
+      keyed.encodeString(
+        _$TwitterStatusSchema.nameInReplyToScreenName,
+        v$InReplyToScreenName,
+      );
+    }
+    final v$User = instance.user;
+    if (v$User != null) {
+      keyed.encodeValue(
+        _$TwitterStatusSchema.nameUser,
+        v$User,
+        const TwitterUserCodable(),
+      );
+    }
+    keyed.encodeInt(
+      _$TwitterStatusSchema.nameRetweetCount,
+      instance.retweetCount,
+    );
+    keyed.encodeInt(
+      _$TwitterStatusSchema.nameFavoriteCount,
+      instance.favoriteCount,
+    );
+    final v$Entities = instance.entities;
+    if (v$Entities != null) {
+      keyed.encodeValue(
+        _$TwitterStatusSchema.nameEntities,
+        v$Entities,
+        const TwitterEntitiesCodable(),
+      );
+    }
+    keyed.encodeBool(_$TwitterStatusSchema.nameFavorited, instance.favorited);
+    keyed.encodeBool(_$TwitterStatusSchema.nameRetweeted, instance.retweeted);
+    final v$PossiblySensitive = instance.possiblySensitive;
+    if (v$PossiblySensitive != null) {
+      keyed.encodeBool(
+        _$TwitterStatusSchema.namePossiblySensitive,
+        v$PossiblySensitive,
+      );
+    }
+    keyed.encodeString(_$TwitterStatusSchema.nameLang, instance.lang);
+    final v$RetweetedStatus = instance.retweetedStatus;
+    if (v$RetweetedStatus != null) {
+      keyed.encodeValue(
+        _$TwitterStatusSchema.nameRetweetedStatus,
+        v$RetweetedStatus,
+        const TwitterStatusCodable(),
+      );
+    }
   }
 
   @override
@@ -1838,7 +2202,7 @@ extension type const _$TwitterSearchMetadataSchema(int _value) {
 // 2. Companion Codable for TwitterSearchMetadata
 // =============================================================================
 final class TwitterSearchMetadataCodable
-    implements Codable<TwitterSearchMetadata> {
+    implements KeyedCodable<TwitterSearchMetadata> {
   const TwitterSearchMetadataCodable();
 
   @override
@@ -1933,6 +2297,40 @@ final class TwitterSearchMetadataCodable
   }
 
   @override
+  int encodedFieldCount(TwitterSearchMetadata instance) => 9;
+
+  @override
+  void encodeFields(TwitterSearchMetadata instance, KeyedEncoder keyed) {
+    keyed.encodeDouble(
+      _$TwitterSearchMetadataSchema.nameCompletedIn,
+      instance.completedIn,
+    );
+    keyed.encodeInt(_$TwitterSearchMetadataSchema.nameMaxId, instance.maxId);
+    keyed.encodeString(
+      _$TwitterSearchMetadataSchema.nameMaxIdStr,
+      instance.maxIdStr,
+    );
+    keyed.encodeString(
+      _$TwitterSearchMetadataSchema.nameNextResults,
+      instance.nextResults,
+    );
+    keyed.encodeString(_$TwitterSearchMetadataSchema.nameQuery, instance.query);
+    keyed.encodeString(
+      _$TwitterSearchMetadataSchema.nameRefreshUrl,
+      instance.refreshUrl,
+    );
+    keyed.encodeInt(_$TwitterSearchMetadataSchema.nameCount, instance.count);
+    keyed.encodeInt(
+      _$TwitterSearchMetadataSchema.nameSinceId,
+      instance.sinceId,
+    );
+    keyed.encodeString(
+      _$TwitterSearchMetadataSchema.nameSinceIdStr,
+      instance.sinceIdStr,
+    );
+  }
+
+  @override
   void encode(TwitterSearchMetadata instance, Encoder encoder) {
     final keyed = encoder.keyed(length: 9);
     keyed.encodeDouble(
@@ -2023,7 +2421,7 @@ extension type const _$TwitterResponseSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TwitterResponse
 // =============================================================================
-final class TwitterResponseCodable implements Codable<TwitterResponse> {
+final class TwitterResponseCodable implements KeyedCodable<TwitterResponse> {
   const TwitterResponseCodable();
 
   @override
@@ -2061,6 +2459,23 @@ final class TwitterResponseCodable implements Codable<TwitterResponse> {
     seen.validate();
 
     return TwitterResponse(statuses: statuses, searchMetadata: searchMetadata!);
+  }
+
+  @override
+  int encodedFieldCount(TwitterResponse instance) => 2;
+
+  @override
+  void encodeFields(TwitterResponse instance, KeyedEncoder keyed) {
+    keyed.encodeList(
+      _$TwitterResponseSchema.nameStatuses,
+      instance.statuses,
+      const TwitterStatusCodable(),
+    );
+    keyed.encodeValue(
+      _$TwitterResponseSchema.nameSearchMetadata,
+      instance.searchMetadata,
+      const TwitterSearchMetadataCodable(),
+    );
   }
 
   @override

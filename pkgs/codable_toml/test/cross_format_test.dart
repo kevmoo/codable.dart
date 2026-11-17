@@ -507,6 +507,107 @@ final class CompositeMapKeyModel {
 }
 
 // =============================================================================
+// 7. Generic @Codable() & Zero-Boilerplate Sealed Polymorphism (All 5 Drivers)
+// =============================================================================
+
+@Codable()
+final class PagedEnvelope<T> {
+  final int page;
+  final T primary;
+  final List<T> items;
+  final Map<String, T> tagged;
+  final T? nextPreview;
+
+  const PagedEnvelope({
+    required this.page,
+    required this.primary,
+    this.items = const [],
+    this.tagged = const {},
+    this.nextPreview,
+  });
+}
+
+@Codable(discriminatorKey: 'kind', fieldRename: FieldRename.snake)
+sealed class PipelineStage {
+  const PipelineStage();
+}
+
+@Codable()
+final class FetchStage extends PipelineStage {
+  final LevelC source;
+  final int timeoutMs;
+  final String? authHeader;
+
+  const FetchStage({
+    required this.source,
+    required this.timeoutMs,
+    this.authHeader,
+  });
+}
+
+@Codable(discriminatorValue: 'filter_expr')
+final class FilterStage extends PipelineStage {
+  final List<String> predicates;
+  final bool dropEmpty;
+
+  const FilterStage({required this.predicates, this.dropEmpty = false});
+}
+
+@Codable(discriminatorKey: 'outcome')
+sealed class StageResult<T> {
+  const StageResult();
+}
+
+@Codable(discriminatorValue: 'ok')
+final class StageOk<T> extends StageResult<T> {
+  final T data;
+  final int elapsedMs;
+
+  const StageOk({required this.data, required this.elapsedMs});
+}
+
+@Codable(discriminatorValue: 'failed')
+final class StageFailed extends StageResult<Never> {
+  final String errorCode;
+
+  const StageFailed({required this.errorCode});
+}
+
+@Codable()
+final class PipelineManifest {
+  final PagedEnvelope<LevelC> targets;
+  final PipelineStage entryStage;
+  final PipelineStage? fallbackStage;
+  final List<PipelineStage> stages;
+  final Map<String, PipelineStage> stageById;
+  final StageResult<GridCell> lastRun;
+  final StageResult<int> retryStatus;
+
+  const PipelineManifest({
+    required this.targets,
+    required this.entryStage,
+    this.fallbackStage,
+    this.stages = const [],
+    this.stageById = const {},
+    required this.lastRun,
+    required this.retryStatus,
+  });
+}
+
+final class SuperCodableStageAdapter extends SuperCodable<PipelineStage> {
+  const SuperCodableStageAdapter();
+
+  @override
+  String get discriminatorKey => 'kind';
+
+  @override
+  List<PolymorphicSubtype<PipelineStage>> get subtypes => const [
+    SubtypeCodable('fetch_stage', FetchStageCodable()),
+    SubtypeCodable('filter_expr', FilterStageCodable()),
+  ];
+}
+
+// =============================================================================
 // Test Suite Registration
 // =============================================================================
 
@@ -517,6 +618,7 @@ void main() {
   _registerMapsBytesTupleAndPolymorphicTests();
   _registerDateTimeVsDateStringTests();
   _registerStructuralBoundaryRejectionTests();
+  _registerGenericAndSealedPolymorphicFiveDriverTests();
 }
 
 void _registerInterleavedOrderingTests() {
@@ -1281,5 +1383,128 @@ void _registerStructuralBoundaryRejectionTests() {
             .equals(256);
       },
     );
+  });
+}
+
+void _registerGenericAndSealedPolymorphicFiveDriverTests() {
+  group('Generic @Codable() & sealed polymorphism across all 5 formats', () {
+    test('roundtrips PagedEnvelope<T>, sealed PipelineStage, and generic StageResult<T>', () {
+      const manifest = PipelineManifest(
+        targets: PagedEnvelope(
+          page: 1,
+          primary: LevelC(region: 'us-west1', replicas: 3),
+          items: [
+            LevelC(region: 'us-east1', replicas: 2),
+            LevelC(region: 'ap-south1', replicas: 4),
+          ],
+          tagged: {'canary': LevelC(region: 'eu-west1', replicas: 1)},
+        ),
+        entryStage: FetchStage(
+          source: LevelC(region: 'us-central1', replicas: 5),
+          timeoutMs: 1500,
+        ),
+        stages: [
+          FilterStage(
+            predicates: ['status == 200', 'latency < 50'],
+            dropEmpty: true,
+          ),
+          FetchStage(
+            source: LevelC(region: 'eu-central1', replicas: 2),
+            timeoutMs: 3000,
+            authHeader: 'Bearer token',
+          ),
+        ],
+        stageById: {
+          'ingest': FetchStage(
+            source: LevelC(region: 'us-east4', replicas: 2),
+            timeoutMs: 800,
+          ),
+          'scrub': FilterStage(predicates: ['valid']),
+        },
+        lastRun: StageOk(
+          data: GridCell(x: 10, y: 20, tag: 'ok-cell'),
+          elapsedMs: 42,
+        ),
+        retryStatus: StageFailed(errorCode: 'RATE_LIMITED'),
+      );
+
+      for (final r in _roundtripAllFiveFormats(
+        manifest,
+        const PipelineManifestCodable(),
+      )) {
+        check(r.targets.page).equals(1);
+        check(r.targets.primary)
+            .equals(const LevelC(region: 'us-west1', replicas: 3));
+        check(r.targets.items).length.equals(2);
+        check(r.targets.tagged['canary'])
+            .equals(const LevelC(region: 'eu-west1', replicas: 1));
+        check(r.targets.nextPreview).isNull();
+        check(r.fallbackStage).isNull();
+        check(r.entryStage)
+            .isA<FetchStage>()
+            .has((f) => (f.timeoutMs, f.authHeader, f.source.region), 'fetch')
+            .equals((1500, null, 'us-central1'));
+        check(r.stages).length.equals(2);
+        check(r.stages[0])
+            .isA<FilterStage>()
+            .has((f) => f.dropEmpty, 'dropEmpty')
+            .isTrue();
+        check(r.stages[1])
+            .isA<FetchStage>()
+            .has((f) => f.authHeader, 'authHeader')
+            .equals('Bearer token');
+        check(r.stageById['scrub']).isA<FilterStage>();
+        check(r.lastRun)
+            .isA<StageOk<GridCell>>()
+            .has((s) => (s.data.tag, s.elapsedMs), 'ok')
+            .equals(('ok-cell', 42));
+        check(r.retryStatus)
+            .isA<StageFailed>()
+            .has((f) => f.errorCode, 'errorCode')
+            .equals('RATE_LIMITED');
+      }
+    });
+
+    test('roundtrips standalone SuperCodable and generic Envelope<T?> with omitted null across all 5 formats', () {
+      const stageAdapter = SuperCodableStageAdapter();
+      const stage = FetchStage(
+        source: LevelC(region: 'sa-east1', replicas: 2),
+        timeoutMs: 950,
+      );
+      for (final r in _roundtripAllFiveFormats<PipelineStage>(
+        stage,
+        stageAdapter,
+      )) {
+        check(r)
+            .isA<FetchStage>()
+            .has((s) => (s.source.region, s.timeoutMs), 'stage')
+            .equals(('sa-east1', 950));
+      }
+
+      const secondStage = FilterStage(
+        predicates: ['status >= 500', 'env == prod'],
+        dropEmpty: true,
+      );
+      for (final r in _roundtripAllFiveFormats<PipelineStage>(
+        secondStage,
+        stageAdapter,
+      )) {
+        check(r).isA<FilterStage>()
+          ..has(
+            (s) => s.predicates,
+            'predicates',
+          ).deepEquals(['status >= 500', 'env == prod'])
+          ..has((s) => s.dropEmpty, 'dropEmpty').isTrue();
+      }
+
+      final nullableEnvCodec = PagedEnvelopeCodable<LevelC?>(
+        const LevelCCodable().nullable,
+      );
+      const sparseEnv = PagedEnvelope<LevelC?>(page: 2, primary: null);
+      for (final r in _roundtripAllFiveFormats(sparseEnv, nullableEnvCodec)) {
+        check(r.page).equals(2);
+        check(r.primary).isNull();
+      }
+    });
   });
 }

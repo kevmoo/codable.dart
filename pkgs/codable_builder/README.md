@@ -75,23 +75,29 @@ For each `@Codable()` class `Model`, `codable_builder` emits:
   schema descriptor containing wire name constants, key index constants, a
   pre-compiled `KeyOptions` lookup table, enum option tables, and a 62-bit
   Golden Mask (`validate()`) for single-instruction required-field verification.
-- `final class ModelCodable` (`const ModelCodable()`) — Stateless companion
-  class implementing `Codable<Model>` (or `Decodable<Model>` /
-  `Encodable<Model>` when `createEncoder: false` or `createDecoder: false`):
-  - `Model decode(Decoder decoder)` — Universal streaming `Decoder` method.
+- `final class ModelCodable` (`const ModelCodable()`, or
+  `const ModelCodable(this._$t)` for generic `Model<T>`) — Stateless companion
+  class implementing `KeyedCodable<Model>` (or `Decodable<Model>` /
+  `KeyedEncodable<Model>` when `createEncoder: false` or
+  `createDecoder: false`):
+  - `Model decode(Decoder decoder)` — Universal streaming `Decoder` method (or
+    `MappedDecoder` discriminator dispatch for `sealed` / polymorphic bases).
   - `List<Model> decodeList(Decoder decoder)` — Specialized SIMD/flat-buffer
     array decoder for uniform `double` models (all other models inherit
     `decodeList` via `DecodableListExtension`).
-  - `void encode(Model instance, Encoder encoder)` — Universal streaming
-    `Encoder` method.
+  - `int encodedFieldCount(Model instance)` &
+    `void encodeFields(Model instance, KeyedEncoder keyed)` — Field-splicing
+    hooks used by polymorphic envelopes (`SuperEncodable` / `SuperCodable`).
+  - `void encode(Model instance, Encoder encoder)` — Universal single-pass
+    streaming `Encoder` method.
 
 ## Annotations Reference
 
-| Annotation              | Target                     | Options                                                                                                                                                        |
-| :---------------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@Codable()`            | Class                      | `createDecoder` (`true`), `createEncoder` (`true`), `useGoldenMask` (`true`), `fieldRename` (`FieldRename.none`, `snake`, `kebab`, `pascal`, `screamingSnake`) |
-| `@CodableKey()`         | Field / Parameter / Getter | `name`, `aliases`, `ignore` (`false`), `customDecoder` (`Codable<T>` / `Decodable<T>` / `Encodable<T>` instance or type), `defaultValue`                       |
-| `@CodableTuple(length)` | Field / Parameter          | Fixed-length numeric tuple hint for `Float64List` / `List<double>` / `List<int>`                                                                               |
+| Annotation              | Target                     | Options                                                                                                                                                                                                              |
+| :---------------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@Codable()`            | Class                      | `createDecoder` (`true`), `createEncoder` (`true`), `useGoldenMask` (`true`), `fieldRename` (`FieldRename.none`, `snake`, `kebab`, `pascal`, `screamingSnake`), `discriminatorKey`, `discriminatorValue`, `subtypes` |
+| `@CodableKey()`         | Field / Parameter / Getter | `name`, `aliases`, `ignore` (`false`), `codable` / `customDecoder` / `customEncoder` (`Codable<T>` / `Decodable<T>` / `Encodable<T>` instance or type), `defaultValue`                                               |
+| `@CodableTuple(length)` | Field / Parameter          | Fixed-length numeric tuple hint for `Float64List` / `List<double>` / `List<int>`                                                                                                                                     |
 
 See the [`package:codable` README](../codable/README.md) for full documentation
 on `JsonCodableDecoder`, `JsonCodableEncoder`, and implementing custom

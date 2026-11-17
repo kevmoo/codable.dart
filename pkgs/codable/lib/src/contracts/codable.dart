@@ -31,6 +31,22 @@ abstract interface class Encodable<T> {
   void encode(T value, Encoder encoder);
 }
 
+/// An [Encodable] that serializes [T] as fields into a [KeyedEncoder]
+/// container, enabling field splicing into polymorphic or composite envelopes
+/// without opening a duplicate root container.
+abstract interface class KeyedEncodable<T> implements Encodable<T> {
+  /// Exact number of keyed entries [encodeFields] will write for [value], or
+  /// `null` when the count is not known upfront.
+  int? encodedFieldCount(T value);
+
+  /// Writes [value]'s fields into an already-open [keyed] container.
+  void encodeFields(T value, KeyedEncoder keyed);
+}
+
+/// Unified [Codable] and [KeyedEncodable] contract for keyed object models.
+abstract interface class KeyedCodable<T>
+    implements Codable<T>, KeyedEncodable<T>;
+
 /// Unified companion contract for serializing and deserializing values of type
 /// [T], and the metadata annotation (`@Codable()`) designating a class for
 /// code generation.
@@ -43,6 +59,9 @@ abstract interface class Codable<T> implements Decodable<T>, Encodable<T> {
     bool createDecoder,
     bool useGoldenMask,
     FieldRename fieldRename,
+    String? discriminatorKey,
+    String? discriminatorValue,
+    List<Type>? subtypes,
   }) = CodableAnnotation;
 
   /// Creates a [Codable] from standalone [decode] and [encode] functions.
@@ -126,6 +145,24 @@ extension CodableListExtension<T> on Codable<T> {
   Codable<List<T>> get list => _ListCodable<T>(this);
 }
 
+/// Extension methods for adapting a [Decodable] to nullable `T?`.
+extension DecodableNullableExtension<T> on Decodable<T> {
+  /// Returns a [Decodable] that decodes `null` or delegates to `this`.
+  Decodable<T?> get nullable => _NullableDecodable<T>(this);
+}
+
+/// Extension methods for adapting an [Encodable] to nullable `T?`.
+extension EncodableNullableExtension<T> on Encodable<T> {
+  /// Returns an [Encodable] that encodes `null` or delegates to `this`.
+  Encodable<T?> get nullable => _NullableEncodable<T>(this);
+}
+
+/// Extension methods for adapting a [Codable] to nullable `T?`.
+extension CodableNullableExtension<T> on Codable<T> {
+  /// Returns a [Codable] that decodes and encodes `T?`.
+  Codable<T?> get nullable => _NullableCodable<T>(this);
+}
+
 final class _ListDecodable<T> implements Decodable<List<T>> {
   final Decodable<T> _element;
 
@@ -156,4 +193,53 @@ final class _ListCodable<T> implements Codable<List<T>> {
   @override
   void encode(List<T> value, Encoder encoder) =>
       _element.encodeList(value, encoder);
+}
+
+T? _decodeNullableWith<T>(Decoder decoder, Decodable<T> decodable) {
+  final sv = decoder.singleValue();
+  if (sv.isNull()) {
+    sv.readNull();
+    return null;
+  }
+  return decodable.decode(decoder);
+}
+
+void _encodeNullableWith<T>(T? value, Encoder encoder, Encodable<T> encodable) {
+  if (value == null) {
+    encoder.singleValue().encodeNull();
+  } else {
+    encodable.encode(value, encoder);
+  }
+}
+
+final class _NullableDecodable<T> implements Decodable<T?> {
+  final Decodable<T> _inner;
+
+  const _NullableDecodable(this._inner);
+
+  @override
+  T? decode(Decoder decoder) => _decodeNullableWith(decoder, _inner);
+}
+
+final class _NullableEncodable<T> implements Encodable<T?> {
+  final Encodable<T> _inner;
+
+  const _NullableEncodable(this._inner);
+
+  @override
+  void encode(T? value, Encoder encoder) =>
+      _encodeNullableWith(value, encoder, _inner);
+}
+
+final class _NullableCodable<T> implements Codable<T?> {
+  final Codable<T> _inner;
+
+  const _NullableCodable(this._inner);
+
+  @override
+  T? decode(Decoder decoder) => _decodeNullableWith(decoder, _inner);
+
+  @override
+  void encode(T? value, Encoder encoder) =>
+      _encodeNullableWith(value, encoder, _inner);
 }

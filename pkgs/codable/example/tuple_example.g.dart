@@ -41,7 +41,7 @@ extension type const _$CoordinatePairSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CoordinatePair
 // =============================================================================
-final class CoordinatePairCodable implements Codable<CoordinatePair> {
+final class CoordinatePairCodable implements KeyedCodable<CoordinatePair> {
   const CoordinatePairCodable();
 
   @override
@@ -77,6 +77,21 @@ final class CoordinatePairCodable implements Codable<CoordinatePair> {
     seen.validate();
 
     return CoordinatePair(location: location);
+  }
+
+  @override
+  int encodedFieldCount(CoordinatePair instance) {
+    var count$ = 0;
+    if (instance.location != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CoordinatePair instance, KeyedEncoder keyed) {
+    final v$Location = instance.location;
+    if (v$Location != null) {
+      keyed.encodeDoubleList(_$CoordinatePairSchema.nameLocation, v$Location);
+    }
   }
 
   @override

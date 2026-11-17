@@ -67,6 +67,27 @@ String toScreamingSnakeCase(String name) {
   return toSnakeCase(name).toUpperCase();
 }
 
+/// Converts identifier to lowerCamelCase.
+String toLowerCamelCase(String name) {
+  if (name.isEmpty) return name;
+  final snake = toSnakeCase(name);
+  final parts = snake
+      .split(RegExp(r'[_-]'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return name;
+  final buffer = StringBuffer(parts.first);
+  for (var i = 1; i < parts.length; i++) {
+    buffer.write(toPascalCase(parts[i]));
+  }
+  return buffer.toString();
+}
+
+/// Computes the default wire discriminator value for a concrete subtype named
+/// [className] under [rename].
+String defaultDiscriminatorValue(String className, FieldRename rename) =>
+    applyFieldRename(toLowerCamelCase(className), rename);
+
 /// Converts a field or wire name into a valid, safe PascalCase identifier
 /// suffix.
 String toSafeIdentifierSuffix(String name) {
