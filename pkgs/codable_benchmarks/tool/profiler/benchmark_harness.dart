@@ -3,10 +3,12 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
+import 'package:codable/src/json/substrate/substrate.dart' show isMockSubstrate;
 
 import 'package:codable_benchmarks/src/data/embedded_datasets.dart';
 import 'package:codable_benchmarks/src/models/codable/canada.dart'

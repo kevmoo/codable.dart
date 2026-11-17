@@ -10,8 +10,9 @@ import 'src/json/substrate/substrate.dart';
 
 export 'package:codable/codable.dart';
 
-export 'src/json/driver/json_codable_driver.dart';
-export 'src/json/substrate/substrate.dart';
+export 'src/json/driver/json_codable_driver.dart'
+    show JsonCodableDecoder, JsonCodableEncoder;
+export 'src/json/substrate/substrate.dart' hide isMockSubstrate;
 
 /// Extension on [JsonTokenReader] providing convenience utilities.
 extension JsonTokenReaderCodableExtension on JsonTokenReader {

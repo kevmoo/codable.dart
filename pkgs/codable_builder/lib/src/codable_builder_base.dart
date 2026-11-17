@@ -18,7 +18,7 @@ import 'model_visitor.dart';
 class CodableGenerator extends GeneratorForAnnotation<Codable> {
   final ModelVisitor _visitor;
 
-  const CodableGenerator({this._visitor = const ModelVisitor()});
+  const CodableGenerator() : _visitor = const ModelVisitor();
 
   @override
   FutureOr<String> generate(LibraryReader library, BuildStep buildStep) async {
@@ -43,49 +43,49 @@ class CodableGenerator extends GeneratorForAnnotation<Codable> {
     final model = _visitor.visitClass(element, annotation);
     return generateForModel(model);
   }
+}
 
-  /// Generates the schema extension type and companion `*Codable` class for
-  /// [model].
-  String generateForModel(ModelDescriptor model) {
-    final decoderHelper = DecoderGeneratorHelper(model);
-    final encoderHelper = EncoderGeneratorHelper(model);
+/// Generates the schema extension type and companion `*Codable` class for
+/// [model].
+String generateForModel(ModelDescriptor model) {
+  final decoderHelper = DecoderGeneratorHelper(model);
+  final encoderHelper = EncoderGeneratorHelper(model);
 
-    final buffer = StringBuffer();
-    buffer.write(decoderHelper.generateSchema());
+  final buffer = StringBuffer();
+  buffer.write(decoderHelper.generateSchema());
 
-    final interfaceName = switch ((model.createDecoder, model.createEncoder)) {
-      (true, true) => 'Codable<${model.className}>',
-      (true, false) => 'Decodable<${model.className}>',
-      (false, true) => 'Encodable<${model.className}>',
-      (false, false) => null,
-    };
+  final interfaceName = switch ((model.createDecoder, model.createEncoder)) {
+    (true, true) => 'Codable<${model.className}>',
+    (true, false) => 'Decodable<${model.className}>',
+    (false, true) => 'Encodable<${model.className}>',
+    (false, false) => null,
+  };
 
-    if (interfaceName != null) {
+  if (interfaceName != null) {
+    buffer.writeln();
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln('// 2. Companion Codable for ${model.className}');
+    buffer.writeln(
+      '// =============================================================================',
+    );
+    buffer.writeln(
+      'final class ${model.className}Codable implements $interfaceName {',
+    );
+    buffer.writeln('  const ${model.className}Codable();');
+
+    if (model.createDecoder) {
       buffer.writeln();
-      buffer.writeln(
-        '// =============================================================================',
-      );
-      buffer.writeln('// 2. Companion Codable for ${model.className}');
-      buffer.writeln(
-        '// =============================================================================',
-      );
-      buffer.writeln(
-        'final class ${model.className}Codable implements $interfaceName {',
-      );
-      buffer.writeln('  const ${model.className}Codable();');
-
-      if (model.createDecoder) {
-        buffer.writeln();
-        buffer.write(decoderHelper.generateMethods());
-      }
-      if (model.createEncoder) {
-        buffer.writeln();
-        buffer.write(encoderHelper.generateMethod());
-      }
-
-      buffer.writeln('}');
+      buffer.write(decoderHelper.generateMethods());
+    }
+    if (model.createEncoder) {
+      buffer.writeln();
+      buffer.write(encoderHelper.generateMethod());
     }
 
-    return buffer.toString();
+    buffer.writeln('}');
   }
+
+  return buffer.toString();
 }

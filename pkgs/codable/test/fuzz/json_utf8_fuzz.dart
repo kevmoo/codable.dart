@@ -6,6 +6,7 @@ import 'dart:convert'
     show ByteConversionSink, ChunkedConversionSink, json, utf8;
 import 'dart:typed_data';
 
+import 'package:codable/src/json/substrate/mock/span_parsers.dart';
 import 'package:codable/src/json/substrate/mock/substrate_mock.dart';
 
 void main() => fuzzTarget(Uint8List(0));

@@ -921,6 +921,20 @@ void _registerMalformedAndFuzzSmokeTests() {
       );
       fuzzTarget(Uint8List.fromList(const [0xfa, 0x60, 0xad, 0x78, 0xec]));
       fuzzTarget(Uint8List.fromList(const [0xfa, 0x80, 0x00, 0x00, 0x00]));
+
+      final instEnc = CborCodableEncoder(
+        initialCapacity: 16,
+        userInfo: const {'ctx': 1},
+      );
+      check(instEnc.userInfo['ctx']).equals(1);
+      instEnc.keyed(length: 1).encodeInt('k', 7);
+      final instBytes = instEnc.toBytes();
+      check(
+        CborCodableDecoder.decode<int>(
+          instBytes,
+          Decodable.fromFunction((d) => d.mapped().readInt('k')),
+        ),
+      ).equals(7);
     });
   });
 }

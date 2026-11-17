@@ -4,7 +4,7 @@
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable_builder/codable_builder.dart';
+import 'package:codable_builder/src/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -46,11 +46,6 @@ void main() {
       check(applyFieldRename(field, FieldRename.pascal)).equals('CreatedAt');
       check(applyFieldRename(field, FieldRename.screamingSnake))
           .equals('CREATED_AT');
-    });
-
-    test('encodeAsConstBytes encodes ASCII and UTF-8 strings', () {
-      check(encodeAsConstBytes('id')).equals('const [105, 100]');
-      check(encodeAsConstBytes('role')).equals('const [114, 111, 108, 101]');
     });
 
     test('toSafeIdentifierSuffix sanitizes characters', () {

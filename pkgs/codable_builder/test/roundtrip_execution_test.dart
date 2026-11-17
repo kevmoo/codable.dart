@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
+import 'package:codable/codable_driver.dart';
 import 'package:codable/codable_json.dart';
 import 'package:test/test.dart';
 

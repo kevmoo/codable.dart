@@ -1,0 +1,29 @@
+environment:
+  sdk: ^3.13.0
+package:codable_builder/codable_builder.dart:
+  codableBuilder (function: Builder Function(BuilderOptions))
+  CodableGenerator (class extends GeneratorForAnnotation<Codable<dynamic>>):
+    new (const constructor: CodableGenerator Function())
+    generate (method: FutureOr<String> Function(LibraryReader, BuildStep))
+    generateForAnnotatedElement (method: String Function(Element, ConstantReader, BuildStep))
+package:codable_builder/builder.dart:
+  codableBuilder (see above)
+dart:async:
+  FutureOr (referenced)
+dart:core:
+  String (referenced)
+package:analyzer/dart/element/element.dart:
+  Element (referenced)
+package:build/src/build_step.dart:
+  BuildStep (referenced)
+package:build/src/builder.dart:
+  Builder (referenced)
+  BuilderOptions (referenced)
+package:codable/src/contracts/codable.dart:
+  Codable (referenced)
+package:source_gen/src/constants/reader.dart:
+  ConstantReader (referenced)
+package:source_gen/src/generator_for_annotation.dart:
+  GeneratorForAnnotation (referenced)
+package:source_gen/src/library.dart:
+  LibraryReader (referenced)

@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 import 'toml_types.dart';
 

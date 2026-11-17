@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 import 'msgpack_reader.dart';
 
@@ -24,12 +24,9 @@ final class MsgPackCodableDecoder implements Decoder {
   final Map<Object, Object?> userInfo;
 
   /// Creates a [MsgPackCodableDecoder] streaming over [bytes].
-  MsgPackCodableDecoder.fromBytes(
-    Uint8List bytes, {
-    Map<Object, Object?>? userInfo,
-  }) : _reader = MsgPackReader(bytes),
-       _depth = 0,
-       userInfo = userInfo ?? const {};
+  MsgPackCodableDecoder.fromBytes(Uint8List bytes, {this.userInfo = const {}})
+    : _reader = MsgPackReader(bytes),
+      _depth = 0;
 
   MsgPackCodableDecoder._(this._reader, this._depth, {required this.userInfo});
 
@@ -37,7 +34,7 @@ final class MsgPackCodableDecoder implements Decoder {
   static T decode<T>(
     Uint8List bytes,
     Decodable<T> decodable, {
-    Map<Object, Object?>? userInfo,
+    Map<Object, Object?> userInfo = const {},
   }) {
     final decoder = MsgPackCodableDecoder.fromBytes(bytes, userInfo: userInfo);
     final result = decodable.decode(decoder);

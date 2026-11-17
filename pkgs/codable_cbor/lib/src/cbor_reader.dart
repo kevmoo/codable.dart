@@ -37,10 +37,10 @@ bool cborBytesMatch(Uint8List buf, int start, Uint8List target, int length) {
 }
 
 /// Pre-encoded UTF-8 key table cached on [KeyOptions] via `compiled<T>`.
-final class CborCompiledKeys {
+final class _CborCompiledKeys {
   final List<Uint8List> utf8Keys;
 
-  CborCompiledKeys(List<String> keys)
+  _CborCompiledKeys(List<String> keys)
     : utf8Keys = [for (final key in keys) utf8.encode(key)];
 
   int match(Uint8List buf, int start, int length) {
@@ -273,7 +273,7 @@ final class CborReader {
   int selectString(KeyOptions options) {
     final (start, end) = readTextStringSpan();
     return options
-        .compiled<CborCompiledKeys>(CborCompiledKeys.new)
+        .compiled<_CborCompiledKeys>(_CborCompiledKeys.new)
         .match(bytes, start, end - start);
   }
 

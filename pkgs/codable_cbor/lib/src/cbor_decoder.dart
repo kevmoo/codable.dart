@@ -3,8 +3,9 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:typed_data';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 import 'cbor_reader.dart';
 

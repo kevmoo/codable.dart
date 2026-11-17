@@ -1,0 +1,95 @@
+environment:
+  sdk: ^3.13.0
+package:codable_toml/codable_toml.dart:
+  TomlCodableDecoder (class extends Object implements Decoder, TomlNativeDateTimeSource, final):
+    decode (static method: T Function<T>(String, Decodable<T>, {Map<Object, Object?> userInfo}))
+    decodeBytes (static method: T Function<T>(Uint8List, Decodable<T>, {Map<Object, Object?> userInfo}))
+    fromBytes (constructor: TomlCodableDecoder Function(Uint8List, {Map<Object, Object?> userInfo}))
+    fromString (constructor: TomlCodableDecoder Function(String, {Map<Object, Object?> userInfo}))
+    isHumanReadable (getter: bool)
+    payload (getter: Uint8List?)
+    userInfo (getter: Map<Object, Object?>)
+    decodeUniformDoubleList (method: Float64List? Function(List<List<String>>))
+    keyed (method: KeyedDecoder Function({KeyOptions? options}))
+    map (method: MapDecoder Function())
+    mapped (method: MappedDecoder Function())
+    peekKind (method: ValueKind Function())
+    singleValue (method: SingleValueDecoder Function())
+    tryReadTomlDateTime (method: TomlDateTime? Function())
+    unkeyed (method: UnkeyedDecoder Function())
+  TomlCodableEncoder (class extends Object implements Encoder, final):
+    encode (static method: String Function<T>(T, Encodable<T>, {Map<Object, Object?> userInfo}))
+    toBytes (static method: Uint8List Function<T>(T, Encodable<T>, {Map<Object, Object?> userInfo}))
+    new (constructor: TomlCodableEncoder Function({Map<Object, Object?> userInfo}))
+    isHumanReadable (getter: bool)
+    userInfo (getter: Map<Object, Object?>)
+    keyed (method: KeyedEncoder Function({int? length, KeyOptions? options}))
+    map (method: MapEncoder Function({int? length}))
+    singleValue (method: SingleValueEncoder Function())
+    toTomlString (method: String Function())
+    unkeyed (method: UnkeyedEncoder Function({int? length}))
+  TomlCodableException (class extends CodableException, final):
+    new (const constructor: TomlCodableException Function(String, {Object? actualValue, int? column, int? line, List<Object> path, Object? underlyingError}))
+    column (getter: int?)
+    line (getter: int?)
+    toString (method: String Function())
+  TomlDateTime (class extends Object, final):
+    new (const constructor: TomlDateTime Function({DateTime? dateTime, required TomlDateTimeKind kind, required String raw}))
+    fromDateTime (constructor: TomlDateTime Function(DateTime))
+    dateTime (getter: DateTime?)
+    hashCode (getter: int)
+    kind (getter: TomlDateTimeKind)
+    raw (getter: String)
+    == (method: bool Function(Object))
+    toString (method: String Function())
+  TomlDateTimeCodable (class extends Object implements Codable<TomlDateTime>, final):
+    new (const constructor: TomlDateTimeCodable Function())
+    decode (method: TomlDateTime Function(Decoder))
+    encode (method: void Function(TomlDateTime, Encoder))
+  TomlDateTimeCodec (class extends Object implements Codable<DateTime>, final):
+    new (const constructor: TomlDateTimeCodec Function())
+    decode (method: DateTime Function(Decoder))
+    encode (method: void Function(DateTime, Encoder))
+  TomlDateTimeKind (enum):
+    localDate (enum constant: TomlDateTimeKind)
+    localDateTime (enum constant: TomlDateTimeKind)
+    localTime (enum constant: TomlDateTimeKind)
+    offsetDateTime (enum constant: TomlDateTimeKind)
+    values (static const getter: List<TomlDateTimeKind>)
+  TomlNativeDateTimeSink (class extends Object, abstract, interface):
+    writeTomlDateTime (method: void Function(TomlDateTime))
+  TomlNativeDateTimeSource (class extends Object, abstract, interface):
+    tryReadTomlDateTime (method: TomlDateTime? Function())
+dart:core:
+  DateTime (referenced)
+  List (referenced)
+  Map (referenced)
+  Object (referenced)
+  String (referenced)
+  bool (referenced)
+  int (referenced)
+dart:typed_data:
+  Float64List (referenced)
+  Uint8List (referenced)
+package:codable/src/contracts/codable.dart:
+  Codable (referenced)
+  Decodable (referenced)
+  Encodable (referenced)
+package:codable/src/contracts/decoder.dart:
+  Decoder (referenced)
+  KeyedDecoder (referenced)
+  MapDecoder (referenced)
+  MappedDecoder (referenced)
+  SingleValueDecoder (referenced)
+  UnkeyedDecoder (referenced)
+  ValueKind (referenced)
+package:codable/src/contracts/encoder.dart:
+  Encoder (referenced)
+  KeyedEncoder (referenced)
+  MapEncoder (referenced)
+  SingleValueEncoder (referenced)
+  UnkeyedEncoder (referenced)
+package:codable/src/contracts/exceptions.dart:
+  CodableException (referenced)
+package:codable/src/contracts/static_key.dart:
+  KeyOptions (referenced)

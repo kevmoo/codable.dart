@@ -2,7 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:codable/codable.dart';
+import 'dart:typed_data';
+
+import 'package:codable/codable_driver.dart';
 import 'package:yaml/yaml.dart';
 
 import 'yaml_exception.dart';

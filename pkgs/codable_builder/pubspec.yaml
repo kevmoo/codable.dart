@@ -16,6 +16,7 @@ dependencies:
   source_helper: ^1.4.0
 
 dev_dependencies:
+  api_summary: ^1.2.0
   build_runner: ^2.4.14
   build_test: ^3.5.21
   checks: ^0.3.0

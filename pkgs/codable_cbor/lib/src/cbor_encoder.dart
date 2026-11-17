@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 import 'cbor_reader.dart';
 
@@ -230,6 +230,13 @@ final class CborCodableEncoder implements Encoder {
   @override
   final Map<Object, Object?> userInfo;
 
+  /// Creates a [CborCodableEncoder] writing into a fresh byte buffer.
+  CborCodableEncoder({this.userInfo = const {}, int initialCapacity = 256})
+    : _writer = _CborWriter(
+        RangeError.checkNotNegative(initialCapacity, 'initialCapacity'),
+      ),
+      _depth = 0;
+
   CborCodableEncoder._(this._writer, this._depth, {this.userInfo = const {}});
 
   /// Encodes [value] to definite-length RFC 8949 CBOR bytes using [encodable].
@@ -239,14 +246,18 @@ final class CborCodableEncoder implements Encoder {
     Map<Object, Object?> userInfo = const {},
     int initialCapacity = 256,
   }) {
-    if (initialCapacity < 0) {
-      throw RangeError.value(initialCapacity, 'initialCapacity');
-    }
-    final writer = _CborWriter(initialCapacity);
-    final encoder = CborCodableEncoder._(writer, 0, userInfo: userInfo);
+    final encoder = CborCodableEncoder(
+      userInfo: userInfo,
+      initialCapacity: initialCapacity,
+    );
     encodable.encode(value, encoder);
-    encoder._finish();
-    return writer.toBytes();
+    return encoder.toBytes();
+  }
+
+  /// Finalizes any open container and returns the encoded CBOR bytes.
+  Uint8List toBytes() {
+    _finish();
+    return _writer.toBytes();
   }
 
   void _finish() {

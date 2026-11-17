@@ -12,7 +12,12 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:checks/checks.dart';
-import 'package:codable_builder/codable_builder.dart';
+import 'package:codable_builder/src/codable_builder_base.dart';
+import 'package:codable_builder/src/decoder_helper.dart';
+import 'package:codable_builder/src/encoder_helper.dart';
+import 'package:codable_builder/src/field_descriptor.dart';
+import 'package:codable_builder/src/model_visitor.dart';
+import 'package:codable_builder/src/type_helper.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 
@@ -57,7 +62,7 @@ void main() {
       element,
       ConstantReader(annotation),
     );
-    return const CodableGenerator().generateForModel(model);
+    return generateForModel(model);
   }
 
   group('CodableGenerator Code Synthesis & Validation Tests', () {

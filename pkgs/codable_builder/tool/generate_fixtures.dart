@@ -4,7 +4,9 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:codable_builder/codable_builder.dart';
+import 'package:codable_builder/src/codable_builder_base.dart';
+import 'package:codable_builder/src/model_visitor.dart';
+import 'package:codable_builder/src/type_helper.dart';
 import 'package:source_gen/source_gen.dart';
 
 void main() async {
@@ -52,7 +54,7 @@ void main() async {
       element,
       ConstantReader(annotation),
     );
-    final code = const CodableGenerator().generateForModel(model);
+    final code = generateForModel(model);
     buffer.writeln(code);
     buffer.writeln();
   }

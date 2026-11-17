@@ -461,9 +461,9 @@ List<bool> _extractBoolList(JSAny? val) {
 /// NOTE: Because `JSON.parse` uses IEEE-754 64-bit floating-point numbers on
 /// Web targets, integers outside the safe integer range
 /// $[-2^{53}+1, 2^{53}-1]$ ($[-9007199254740991, 9007199254740991]$) are
-/// subject to standard JavaScript precision limits. For exact 64-bit integer
-/// parsing on standalone Wasm or Native targets, use
-/// `package:codable/codable_streaming.dart`.
+/// subject to standard JavaScript precision limits. On standalone Wasm or
+/// Native targets, [JsonCodableDecoder] streams directly via [JsonTokenReader]
+/// with full 64-bit integer precision.
 final class JsonCodableDecoder implements Decoder {
   final JSAny? _decoded;
   final JsonTokenReader? _reader;
@@ -509,6 +509,23 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder._(decoded, null, userInfo: userInfo);
   }
 
+  /// Decodes a JSON [source] string into [T] using [decodable].
+  static T decode<T>(
+    String source,
+    Decodable<T> decodable, {
+    Map<Object, Object?> userInfo = const {},
+  }) => decodable.decode(
+    JsonCodableDecoder.fromString(source, userInfo: userInfo),
+  );
+
+  /// Decodes UTF-8 JSON [bytes] into [T] using [decodable].
+  static T decodeBytes<T>(
+    Uint8List bytes,
+    Decodable<T> decodable, {
+    Map<Object, Object?> userInfo = const {},
+  }) =>
+      decodable.decode(JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo));
+
   /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
   /// and invokes [decodable] on the resulting [JsonCodableDecoder] when closed,
   /// emitting the decoded value to [sink].
@@ -517,7 +534,11 @@ final class JsonCodableDecoder implements Decoder {
     Decodable<T> decodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    return _JsonCodableChunkedDecoderSink<T>(sink, decodable, userInfo);
+    return ChunkedCodableDecoderSink<T>(sink, (bytes) {
+      final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
+      final value = decodable.decode(decoder);
+      return (value, canPool: !decoder._payloadEscaped);
+    });
   }
 
   JsonTokenReader get reader {
@@ -2054,51 +2075,5 @@ final class _JsonCodableJsSingleValueEncoder implements SingleValueEncoder {
       encodable.encode(value, child);
       _rootEncoder._setRoot(child._root);
     }
-  }
-}
-
-final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
-  final Sink<T> _sink;
-  final Decodable<T> _decodable;
-  final Map<Object, Object?> _userInfo;
-  final ScratchByteAccumulator _accumulator = ScratchByteAccumulator();
-  bool _isClosed = false;
-
-  _JsonCodableChunkedDecoderSink(this._sink, this._decodable, this._userInfo);
-
-  @override
-  void add(List<int> chunk) {
-    if (_isClosed) {
-      throw StateError('Cannot add to a closed sink');
-    }
-    _accumulator.add(chunk);
-  }
-
-  @override
-  void addSlice(List<int> chunk, int start, int end, bool isLast) {
-    if (_isClosed) {
-      throw StateError('Cannot addSlice to a closed sink');
-    }
-    RangeError.checkValidRange(start, end, chunk.length);
-    if (start < end) {
-      _accumulator.addSlice(chunk, start, end);
-    }
-    if (isLast) {
-      close();
-    }
-  }
-
-  @override
-  void close() {
-    if (_isClosed) return;
-    _isClosed = true;
-    final bytes = _accumulator.takeBytes();
-    final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
-    try {
-      _sink.add(_decodable.decode(decoder));
-    } finally {
-      _accumulator.release(canPool: !decoder._payloadEscaped);
-    }
-    _sink.close();
   }
 }
