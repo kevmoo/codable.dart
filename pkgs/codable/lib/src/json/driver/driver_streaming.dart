@@ -23,6 +23,7 @@ import 'streaming_cursors.dart';
 final class JsonCodableDecoder implements Decoder {
   final JsonTokenReader _reader;
   final Uint8List? _bytes;
+  final StreamingPathTracker? _pathTracker;
   bool _payloadEscaped = false;
 
   @override
@@ -43,7 +44,8 @@ final class JsonCodableDecoder implements Decoder {
   }
 
   JsonCodableDecoder.fromReader(this._reader, {this.userInfo = const {}})
-    : _bytes = null;
+    : _bytes = null,
+      _pathTracker = null;
 
   factory JsonCodableDecoder.fromBytes(
     Uint8List bytes, {
@@ -64,13 +66,67 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
   }
 
+  static T _runDecodeBytes<T>(
+    Uint8List bytes,
+    Decodable<T> decodable,
+    Map<Object, Object?> userInfo,
+  ) {
+    final tracker = StreamingPathTracker.acquire(bytes);
+    final decoder = JsonCodableDecoder._(
+      JsonTokenReader.fromBytes(bytes),
+      bytes,
+      userInfo: userInfo,
+      pathTracker: tracker,
+    );
+    final result = _runDecodeWithTracker(decoder, tracker, decodable);
+    tracker.release();
+    return result;
+  }
+
+  static T _runDecodeWithTracker<T>(
+    JsonCodableDecoder decoder,
+    StreamingPathTracker tracker,
+    Decodable<T> decodable,
+  ) {
+    try {
+      return decodable.decode(decoder);
+    } on CodableException catch (e) {
+      final alreadyAttributed =
+          tracker.mappedErrorState?.attributedError ?? tracker.attributedError;
+      final enriched = enrichCodableException(
+        e,
+        alreadyAttributed: alreadyAttributed,
+        containerPath: tracker.buildContainerPath,
+        leafPath: tracker.buildLeafPath,
+      );
+      if (identical(enriched, e)) rethrow;
+      throw enriched;
+    } on FormatException catch (e) {
+      final uniformAliases = tracker.uniformAliases;
+      final uniformOptions = tracker.uniformOptions;
+      if (uniformAliases != null && uniformOptions != null) {
+        tracker.endUniform();
+        _rethrowUniformFormatException(
+          decoder._reader,
+          tracker,
+          uniformOptions,
+          uniformAliases,
+          e,
+        );
+      }
+      rethrowStreamingFormatException(decoder._reader, tracker, e);
+    }
+  }
+
   /// Decodes a JSON [source] string into [T] using [decodable].
   static T decode<T>(
     String source,
     Decodable<T> decodable, {
     Map<Object, Object?> userInfo = const {},
-  }) => decodable.decode(
-    JsonCodableDecoder.fromString(source, userInfo: userInfo),
+  }) => _runDecodeBytes(
+    Uint8List.fromList(utf8.encode(source)),
+    decodable,
+    userInfo,
   );
 
   /// Decodes UTF-8 JSON [bytes] into [T] using [decodable].
@@ -78,8 +134,7 @@ final class JsonCodableDecoder implements Decoder {
     Uint8List bytes,
     Decodable<T> decodable, {
     Map<Object, Object?> userInfo = const {},
-  }) =>
-      decodable.decode(JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo));
+  }) => _runDecodeBytes(bytes, decodable, userInfo);
 
   /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
   /// and invokes [decodable] on the resulting [JsonCodableDecoder] when closed,
@@ -90,13 +145,25 @@ final class JsonCodableDecoder implements Decoder {
     Map<Object, Object?> userInfo = const {},
   }) {
     return ChunkedCodableDecoderSink<T>(sink, (bytes) {
-      final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
-      final value = decodable.decode(decoder);
+      final tracker = StreamingPathTracker.acquire(bytes);
+      final decoder = JsonCodableDecoder._(
+        JsonTokenReader.fromBytes(bytes),
+        bytes,
+        userInfo: userInfo,
+        pathTracker: tracker,
+      );
+      final value = _runDecodeWithTracker(decoder, tracker, decodable);
+      tracker.release();
       return (value, canPool: !decoder._payloadEscaped);
     });
   }
 
-  JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
+  JsonCodableDecoder._(
+    this._reader,
+    this._bytes, {
+    this.userInfo = const {},
+    this._pathTracker,
+  });
 
   @override
   bool get isHumanReadable => true;
@@ -104,22 +171,46 @@ final class JsonCodableDecoder implements Decoder {
   @override
   ValueKind peekKind() {
     if (hasStreamingBufferedObject(this)) return ValueKind.map;
-    return streamingTokenTypeToValueKind(_reader.peek());
+    return streamingTokenTypeToValueKind(_reader.peek(), _pathTracker);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   KeyedDecoder keyed({KeyOptions? options}) {
     final buffered = takeStreamingBufferedObject(this);
     if (buffered != null) {
-      return DartObjectKeyedDecoder(buffered, userInfo);
+      final state = _pathTracker?.beginMappedHandoff();
+      return DartObjectKeyedDecoder(
+        buffered,
+        userInfo,
+        path: state?.containerPath ?? const [],
+        errorState: state,
+      );
     }
-    return StreamingKeyedDecoder(_reader, this, options: options);
+    return StreamingKeyedDecoder(
+      _reader,
+      this,
+      options: options,
+      tracker: _pathTracker,
+    );
   }
 
   @override
   MappedDecoder mapped() {
-    final map = bufferStreamingObject(this, _reader, parseObjectFromReader);
-    return DartObjectMappedDecoder(map, userInfo);
+    final map = bufferStreamingObject(
+      this,
+      _reader,
+      parseObjectFromReader,
+      _pathTracker,
+    );
+    final state = _pathTracker?.beginMappedHandoff();
+    return DartObjectMappedDecoder(
+      map,
+      userInfo,
+      path: state?.containerPath ?? const [],
+      errorState: state,
+    );
   }
 
   @override
@@ -128,49 +219,70 @@ final class JsonCodableDecoder implements Decoder {
   MapDecoder map() {
     final buffered = takeStreamingBufferedObject(this);
     if (buffered != null) {
-      return DartObjectMapDecoder(buffered, userInfo);
+      final state = _pathTracker?.beginMappedHandoff();
+      return DartObjectMapDecoder(
+        buffered,
+        userInfo,
+        path: state?.containerPath ?? const [],
+        errorState: state,
+      );
     }
-    return StreamingMapDecoder(_reader, this);
+    return StreamingMapDecoder(_reader, this, _pathTracker);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   UnkeyedDecoder unkeyed() {
     final buffered = takeStreamingBufferedObject(this);
     if (buffered != null) {
-      return DartObjectDecoder(buffered, userInfo: userInfo).unkeyed();
+      final state = _pathTracker?.beginMappedHandoff();
+      return DartObjectDecoder(
+        buffered,
+        userInfo: userInfo,
+        path: state?.containerPath ?? const [],
+        errorState: state,
+      ).unkeyed();
     }
-    return StreamingUnkeyedDecoder(_reader, this);
+    return StreamingUnkeyedDecoder(_reader, this, _pathTracker);
   }
 
   @override
+  @pragma('vm:prefer-inline')
+  @pragma('wasm:prefer-inline')
   SingleValueDecoder singleValue() {
     final buffered = peekStreamingBufferedObject(this);
     if (buffered != null) {
+      final state = _pathTracker?.beginMappedHandoff();
       return DartObjectSingleValueDecoder(
         buffered,
         userInfo,
-        () => clearStreamingBufferedObject(this),
+        () => clearStreamingBufferedObject(this, _pathTracker),
+        state?.containerPath ?? const [],
+        state,
       );
     }
-    return StreamingSingleValueDecoder(_reader, this);
+    return StreamingSingleValueDecoder(_reader, this, _pathTracker);
   }
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
-      decodeUniformDoubleListFromReader(_reader, propertyAliases);
+      decodeUniformDoubleListFromReader(_reader, propertyAliases, _pathTracker);
 }
 
 final _uniformKeyOptionsCache =
     Expando<({JsonKeyOptions options, Int32List fieldMap})>();
 
-({JsonKeyOptions options, Int32List fieldMap}) _compileUniformAliases(
+({JsonKeyOptions options, Int32List fieldMap})? _compileUniformAliases(
   List<List<String>> propertyAliases,
 ) {
+  final kCount = propertyAliases.length;
+  if (kCount == 0 || kCount > 30) return null;
   final cached = _uniformKeyOptionsCache[propertyAliases];
   if (cached != null) return cached;
   final flatKeys = <String>[];
   final mapList = <int>[];
-  for (var fieldIdx = 0; fieldIdx < propertyAliases.length; fieldIdx++) {
+  for (var fieldIdx = 0; fieldIdx < kCount; fieldIdx++) {
     for (final alias in propertyAliases[fieldIdx]) {
       flatKeys.add(alias);
       mapList.add(fieldIdx);
@@ -188,81 +300,268 @@ final _uniformKeyOptionsCache =
   return built;
 }
 
+String _aliasAtFlatIndex(List<List<String>> propertyAliases, int flatIndex) {
+  var rem = flatIndex;
+  for (final group in propertyAliases) {
+    if (rem < group.length) return group[rem];
+    rem -= group.length;
+  }
+  return propertyAliases.first.first;
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never _throwUniformDuplicateField(
+  StreamingPathTracker? tracker,
+  List<List<String>> propertyAliases,
+  int fieldIdx,
+  int keyIdx,
+  int outLen,
+  int kCount,
+) {
+  final base = tracker != null ? tracker.buildLeafPath() : const <Object>[];
+  final canonicalName = propertyAliases[fieldIdx].first;
+  final wireKey = _aliasAtFlatIndex(propertyAliases, keyIdx);
+  throwStreamingError(
+    tracker,
+    'Duplicate field "$canonicalName"',
+    explicitPath: <Object>[...base, outLen ~/ kCount, wireKey],
+  );
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never _throwUniformMissingFields(
+  StreamingPathTracker? tracker,
+  List<List<String>> propertyAliases,
+  int seenMask,
+  int kCount,
+  int outLen,
+) {
+  final missing = <String>[];
+  for (var k = 0; k < kCount; k++) {
+    if ((seenMask & (1 << k)) == 0) {
+      missing.add(propertyAliases[k].first);
+    }
+  }
+  final base = tracker != null ? tracker.buildLeafPath() : const <Object>[];
+  throwStreamingError(
+    tracker,
+    'Missing required fields: ${missing.join(", ")}',
+    explicitPath: <Object>[...base, outLen ~/ kCount],
+  );
+}
+
+void _rescanUniformElement(
+  JsonTokenReader rescan,
+  JsonTokenReader liveReader,
+  StreamingPathTracker? tracker,
+  JsonKeyOptions options,
+  List<List<String>> propertyAliases,
+  int elemIndex,
+  FormatException error,
+) {
+  if (rescan.peek() != JsonTokenType.beginObject) {
+    rethrowStreamingMismatch(
+      liveReader,
+      tracker,
+      error,
+      'object',
+      sameTokenMalformed: JsonTokenType.beginObject,
+      extraSegment: elemIndex,
+    );
+  }
+  rescan.beginObject();
+  while (rescan.moveNext()) {
+    final kIdx = rescan.selectName(options);
+    if (kIdx < 0) {
+      rescan.skipValue();
+      continue;
+    }
+    try {
+      rescan.readDouble();
+    } on FormatException {
+      _rethrowUniformFieldMismatch(
+        liveReader,
+        tracker,
+        error,
+        elemIndex,
+        _aliasAtFlatIndex(propertyAliases, kIdx),
+        rescan.peek(),
+      );
+    }
+  }
+  rescan.endObject();
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never _rethrowUniformFieldMismatch(
+  JsonTokenReader reader,
+  StreamingPathTracker? tracker,
+  FormatException error,
+  int elemIndex,
+  String wireKey,
+  JsonTokenType tokenAtField,
+) {
+  if (tokenAtField == JsonTokenType.number) throw error;
+  final base = tracker != null ? tracker.buildLeafPath() : const <Object>[];
+  try {
+    rethrowStreamingMismatch(
+      reader,
+      tracker,
+      error,
+      'double',
+      sameTokenMalformed: JsonTokenType.number,
+      extraSegment: elemIndex,
+      extraObjectKey: wireKey,
+    );
+  } on CodableException catch (e) {
+    throwStreamingError(
+      tracker,
+      e.message,
+      explicitPath: <Object>[...base, elemIndex, wireKey],
+      actualValue: e.actualValue,
+      underlyingError: e.underlyingError,
+    );
+  }
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Never _rethrowUniformFormatException(
+  JsonTokenReader reader,
+  StreamingPathTracker? tracker,
+  JsonKeyOptions options,
+  List<List<String>> propertyAliases,
+  FormatException error,
+) {
+  if (tracker == null || !tracker.startsAtZero) {
+    rethrowStreamingMismatch(reader, tracker, error, 'uniform double list');
+  }
+  final rescan = JsonTokenReader.fromBytes(reader.bytes);
+  tracker.replayToActivePosition(rescan);
+  if (rescan.peek() != JsonTokenType.beginArray) {
+    rethrowStreamingMismatch(
+      reader,
+      tracker,
+      error,
+      'List',
+      sameTokenMalformed: JsonTokenType.beginArray,
+    );
+  }
+  rescan.beginArray();
+  var elemIndex = 0;
+  while (rescan.moveNext()) {
+    _rescanUniformElement(
+      rescan,
+      reader,
+      tracker,
+      options,
+      propertyAliases,
+      elemIndex,
+      error,
+    );
+    elemIndex++;
+  }
+  rescan.endArray();
+  throw error;
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+Float64List _ensureUniformCapacity(Float64List out, int outLen, int kCount) {
+  if (outLen + kCount <= out.length) return out;
+  return _growUniformBuffer(out, outLen);
+}
+
+@pragma('vm:never-inline')
+@pragma('wasm:never-inline')
+Float64List _growUniformBuffer(Float64List out, int outLen) {
+  final next = Float64List(out.length * 2);
+  next.setRange(0, outLen, out);
+  return next;
+}
+
+@pragma('vm:prefer-inline')
+@pragma('wasm:prefer-inline')
+Float64List _trimUniformBuffer(Float64List out, int outLen) {
+  if (outLen == out.length) return out;
+  if (out.length - outLen <= 512 || outLen >= (out.length >> 2)) {
+    return Float64List.sublistView(out, 0, outLen);
+  }
+  return out.sublist(0, outLen);
+}
+
 /// Decodes a uniform array of numeric objects directly from [reader] into a
 /// flat [Float64List] without per-element [KeyedDecoder] allocations.
 Float64List? decodeUniformDoubleListFromReader(
   JsonTokenReader reader,
-  List<List<String>> propertyAliases,
-) {
-  final kCount = propertyAliases.length;
-  if (kCount == 0 || kCount > 30) return null;
+  List<List<String>> propertyAliases, [
+  StreamingPathTracker? tracker,
+]) {
   final compiled = _compileUniformAliases(propertyAliases);
+  if (compiled == null) return null;
+  final kCount = propertyAliases.length;
   final options = compiled.options;
   final fieldMap = compiled.fieldMap;
   final expectedMask = (1 << kCount) - 1;
 
-  try {
-    reader.beginArray();
-    var estimatedRows = (reader.bytes.length ~/ (10 * kCount + 8)).clamp(
-      256,
-      16384,
-    );
-    var out = Float64List(estimatedRows * kCount);
-    var outLen = 0;
-    final row = Float64List(kCount);
+  tracker?.beginUniform(options, propertyAliases);
+  reader.beginArray();
+  final estimatedRows = (reader.bytes.length ~/ (10 * kCount + 8)).clamp(
+    256,
+    16384,
+  );
+  var out = Float64List(estimatedRows * kCount);
+  var outLen = 0;
+  final row = Float64List(kCount);
 
+  while (reader.moveNext()) {
+    reader.beginObject();
+    var seenMask = 0;
     while (reader.moveNext()) {
-      reader.beginObject();
-      var seenMask = 0;
-      while (reader.moveNext()) {
-        final keyIdx = reader.selectName(options);
-        if (keyIdx < 0) {
-          reader.skipValue();
-        } else {
-          final fieldIdx = fieldMap[keyIdx];
-          final bit = 1 << fieldIdx;
-          if ((seenMask & bit) != 0) {
-            throw CodableException(
-              'Duplicate field "${propertyAliases[fieldIdx].first}"',
-            );
-          }
-          row[fieldIdx] = reader.readDouble();
-          seenMask |= bit;
-        }
+      final keyIdx = reader.selectName(options);
+      if (keyIdx < 0) {
+        reader.skipValue();
+        continue;
       }
-      if (seenMask != expectedMask) {
-        final missing = <String>[];
-        for (var k = 0; k < kCount; k++) {
-          if ((seenMask & (1 << k)) == 0) {
-            missing.add(propertyAliases[k].first);
-          }
-        }
-        throw CodableException(
-          'Missing required fields: ${missing.join(", ")}',
+      final fieldIdx = fieldMap[keyIdx];
+      final bit = 1 << fieldIdx;
+      if ((seenMask & bit) != 0) {
+        tracker?.endUniform();
+        _throwUniformDuplicateField(
+          tracker,
+          propertyAliases,
+          fieldIdx,
+          keyIdx,
+          outLen,
+          kCount,
         );
       }
-      reader.endObject();
+      row[fieldIdx] = reader.readDouble();
+      seenMask |= bit;
+    }
+    if (seenMask != expectedMask) {
+      tracker?.endUniform();
+      _throwUniformMissingFields(
+        tracker,
+        propertyAliases,
+        seenMask,
+        kCount,
+        outLen,
+      );
+    }
+    reader.endObject();
 
-      if (outLen + kCount > out.length) {
-        final next = Float64List(out.length * 2);
-        next.setRange(0, outLen, out);
-        out = next;
-      }
-      for (var k = 0; k < kCount; k++) {
-        out[outLen++] = row[k];
-      }
+    out = _ensureUniformCapacity(out, outLen, kCount);
+    for (var k = 0; k < kCount; k++) {
+      out[outLen++] = row[k];
     }
-    reader.endArray();
-    if (outLen == out.length) return out;
-    if (out.length - outLen <= 512 || outLen >= (out.length >> 2)) {
-      return Float64List.sublistView(out, 0, outLen);
-    }
-    return out.sublist(0, outLen);
-  } on CodableException {
-    rethrow;
-  } on Object catch (e) {
-    throw CodableException('Failed to decode uniform double list: $e');
   }
+  reader.endArray();
+  tracker?.endUniform();
+  return _trimUniformBuffer(out, outLen);
 }
 
 abstract interface class _StreamingClosable {

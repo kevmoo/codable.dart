@@ -15,6 +15,29 @@ import 'encoder.dart';
 import 'exceptions.dart';
 import 'static_key.dart';
 
+/// Attaches cursor path diagnostics to an unattributed [CodableException]
+/// (such as a generated missing-field, duplicate-field, enum, tuple-length,
+/// `SuperDecodable`, or custom `Decodable` error) when [error] was not
+/// [alreadyAttributed] by the driver.
+CodableException enrichCodableException(
+  CodableException error, {
+  required CodableException? alreadyAttributed,
+  required List<Object> Function() containerPath,
+  required List<Object> Function() leafPath,
+}) {
+  if (identical(error, alreadyAttributed)) return error;
+  final resolved = error.path.isEmpty
+      ? List<Object>.unmodifiable(leafPath())
+      : List<Object>.unmodifiable(<Object>[...containerPath(), ...error.path]);
+  if (resolved.isEmpty && error.path.isEmpty) return error;
+  return CodableException(
+    error.message,
+    path: resolved,
+    actualValue: error.actualValue,
+    underlyingError: error.underlyingError,
+  );
+}
+
 Uint8List _decodeBase64String(String encoded) {
   try {
     return base64Decode(encoded);
@@ -765,8 +788,23 @@ final class StringMapKeyDecoder
   /// Human-readable format name used in diagnostic [CodableException] messages.
   final String formatName;
 
+  /// Optional callback invoked to attach container path metadata when key
+  /// coercion fails.
+  final CodableException Function(CodableException error)? onError;
+
   /// Creates a [StringMapKeyDecoder] for [formatName] (defaults to `'JSON'`).
-  StringMapKeyDecoder(this.userInfo, {this.key = '', this.formatName = 'JSON'});
+  StringMapKeyDecoder(
+    this.userInfo, {
+    this.key = '',
+    this.formatName = 'JSON',
+    this.onError,
+  });
+
+  Never _failKey(String message) {
+    final error = CodableException(message, actualValue: key);
+    final enrich = onError;
+    throw enrich != null ? enrich(error) : error;
+  }
 
   @override
   bool get isHumanReadable => true;
@@ -784,28 +822,20 @@ final class StringMapKeyDecoder
   SingleValueDecoder singleValue() => this;
 
   @override
-  KeyedDecoder keyed({KeyOptions? options}) => throw CodableException(
-    '$formatName map keys are scalar strings, not keyed objects',
-    actualValue: key,
-  );
+  KeyedDecoder keyed({KeyOptions? options}) =>
+      _failKey('$formatName map keys are scalar strings, not keyed objects');
 
   @override
-  MappedDecoder mapped() => throw CodableException(
-    '$formatName map keys are scalar strings, not mapped objects',
-    actualValue: key,
-  );
+  MappedDecoder mapped() =>
+      _failKey('$formatName map keys are scalar strings, not mapped objects');
 
   @override
-  MapDecoder map() => throw CodableException(
-    '$formatName map keys are scalar strings, not maps',
-    actualValue: key,
-  );
+  MapDecoder map() =>
+      _failKey('$formatName map keys are scalar strings, not maps');
 
   @override
-  UnkeyedDecoder unkeyed() => throw CodableException(
-    '$formatName map keys are scalar strings, not arrays',
-    actualValue: key,
-  );
+  UnkeyedDecoder unkeyed() =>
+      _failKey('$formatName map keys are scalar strings, not arrays');
 
   @override
   Float64List? decodeUniformDoubleList(List<List<String>> propertyAliases) =>
@@ -815,10 +845,8 @@ final class StringMapKeyDecoder
   bool isNull() => false;
 
   @override
-  void readNull() => throw CodableException(
-    'Expected null $formatName map key, found "$key"',
-    actualValue: key,
-  );
+  void readNull() =>
+      _failKey('Expected null $formatName map key, found "$key"');
 
   @override
   @pragma('vm:prefer-inline')
@@ -829,10 +857,7 @@ final class StringMapKeyDecoder
       final parsed = int.tryParse(key, radix: 10);
       if (parsed != null && _isValidJsSafeInt(parsed)) return parsed;
     }
-    throw CodableException(
-      'Expected int $formatName map key, found "$key"',
-      actualValue: key,
-    );
+    _failKey('Expected int $formatName map key, found "$key"');
   }
 
   @override
@@ -844,10 +869,7 @@ final class StringMapKeyDecoder
       final parsed = double.tryParse(key);
       if (parsed != null && parsed.isFinite) return parsed;
     }
-    throw CodableException(
-      'Expected finite double $formatName map key, found "$key"',
-      actualValue: key,
-    );
+    _failKey('Expected finite double $formatName map key, found "$key"');
   }
 
   @override
@@ -872,17 +894,12 @@ final class StringMapKeyDecoder
   bool readBool() {
     if (key == 'true') return true;
     if (key == 'false') return false;
-    throw CodableException(
-      'Expected bool $formatName map key, found "$key"',
-      actualValue: key,
-    );
+    _failKey('Expected bool $formatName map key, found "$key"');
   }
 
   @override
-  Uint8List readBytes() => throw CodableException(
-    '$formatName map keys cannot be binary bytes',
-    actualValue: key,
-  );
+  Uint8List readBytes() =>
+      _failKey('$formatName map keys cannot be binary bytes');
 
   /// Matches [key] against [options] for enum map keys.
   @pragma('vm:prefer-inline')
