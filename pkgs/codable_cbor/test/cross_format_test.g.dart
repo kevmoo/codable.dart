@@ -47,7 +47,7 @@ extension type const _$OrderItemSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for OrderItem
 // =============================================================================
-final class OrderItemCodable implements Codable<OrderItem> {
+final class OrderItemCodable implements KeyedCodable<OrderItem> {
   const OrderItemCodable();
 
   @override
@@ -95,6 +95,31 @@ final class OrderItemCodable implements Codable<OrderItem> {
     seen.validate();
 
     return OrderItem(count: count, itemNumber: itemNumber, isRushed: isRushed);
+  }
+
+  @override
+  int encodedFieldCount(OrderItem instance) {
+    var count$ = 0;
+    if (instance.count != null) count$++;
+    if (instance.itemNumber != null) count$++;
+    if (instance.isRushed != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(OrderItem instance, KeyedEncoder keyed) {
+    final v$Count = instance.count;
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderItemSchema.nameCount, v$Count);
+    }
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$OrderItemSchema.nameItemNumber, v$ItemNumber);
+    }
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$OrderItemSchema.nameIsRushed, v$IsRushed);
+    }
   }
 
   @override
@@ -176,7 +201,7 @@ extension type const _$OrderSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Order
 // =============================================================================
-final class OrderCodable implements Codable<Order> {
+final class OrderCodable implements KeyedCodable<Order> {
   const OrderCodable();
 
   @override
@@ -223,6 +248,31 @@ final class OrderCodable implements Codable<Order> {
     seen.validate();
 
     return Order(dateUs: dateUs!, count: count, item: item);
+  }
+
+  @override
+  int encodedFieldCount(Order instance) {
+    var count$ = 1;
+    if (instance.count != null) count$++;
+    if (instance.item != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Order instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
+    final v$Count = instance.count;
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderSchema.nameCount, v$Count);
+    }
+    final v$Item = instance.item;
+    if (v$Item != null) {
+      keyed.encodeValue(
+        _$OrderSchema.nameItem,
+        v$Item,
+        const OrderItemCodable(),
+      );
+    }
   }
 
   @override
@@ -325,7 +375,7 @@ extension type const _$PersonSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Person
 // =============================================================================
-final class PersonCodable implements Codable<Person> {
+final class PersonCodable implements KeyedCodable<Person> {
   const PersonCodable();
 
   @override
@@ -389,6 +439,33 @@ final class PersonCodable implements Codable<Person> {
       dateOfBirth: dateOfBirth!,
       middleName: middleName,
       orders: orders,
+    );
+  }
+
+  @override
+  int encodedFieldCount(Person instance) {
+    var count$ = 4;
+    if (instance.middleName != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Person instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
+    keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
+    keyed.encodeValue(
+      _$PersonSchema.nameDateOfBirth,
+      instance.dateOfBirth,
+      const DateTimeIsoCodec(),
+    );
+    final v$MiddleName = instance.middleName;
+    if (v$MiddleName != null) {
+      keyed.encodeString(_$PersonSchema.nameMiddleName, v$MiddleName);
+    }
+    keyed.encodeList(
+      _$PersonSchema.nameOrders,
+      instance.orders,
+      const OrderCodable(),
     );
   }
 
@@ -475,7 +552,7 @@ extension type const _$PointKeySchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for PointKey
 // =============================================================================
-final class PointKeyCodable implements Codable<PointKey> {
+final class PointKeyCodable implements KeyedCodable<PointKey> {
   const PointKeyCodable();
 
   @override
@@ -515,10 +592,17 @@ final class PointKeyCodable implements Codable<PointKey> {
   }
 
   @override
-  void encode(PointKey instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(PointKey instance) => 2;
+
+  @override
+  void encodeFields(PointKey instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$PointKeySchema.nameX, instance.x);
     keyed.encodeInt(_$PointKeySchema.nameY, instance.y);
+  }
+
+  @override
+  void encode(PointKey instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -624,7 +708,7 @@ extension type const _$OpenApiSpecModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for OpenApiSpecModel
 // =============================================================================
-final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
+final class OpenApiSpecModelCodable implements KeyedCodable<OpenApiSpecModel> {
   const OpenApiSpecModelCodable();
 
   @override
@@ -745,6 +829,56 @@ final class OpenApiSpecModelCodable implements Codable<OpenApiSpecModel> {
   }
 
   @override
+  int encodedFieldCount(OpenApiSpecModel instance) {
+    var count$ = 6;
+    if (instance.signature != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(OpenApiSpecModel instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$OpenApiSpecModelSchema.namePath, instance.path);
+    keyed.encodeString(
+      _$OpenApiSpecModelSchema.nameMethod,
+      instance.method.name,
+    );
+    keyed.encodeBytes(
+      _$OpenApiSpecModelSchema.nameSchemaHash,
+      instance.schemaHash,
+    );
+    final v$Signature = instance.signature;
+    if (v$Signature != null) {
+      keyed.encodeBytes(_$OpenApiSpecModelSchema.nameSignature, v$Signature);
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$OpenApiSpecModelSchema.nameResponses)
+          .map(length: instance.responses.length);
+      for (final entry in instance.responses.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$OpenApiSpecModelSchema.nameRateLimits)
+          .map(length: instance.rateLimits.length);
+      for (final entry in instance.rateLimits.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$OpenApiSpecModelSchema.nameLatencyBuckets)
+          .keyed(length: instance.latencyBuckets.length);
+      for (final entry in instance.latencyBuckets.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+  }
+
+  @override
   void encode(OpenApiSpecModel instance, Encoder encoder) {
     var count$ = 6;
     final v$Signature = instance.signature;
@@ -822,7 +956,7 @@ extension type const _$GridOverlayModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GridOverlayModel
 // =============================================================================
-final class GridOverlayModelCodable implements Codable<GridOverlayModel> {
+final class GridOverlayModelCodable implements KeyedCodable<GridOverlayModel> {
   const GridOverlayModelCodable();
 
   @override
@@ -858,8 +992,10 @@ final class GridOverlayModelCodable implements Codable<GridOverlayModel> {
   }
 
   @override
-  void encode(GridOverlayModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(GridOverlayModel instance) => 1;
+
+  @override
+  void encodeFields(GridOverlayModel instance, KeyedEncoder keyed) {
     {
       final m = keyed
           .nestedEncoder(_$GridOverlayModelSchema.nameCells)
@@ -869,6 +1005,11 @@ final class GridOverlayModelCodable implements Codable<GridOverlayModel> {
         m.valueEncoder().singleValue().encodeString(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(GridOverlayModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -957,7 +1098,7 @@ extension type const _$StringMapBundleSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for StringMapBundle
 // =============================================================================
-final class StringMapBundleCodable implements Codable<StringMapBundle> {
+final class StringMapBundleCodable implements KeyedCodable<StringMapBundle> {
   const StringMapBundleCodable();
 
   @override
@@ -1052,8 +1193,10 @@ final class StringMapBundleCodable implements Codable<StringMapBundle> {
   }
 
   @override
-  void encode(StringMapBundle instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(StringMapBundle instance) => 4;
+
+  @override
+  void encodeFields(StringMapBundle instance, KeyedEncoder keyed) {
     {
       final k = keyed
           .nestedEncoder(_$StringMapBundleSchema.nameEmptyLabels)
@@ -1090,6 +1233,11 @@ final class StringMapBundleCodable implements Codable<StringMapBundle> {
         k.encodeIntList(entry.key, entry.value);
       }
     }
+  }
+
+  @override
+  void encode(StringMapBundle instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -1147,7 +1295,7 @@ extension type const _$CircleShapeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CircleShape
 // =============================================================================
-final class CircleShapeCodable implements Codable<CircleShape> {
+final class CircleShapeCodable implements KeyedCodable<CircleShape> {
   const CircleShapeCodable();
 
   @override
@@ -1183,10 +1331,17 @@ final class CircleShapeCodable implements Codable<CircleShape> {
   }
 
   @override
-  void encode(CircleShape instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(CircleShape instance) => 2;
+
+  @override
+  void encodeFields(CircleShape instance, KeyedEncoder keyed) {
     keyed.encodeDouble(_$CircleShapeSchema.nameRadius, instance.radius);
     keyed.encodeString(_$CircleShapeSchema.nameKind, instance.kind);
+  }
+
+  @override
+  void encode(CircleShape instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -1254,7 +1409,7 @@ extension type const _$RectShapeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for RectShape
 // =============================================================================
-final class RectShapeCodable implements Codable<RectShape> {
+final class RectShapeCodable implements KeyedCodable<RectShape> {
   const RectShapeCodable();
 
   @override
@@ -1298,11 +1453,18 @@ final class RectShapeCodable implements Codable<RectShape> {
   }
 
   @override
-  void encode(RectShape instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(RectShape instance) => 3;
+
+  @override
+  void encodeFields(RectShape instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$RectShapeSchema.nameWidth, instance.width);
     keyed.encodeInt(_$RectShapeSchema.nameHeight, instance.height);
     keyed.encodeString(_$RectShapeSchema.nameKind, instance.kind);
+  }
+
+  @override
+  void encode(RectShape instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1375,7 +1537,7 @@ extension type const _$AuditEventSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for AuditEvent
 // =============================================================================
-final class AuditEventCodable implements Codable<AuditEvent> {
+final class AuditEventCodable implements KeyedCodable<AuditEvent> {
   const AuditEventCodable();
 
   @override
@@ -1423,8 +1585,10 @@ final class AuditEventCodable implements Codable<AuditEvent> {
   }
 
   @override
-  void encode(AuditEvent instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(AuditEvent instance) => 3;
+
+  @override
+  void encodeFields(AuditEvent instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$AuditEventSchema.nameId,
       instance.id,
@@ -1436,5 +1600,10 @@ final class AuditEventCodable implements Codable<AuditEvent> {
       const AdaptiveDateTimeCodable(),
     );
     keyed.encodeString(_$AuditEventSchema.nameAction, instance.action);
+  }
+
+  @override
+  void encode(AuditEvent instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }

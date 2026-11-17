@@ -75,7 +75,7 @@ extension type const _$RetryPolicySchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for RetryPolicy
 // =============================================================================
-final class RetryPolicyCodable implements Codable<RetryPolicy> {
+final class RetryPolicyCodable implements KeyedCodable<RetryPolicy> {
   const RetryPolicyCodable();
 
   @override
@@ -119,13 +119,20 @@ final class RetryPolicyCodable implements Codable<RetryPolicy> {
   }
 
   @override
-  void encode(RetryPolicy instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(RetryPolicy instance) => 2;
+
+  @override
+  void encodeFields(RetryPolicy instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$RetryPolicySchema.nameMaxAttempts, instance.maxAttempts);
     keyed.encodeDouble(
       _$RetryPolicySchema.nameBackoffMultiplier,
       instance.backoffMultiplier,
     );
+  }
+
+  @override
+  void encode(RetryPolicy instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -198,7 +205,7 @@ extension type const _$SubtableSpecSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SubtableSpec
 // =============================================================================
-final class SubtableSpecCodable implements Codable<SubtableSpec> {
+final class SubtableSpecCodable implements KeyedCodable<SubtableSpec> {
   const SubtableSpecCodable();
 
   @override
@@ -246,11 +253,18 @@ final class SubtableSpecCodable implements Codable<SubtableSpec> {
   }
 
   @override
-  void encode(SubtableSpec instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(SubtableSpec instance) => 3;
+
+  @override
+  void encodeFields(SubtableSpec instance, KeyedEncoder keyed) {
     keyed.encodeString(_$SubtableSpecSchema.nameHost, instance.host);
     keyed.encodeInt(_$SubtableSpecSchema.namePort, instance.port);
     keyed.encodeBool(_$SubtableSpecSchema.nameTls, instance.tls);
+  }
+
+  @override
+  void encode(SubtableSpec instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -325,7 +339,7 @@ extension type const _$EndpointItemSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EndpointItem
 // =============================================================================
-final class EndpointItemCodable implements Codable<EndpointItem> {
+final class EndpointItemCodable implements KeyedCodable<EndpointItem> {
   const EndpointItemCodable();
 
   @override
@@ -373,8 +387,10 @@ final class EndpointItemCodable implements Codable<EndpointItem> {
   }
 
   @override
-  void encode(EndpointItem instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(EndpointItem instance) => 3;
+
+  @override
+  void encodeFields(EndpointItem instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$EndpointItemSchema.nameRetry,
       instance.retry,
@@ -382,6 +398,11 @@ final class EndpointItemCodable implements Codable<EndpointItem> {
     );
     keyed.encodeString(_$EndpointItemSchema.namePath, instance.path);
     keyed.encodeInt(_$EndpointItemSchema.nameRateLimit, instance.rateLimit);
+  }
+
+  @override
+  void encode(EndpointItem instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -479,7 +500,7 @@ extension type const _$InterleavedServiceConfigSchema(int _value) {
 // 2. Companion Codable for InterleavedServiceConfig
 // =============================================================================
 final class InterleavedServiceConfigCodable
-    implements Codable<InterleavedServiceConfig> {
+    implements KeyedCodable<InterleavedServiceConfig> {
   const InterleavedServiceConfigCodable();
 
   @override
@@ -560,8 +581,10 @@ final class InterleavedServiceConfigCodable
   }
 
   @override
-  void encode(InterleavedServiceConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
+  int encodedFieldCount(InterleavedServiceConfig instance) => 5;
+
+  @override
+  void encodeFields(InterleavedServiceConfig instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$InterleavedServiceConfigSchema.nameSubtable,
       instance.subtable,
@@ -584,6 +607,11 @@ final class InterleavedServiceConfigCodable
       _$InterleavedServiceConfigSchema.nameEnabled,
       instance.enabled,
     );
+  }
+
+  @override
+  void encode(InterleavedServiceConfig instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -614,7 +642,7 @@ extension type const _$EmptyMarkerSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EmptyMarker
 // =============================================================================
-final class EmptyMarkerCodable implements Codable<EmptyMarker> {
+final class EmptyMarkerCodable implements KeyedCodable<EmptyMarker> {
   const EmptyMarkerCodable();
 
   @override
@@ -636,6 +664,12 @@ final class EmptyMarkerCodable implements Codable<EmptyMarker> {
 
     return const EmptyMarker();
   }
+
+  @override
+  int encodedFieldCount(EmptyMarker instance) => 0;
+
+  @override
+  void encodeFields(EmptyMarker instance, KeyedEncoder keyed) {}
 
   @override
   void encode(EmptyMarker instance, Encoder encoder) {
@@ -704,7 +738,7 @@ extension type const _$LevelCSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for LevelC
 // =============================================================================
-final class LevelCCodable implements Codable<LevelC> {
+final class LevelCCodable implements KeyedCodable<LevelC> {
   const LevelCCodable();
 
   @override
@@ -744,10 +778,17 @@ final class LevelCCodable implements Codable<LevelC> {
   }
 
   @override
-  void encode(LevelC instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(LevelC instance) => 2;
+
+  @override
+  void encodeFields(LevelC instance, KeyedEncoder keyed) {
     keyed.encodeString(_$LevelCSchema.nameRegion, instance.region);
     keyed.encodeInt(_$LevelCSchema.nameReplicas, instance.replicas);
+  }
+
+  @override
+  void encode(LevelC instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -800,7 +841,7 @@ extension type const _$LevelBSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for LevelB
 // =============================================================================
-final class LevelBCodable implements Codable<LevelB> {
+final class LevelBCodable implements KeyedCodable<LevelB> {
   const LevelBCodable();
 
   @override
@@ -832,9 +873,16 @@ final class LevelBCodable implements Codable<LevelB> {
   }
 
   @override
-  void encode(LevelB instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(LevelB instance) => 1;
+
+  @override
+  void encodeFields(LevelB instance, KeyedEncoder keyed) {
     keyed.encodeValue(_$LevelBSchema.nameC, instance.c, const LevelCCodable());
+  }
+
+  @override
+  void encode(LevelB instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -887,7 +935,7 @@ extension type const _$LevelASchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for LevelA
 // =============================================================================
-final class LevelACodable implements Codable<LevelA> {
+final class LevelACodable implements KeyedCodable<LevelA> {
   const LevelACodable();
 
   @override
@@ -919,9 +967,16 @@ final class LevelACodable implements Codable<LevelA> {
   }
 
   @override
-  void encode(LevelA instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(LevelA instance) => 1;
+
+  @override
+  void encodeFields(LevelA instance, KeyedEncoder keyed) {
     keyed.encodeValue(_$LevelASchema.nameB, instance.b, const LevelBCodable());
+  }
+
+  @override
+  void encode(LevelA instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -994,7 +1049,7 @@ extension type const _$GridCellSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GridCell
 // =============================================================================
-final class GridCellCodable implements Codable<GridCell> {
+final class GridCellCodable implements KeyedCodable<GridCell> {
   const GridCellCodable();
 
   @override
@@ -1042,11 +1097,18 @@ final class GridCellCodable implements Codable<GridCell> {
   }
 
   @override
-  void encode(GridCell instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(GridCell instance) => 3;
+
+  @override
+  void encodeFields(GridCell instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$GridCellSchema.nameX, instance.x);
     keyed.encodeInt(_$GridCellSchema.nameY, instance.y);
     keyed.encodeString(_$GridCellSchema.nameTag, instance.tag);
+  }
+
+  @override
+  void encode(GridCell instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -1168,7 +1230,7 @@ extension type const _$StructuralHierarchyModelSchema(int _value) {
 // 2. Companion Codable for StructuralHierarchyModel
 // =============================================================================
 final class StructuralHierarchyModelCodable
-    implements Codable<StructuralHierarchyModel> {
+    implements KeyedCodable<StructuralHierarchyModel> {
   const StructuralHierarchyModelCodable();
 
   @override
@@ -1287,8 +1349,10 @@ final class StructuralHierarchyModelCodable
   }
 
   @override
-  void encode(StructuralHierarchyModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 7);
+  int encodedFieldCount(StructuralHierarchyModel instance) => 7;
+
+  @override
+  void encodeFields(StructuralHierarchyModel instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$StructuralHierarchyModelSchema.nameA,
       instance.a,
@@ -1338,6 +1402,11 @@ final class StructuralHierarchyModelCodable
       instance.title,
     );
   }
+
+  @override
+  void encode(StructuralHierarchyModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 7));
+  }
 }
 
 // =============================================================================
@@ -1377,7 +1446,7 @@ extension type const _$AllOptionalPatchSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for AllOptionalPatch
 // =============================================================================
-final class AllOptionalPatchCodable implements Codable<AllOptionalPatch> {
+final class AllOptionalPatchCodable implements KeyedCodable<AllOptionalPatch> {
   const AllOptionalPatchCodable();
 
   @override
@@ -1425,6 +1494,31 @@ final class AllOptionalPatchCodable implements Codable<AllOptionalPatch> {
     seen.validate();
 
     return AllOptionalPatch(alpha: alpha, beta: beta, gamma: gamma);
+  }
+
+  @override
+  int encodedFieldCount(AllOptionalPatch instance) {
+    var count$ = 0;
+    if (instance.alpha != null) count$++;
+    if (instance.beta != null) count$++;
+    if (instance.gamma != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(AllOptionalPatch instance, KeyedEncoder keyed) {
+    final v$Alpha = instance.alpha;
+    if (v$Alpha != null) {
+      keyed.encodeInt(_$AllOptionalPatchSchema.nameAlpha, v$Alpha);
+    }
+    final v$Beta = instance.beta;
+    if (v$Beta != null) {
+      keyed.encodeString(_$AllOptionalPatchSchema.nameBeta, v$Beta);
+    }
+    final v$Gamma = instance.gamma;
+    if (v$Gamma != null) {
+      keyed.encodeBool(_$AllOptionalPatchSchema.nameGamma, v$Gamma);
+    }
   }
 
   @override
@@ -1538,7 +1632,7 @@ extension type const _$NullableShowcaseSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for NullableShowcase
 // =============================================================================
-final class NullableShowcaseCodable implements Codable<NullableShowcase> {
+final class NullableShowcaseCodable implements KeyedCodable<NullableShowcase> {
   const NullableShowcaseCodable();
 
   @override
@@ -1709,6 +1803,110 @@ final class NullableShowcaseCodable implements Codable<NullableShowcase> {
       optStringMap: optStringMap,
       optIntMap: optIntMap,
     );
+  }
+
+  @override
+  int encodedFieldCount(NullableShowcase instance) {
+    var count$ = 1;
+    if (instance.optInt != null) count$++;
+    if (instance.optDouble != null) count$++;
+    if (instance.optString != null) count$++;
+    if (instance.optBool != null) count$++;
+    if (instance.optStruct != null) count$++;
+    if (instance.optEmpty != null) count$++;
+    if (instance.optBytes != null) count$++;
+    if (instance.optStringList != null) count$++;
+    if (instance.optStructList != null) count$++;
+    if (instance.optIntSet != null) count$++;
+    if (instance.optStringMap != null) count$++;
+    if (instance.optIntMap != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(NullableShowcase instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$NullableShowcaseSchema.nameId, instance.id);
+    final v$OptInt = instance.optInt;
+    if (v$OptInt != null) {
+      keyed.encodeInt(_$NullableShowcaseSchema.nameOptInt, v$OptInt);
+    }
+    final v$OptDouble = instance.optDouble;
+    if (v$OptDouble != null) {
+      keyed.encodeDouble(_$NullableShowcaseSchema.nameOptDouble, v$OptDouble);
+    }
+    final v$OptString = instance.optString;
+    if (v$OptString != null) {
+      keyed.encodeString(_$NullableShowcaseSchema.nameOptString, v$OptString);
+    }
+    final v$OptBool = instance.optBool;
+    if (v$OptBool != null) {
+      keyed.encodeBool(_$NullableShowcaseSchema.nameOptBool, v$OptBool);
+    }
+    final v$OptStruct = instance.optStruct;
+    if (v$OptStruct != null) {
+      keyed.encodeValue(
+        _$NullableShowcaseSchema.nameOptStruct,
+        v$OptStruct,
+        const LevelCCodable(),
+      );
+    }
+    final v$OptEmpty = instance.optEmpty;
+    if (v$OptEmpty != null) {
+      keyed.encodeValue(
+        _$NullableShowcaseSchema.nameOptEmpty,
+        v$OptEmpty,
+        const AllOptionalPatchCodable(),
+      );
+    }
+    final v$OptBytes = instance.optBytes;
+    if (v$OptBytes != null) {
+      keyed.encodeBytes(_$NullableShowcaseSchema.nameOptBytes, v$OptBytes);
+    }
+    final v$OptStringList = instance.optStringList;
+    if (v$OptStringList != null) {
+      keyed.encodeStringList(
+        _$NullableShowcaseSchema.nameOptStringList,
+        v$OptStringList,
+      );
+    }
+    final v$OptStructList = instance.optStructList;
+    if (v$OptStructList != null) {
+      keyed.encodeList(
+        _$NullableShowcaseSchema.nameOptStructList,
+        v$OptStructList,
+        const GridCellCodable(),
+      );
+    }
+    final v$OptIntSet = instance.optIntSet;
+    if (v$OptIntSet != null) {
+      keyed.encodeIntList(
+        _$NullableShowcaseSchema.nameOptIntSet,
+        v$OptIntSet.toList(),
+      );
+    }
+    final v$OptStringMap = instance.optStringMap;
+    if (v$OptStringMap != null) {
+      {
+        final k = keyed
+            .nestedEncoder(_$NullableShowcaseSchema.nameOptStringMap)
+            .keyed(length: v$OptStringMap.length);
+        for (final entry in v$OptStringMap.entries) {
+          k.encodeInt(entry.key, entry.value);
+        }
+      }
+    }
+    final v$OptIntMap = instance.optIntMap;
+    if (v$OptIntMap != null) {
+      {
+        final m = keyed
+            .nestedEncoder(_$NullableShowcaseSchema.nameOptIntMap)
+            .map(length: v$OptIntMap.length);
+        for (final entry in v$OptIntMap.entries) {
+          m.keyEncoder().singleValue().encodeInt(entry.key);
+          m.valueEncoder().singleValue().encodeString(entry.value);
+        }
+      }
+    }
   }
 
   @override
@@ -1941,7 +2139,7 @@ extension type const _$TypedFeaturesEnvelopeSchema(int _value) {
 // 2. Companion Codable for TypedFeaturesEnvelope
 // =============================================================================
 final class TypedFeaturesEnvelopeCodable
-    implements Codable<TypedFeaturesEnvelope> {
+    implements KeyedCodable<TypedFeaturesEnvelope> {
   const TypedFeaturesEnvelopeCodable();
 
   @override
@@ -2110,6 +2308,70 @@ final class TypedFeaturesEnvelopeCodable
   }
 
   @override
+  int encodedFieldCount(TypedFeaturesEnvelope instance) {
+    var count$ = 7;
+    if (instance.normal != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TypedFeaturesEnvelope instance, KeyedEncoder keyed) {
+    {
+      final k = keyed
+          .nestedEncoder(_$TypedFeaturesEnvelopeSchema.nameStringBuckets)
+          .keyed(length: instance.stringBuckets.length);
+      for (final entry in instance.stringBuckets.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$TypedFeaturesEnvelopeSchema.nameNamedTargets)
+          .keyed(length: instance.namedTargets.length);
+      for (final entry in instance.namedTargets.entries) {
+        const LevelCCodable().encode(entry.value, k.nestedEncoder(entry.key));
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$TypedFeaturesEnvelopeSchema.nameStatusMessages)
+          .map(length: instance.statusMessages.length);
+      for (final entry in instance.statusMessages.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$TypedFeaturesEnvelopeSchema.nameVerbQuotas)
+          .map(length: instance.verbQuotas.length);
+      for (final entry in instance.verbQuotas.entries) {
+        m.keyEncoder().singleValue().encodeString(entry.key.name);
+        m.valueEncoder().singleValue().encodeInt(entry.value);
+      }
+    }
+    keyed.encodeBytes(
+      _$TypedFeaturesEnvelopeSchema.nameBinaryPayload,
+      instance.binaryPayload,
+    );
+    keyed.encodeBytes(
+      _$TypedFeaturesEnvelopeSchema.nameEmptyPayload,
+      instance.emptyPayload,
+    );
+    keyed.encodeDoubleList(
+      _$TypedFeaturesEnvelopeSchema.nameCoords,
+      instance.coords,
+    );
+    final v$Normal = instance.normal;
+    if (v$Normal != null) {
+      keyed.encodeDoubleList(
+        _$TypedFeaturesEnvelopeSchema.nameNormal,
+        v$Normal,
+      );
+    }
+  }
+
+  @override
   void encode(TypedFeaturesEnvelope instance, Encoder encoder) {
     var count$ = 7;
     final v$Normal = instance.normal;
@@ -2230,7 +2492,7 @@ extension type const _$CircleSpecSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CircleSpec
 // =============================================================================
-final class CircleSpecCodable implements Codable<CircleSpec> {
+final class CircleSpecCodable implements KeyedCodable<CircleSpec> {
   const CircleSpecCodable();
 
   @override
@@ -2281,6 +2543,32 @@ final class CircleSpecCodable implements Codable<CircleSpec> {
     seen.validate();
 
     return CircleSpec(meta: meta, radius: radius!, label: label, kind: kind);
+  }
+
+  @override
+  int encodedFieldCount(CircleSpec instance) {
+    var count$ = 2;
+    if (instance.meta != null) count$++;
+    if (instance.label != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CircleSpec instance, KeyedEncoder keyed) {
+    final v$Meta = instance.meta;
+    if (v$Meta != null) {
+      keyed.encodeValue(
+        _$CircleSpecSchema.nameMeta,
+        v$Meta,
+        const LevelCCodable(),
+      );
+    }
+    keyed.encodeDouble(_$CircleSpecSchema.nameRadius, instance.radius);
+    final v$Label = instance.label;
+    if (v$Label != null) {
+      keyed.encodeString(_$CircleSpecSchema.nameLabel, v$Label);
+    }
+    keyed.encodeString(_$CircleSpecSchema.nameKind, instance.kind);
   }
 
   @override
@@ -2363,7 +2651,7 @@ extension type const _$PolygonSpecSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for PolygonSpec
 // =============================================================================
-final class PolygonSpecCodable implements Codable<PolygonSpec> {
+final class PolygonSpecCodable implements KeyedCodable<PolygonSpec> {
   const PolygonSpecCodable();
 
   @override
@@ -2403,11 +2691,18 @@ final class PolygonSpecCodable implements Codable<PolygonSpec> {
   }
 
   @override
-  void encode(PolygonSpec instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(PolygonSpec instance) => 3;
+
+  @override
+  void encodeFields(PolygonSpec instance, KeyedEncoder keyed) {
     keyed.encodeIntList(_$PolygonSpecSchema.nameVertices, instance.vertices);
     keyed.encodeBool(_$PolygonSpecSchema.nameClosed, instance.closed);
     keyed.encodeString(_$PolygonSpecSchema.nameKind, instance.kind);
+  }
+
+  @override
+  void encode(PolygonSpec instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -2479,7 +2774,8 @@ extension type const _$PolymorphicCanvasSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for PolymorphicCanvas
 // =============================================================================
-final class PolymorphicCanvasCodable implements Codable<PolymorphicCanvas> {
+final class PolymorphicCanvasCodable
+    implements KeyedCodable<PolymorphicCanvas> {
   const PolymorphicCanvasCodable();
 
   @override
@@ -2528,6 +2824,34 @@ final class PolymorphicCanvasCodable implements Codable<PolymorphicCanvas> {
       hero: hero!,
       secondary: secondary,
       canvasId: canvasId!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(PolymorphicCanvas instance) {
+    var count$ = 2;
+    if (instance.secondary != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(PolymorphicCanvas instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$PolymorphicCanvasSchema.nameHero,
+      instance.hero,
+      const ShapeSpecCodable(),
+    );
+    final v$Secondary = instance.secondary;
+    if (v$Secondary != null) {
+      keyed.encodeValue(
+        _$PolymorphicCanvasSchema.nameSecondary,
+        v$Secondary,
+        const ShapeSpecCodable(),
+      );
+    }
+    keyed.encodeString(
+      _$PolymorphicCanvasSchema.nameCanvasId,
+      instance.canvasId,
     );
   }
 
@@ -2647,7 +2971,7 @@ extension type const _$TimestampCollisionModelSchema(int _value) {
 // 2. Companion Codable for TimestampCollisionModel
 // =============================================================================
 final class TimestampCollisionModelCodable
-    implements Codable<TimestampCollisionModel> {
+    implements KeyedCodable<TimestampCollisionModel> {
   const TimestampCollisionModelCodable();
 
   @override
@@ -2730,6 +3054,42 @@ final class TimestampCollisionModelCodable
       rawIsoString: rawIsoString!,
       rawLocalDateString: rawLocalDateString!,
       rawLocalTimeString: rawLocalTimeString!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(TimestampCollisionModel instance) {
+    var count$ = 4;
+    if (instance.expiresAt != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TimestampCollisionModel instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$TimestampCollisionModelSchema.nameTimestamp,
+      instance.timestamp,
+      const TomlDateTimeCodec(),
+    );
+    final v$ExpiresAt = instance.expiresAt;
+    if (v$ExpiresAt != null) {
+      keyed.encodeValue(
+        _$TimestampCollisionModelSchema.nameExpiresAt,
+        v$ExpiresAt,
+        const TomlDateTimeCodec(),
+      );
+    }
+    keyed.encodeString(
+      _$TimestampCollisionModelSchema.nameRawIsoString,
+      instance.rawIsoString,
+    );
+    keyed.encodeString(
+      _$TimestampCollisionModelSchema.nameRawLocalDateString,
+      instance.rawLocalDateString,
+    );
+    keyed.encodeString(
+      _$TimestampCollisionModelSchema.nameRawLocalTimeString,
+      instance.rawLocalTimeString,
     );
   }
 
@@ -2845,7 +3205,7 @@ extension type const _$LocalDateTimesRecordSchema(int _value) {
 // 2. Companion Codable for LocalDateTimesRecord
 // =============================================================================
 final class LocalDateTimesRecordCodable
-    implements Codable<LocalDateTimesRecord> {
+    implements KeyedCodable<LocalDateTimesRecord> {
   const LocalDateTimesRecordCodable();
 
   @override
@@ -2911,6 +3271,40 @@ final class LocalDateTimesRecordCodable
       calendarDay: calendarDay!,
       dailyWindow: dailyWindow,
     );
+  }
+
+  @override
+  int encodedFieldCount(LocalDateTimesRecord instance) {
+    var count$ = 3;
+    if (instance.dailyWindow != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(LocalDateTimesRecord instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$LocalDateTimesRecordSchema.nameOffsetInstant,
+      instance.offsetInstant,
+      const TomlDateTimeCodec(),
+    );
+    keyed.encodeValue(
+      _$LocalDateTimesRecordSchema.nameLocalWallClock,
+      instance.localWallClock,
+      const TomlDateTimeCodec(),
+    );
+    keyed.encodeValue(
+      _$LocalDateTimesRecordSchema.nameCalendarDay,
+      instance.calendarDay,
+      const TomlDateTimeCodec(),
+    );
+    final v$DailyWindow = instance.dailyWindow;
+    if (v$DailyWindow != null) {
+      keyed.encodeValue(
+        _$LocalDateTimesRecordSchema.nameDailyWindow,
+        v$DailyWindow,
+        const TomlDateTimeCodable(),
+      );
+    }
   }
 
   @override
@@ -3000,7 +3394,7 @@ extension type const _$NullableElementListModelSchema(int _value) {
 // 2. Companion Codable for NullableElementListModel
 // =============================================================================
 final class NullableElementListModelCodable
-    implements Codable<NullableElementListModel> {
+    implements KeyedCodable<NullableElementListModel> {
   const NullableElementListModelCodable();
 
   @override
@@ -3039,8 +3433,10 @@ final class NullableElementListModelCodable
   }
 
   @override
-  void encode(NullableElementListModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(NullableElementListModel instance) => 1;
+
+  @override
+  void encodeFields(NullableElementListModel instance, KeyedEncoder keyed) {
     keyed.encodeList(
       _$NullableElementListModelSchema.nameValues,
       instance.values,
@@ -3048,6 +3444,11 @@ final class NullableElementListModelCodable
         e.singleValue().encodeNullableInt(item);
       }),
     );
+  }
+
+  @override
+  void encode(NullableElementListModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3107,7 +3508,7 @@ extension type const _$NullableStringMapModelSchema(int _value) {
 // 2. Companion Codable for NullableStringMapModel
 // =============================================================================
 final class NullableStringMapModelCodable
-    implements Codable<NullableStringMapModel> {
+    implements KeyedCodable<NullableStringMapModel> {
   const NullableStringMapModelCodable();
 
   @override
@@ -3150,8 +3551,10 @@ final class NullableStringMapModelCodable
   }
 
   @override
-  void encode(NullableStringMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(NullableStringMapModel instance) => 1;
+
+  @override
+  void encodeFields(NullableStringMapModel instance, KeyedEncoder keyed) {
     {
       final k = keyed
           .nestedEncoder(_$NullableStringMapModelSchema.nameScores)
@@ -3164,6 +3567,11 @@ final class NullableStringMapModelCodable
         }
       }
     }
+  }
+
+  @override
+  void encode(NullableStringMapModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3223,7 +3631,8 @@ extension type const _$NullableIntMapModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for NullableIntMapModel
 // =============================================================================
-final class NullableIntMapModelCodable implements Codable<NullableIntMapModel> {
+final class NullableIntMapModelCodable
+    implements KeyedCodable<NullableIntMapModel> {
   const NullableIntMapModelCodable();
 
   @override
@@ -3265,8 +3674,10 @@ final class NullableIntMapModelCodable implements Codable<NullableIntMapModel> {
   }
 
   @override
-  void encode(NullableIntMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(NullableIntMapModel instance) => 1;
+
+  @override
+  void encodeFields(NullableIntMapModel instance, KeyedEncoder keyed) {
     {
       final m = keyed
           .nestedEncoder(_$NullableIntMapModelSchema.nameBuckets)
@@ -3276,6 +3687,11 @@ final class NullableIntMapModelCodable implements Codable<NullableIntMapModel> {
         m.valueEncoder().singleValue().encodeNullableInt(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(NullableIntMapModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -3335,7 +3751,7 @@ extension type const _$CompositeMapKeyModelSchema(int _value) {
 // 2. Companion Codable for CompositeMapKeyModel
 // =============================================================================
 final class CompositeMapKeyModelCodable
-    implements Codable<CompositeMapKeyModel> {
+    implements KeyedCodable<CompositeMapKeyModel> {
   const CompositeMapKeyModelCodable();
 
   @override
@@ -3377,8 +3793,10 @@ final class CompositeMapKeyModelCodable
   }
 
   @override
-  void encode(CompositeMapKeyModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(CompositeMapKeyModel instance) => 1;
+
+  @override
+  void encodeFields(CompositeMapKeyModel instance, KeyedEncoder keyed) {
     {
       final m = keyed
           .nestedEncoder(_$CompositeMapKeyModelSchema.nameCells)
@@ -3388,5 +3806,1265 @@ final class CompositeMapKeyModelCodable
         m.valueEncoder().singleValue().encodeString(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(CompositeMapKeyModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for PagedEnvelope
+// =============================================================================
+extension type const _$PagedEnvelopeSchema(int _value) {
+  // String Name Constants
+  static const String namePage = 'page';
+  static const String namePrimary = 'primary';
+  static const String nameItems = 'items';
+  static const String nameTagged = 'tagged';
+  static const String nameNextPreview = 'nextPreview';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPage = 0;
+  static const int keyPrimary = 1;
+  static const int keyItems = 2;
+  static const int keyTagged = 3;
+  static const int keyNextPreview = 4;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PagedEnvelopeSchema.namePage,
+    _$PagedEnvelopeSchema.namePrimary,
+    _$PagedEnvelopeSchema.nameItems,
+    _$PagedEnvelopeSchema.nameTagged,
+    _$PagedEnvelopeSchema.nameNextPreview,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PagedEnvelopeSchema none = _$PagedEnvelopeSchema(0);
+  static const int _pageBit = 1 << 0;
+  static const _$PagedEnvelopeSchema page = _$PagedEnvelopeSchema(_pageBit);
+  static const int _primaryBit = 1 << 1;
+  static const _$PagedEnvelopeSchema primary = _$PagedEnvelopeSchema(
+    _primaryBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PagedEnvelopeSchema golden = _$PagedEnvelopeSchema(
+    _pageBit | _primaryBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$PagedEnvelopeSchema operator |(_$PagedEnvelopeSchema other) =>
+      _$PagedEnvelopeSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _pageBit) == 0) {
+      missing.add(namePage);
+    }
+    if ((_value & _primaryBit) == 0) {
+      missing.add(namePrimary);
+    }
+    throw CodableException(
+      'Missing required fields for PagedEnvelope: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for PagedEnvelope
+// =============================================================================
+final class PagedEnvelopeCodable<T> implements KeyedCodable<PagedEnvelope<T>> {
+  final Codable<T> _$t;
+
+  const PagedEnvelopeCodable(this._$t);
+
+  @override
+  PagedEnvelope<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PagedEnvelopeSchema.keyOptions);
+
+    int? page;
+    T? primary;
+    List<T> items = const [];
+    Map<String, T> tagged = const {};
+    T? nextPreview;
+    var seen = _$PagedEnvelopeSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PagedEnvelopeSchema.keyOptions)) {
+        case _$PagedEnvelopeSchema.keyPage:
+          if ((seen._value & _$PagedEnvelopeSchema.page._value) != 0) {
+            throw const CodableException('Duplicate field "page"');
+          }
+          page = keyed.readInt();
+          seen |= _$PagedEnvelopeSchema.page;
+          break;
+        case _$PagedEnvelopeSchema.keyPrimary:
+          if ((seen._value & _$PagedEnvelopeSchema.primary._value) != 0) {
+            throw const CodableException('Duplicate field "primary"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            primary = null as T;
+          } else {
+            primary = keyed.decodeValue(_$t);
+          }
+          seen |= _$PagedEnvelopeSchema.primary;
+          break;
+        case _$PagedEnvelopeSchema.keyItems:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <T>[];
+            while (u.moveNext()) {
+              if (null is T && u.isNextNull()) {
+                u.readNull();
+                l.add(null as T);
+              } else {
+                l.add(_$t.decode(u.nestedDecoder()));
+              }
+            }
+            items = l;
+          }
+          break;
+        case _$PagedEnvelopeSchema.keyTagged:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, T>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              if (null is T && k.isNextNull()) {
+                k.readNull();
+                m[key] = null as T;
+              } else {
+                m[key] = _$t.decode(k.nestedDecoder());
+              }
+            }
+            tagged = m;
+          }
+          break;
+        case _$PagedEnvelopeSchema.keyNextPreview:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            nextPreview = null;
+          } else {
+            nextPreview = keyed.decodeValue(_$t);
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$PagedEnvelopeSchema.primary;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return PagedEnvelope<T>(
+      page: page!,
+      primary: primary as T,
+      items: items,
+      tagged: tagged,
+      nextPreview: nextPreview,
+    );
+  }
+
+  @override
+  int encodedFieldCount(PagedEnvelope<T> instance) {
+    var count$ = 3;
+    if (instance.primary != null) count$++;
+    if (instance.nextPreview != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(PagedEnvelope<T> instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$PagedEnvelopeSchema.namePage, instance.page);
+    final v$Primary = instance.primary;
+    if (v$Primary != null) {
+      keyed.encodeValue(_$PagedEnvelopeSchema.namePrimary, v$Primary, _$t);
+    }
+    keyed.encodeList(
+      _$PagedEnvelopeSchema.nameItems,
+      instance.items,
+      Encodable.fromFunction((T item, e) {
+        if (item case final val0?) {
+          _$t.encode(val0, e);
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PagedEnvelopeSchema.nameTagged)
+          .keyed(length: instance.tagged.length);
+      for (final entry in instance.tagged.entries) {
+        if (entry.value case final val1?) {
+          _$t.encode(val1, k.nestedEncoder(entry.key));
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    final v$NextPreview = instance.nextPreview;
+    if (v$NextPreview != null) {
+      keyed.encodeValue(
+        _$PagedEnvelopeSchema.nameNextPreview,
+        v$NextPreview,
+        _$t,
+      );
+    }
+  }
+
+  @override
+  void encode(PagedEnvelope<T> instance, Encoder encoder) {
+    var count$ = 3;
+    final v$Primary = instance.primary;
+    if (v$Primary != null) count$++;
+    final v$NextPreview = instance.nextPreview;
+    if (v$NextPreview != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeInt(_$PagedEnvelopeSchema.namePage, instance.page);
+    if (v$Primary != null) {
+      keyed.encodeValue(_$PagedEnvelopeSchema.namePrimary, v$Primary, _$t);
+    }
+    keyed.encodeList(
+      _$PagedEnvelopeSchema.nameItems,
+      instance.items,
+      Encodable.fromFunction((T item, e) {
+        if (item case final val0?) {
+          _$t.encode(val0, e);
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PagedEnvelopeSchema.nameTagged)
+          .keyed(length: instance.tagged.length);
+      for (final entry in instance.tagged.entries) {
+        if (entry.value case final val1?) {
+          _$t.encode(val1, k.nestedEncoder(entry.key));
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    if (v$NextPreview != null) {
+      keyed.encodeValue(
+        _$PagedEnvelopeSchema.nameNextPreview,
+        v$NextPreview,
+        _$t,
+      );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for PipelineStage
+// =============================================================================
+extension type const _$PipelineStageSchema(int _value) {
+  static const String discriminatorKey = 'kind';
+  static const String subtypeFetchStage = 'fetch_stage';
+  static const String subtypeFilterStage = 'filter_expr';
+}
+
+// =============================================================================
+// 2. Companion Codable for PipelineStage
+// =============================================================================
+final class PipelineStageCodable implements KeyedCodable<PipelineStage> {
+  const PipelineStageCodable();
+
+  @override
+  PipelineStage decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$PipelineStageSchema.discriminatorKey) ||
+        mapped.isNull(_$PipelineStageSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$PipelineStageSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$PipelineStageSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$PipelineStageSchema.subtypeFetchStage =>
+        const FetchStageCodable().decode(decoder),
+      _$PipelineStageSchema.subtypeFilterStage =>
+        const FilterStageCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$PipelineStageSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(PipelineStage instance) => switch (instance) {
+    final FetchStage sub =>
+      1 + const FetchStageCodable().encodedFieldCount(sub),
+    final FilterStage sub =>
+      1 + const FilterStageCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(PipelineStage instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final FetchStage sub:
+        keyed.encodeString(
+          _$PipelineStageSchema.discriminatorKey,
+          _$PipelineStageSchema.subtypeFetchStage,
+        );
+        const FetchStageCodable().encodeFields(sub, keyed);
+      case final FilterStage sub:
+        keyed.encodeString(
+          _$PipelineStageSchema.discriminatorKey,
+          _$PipelineStageSchema.subtypeFilterStage,
+        );
+        const FilterStageCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(PipelineStage instance, Encoder encoder) {
+    switch (instance) {
+      case final FetchStage sub:
+        final keyed = encoder.keyed(
+          length: 1 + const FetchStageCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PipelineStageSchema.discriminatorKey,
+          _$PipelineStageSchema.subtypeFetchStage,
+        );
+        const FetchStageCodable().encodeFields(sub, keyed);
+      case final FilterStage sub:
+        final keyed = encoder.keyed(
+          length: 1 + const FilterStageCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PipelineStageSchema.discriminatorKey,
+          _$PipelineStageSchema.subtypeFilterStage,
+        );
+        const FilterStageCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for FetchStage
+// =============================================================================
+extension type const _$FetchStageSchema(int _value) {
+  // String Name Constants
+  static const String nameSource = 'source';
+  static const String nameTimeoutMs = 'timeoutMs';
+  static const String nameAuthHeader = 'authHeader';
+
+  // Key Indices for selectKeyIndex()
+  static const int keySource = 0;
+  static const int keyTimeoutMs = 1;
+  static const int keyAuthHeader = 2;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$FetchStageSchema.nameSource,
+    _$FetchStageSchema.nameTimeoutMs,
+    _$FetchStageSchema.nameAuthHeader,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$FetchStageSchema none = _$FetchStageSchema(0);
+  static const int _sourceBit = 1 << 0;
+  static const _$FetchStageSchema source = _$FetchStageSchema(_sourceBit);
+  static const int _timeoutMsBit = 1 << 1;
+  static const _$FetchStageSchema timeoutMs = _$FetchStageSchema(_timeoutMsBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$FetchStageSchema golden = _$FetchStageSchema(
+    _sourceBit | _timeoutMsBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$FetchStageSchema operator |(_$FetchStageSchema other) =>
+      _$FetchStageSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _sourceBit) == 0) {
+      missing.add(nameSource);
+    }
+    if ((_value & _timeoutMsBit) == 0) {
+      missing.add(nameTimeoutMs);
+    }
+    throw CodableException(
+      'Missing required fields for FetchStage: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for FetchStage
+// =============================================================================
+final class FetchStageCodable implements KeyedCodable<FetchStage> {
+  const FetchStageCodable();
+
+  @override
+  FetchStage decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$FetchStageSchema.keyOptions);
+
+    LevelC? source;
+    int? timeoutMs;
+    String? authHeader;
+    var seen = _$FetchStageSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$FetchStageSchema.keyOptions)) {
+        case _$FetchStageSchema.keySource:
+          if ((seen._value & _$FetchStageSchema.source._value) != 0) {
+            throw const CodableException('Duplicate field "source"');
+          }
+          source = const LevelCCodable().decode(keyed.nestedDecoder());
+          seen |= _$FetchStageSchema.source;
+          break;
+        case _$FetchStageSchema.keyTimeoutMs:
+          if ((seen._value & _$FetchStageSchema.timeoutMs._value) != 0) {
+            throw const CodableException('Duplicate field "timeoutMs"');
+          }
+          timeoutMs = keyed.readInt();
+          seen |= _$FetchStageSchema.timeoutMs;
+          break;
+        case _$FetchStageSchema.keyAuthHeader:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            authHeader = null;
+          } else {
+            authHeader = keyed.readString();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return FetchStage(
+      source: source!,
+      timeoutMs: timeoutMs!,
+      authHeader: authHeader,
+    );
+  }
+
+  @override
+  int encodedFieldCount(FetchStage instance) {
+    var count$ = 2;
+    if (instance.authHeader != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(FetchStage instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$FetchStageSchema.nameSource,
+      instance.source,
+      const LevelCCodable(),
+    );
+    keyed.encodeInt(_$FetchStageSchema.nameTimeoutMs, instance.timeoutMs);
+    final v$AuthHeader = instance.authHeader;
+    if (v$AuthHeader != null) {
+      keyed.encodeString(_$FetchStageSchema.nameAuthHeader, v$AuthHeader);
+    }
+  }
+
+  @override
+  void encode(FetchStage instance, Encoder encoder) {
+    var count$ = 2;
+    final v$AuthHeader = instance.authHeader;
+    if (v$AuthHeader != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeValue(
+      _$FetchStageSchema.nameSource,
+      instance.source,
+      const LevelCCodable(),
+    );
+    keyed.encodeInt(_$FetchStageSchema.nameTimeoutMs, instance.timeoutMs);
+    if (v$AuthHeader != null) {
+      keyed.encodeString(_$FetchStageSchema.nameAuthHeader, v$AuthHeader);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for FilterStage
+// =============================================================================
+extension type const _$FilterStageSchema(int _value) {
+  // String Name Constants
+  static const String namePredicates = 'predicates';
+  static const String nameDropEmpty = 'dropEmpty';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPredicates = 0;
+  static const int keyDropEmpty = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$FilterStageSchema.namePredicates,
+    _$FilterStageSchema.nameDropEmpty,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$FilterStageSchema none = _$FilterStageSchema(0);
+  static const int _predicatesBit = 1 << 0;
+  static const _$FilterStageSchema predicates = _$FilterStageSchema(
+    _predicatesBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$FilterStageSchema golden = _$FilterStageSchema(_predicatesBit);
+
+  @pragma('vm:prefer-inline')
+  _$FilterStageSchema operator |(_$FilterStageSchema other) =>
+      _$FilterStageSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _predicatesBit) == 0) {
+      missing.add(namePredicates);
+    }
+    throw CodableException(
+      'Missing required fields for FilterStage: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for FilterStage
+// =============================================================================
+final class FilterStageCodable implements KeyedCodable<FilterStage> {
+  const FilterStageCodable();
+
+  @override
+  FilterStage decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$FilterStageSchema.keyOptions);
+
+    List<String>? predicates;
+    bool dropEmpty = false;
+    var seen = _$FilterStageSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$FilterStageSchema.keyOptions)) {
+        case _$FilterStageSchema.keyPredicates:
+          if ((seen._value & _$FilterStageSchema.predicates._value) != 0) {
+            throw const CodableException('Duplicate field "predicates"');
+          }
+          predicates = keyed.decodeStringList();
+          seen |= _$FilterStageSchema.predicates;
+          break;
+        case _$FilterStageSchema.keyDropEmpty:
+          dropEmpty = keyed.readBool();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return FilterStage(predicates: predicates!, dropEmpty: dropEmpty);
+  }
+
+  @override
+  int encodedFieldCount(FilterStage instance) => 2;
+
+  @override
+  void encodeFields(FilterStage instance, KeyedEncoder keyed) {
+    keyed.encodeStringList(
+      _$FilterStageSchema.namePredicates,
+      instance.predicates,
+    );
+    keyed.encodeBool(_$FilterStageSchema.nameDropEmpty, instance.dropEmpty);
+  }
+
+  @override
+  void encode(FilterStage instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for StageResult
+// =============================================================================
+extension type const _$StageResultSchema(int _value) {
+  static const String discriminatorKey = 'outcome';
+  static const String subtypeStageOk = 'ok';
+  static const String subtypeStageFailed = 'failed';
+}
+
+// =============================================================================
+// 2. Companion Codable for StageResult
+// =============================================================================
+final class StageResultCodable<T> implements KeyedCodable<StageResult<T>> {
+  final Codable<T> _$t;
+
+  const StageResultCodable(this._$t);
+
+  @override
+  StageResult<T> decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$StageResultSchema.discriminatorKey) ||
+        mapped.isNull(_$StageResultSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$StageResultSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$StageResultSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$StageResultSchema.subtypeStageOk => StageOkCodable<T>(
+        _$t,
+      ).decode(decoder),
+      _$StageResultSchema.subtypeStageFailed =>
+        const StageFailedCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$StageResultSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(StageResult<T> instance) => switch (instance) {
+    final StageOk<T> sub => 1 + StageOkCodable<T>(_$t).encodedFieldCount(sub),
+    final StageFailed sub =>
+      1 + const StageFailedCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(StageResult<T> instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final StageOk<T> sub:
+        keyed.encodeString(
+          _$StageResultSchema.discriminatorKey,
+          _$StageResultSchema.subtypeStageOk,
+        );
+        StageOkCodable<T>(_$t).encodeFields(sub, keyed);
+      case final StageFailed sub:
+        keyed.encodeString(
+          _$StageResultSchema.discriminatorKey,
+          _$StageResultSchema.subtypeStageFailed,
+        );
+        const StageFailedCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(StageResult<T> instance, Encoder encoder) {
+    switch (instance) {
+      case final StageOk<T> sub:
+        final subCodec = StageOkCodable<T>(_$t);
+        final keyed = encoder.keyed(
+          length: 1 + subCodec.encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$StageResultSchema.discriminatorKey,
+          _$StageResultSchema.subtypeStageOk,
+        );
+        subCodec.encodeFields(sub, keyed);
+      case final StageFailed sub:
+        final keyed = encoder.keyed(
+          length: 1 + const StageFailedCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$StageResultSchema.discriminatorKey,
+          _$StageResultSchema.subtypeStageFailed,
+        );
+        const StageFailedCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for StageOk
+// =============================================================================
+extension type const _$StageOkSchema(int _value) {
+  // String Name Constants
+  static const String nameData = 'data';
+  static const String nameElapsedMs = 'elapsedMs';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyData = 0;
+  static const int keyElapsedMs = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$StageOkSchema.nameData,
+    _$StageOkSchema.nameElapsedMs,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$StageOkSchema none = _$StageOkSchema(0);
+  static const int _dataBit = 1 << 0;
+  static const _$StageOkSchema data = _$StageOkSchema(_dataBit);
+  static const int _elapsedMsBit = 1 << 1;
+  static const _$StageOkSchema elapsedMs = _$StageOkSchema(_elapsedMsBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$StageOkSchema golden = _$StageOkSchema(
+    _dataBit | _elapsedMsBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$StageOkSchema operator |(_$StageOkSchema other) =>
+      _$StageOkSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _dataBit) == 0) {
+      missing.add(nameData);
+    }
+    if ((_value & _elapsedMsBit) == 0) {
+      missing.add(nameElapsedMs);
+    }
+    throw CodableException(
+      'Missing required fields for StageOk: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for StageOk
+// =============================================================================
+final class StageOkCodable<T> implements KeyedCodable<StageOk<T>> {
+  final Codable<T> _$t;
+
+  const StageOkCodable(this._$t);
+
+  @override
+  StageOk<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$StageOkSchema.keyOptions);
+
+    T? data;
+    int? elapsedMs;
+    var seen = _$StageOkSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$StageOkSchema.keyOptions)) {
+        case _$StageOkSchema.keyData:
+          if ((seen._value & _$StageOkSchema.data._value) != 0) {
+            throw const CodableException('Duplicate field "data"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            data = null as T;
+          } else {
+            data = keyed.decodeValue(_$t);
+          }
+          seen |= _$StageOkSchema.data;
+          break;
+        case _$StageOkSchema.keyElapsedMs:
+          if ((seen._value & _$StageOkSchema.elapsedMs._value) != 0) {
+            throw const CodableException('Duplicate field "elapsedMs"');
+          }
+          elapsedMs = keyed.readInt();
+          seen |= _$StageOkSchema.elapsedMs;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$StageOkSchema.data;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return StageOk<T>(data: data as T, elapsedMs: elapsedMs!);
+  }
+
+  @override
+  int encodedFieldCount(StageOk<T> instance) {
+    var count$ = 1;
+    if (instance.data != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(StageOk<T> instance, KeyedEncoder keyed) {
+    final v$Data = instance.data;
+    if (v$Data != null) {
+      keyed.encodeValue(_$StageOkSchema.nameData, v$Data, _$t);
+    }
+    keyed.encodeInt(_$StageOkSchema.nameElapsedMs, instance.elapsedMs);
+  }
+
+  @override
+  void encode(StageOk<T> instance, Encoder encoder) {
+    var count$ = 1;
+    final v$Data = instance.data;
+    if (v$Data != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Data != null) {
+      keyed.encodeValue(_$StageOkSchema.nameData, v$Data, _$t);
+    }
+    keyed.encodeInt(_$StageOkSchema.nameElapsedMs, instance.elapsedMs);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for StageFailed
+// =============================================================================
+extension type const _$StageFailedSchema(int _value) {
+  // String Name Constants
+  static const String nameErrorCode = 'errorCode';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyErrorCode = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$StageFailedSchema.nameErrorCode,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$StageFailedSchema none = _$StageFailedSchema(0);
+  static const int _errorCodeBit = 1 << 0;
+  static const _$StageFailedSchema errorCode = _$StageFailedSchema(
+    _errorCodeBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$StageFailedSchema golden = _$StageFailedSchema(_errorCodeBit);
+
+  @pragma('vm:prefer-inline')
+  _$StageFailedSchema operator |(_$StageFailedSchema other) =>
+      _$StageFailedSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _errorCodeBit) == 0) {
+      missing.add(nameErrorCode);
+    }
+    throw CodableException(
+      'Missing required fields for StageFailed: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for StageFailed
+// =============================================================================
+final class StageFailedCodable implements KeyedCodable<StageFailed> {
+  const StageFailedCodable();
+
+  @override
+  StageFailed decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$StageFailedSchema.keyOptions);
+
+    String? errorCode;
+    var seen = _$StageFailedSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$StageFailedSchema.keyOptions)) {
+        case _$StageFailedSchema.keyErrorCode:
+          if ((seen._value & _$StageFailedSchema.errorCode._value) != 0) {
+            throw const CodableException('Duplicate field "errorCode"');
+          }
+          errorCode = keyed.readString();
+          seen |= _$StageFailedSchema.errorCode;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return StageFailed(errorCode: errorCode!);
+  }
+
+  @override
+  int encodedFieldCount(StageFailed instance) => 1;
+
+  @override
+  void encodeFields(StageFailed instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$StageFailedSchema.nameErrorCode, instance.errorCode);
+  }
+
+  @override
+  void encode(StageFailed instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for PipelineManifest
+// =============================================================================
+extension type const _$PipelineManifestSchema(int _value) {
+  // String Name Constants
+  static const String nameTargets = 'targets';
+  static const String nameEntryStage = 'entryStage';
+  static const String nameFallbackStage = 'fallbackStage';
+  static const String nameStages = 'stages';
+  static const String nameStageById = 'stageById';
+  static const String nameLastRun = 'lastRun';
+  static const String nameRetryStatus = 'retryStatus';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyTargets = 0;
+  static const int keyEntryStage = 1;
+  static const int keyFallbackStage = 2;
+  static const int keyStages = 3;
+  static const int keyStageById = 4;
+  static const int keyLastRun = 5;
+  static const int keyRetryStatus = 6;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PipelineManifestSchema.nameTargets,
+    _$PipelineManifestSchema.nameEntryStage,
+    _$PipelineManifestSchema.nameFallbackStage,
+    _$PipelineManifestSchema.nameStages,
+    _$PipelineManifestSchema.nameStageById,
+    _$PipelineManifestSchema.nameLastRun,
+    _$PipelineManifestSchema.nameRetryStatus,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PipelineManifestSchema none = _$PipelineManifestSchema(0);
+  static const int _targetsBit = 1 << 0;
+  static const _$PipelineManifestSchema targets = _$PipelineManifestSchema(
+    _targetsBit,
+  );
+  static const int _entryStageBit = 1 << 1;
+  static const _$PipelineManifestSchema entryStage = _$PipelineManifestSchema(
+    _entryStageBit,
+  );
+  static const int _lastRunBit = 1 << 2;
+  static const _$PipelineManifestSchema lastRun = _$PipelineManifestSchema(
+    _lastRunBit,
+  );
+  static const int _retryStatusBit = 1 << 3;
+  static const _$PipelineManifestSchema retryStatus = _$PipelineManifestSchema(
+    _retryStatusBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PipelineManifestSchema golden = _$PipelineManifestSchema(
+    _targetsBit | _entryStageBit | _lastRunBit | _retryStatusBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$PipelineManifestSchema operator |(_$PipelineManifestSchema other) =>
+      _$PipelineManifestSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _targetsBit) == 0) {
+      missing.add(nameTargets);
+    }
+    if ((_value & _entryStageBit) == 0) {
+      missing.add(nameEntryStage);
+    }
+    if ((_value & _lastRunBit) == 0) {
+      missing.add(nameLastRun);
+    }
+    if ((_value & _retryStatusBit) == 0) {
+      missing.add(nameRetryStatus);
+    }
+    throw CodableException(
+      'Missing required fields for PipelineManifest: ${missing.join(", ")}',
+    );
+  }
+
+  // Cached Closed Codecs
+  static final StageResultCodable<int> codec0 = StageResultCodable<int>(
+    Codable<int>.fromFunctions(
+      decode: (d) {
+        final res = d.singleValue().readInt();
+        return res;
+      },
+      encode: (int v, e) {
+        e.singleValue().encodeInt(v);
+      },
+    ),
+  );
+}
+
+// =============================================================================
+// 2. Companion Codable for PipelineManifest
+// =============================================================================
+final class PipelineManifestCodable implements KeyedCodable<PipelineManifest> {
+  const PipelineManifestCodable();
+
+  @override
+  PipelineManifest decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PipelineManifestSchema.keyOptions);
+
+    PagedEnvelope<LevelC>? targets;
+    PipelineStage? entryStage;
+    PipelineStage? fallbackStage;
+    List<PipelineStage> stages = const [];
+    Map<String, PipelineStage> stageById = const {};
+    StageResult<GridCell>? lastRun;
+    StageResult<int>? retryStatus;
+    var seen = _$PipelineManifestSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PipelineManifestSchema.keyOptions)) {
+        case _$PipelineManifestSchema.keyTargets:
+          if ((seen._value & _$PipelineManifestSchema.targets._value) != 0) {
+            throw const CodableException('Duplicate field "targets"');
+          }
+          targets = const PagedEnvelopeCodable<LevelC>(LevelCCodable())
+              .decode(keyed.nestedDecoder());
+          seen |= _$PipelineManifestSchema.targets;
+          break;
+        case _$PipelineManifestSchema.keyEntryStage:
+          if ((seen._value & _$PipelineManifestSchema.entryStage._value) != 0) {
+            throw const CodableException('Duplicate field "entryStage"');
+          }
+          entryStage = const PipelineStageCodable().decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$PipelineManifestSchema.entryStage;
+          break;
+        case _$PipelineManifestSchema.keyFallbackStage:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            fallbackStage = null;
+          } else {
+            fallbackStage = const PipelineStageCodable().decode(
+              keyed.nestedDecoder(),
+            );
+          }
+          break;
+        case _$PipelineManifestSchema.keyStages:
+          stages = const PipelineStageCodable().decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        case _$PipelineManifestSchema.keyStageById:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, PipelineStage>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = const PipelineStageCodable().decode(k.nestedDecoder());
+            }
+            stageById = m;
+          }
+          break;
+        case _$PipelineManifestSchema.keyLastRun:
+          if ((seen._value & _$PipelineManifestSchema.lastRun._value) != 0) {
+            throw const CodableException('Duplicate field "lastRun"');
+          }
+          lastRun = const StageResultCodable<GridCell>(GridCellCodable())
+              .decode(keyed.nestedDecoder());
+          seen |= _$PipelineManifestSchema.lastRun;
+          break;
+        case _$PipelineManifestSchema.keyRetryStatus:
+          if ((seen._value & _$PipelineManifestSchema.retryStatus._value) !=
+              0) {
+            throw const CodableException('Duplicate field "retryStatus"');
+          }
+          retryStatus = _$PipelineManifestSchema.codec0.decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$PipelineManifestSchema.retryStatus;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return PipelineManifest(
+      targets: targets!,
+      entryStage: entryStage!,
+      fallbackStage: fallbackStage,
+      stages: stages,
+      stageById: stageById,
+      lastRun: lastRun!,
+      retryStatus: retryStatus!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(PipelineManifest instance) {
+    var count$ = 6;
+    if (instance.fallbackStage != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(PipelineManifest instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameTargets,
+      instance.targets,
+      const PagedEnvelopeCodable<LevelC>(LevelCCodable()),
+    );
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameEntryStage,
+      instance.entryStage,
+      const PipelineStageCodable(),
+    );
+    final v$FallbackStage = instance.fallbackStage;
+    if (v$FallbackStage != null) {
+      keyed.encodeValue(
+        _$PipelineManifestSchema.nameFallbackStage,
+        v$FallbackStage,
+        const PipelineStageCodable(),
+      );
+    }
+    keyed.encodeList(
+      _$PipelineManifestSchema.nameStages,
+      instance.stages,
+      const PipelineStageCodable(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PipelineManifestSchema.nameStageById)
+          .keyed(length: instance.stageById.length);
+      for (final entry in instance.stageById.entries) {
+        const PipelineStageCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameLastRun,
+      instance.lastRun,
+      const StageResultCodable<GridCell>(GridCellCodable()),
+    );
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameRetryStatus,
+      instance.retryStatus,
+      _$PipelineManifestSchema.codec0,
+    );
+  }
+
+  @override
+  void encode(PipelineManifest instance, Encoder encoder) {
+    var count$ = 6;
+    final v$FallbackStage = instance.fallbackStage;
+    if (v$FallbackStage != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameTargets,
+      instance.targets,
+      const PagedEnvelopeCodable<LevelC>(LevelCCodable()),
+    );
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameEntryStage,
+      instance.entryStage,
+      const PipelineStageCodable(),
+    );
+    if (v$FallbackStage != null) {
+      keyed.encodeValue(
+        _$PipelineManifestSchema.nameFallbackStage,
+        v$FallbackStage,
+        const PipelineStageCodable(),
+      );
+    }
+    keyed.encodeList(
+      _$PipelineManifestSchema.nameStages,
+      instance.stages,
+      const PipelineStageCodable(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PipelineManifestSchema.nameStageById)
+          .keyed(length: instance.stageById.length);
+      for (final entry in instance.stageById.entries) {
+        const PipelineStageCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameLastRun,
+      instance.lastRun,
+      const StageResultCodable<GridCell>(GridCellCodable()),
+    );
+    keyed.encodeValue(
+      _$PipelineManifestSchema.nameRetryStatus,
+      instance.retryStatus,
+      _$PipelineManifestSchema.codec0,
+    );
   }
 }

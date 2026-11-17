@@ -65,7 +65,7 @@ extension type const _$CanadaPropertiesSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaProperties
 // =============================================================================
-final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
+final class CanadaPropertiesCodable implements KeyedCodable<CanadaProperties> {
   const CanadaPropertiesCodable();
 
   @override
@@ -97,9 +97,16 @@ final class CanadaPropertiesCodable implements Codable<CanadaProperties> {
   }
 
   @override
-  void encode(CanadaProperties instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(CanadaProperties instance) => 1;
+
+  @override
+  void encodeFields(CanadaProperties instance, KeyedEncoder keyed) {
     keyed.encodeString(_$CanadaPropertiesSchema.nameName, instance.name);
+  }
+
+  @override
+  void encode(CanadaProperties instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -157,7 +164,7 @@ extension type const _$CanadaGeometrySchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaGeometry
 // =============================================================================
-final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
+final class CanadaGeometryCodable implements KeyedCodable<CanadaGeometry> {
   const CanadaGeometryCodable();
 
   @override
@@ -193,14 +200,21 @@ final class CanadaGeometryCodable implements Codable<CanadaGeometry> {
   }
 
   @override
-  void encode(CanadaGeometry instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(CanadaGeometry instance) => 2;
+
+  @override
+  void encodeFields(CanadaGeometry instance, KeyedEncoder keyed) {
     keyed.encodeString(_$CanadaGeometrySchema.nameType, instance.type);
     keyed.encodeValue(
       _$CanadaGeometrySchema.nameCoordinates,
       instance.coordinates,
       const CanadaCoordinatesDecoder(),
     );
+  }
+
+  @override
+  void encode(CanadaGeometry instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -277,7 +291,7 @@ extension type const _$CanadaFeatureSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CanadaFeature
 // =============================================================================
-final class CanadaFeatureCodable implements Codable<CanadaFeature> {
+final class CanadaFeatureCodable implements KeyedCodable<CanadaFeature> {
   const CanadaFeatureCodable();
 
   @override
@@ -333,8 +347,10 @@ final class CanadaFeatureCodable implements Codable<CanadaFeature> {
   }
 
   @override
-  void encode(CanadaFeature instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(CanadaFeature instance) => 3;
+
+  @override
+  void encodeFields(CanadaFeature instance, KeyedEncoder keyed) {
     keyed.encodeString(_$CanadaFeatureSchema.nameType, instance.type);
     keyed.encodeValue(
       _$CanadaFeatureSchema.nameProperties,
@@ -346,6 +362,11 @@ final class CanadaFeatureCodable implements Codable<CanadaFeature> {
       instance.geometry,
       const CanadaGeometryCodable(),
     );
+  }
+
+  @override
+  void encode(CanadaFeature instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -408,7 +429,7 @@ extension type const _$CanadaFeatureCollectionSchema(int _value) {
 // 2. Companion Codable for CanadaFeatureCollection
 // =============================================================================
 final class CanadaFeatureCollectionCodable
-    implements Codable<CanadaFeatureCollection> {
+    implements KeyedCodable<CanadaFeatureCollection> {
   const CanadaFeatureCollectionCodable();
 
   @override
@@ -451,13 +472,20 @@ final class CanadaFeatureCollectionCodable
   }
 
   @override
-  void encode(CanadaFeatureCollection instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(CanadaFeatureCollection instance) => 2;
+
+  @override
+  void encodeFields(CanadaFeatureCollection instance, KeyedEncoder keyed) {
     keyed.encodeString(_$CanadaFeatureCollectionSchema.nameType, instance.type);
     keyed.encodeList(
       _$CanadaFeatureCollectionSchema.nameFeatures,
       instance.features,
       const CanadaFeatureCodable(),
     );
+  }
+
+  @override
+  void encode(CanadaFeatureCollection instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }

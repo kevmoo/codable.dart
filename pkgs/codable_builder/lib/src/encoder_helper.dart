@@ -3,12 +3,14 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_helper/source_helper.dart';
 
+import 'codec_expression_helper.dart';
+import 'decoder_helper.dart';
 import 'field_descriptor.dart';
 import 'type_helper.dart';
+import 'utils.dart';
 
 typedef _EncoderSlot = ({
   String itemAccess,
@@ -17,48 +19,158 @@ typedef _EncoderSlot = ({
   int depth,
 });
 
-/// Emits the format-agnostic `encode` method on the companion `*Codable` class.
+/// Emits the format-agnostic `encodedFieldCount`, `encodeFields`, and `encode`
+/// methods on the companion `*Codable` class.
 final class EncoderGeneratorHelper {
   final ModelDescriptor model;
+  late final CodecExpressionHelper _codecHelper = CodecExpressionHelper(
+    model,
+    decodeBuilder:
+        (type, {required targetVar, required decoderExpr, required indent}) =>
+            DecoderGeneratorHelper(model).inlineValueDecodeCode(
+              type,
+              targetVar: targetVar,
+              decoderExpr: decoderExpr,
+              indent: indent,
+            ),
+    encodeBuilder: inlineValueEncodeCode,
+  );
 
   EncoderGeneratorHelper(this.model);
 
-  /// Generates the serializer code for [model].
+  /// Generates the serializer methods for [model].
   String generate() => generateMethod();
 
-  /// Generates the `encode` method for the companion `*Codable` class.
+  /// Renders inline statements encoding [valueExpr] of [type] into
+  /// [encoderExpr].
+  String inlineValueEncodeCode(
+    DartType type, {
+    required String valueExpr,
+    required String encoderExpr,
+    required String indent,
+  }) => _encoderValueCode(type, (
+    itemAccess: valueExpr,
+    encoderExpr: encoderExpr,
+    indent: indent,
+    depth: 0,
+  ));
+
+  /// Generates `encodedFieldCount`, `encodeFields`, and `encode` for the
+  /// companion `*Codable` class.
   String generateMethod() {
     if (!model.createEncoder) return '';
 
     final raw = StringBuffer();
-    final schemaName = '_\$${model.className}Schema';
     final nonIgnoredFields = model.fields.where((f) => !f.ignore).toList();
-    final nullableFields = nonIgnoredFields.where((f) => f.isNullable).toList();
+    final dynamicCountFields = nonIgnoredFields
+        .where(_isDynamicallyOmittedField)
+        .toList();
 
+    _writeEncodedFieldCountMethod(raw, nonIgnoredFields, dynamicCountFields);
+    raw.writeln();
+    _writeEncodeFieldsMethod(raw, nonIgnoredFields);
+    raw.writeln();
+    _writeEncodeMethod(raw, nonIgnoredFields, dynamicCountFields);
+
+    return indentLines(raw.toString(), '  ');
+  }
+
+  static bool _isDynamicallyOmittedField(FieldDescriptor f) =>
+      f.isNullable || f.isUnboundedTypeParameter;
+
+  void _writeEncodedFieldCountMethod(
+    StringBuffer raw,
+    List<FieldDescriptor> nonIgnoredFields,
+    List<FieldDescriptor> dynamicCountFields,
+  ) {
+    final targetType = model.instantiatedClassName;
     raw.writeln('@override');
-    raw.writeln('void encode(${model.className} instance, Encoder encoder) {');
+    if (dynamicCountFields.isEmpty) {
+      raw.writeln(
+        'int encodedFieldCount($targetType instance) => '
+        '${nonIgnoredFields.length};',
+      );
+      return;
+    }
+    final fixedCount = nonIgnoredFields.length - dynamicCountFields.length;
+    raw.writeln('int encodedFieldCount($targetType instance) {');
+    raw.writeln('  var count\$ = $fixedCount;');
+    for (final field in dynamicCountFields) {
+      raw.writeln('  if (instance.${field.name} != null) count\$++;');
+    }
+    raw.writeln('  return count\$;');
+    raw.writeln('}');
+  }
+
+  void _writeEncodeFieldsMethod(
+    StringBuffer raw,
+    List<FieldDescriptor> nonIgnoredFields,
+  ) {
+    final targetType = model.instantiatedClassName;
+    final schemaName = '_\$${model.className}Schema';
+    raw.writeln('@override');
+    raw.writeln(
+      'void encodeFields($targetType instance, KeyedEncoder keyed) {',
+    );
+    for (final field in nonIgnoredFields) {
+      final suffix = field.schemaSuffix;
+      final keyExpr = '$schemaName.name$suffix';
+      if (_isDynamicallyOmittedField(field)) {
+        raw.writeln('  final v\$$suffix = instance.${field.name};');
+        raw.writeln('  if (v\$$suffix != null) {');
+        _writeFieldEncode(raw, field, keyExpr, 'v\$$suffix', indent: '    ');
+        raw.writeln('  }');
+      } else {
+        _writeFieldEncode(
+          raw,
+          field,
+          keyExpr,
+          'instance.${field.name}',
+          indent: '  ',
+        );
+      }
+    }
+    raw.writeln('}');
+  }
+
+  void _writeEncodeMethod(
+    StringBuffer raw,
+    List<FieldDescriptor> nonIgnoredFields,
+    List<FieldDescriptor> dynamicCountFields,
+  ) {
+    final targetType = model.instantiatedClassName;
+    raw.writeln('@override');
+    raw.writeln('void encode($targetType instance, Encoder encoder) {');
     if (nonIgnoredFields.isEmpty) {
       raw.writeln('  encoder.keyed(length: 0);');
-    } else if (nullableFields.isEmpty) {
-      raw.writeln(
-        '  final keyed = encoder.keyed(length: ${nonIgnoredFields.length});',
-      );
-    } else {
-      final fixedNonNullCount = nonIgnoredFields.length - nullableFields.length;
-      raw.writeln('  var count\$ = $fixedNonNullCount;');
-      for (final field in nullableFields) {
-        final suffix = field.schemaSuffix;
-        raw.writeln('  final v\$$suffix = instance.${field.name};');
-        raw.writeln('  if (v\$$suffix != null) count\$++;');
-      }
-      raw.writeln('  final keyed = encoder.keyed(length: count\$);');
+      raw.writeln('}');
+      return;
     }
+    if (dynamicCountFields.isEmpty) {
+      raw.writeln(
+        '  encodeFields(instance, '
+        'encoder.keyed(length: ${nonIgnoredFields.length}));',
+      );
+      raw.writeln('}');
+      return;
+    }
+
+    final schemaName = '_\$${model.className}Schema';
+    final fixedNonNullCount =
+        nonIgnoredFields.length - dynamicCountFields.length;
+    raw.writeln('  var count\$ = $fixedNonNullCount;');
+    for (final field in dynamicCountFields) {
+      final suffix = field.schemaSuffix;
+      raw.writeln('  final v\$$suffix = instance.${field.name};');
+      raw.writeln('  if (v\$$suffix != null) count\$++;');
+    }
+    raw.writeln('  final keyed = encoder.keyed(length: count\$);');
 
     for (final field in nonIgnoredFields) {
       final suffix = field.schemaSuffix;
       final keyExpr = '$schemaName.name$suffix';
 
-      if (field.isNullable) {
+      if (_isDynamicallyOmittedField(field)) {
         raw.writeln('  if (v\$$suffix != null) {');
         _writeFieldEncode(raw, field, keyExpr, 'v\$$suffix', indent: '    ');
         raw.writeln('  }');
@@ -74,22 +186,6 @@ final class EncoderGeneratorHelper {
     }
 
     raw.writeln('}');
-    return _indentLines(raw.toString(), '  ');
-  }
-
-  static String _indentLines(String text, String indent) {
-    final lines = text.split('\n');
-    final buffer = StringBuffer();
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i];
-      if (i == lines.length - 1 && line.isEmpty) break;
-      if (line.isEmpty) {
-        buffer.writeln();
-      } else {
-        buffer.writeln('$indent$line');
-      }
-    }
-    return buffer.toString();
   }
 
   void _writeFieldEncode(
@@ -147,11 +243,16 @@ final class EncoderGeneratorHelper {
         _writeSetEncode(buffer, field, keyExpr, access, indent: indent);
       case TypeCategory.map:
         _writeMapEncode(buffer, field, keyExpr, access, indent: indent);
-      case TypeCategory.nestedCodable:
-        final nestedName = field.type.element!.name;
+      case TypeCategory.nestedCodable || TypeCategory.typeParameter:
+        final nonNullType = field.isNullable
+            ? model.element.library.typeSystem.promoteToNonNull(field.type)
+            : field.type;
+        final codecExpr = _codecHelper.forType(
+          nonNullType,
+          CodecMode.encodable,
+        );
         buffer.writeln(
-          '${indent}keyed.encodeValue('
-          '$keyExpr, $access, const ${nestedName}Codable());',
+          '${indent}keyed.encodeValue($keyExpr, $access, $codecExpr);',
         );
       case TypeCategory.unknown:
         throw StateError(
@@ -178,11 +279,17 @@ final class EncoderGeneratorHelper {
     return null;
   }
 
-  static String? _nonNullCodableElementName(DartType? elemType) {
+  String? _directNonNullElementCodecExpr(DartType? elemType) {
     if (elemType == null || elemType.isNullableType) return null;
+    if (elemType is TypeParameterType) {
+      if (model.element.library.typeSystem.isPotentiallyNullable(elemType)) {
+        return null;
+      }
+      return _codecHelper.forType(elemType, CodecMode.encodable);
+    }
     final element = elemType.element;
     if (element != null && const TypeClassifier().isCodableElement(element)) {
-      return element.name;
+      return _codecHelper.forType(elemType, CodecMode.encodable);
     }
     return null;
   }
@@ -207,34 +314,14 @@ final class EncoderGeneratorHelper {
         '(${field.type.getDisplayString()}).',
       );
     }
-    final primMethod = _primitiveKeyedListMethod(elemType);
-    if (primMethod != null) {
-      buffer.writeln('${indent}keyed.$primMethod($keyExpr, $access);');
-      return;
-    }
-
-    final nestedName = _nonNullCodableElementName(elemType);
-    if (nestedName != null) {
-      buffer.writeln(
-        '${indent}keyed.encodeList('
-        '$keyExpr, $access, const ${nestedName}Codable());',
-      );
-      return;
-    }
-
-    final elemTypeStr = elemType.getDisplayString();
-    buffer.writeln(
-      '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
+    _writeLinearIterableEncode(
+      buffer,
+      elemType,
+      keyExpr,
+      access,
+      indent: indent,
+      isSet: false,
     );
-    buffer.write(
-      _encoderValueCode(elemType, (
-        itemAccess: 'item',
-        encoderExpr: 'e',
-        indent: '$indent  ',
-        depth: 0,
-      )),
-    );
-    buffer.writeln('$indent}));');
   }
 
   void _writeSetEncode(
@@ -251,24 +338,43 @@ final class EncoderGeneratorHelper {
         '(${field.type.getDisplayString()}).',
       );
     }
+    _writeLinearIterableEncode(
+      buffer,
+      elemType,
+      keyExpr,
+      access,
+      indent: indent,
+      isSet: true,
+    );
+  }
+
+  void _writeLinearIterableEncode(
+    StringBuffer buffer,
+    DartType elemType,
+    String keyExpr,
+    String access, {
+    required String indent,
+    required bool isSet,
+  }) {
     final primMethod = _primitiveKeyedListMethod(elemType);
     if (primMethod != null) {
-      buffer.writeln('${indent}keyed.$primMethod($keyExpr, $access.toList());');
+      final listExpr = isSet ? '$access.toList()' : access;
+      buffer.writeln('${indent}keyed.$primMethod($keyExpr, $listExpr);');
       return;
     }
 
-    final nestedName = _nonNullCodableElementName(elemType);
-    if (nestedName != null) {
+    final directCodec = _directNonNullElementCodecExpr(elemType);
+    if (directCodec != null) {
       buffer.writeln(
-        '${indent}keyed.encodeList('
-        '$keyExpr, $access, const ${nestedName}Codable());',
+        '${indent}keyed.encodeList($keyExpr, $access, $directCodec);',
       );
       return;
     }
 
     final elemTypeStr = elemType.getDisplayString();
     buffer.writeln(
-      '${indent}keyed.encodeList($keyExpr, $access, Encodable.fromFunction(($elemTypeStr item, e) {',
+      '${indent}keyed.encodeList($keyExpr, $access, '
+      'Encodable.fromFunction(($elemTypeStr item, e) {',
     );
     buffer.write(
       _encoderValueCode(elemType, (
@@ -298,26 +404,18 @@ final class EncoderGeneratorHelper {
     );
   }
 
-  static bool _isStringMapKey(DartType? keyType) =>
-      keyType != null &&
-      keyType.isDartCoreString &&
-      keyType.nullabilitySuffix == NullabilitySuffix.none;
-
-  static String _inlineMapEncodeCode(
+  String _inlineMapEncodeCode(
     DartType? keyType,
     DartType? valType,
     _EncoderSlot slot,
   ) {
-    if (_isStringMapKey(keyType)) {
+    if (isStringMapKey(keyType)) {
       return _inlineStringMapEncodeCode(valType, slot);
     }
     return _inlineGenericMapEncodeCode(keyType, valType, slot);
   }
 
-  static String _inlineStringMapEncodeCode(
-    DartType? valType,
-    _EncoderSlot slot,
-  ) {
+  String _inlineStringMapEncodeCode(DartType? valType, _EncoderSlot slot) {
     final sfx = slot.depth == 0 ? '' : '${slot.depth}';
     final kVar = 'k$sfx';
     final entryVar = 'entry$sfx';
@@ -344,7 +442,7 @@ final class EncoderGeneratorHelper {
     return out.toString();
   }
 
-  static String _keyedMapValueEncodeCode(
+  String _keyedMapValueEncodeCode(
     DartType? type,
     String kVar,
     String keyExpr,
@@ -361,7 +459,11 @@ final class EncoderGeneratorHelper {
         isNullable: type.isNullableType,
       );
     }
-    if (!type.isNullableType) {
+    final isDynamicallyNull =
+        type.isNullableType ||
+        (type is TypeParameterType &&
+            model.element.library.typeSystem.isPotentiallyNullable(type));
+    if (!isDynamicallyNull) {
       return _nonNullKeyedMapValueEncodeCode(type, kVar, keyExpr, slot);
     }
     final valVar = 'val${slot.depth}';
@@ -405,7 +507,7 @@ final class EncoderGeneratorHelper {
     return out.toString();
   }
 
-  static String _nonNullKeyedMapValueEncodeCode(
+  String _nonNullKeyedMapValueEncodeCode(
     DartType type,
     String kVar,
     String keyExpr,
@@ -431,12 +533,12 @@ final class EncoderGeneratorHelper {
     final typed = _typedDataKeyedMethod(type);
     if (typed != null) return typed;
     if (type.isDartCoreList || type.element?.name == 'List') {
-      return _primitiveKeyedListMethod(_typeArgAt(type, 0));
+      return _primitiveKeyedListMethod(typeArgAt(type, 0));
     }
     return null;
   }
 
-  static String _inlineGenericMapEncodeCode(
+  String _inlineGenericMapEncodeCode(
     DartType? keyType,
     DartType? valType,
     _EncoderSlot slot,
@@ -493,7 +595,7 @@ final class EncoderGeneratorHelper {
     return type.isNullableType ? pair.$2 : pair.$1;
   }
 
-  static String _encoderValueCode(DartType? type, _EncoderSlot slot) {
+  String _encoderValueCode(DartType? type, _EncoderSlot slot) {
     if (type == null) {
       throw StateError('Missing nested value type.');
     }
@@ -512,7 +614,11 @@ final class EncoderGeneratorHelper {
           : '${slot.indent}${slot.encoderExpr}.singleValue()'
                 '.encodeString(${slot.itemAccess}.name);\n';
     }
-    if (!type.isNullableType) {
+    final isDynamicallyNull =
+        type.isNullableType ||
+        (type is TypeParameterType &&
+            model.element.library.typeSystem.isPotentiallyNullable(type));
+    if (!isDynamicallyNull) {
       return _nonNullComplexEncoderValueCode(type, slot);
     }
     final valVar = 'val${slot.depth}';
@@ -554,11 +660,6 @@ final class EncoderGeneratorHelper {
     return out.toString();
   }
 
-  static DartType? _typeArgAt(DartType type, int index) =>
-      type is InterfaceType && type.typeArguments.length > index
-      ? type.typeArguments[index]
-      : null;
-
   static String? _typedUnkeyedElementMethod(DartType type) =>
       switch (classifyTypedDataKind(type)) {
         TypedDataKind.float64 || TypedDataKind.float32 => 'encodeDouble',
@@ -566,31 +667,31 @@ final class EncoderGeneratorHelper {
         TypedDataKind.uint8Bytes || null => null,
       };
 
-  static String _nonNullComplexEncoderValueCode(
-    DartType type,
-    _EncoderSlot slot,
-  ) {
-    final name = type.element?.name;
-    if (type.isDartCoreMap || name == 'Map') {
+  String _nonNullComplexEncoderValueCode(DartType type, _EncoderSlot slot) {
+    final nonNull = model.element.library.typeSystem.promoteToNonNull(type);
+    final name = nonNull.element?.name;
+    if (nonNull.isDartCoreMap || name == 'Map') {
       return _inlineMapEncodeCode(
-        _typeArgAt(type, 0),
-        _typeArgAt(type, 1),
+        typeArgAt(nonNull, 0),
+        typeArgAt(nonNull, 1),
         slot,
       );
     }
-    if (type.isDartCoreList ||
-        type.isDartCoreSet ||
+    if (nonNull.isDartCoreList ||
+        nonNull.isDartCoreSet ||
         name == 'List' ||
         name == 'Set') {
-      return _inlineUnkeyedEncodeCode(_typeArgAt(type, 0), slot);
+      return _inlineUnkeyedEncodeCode(typeArgAt(nonNull, 0), slot);
     }
-    final typedMethod = _typedUnkeyedElementMethod(type);
+    final typedMethod = _typedUnkeyedElementMethod(nonNull);
     if (typedMethod != null) {
       return _inlineTypedUnkeyedEncodeCode(typedMethod, slot);
     }
-    if (type.element != null &&
-        const TypeClassifier().isCodableElement(type.element!)) {
-      return '${slot.indent}const ${type.element!.name}Codable().encode('
+    if (nonNull is TypeParameterType ||
+        (nonNull.element != null &&
+            const TypeClassifier().isCodableElement(nonNull.element!))) {
+      final codecExpr = _codecHelper.forType(nonNull, CodecMode.encodable);
+      return '${slot.indent}$codecExpr.encode('
           '${slot.itemAccess}, ${slot.encoderExpr});\n';
     }
     throw StateError(
@@ -598,7 +699,7 @@ final class EncoderGeneratorHelper {
     );
   }
 
-  static String _inlineUnkeyedEncodeCode(DartType? inner, _EncoderSlot slot) {
+  String _inlineUnkeyedEncodeCode(DartType? inner, _EncoderSlot slot) {
     if (inner == null) {
       throw StateError('Missing element type for nested collection.');
     }

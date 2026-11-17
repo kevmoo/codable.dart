@@ -63,7 +63,7 @@ extension type const _$PointSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Point
 // =============================================================================
-final class PointCodable implements Codable<Point> {
+final class PointCodable implements KeyedCodable<Point> {
   const PointCodable();
 
   @override
@@ -125,10 +125,17 @@ final class PointCodable implements Codable<Point> {
   }
 
   @override
-  void encode(Point instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(Point instance) => 2;
+
+  @override
+  void encodeFields(Point instance, KeyedEncoder keyed) {
     keyed.encodeDouble(_$PointSchema.nameX, instance.x);
     keyed.encodeDouble(_$PointSchema.nameY, instance.y);
+  }
+
+  @override
+  void encode(Point instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -223,7 +230,7 @@ extension type const _$UserAccountSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for UserAccount
 // =============================================================================
-final class UserAccountCodable implements Codable<UserAccount> {
+final class UserAccountCodable implements KeyedCodable<UserAccount> {
   const UserAccountCodable();
 
   @override
@@ -307,6 +314,28 @@ final class UserAccountCodable implements Codable<UserAccount> {
   }
 
   @override
+  int encodedFieldCount(UserAccount instance) {
+    var count$ = 4;
+    if (instance.location != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(UserAccount instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$UserAccountSchema.nameId, instance.id);
+    keyed.encodeString(
+      _$UserAccountSchema.nameEmailAddress,
+      instance.emailAddress,
+    );
+    keyed.encodeString(_$UserAccountSchema.nameRole, instance.role.name);
+    keyed.encodeStringList(_$UserAccountSchema.nameTags, instance.tags);
+    final v$Location = instance.location;
+    if (v$Location != null) {
+      keyed.encodeDoubleList(_$UserAccountSchema.nameLocation, v$Location);
+    }
+  }
+
+  @override
   void encode(UserAccount instance, Encoder encoder) {
     var count$ = 4;
     final v$Location = instance.location;
@@ -384,7 +413,7 @@ extension type const _$AddressSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Address
 // =============================================================================
-final class AddressCodable implements Codable<Address> {
+final class AddressCodable implements KeyedCodable<Address> {
   const AddressCodable();
 
   @override
@@ -424,10 +453,17 @@ final class AddressCodable implements Codable<Address> {
   }
 
   @override
-  void encode(Address instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(Address instance) => 2;
+
+  @override
+  void encodeFields(Address instance, KeyedEncoder keyed) {
     keyed.encodeString(_$AddressSchema.nameCity, instance.city);
     keyed.encodeString(_$AddressSchema.nameStreet, instance.street);
+  }
+
+  @override
+  void encode(Address instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -503,7 +539,7 @@ extension type const _$EnterpriseSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Enterprise
 // =============================================================================
-final class EnterpriseCodable implements Codable<Enterprise> {
+final class EnterpriseCodable implements KeyedCodable<Enterprise> {
   const EnterpriseCodable();
 
   @override
@@ -569,8 +605,10 @@ final class EnterpriseCodable implements Codable<Enterprise> {
   }
 
   @override
-  void encode(Enterprise instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
+  int encodedFieldCount(Enterprise instance) => 5;
+
+  @override
+  void encodeFields(Enterprise instance, KeyedEncoder keyed) {
     keyed.encodeString(_$EnterpriseSchema.nameName, instance.name);
     keyed.encodeValue(
       _$EnterpriseSchema.nameHeadquarter,
@@ -594,6 +632,11 @@ final class EnterpriseCodable implements Codable<Enterprise> {
         k.encodeInt(entry.key, entry.value);
       }
     }
+  }
+
+  @override
+  void encode(Enterprise instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -660,7 +703,8 @@ extension type const _$UserProfileCustomSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for UserProfileCustom
 // =============================================================================
-final class UserProfileCustomCodable implements Codable<UserProfileCustom> {
+final class UserProfileCustomCodable
+    implements KeyedCodable<UserProfileCustom> {
   const UserProfileCustomCodable();
 
   @override
@@ -700,14 +744,21 @@ final class UserProfileCustomCodable implements Codable<UserProfileCustom> {
   }
 
   @override
-  void encode(UserProfileCustom instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(UserProfileCustom instance) => 2;
+
+  @override
+  void encodeFields(UserProfileCustom instance, KeyedEncoder keyed) {
     keyed.encodeString(_$UserProfileCustomSchema.nameId, instance.id);
     keyed.encodeValue(
       _$UserProfileCustomSchema.nameZip,
       instance.zip,
       const ZipCodeDecoder(),
     );
+  }
+
+  @override
+  void encode(UserProfileCustom instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -796,7 +847,7 @@ extension type const _$CodableKeyVariantsModelSchema(int _value) {
 // 2. Companion Codable for CodableKeyVariantsModel
 // =============================================================================
 final class CodableKeyVariantsModelCodable
-    implements Codable<CodableKeyVariantsModel> {
+    implements KeyedCodable<CodableKeyVariantsModel> {
   const CodableKeyVariantsModelCodable();
 
   @override
@@ -867,8 +918,10 @@ final class CodableKeyVariantsModelCodable
   }
 
   @override
-  void encode(CodableKeyVariantsModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(CodableKeyVariantsModel instance) => 4;
+
+  @override
+  void encodeFields(CodableKeyVariantsModel instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$CodableKeyVariantsModelSchema.nameZip,
       instance.zip,
@@ -888,6 +941,11 @@ final class CodableKeyVariantsModelCodable
       instance.createdAt,
       const EpochMsDateTimeEncoder(),
     );
+  }
+
+  @override
+  void encode(CodableKeyVariantsModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -964,7 +1022,8 @@ extension type const _$NumericMeasurementSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for NumericMeasurement
 // =============================================================================
-final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
+final class NumericMeasurementCodable
+    implements KeyedCodable<NumericMeasurement> {
   const NumericMeasurementCodable();
 
   @override
@@ -1054,6 +1113,101 @@ final class NumericMeasurementCodable implements Codable<NumericMeasurement> {
       metrics: metrics,
       nullableMetrics: nullableMetrics,
     );
+  }
+
+  @override
+  int encodedFieldCount(NumericMeasurement instance) {
+    var count$ = 6;
+    if (instance.optionalScore != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(NumericMeasurement instance, KeyedEncoder keyed) {
+    switch (instance.score) {
+      case final int v:
+        keyed.encodeInt(_$NumericMeasurementSchema.nameScore, v);
+      case final v:
+        keyed.encodeDouble(_$NumericMeasurementSchema.nameScore, v.toDouble());
+    }
+    final v$OptionalScore = instance.optionalScore;
+    if (v$OptionalScore != null) {
+      switch (v$OptionalScore) {
+        case final int v:
+          keyed.encodeInt(_$NumericMeasurementSchema.nameOptionalScore, v);
+        case final v:
+          keyed.encodeDouble(
+            _$NumericMeasurementSchema.nameOptionalScore,
+            v.toDouble(),
+          );
+      }
+    }
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameSamples,
+      instance.samples,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameNullableSamples,
+      instance.nullableSamples,
+      Encodable.fromFunction((num? item, e) {
+        switch (item) {
+          case null:
+            e.singleValue().encodeNull();
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$NumericMeasurementSchema.nameDistinctValues,
+      instance.distinctValues,
+      Encodable.fromFunction((num item, e) {
+        switch (item) {
+          case final int v:
+            e.singleValue().encodeInt(v);
+          case final v:
+            e.singleValue().encodeDouble(v.toDouble());
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$NumericMeasurementSchema.nameMetrics)
+          .keyed(length: instance.metrics.length);
+      for (final entry in instance.metrics.entries) {
+        switch (entry.value) {
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
+        }
+      }
+    }
+    {
+      final k = keyed
+          .nestedEncoder(_$NumericMeasurementSchema.nameNullableMetrics)
+          .keyed(length: instance.nullableMetrics.length);
+      for (final entry in instance.nullableMetrics.entries) {
+        switch (entry.value) {
+          case null:
+            k.encodeNull(entry.key);
+          case final int v:
+            k.encodeInt(entry.key, v);
+          case final v:
+            k.encodeDouble(entry.key, v.toDouble());
+        }
+      }
+    }
   }
 
   @override
@@ -1215,7 +1369,7 @@ extension type const _$TeamSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Team
 // =============================================================================
-final class TeamCodable implements Codable<Team> {
+final class TeamCodable implements KeyedCodable<Team> {
   const TeamCodable();
 
   @override
@@ -1290,8 +1444,10 @@ final class TeamCodable implements Codable<Team> {
   }
 
   @override
-  void encode(Team instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(Team instance) => 4;
+
+  @override
+  void encodeFields(Team instance, KeyedEncoder keyed) {
     keyed.encodeString(_$TeamSchema.nameName, instance.name);
     keyed.encodeList(
       _$TeamSchema.nameRoles,
@@ -1319,6 +1475,11 @@ final class TeamCodable implements Codable<Team> {
         }
       }
     }
+  }
+
+  @override
+  void encode(Team instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -1396,7 +1557,7 @@ extension type const _$PrimitiveCollectionsModelSchema(int _value) {
 // 2. Companion Codable for PrimitiveCollectionsModel
 // =============================================================================
 final class PrimitiveCollectionsModelCodable
-    implements Codable<PrimitiveCollectionsModel> {
+    implements KeyedCodable<PrimitiveCollectionsModel> {
   const PrimitiveCollectionsModelCodable();
 
   @override
@@ -1480,8 +1641,10 @@ final class PrimitiveCollectionsModelCodable
   }
 
   @override
-  void encode(PrimitiveCollectionsModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 7);
+  int encodedFieldCount(PrimitiveCollectionsModel instance) => 7;
+
+  @override
+  void encodeFields(PrimitiveCollectionsModel instance, KeyedEncoder keyed) {
     keyed.encodeIntList(
       _$PrimitiveCollectionsModelSchema.nameInts,
       instance.ints,
@@ -1526,6 +1689,11 @@ final class PrimitiveCollectionsModelCodable
         }
       }),
     );
+  }
+
+  @override
+  void encode(PrimitiveCollectionsModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 7));
   }
 }
 
@@ -1596,7 +1764,8 @@ extension type const _$BinaryPayloadModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for BinaryPayloadModel
 // =============================================================================
-final class BinaryPayloadModelCodable implements Codable<BinaryPayloadModel> {
+final class BinaryPayloadModelCodable
+    implements KeyedCodable<BinaryPayloadModel> {
   const BinaryPayloadModelCodable();
 
   @override
@@ -1669,6 +1838,44 @@ final class BinaryPayloadModelCodable implements Codable<BinaryPayloadModel> {
       nullableChunks: nullableChunks,
       namedBlobs: namedBlobs,
     );
+  }
+
+  @override
+  int encodedFieldCount(BinaryPayloadModel instance) {
+    var count$ = 4;
+    if (instance.signature != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(BinaryPayloadModel instance, KeyedEncoder keyed) {
+    keyed.encodeBytes(_$BinaryPayloadModelSchema.namePayload, instance.payload);
+    final v$Signature = instance.signature;
+    if (v$Signature != null) {
+      keyed.encodeBytes(_$BinaryPayloadModelSchema.nameSignature, v$Signature);
+    }
+    keyed.encodeList(
+      _$BinaryPayloadModelSchema.nameChunks,
+      instance.chunks,
+      Encodable.fromFunction((Uint8List item, e) {
+        e.singleValue().encodeBytes(item);
+      }),
+    );
+    keyed.encodeList(
+      _$BinaryPayloadModelSchema.nameNullableChunks,
+      instance.nullableChunks,
+      Encodable.fromFunction((Uint8List? item, e) {
+        e.singleValue().encodeNullableBytes(item);
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$BinaryPayloadModelSchema.nameNamedBlobs)
+          .keyed(length: instance.namedBlobs.length);
+      for (final entry in instance.namedBlobs.entries) {
+        k.encodeBytes(entry.key, entry.value);
+      }
+    }
   }
 
   @override
@@ -1753,7 +1960,7 @@ extension type const _$TypedKeyMapModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TypedKeyMapModel
 // =============================================================================
-final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
+final class TypedKeyMapModelCodable implements KeyedCodable<TypedKeyMapModel> {
   const TypedKeyMapModelCodable();
 
   @override
@@ -1843,8 +2050,10 @@ final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
   }
 
   @override
-  void encode(TypedKeyMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(TypedKeyMapModel instance) => 4;
+
+  @override
+  void encodeFields(TypedKeyMapModel instance, KeyedEncoder keyed) {
     {
       final m = keyed
           .nestedEncoder(_$TypedKeyMapModelSchema.nameStatusMessages)
@@ -1880,6 +2089,11 @@ final class TypedKeyMapModelCodable implements Codable<TypedKeyMapModel> {
         k.encodeIntList(entry.key, entry.value);
       }
     }
+  }
+
+  @override
+  void encode(TypedKeyMapModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -1917,7 +2131,7 @@ extension type const _$CompositeKeyMapModelSchema(int _value) {
 // 2. Companion Codable for CompositeKeyMapModel
 // =============================================================================
 final class CompositeKeyMapModelCodable
-    implements Codable<CompositeKeyMapModel> {
+    implements KeyedCodable<CompositeKeyMapModel> {
   const CompositeKeyMapModelCodable();
 
   @override
@@ -1955,8 +2169,10 @@ final class CompositeKeyMapModelCodable
   }
 
   @override
-  void encode(CompositeKeyMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 1);
+  int encodedFieldCount(CompositeKeyMapModel instance) => 1;
+
+  @override
+  void encodeFields(CompositeKeyMapModel instance, KeyedEncoder keyed) {
     {
       final m = keyed
           .nestedEncoder(_$CompositeKeyMapModelSchema.nameLabelsByPoint)
@@ -1966,6 +2182,11 @@ final class CompositeKeyMapModelCodable
         m.valueEncoder().singleValue().encodeString(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(CompositeKeyMapModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }
 
@@ -2016,7 +2237,7 @@ extension type const _$StringKeyedNestedMapModelSchema(int _value) {
 // 2. Companion Codable for StringKeyedNestedMapModel
 // =============================================================================
 final class StringKeyedNestedMapModelCodable
-    implements Codable<StringKeyedNestedMapModel> {
+    implements KeyedCodable<StringKeyedNestedMapModel> {
   const StringKeyedNestedMapModelCodable();
 
   @override
@@ -2107,8 +2328,10 @@ final class StringKeyedNestedMapModelCodable
   }
 
   @override
-  void encode(StringKeyedNestedMapModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(StringKeyedNestedMapModel instance) => 3;
+
+  @override
+  void encodeFields(StringKeyedNestedMapModel instance, KeyedEncoder keyed) {
     {
       final k = keyed
           .nestedEncoder(_$StringKeyedNestedMapModelSchema.nameRolesByUser)
@@ -2144,6 +2367,11 @@ final class StringKeyedNestedMapModelCodable
         }
       }
     }
+  }
+
+  @override
+  void encode(StringKeyedNestedMapModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -2212,7 +2440,7 @@ extension type const _$NullableGetterTelemetrySchema(int _value) {
 // 2. Companion Codable for NullableGetterTelemetry
 // =============================================================================
 final class NullableGetterTelemetryCodable
-    implements Codable<NullableGetterTelemetry> {
+    implements KeyedCodable<NullableGetterTelemetry> {
   const NullableGetterTelemetryCodable();
 
   @override
@@ -2279,6 +2507,36 @@ final class NullableGetterTelemetryCodable
       location: location,
       onRead: onRead,
     );
+  }
+
+  @override
+  int encodedFieldCount(NullableGetterTelemetry instance) {
+    var count$ = 1;
+    if (instance.tag != null) count$++;
+    if (instance.score != null) count$++;
+    if (instance.location != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(NullableGetterTelemetry instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$NullableGetterTelemetrySchema.nameId, instance.id);
+    final v$Tag = instance.tag;
+    if (v$Tag != null) {
+      keyed.encodeString(_$NullableGetterTelemetrySchema.nameTag, v$Tag);
+    }
+    final v$Score = instance.score;
+    if (v$Score != null) {
+      keyed.encodeInt(_$NullableGetterTelemetrySchema.nameScore, v$Score);
+    }
+    final v$Location = instance.location;
+    if (v$Location != null) {
+      keyed.encodeValue(
+        _$NullableGetterTelemetrySchema.nameLocation,
+        v$Location,
+        const AddressCodable(),
+      );
+    }
   }
 
   @override
@@ -2361,7 +2619,7 @@ extension type const _$AllNullableModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for AllNullableModel
 // =============================================================================
-final class AllNullableModelCodable implements Codable<AllNullableModel> {
+final class AllNullableModelCodable implements KeyedCodable<AllNullableModel> {
   const AllNullableModelCodable();
 
   @override
@@ -2477,6 +2735,67 @@ final class AllNullableModelCodable implements Codable<AllNullableModel> {
   }
 
   @override
+  int encodedFieldCount(AllNullableModel instance) {
+    var count$ = 0;
+    if (instance.a != null) count$++;
+    if (instance.b != null) count$++;
+    if (instance.items != null) count$++;
+    if (instance.roles != null) count$++;
+    if (instance.labels != null) count$++;
+    if (instance.codes != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(AllNullableModel instance, KeyedEncoder keyed) {
+    final v$A = instance.a;
+    if (v$A != null) {
+      keyed.encodeInt(_$AllNullableModelSchema.nameA, v$A);
+    }
+    final v$B = instance.b;
+    if (v$B != null) {
+      keyed.encodeString(_$AllNullableModelSchema.nameB, v$B);
+    }
+    final v$Items = instance.items;
+    if (v$Items != null) {
+      keyed.encodeIntList(_$AllNullableModelSchema.nameItems, v$Items);
+    }
+    final v$Roles = instance.roles;
+    if (v$Roles != null) {
+      keyed.encodeList(
+        _$AllNullableModelSchema.nameRoles,
+        v$Roles,
+        Encodable.fromFunction((UserRole item, e) {
+          e.singleValue().encodeString(item.name);
+        }),
+      );
+    }
+    final v$Labels = instance.labels;
+    if (v$Labels != null) {
+      {
+        final k = keyed
+            .nestedEncoder(_$AllNullableModelSchema.nameLabels)
+            .keyed(length: v$Labels.length);
+        for (final entry in v$Labels.entries) {
+          k.encodeInt(entry.key, entry.value);
+        }
+      }
+    }
+    final v$Codes = instance.codes;
+    if (v$Codes != null) {
+      {
+        final m = keyed
+            .nestedEncoder(_$AllNullableModelSchema.nameCodes)
+            .map(length: v$Codes.length);
+        for (final entry in v$Codes.entries) {
+          m.keyEncoder().singleValue().encodeInt(entry.key);
+          m.valueEncoder().singleValue().encodeString(entry.value);
+        }
+      }
+    }
+  }
+
+  @override
   void encode(AllNullableModel instance, Encoder encoder) {
     var count$ = 0;
     final v$A = instance.a;
@@ -2561,7 +2880,7 @@ extension type const _$EmptyRecordSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EmptyRecord
 // =============================================================================
-final class EmptyRecordCodable implements Codable<EmptyRecord> {
+final class EmptyRecordCodable implements KeyedCodable<EmptyRecord> {
   const EmptyRecordCodable();
 
   @override
@@ -2583,6 +2902,12 @@ final class EmptyRecordCodable implements Codable<EmptyRecord> {
 
     return const EmptyRecord();
   }
+
+  @override
+  int encodedFieldCount(EmptyRecord instance) => 0;
+
+  @override
+  void encodeFields(EmptyRecord instance, KeyedEncoder keyed) {}
 
   @override
   void encode(EmptyRecord instance, Encoder encoder) {
@@ -2630,7 +2955,7 @@ extension type const _$NestedModelGridSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for NestedModelGrid
 // =============================================================================
-final class NestedModelGridCodable implements Codable<NestedModelGrid> {
+final class NestedModelGridCodable implements KeyedCodable<NestedModelGrid> {
   const NestedModelGridCodable();
 
   @override
@@ -2714,8 +3039,10 @@ final class NestedModelGridCodable implements Codable<NestedModelGrid> {
   }
 
   @override
-  void encode(NestedModelGrid instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(NestedModelGrid instance) => 4;
+
+  @override
+  void encodeFields(NestedModelGrid instance, KeyedEncoder keyed) {
     keyed.encodeList(
       _$NestedModelGridSchema.nameRows,
       instance.rows,
@@ -2778,6 +3105,11 @@ final class NestedModelGridCodable implements Codable<NestedModelGrid> {
       }),
     );
   }
+
+  @override
+  void encode(NestedModelGrid instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
+  }
 }
 
 // =============================================================================
@@ -2833,7 +3165,7 @@ extension type const _$NestedCollectionMatrixSchema(int _value) {
 // 2. Companion Codable for NestedCollectionMatrix
 // =============================================================================
 final class NestedCollectionMatrixCodable
-    implements Codable<NestedCollectionMatrix> {
+    implements KeyedCodable<NestedCollectionMatrix> {
   const NestedCollectionMatrixCodable();
 
   @override
@@ -2986,8 +3318,10 @@ final class NestedCollectionMatrixCodable
   }
 
   @override
-  void encode(NestedCollectionMatrix instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
+  int encodedFieldCount(NestedCollectionMatrix instance) => 5;
+
+  @override
+  void encodeFields(NestedCollectionMatrix instance, KeyedEncoder keyed) {
     keyed.encodeList(
       _$NestedCollectionMatrixSchema.nameTensor3d,
       instance.tensor3d,
@@ -3058,6 +3392,11 @@ final class NestedCollectionMatrixCodable
         }
       }),
     );
+  }
+
+  @override
+  void encode(NestedCollectionMatrix instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }
 
@@ -3154,7 +3493,8 @@ extension type const _$DefaultValuesModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for DefaultValuesModel
 // =============================================================================
-final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
+final class DefaultValuesModelCodable
+    implements KeyedCodable<DefaultValuesModel> {
   const DefaultValuesModelCodable();
 
   @override
@@ -3330,6 +3670,115 @@ final class DefaultValuesModelCodable implements Codable<DefaultValuesModel> {
       emptyMap: emptyMap,
       nestedIntRows: nestedIntRows,
       nestedStringIntMaps: nestedStringIntMaps,
+    );
+  }
+
+  @override
+  int encodedFieldCount(DefaultValuesModel instance) {
+    var count$ = 17;
+    if (instance.nullableOverride != null) count$++;
+    if (instance.omittedDefaultKeepCtor != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(DefaultValuesModel instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$DefaultValuesModelSchema.nameLabel, instance.label);
+    keyed.encodeString(
+      _$DefaultValuesModelSchema.nameEscapedNote,
+      instance.escapedNote,
+    );
+    keyed.encodeInt(
+      _$DefaultValuesModelSchema.nameRetryCount,
+      instance.retryCount,
+    );
+    keyed.encodeDouble(_$DefaultValuesModelSchema.nameFactor, instance.factor);
+    keyed.encodeBool(_$DefaultValuesModelSchema.nameEnabled, instance.enabled);
+    keyed.encodeString(_$DefaultValuesModelSchema.nameRole, instance.role.name);
+    keyed.encodeStringList(_$DefaultValuesModelSchema.nameTags, instance.tags);
+    {
+      final k = keyed
+          .nestedEncoder(_$DefaultValuesModelSchema.nameMetadata)
+          .keyed(length: instance.metadata.length);
+      for (final entry in instance.metadata.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
+    keyed.encodeValue(
+      _$DefaultValuesModelSchema.nameOrigin,
+      instance.origin,
+      const PointCodable(),
+    );
+    final v$NullableOverride = instance.nullableOverride;
+    if (v$NullableOverride != null) {
+      keyed.encodeString(
+        _$DefaultValuesModelSchema.nameNullableOverride,
+        v$NullableOverride,
+      );
+    }
+    final v$OmittedDefaultKeepCtor = instance.omittedDefaultKeepCtor;
+    if (v$OmittedDefaultKeepCtor != null) {
+      keyed.encodeString(
+        _$DefaultValuesModelSchema.nameOmittedDefaultKeepCtor,
+        v$OmittedDefaultKeepCtor,
+      );
+    }
+    keyed.encodeDoubleList(
+      _$DefaultValuesModelSchema.nameWeights,
+      instance.weights,
+    );
+    keyed.encodeDouble(
+      _$DefaultValuesModelSchema.nameHexDouble,
+      instance.hexDouble,
+    );
+    keyed.encodeDouble(
+      _$DefaultValuesModelSchema.nameZeroDouble,
+      instance.zeroDouble,
+    );
+    switch (instance.countNum) {
+      case final int v:
+        keyed.encodeInt(_$DefaultValuesModelSchema.nameCountNum, v);
+      case final v:
+        keyed.encodeDouble(
+          _$DefaultValuesModelSchema.nameCountNum,
+          v.toDouble(),
+        );
+    }
+    keyed.encodeStringList(
+      _$DefaultValuesModelSchema.nameEmptySet,
+      instance.emptySet.toList(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$DefaultValuesModelSchema.nameEmptyMap)
+          .keyed(length: instance.emptyMap.length);
+      for (final entry in instance.emptyMap.entries) {
+        k.encodeInt(entry.key, entry.value);
+      }
+    }
+    keyed.encodeList(
+      _$DefaultValuesModelSchema.nameNestedIntRows,
+      instance.nestedIntRows,
+      Encodable.fromFunction((List<int> item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$DefaultValuesModelSchema.nameNestedStringIntMaps,
+      instance.nestedStringIntMaps,
+      Encodable.fromFunction((Map<String, int> item, e) {
+        {
+          final k = e.keyed(length: item.length);
+          for (final entry in item.entries) {
+            k.encodeInt(entry.key, entry.value);
+          }
+        }
+      }),
     );
   }
 
@@ -3595,7 +4044,7 @@ extension type const _$PortableTypedDataModelSchema(int _value) {
 // 2. Companion Codable for PortableTypedDataModel
 // =============================================================================
 final class PortableTypedDataModelCodable
-    implements Codable<PortableTypedDataModel> {
+    implements KeyedCodable<PortableTypedDataModel> {
   const PortableTypedDataModelCodable();
 
   @override
@@ -3805,6 +4254,112 @@ final class PortableTypedDataModelCodable
   }
 
   @override
+  int encodedFieldCount(PortableTypedDataModel instance) {
+    var count$ = 13;
+    if (instance.nullableInt16 != null) count$++;
+    if (instance.nullableFloat32 != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(PortableTypedDataModel instance, KeyedEncoder keyed) {
+    keyed.encodeBytes(_$PortableTypedDataModelSchema.nameUint8, instance.uint8);
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint8Clamped,
+      instance.uint8Clamped,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint16,
+      instance.uint16,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameUint32,
+      instance.uint32,
+    );
+    keyed.encodeIntList(_$PortableTypedDataModelSchema.nameInt8, instance.int8);
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameInt16,
+      instance.int16,
+    );
+    keyed.encodeIntList(
+      _$PortableTypedDataModelSchema.nameInt32,
+      instance.int32,
+    );
+    keyed.encodeDoubleList(
+      _$PortableTypedDataModelSchema.nameFloat32,
+      instance.float32,
+    );
+    keyed.encodeDoubleList(
+      _$PortableTypedDataModelSchema.nameFloat64,
+      instance.float64,
+    );
+    final v$NullableInt16 = instance.nullableInt16;
+    if (v$NullableInt16 != null) {
+      keyed.encodeIntList(
+        _$PortableTypedDataModelSchema.nameNullableInt16,
+        v$NullableInt16,
+      );
+    }
+    final v$NullableFloat32 = instance.nullableFloat32;
+    if (v$NullableFloat32 != null) {
+      keyed.encodeDoubleList(
+        _$PortableTypedDataModelSchema.nameNullableFloat32,
+        v$NullableFloat32,
+      );
+    }
+    keyed.encodeList(
+      _$PortableTypedDataModelSchema.nameNestedInt16s,
+      instance.nestedInt16s,
+      Encodable.fromFunction((Int16List item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    keyed.encodeList(
+      _$PortableTypedDataModelSchema.nameSparseInt16s,
+      instance.sparseInt16s,
+      Encodable.fromFunction((Int16List? item, e) {
+        if (item case final val0?) {
+          {
+            final u1 = e.unkeyed(length: val0.length);
+            for (final elem1 in val0) {
+              u1.encodeInt(elem1);
+            }
+          }
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$PortableTypedDataModelSchema.nameStringKeyedUint16s)
+          .keyed(length: instance.stringKeyedUint16s.length);
+      for (final entry in instance.stringKeyedUint16s.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$PortableTypedDataModelSchema.nameIntKeyedInt8s)
+          .map(length: instance.intKeyedInt8s.length);
+      for (final entry in instance.intKeyedInt8s.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        {
+          final u1 = m.valueEncoder().unkeyed(length: entry.value.length);
+          for (final elem1 in entry.value) {
+            u1.encodeInt(elem1);
+          }
+        }
+      }
+    }
+  }
+
+  @override
   void encode(PortableTypedDataModel instance, Encoder encoder) {
     var count$ = 13;
     final v$NullableInt16 = instance.nullableInt16;
@@ -3990,7 +4545,7 @@ extension type const _$Vm64BitTypedDataModelSchema(int _value) {
 // 2. Companion Codable for Vm64BitTypedDataModel
 // =============================================================================
 final class Vm64BitTypedDataModelCodable
-    implements Codable<Vm64BitTypedDataModel> {
+    implements KeyedCodable<Vm64BitTypedDataModel> {
   const Vm64BitTypedDataModelCodable();
 
   @override
@@ -4110,6 +4665,76 @@ final class Vm64BitTypedDataModelCodable
       tupleInt64: tupleInt64,
       tupleUint64: tupleUint64,
     );
+  }
+
+  @override
+  int encodedFieldCount(Vm64BitTypedDataModel instance) {
+    var count$ = 4;
+    if (instance.nullableInt64 != null) count$++;
+    if (instance.nullableUint64 != null) count$++;
+    if (instance.tupleInt64 != null) count$++;
+    if (instance.tupleUint64 != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Vm64BitTypedDataModel instance, KeyedEncoder keyed) {
+    keyed.encodeIntList(
+      _$Vm64BitTypedDataModelSchema.nameInt64,
+      instance.int64,
+    );
+    keyed.encodeIntList(
+      _$Vm64BitTypedDataModelSchema.nameUint64,
+      instance.uint64,
+    );
+    final v$NullableInt64 = instance.nullableInt64;
+    if (v$NullableInt64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameNullableInt64,
+        v$NullableInt64,
+      );
+    }
+    final v$NullableUint64 = instance.nullableUint64;
+    if (v$NullableUint64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameNullableUint64,
+        v$NullableUint64,
+      );
+    }
+    keyed.encodeList(
+      _$Vm64BitTypedDataModelSchema.nameNestedUint64s,
+      instance.nestedUint64s,
+      Encodable.fromFunction((Uint64List item, e) {
+        {
+          final u = e.unkeyed(length: item.length);
+          for (final elem in item) {
+            u.encodeInt(elem);
+          }
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$Vm64BitTypedDataModelSchema.nameNamedUint64s)
+          .keyed(length: instance.namedUint64s.length);
+      for (final entry in instance.namedUint64s.entries) {
+        k.encodeIntList(entry.key, entry.value);
+      }
+    }
+    final v$TupleInt64 = instance.tupleInt64;
+    if (v$TupleInt64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameTupleInt64,
+        v$TupleInt64,
+      );
+    }
+    final v$TupleUint64 = instance.tupleUint64;
+    if (v$TupleUint64 != null) {
+      keyed.encodeIntList(
+        _$Vm64BitTypedDataModelSchema.nameTupleUint64,
+        v$TupleUint64,
+      );
+    }
   }
 
   @override
@@ -4280,7 +4905,8 @@ extension type const _$TupleVariantsModelSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for TupleVariantsModel
 // =============================================================================
-final class TupleVariantsModelCodable implements Codable<TupleVariantsModel> {
+final class TupleVariantsModelCodable
+    implements KeyedCodable<TupleVariantsModel> {
   const TupleVariantsModelCodable();
 
   @override
@@ -4416,6 +5042,52 @@ final class TupleVariantsModelCodable implements Codable<TupleVariantsModel> {
   }
 
   @override
+  int encodedFieldCount(TupleVariantsModel instance) {
+    var count$ = 5;
+    if (instance.optionalIntPair != null) count$++;
+    if (instance.optionalUint16Pair != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TupleVariantsModel instance, KeyedEncoder keyed) {
+    keyed.encodeIntList(
+      _$TupleVariantsModelSchema.nameIntPair,
+      instance.intPair,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameDoubleTriple,
+      instance.doubleTriple,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameFloat64Pair,
+      instance.float64Pair,
+    );
+    keyed.encodeDoubleList(
+      _$TupleVariantsModelSchema.nameFloat32Pair,
+      instance.float32Pair,
+    );
+    keyed.encodeIntList(
+      _$TupleVariantsModelSchema.nameInt32Triple,
+      instance.int32Triple,
+    );
+    final v$OptionalIntPair = instance.optionalIntPair;
+    if (v$OptionalIntPair != null) {
+      keyed.encodeIntList(
+        _$TupleVariantsModelSchema.nameOptionalIntPair,
+        v$OptionalIntPair,
+      );
+    }
+    final v$OptionalUint16Pair = instance.optionalUint16Pair;
+    if (v$OptionalUint16Pair != null) {
+      keyed.encodeIntList(
+        _$TupleVariantsModelSchema.nameOptionalUint16Pair,
+        v$OptionalUint16Pair,
+      );
+    }
+  }
+
+  @override
   void encode(TupleVariantsModel instance, Encoder encoder) {
     var count$ = 5;
     final v$OptionalIntPair = instance.optionalIntPair;
@@ -4529,7 +5201,7 @@ extension type const _$EnumCollectionsAndAliasesModelSchema(int _value) {
 // 2. Companion Codable for EnumCollectionsAndAliasesModel
 // =============================================================================
 final class EnumCollectionsAndAliasesModelCodable
-    implements Codable<EnumCollectionsAndAliasesModel> {
+    implements KeyedCodable<EnumCollectionsAndAliasesModel> {
   const EnumCollectionsAndAliasesModelCodable();
 
   @override
@@ -4782,8 +5454,13 @@ final class EnumCollectionsAndAliasesModelCodable
   }
 
   @override
-  void encode(EnumCollectionsAndAliasesModel instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 9);
+  int encodedFieldCount(EnumCollectionsAndAliasesModel instance) => 9;
+
+  @override
+  void encodeFields(
+    EnumCollectionsAndAliasesModel instance,
+    KeyedEncoder keyed,
+  ) {
     keyed.encodeList(
       _$EnumCollectionsAndAliasesModelSchema.nameRoles,
       instance.roles,
@@ -4859,5 +5536,4199 @@ final class EnumCollectionsAndAliasesModelCodable
       _$EnumCollectionsAndAliasesModelSchema.nameSlug,
       instance.slug,
     );
+  }
+
+  @override
+  void encode(EnumCollectionsAndAliasesModel instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 9));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for Envelope
+// =============================================================================
+extension type const _$EnvelopeSchema(int _value) {
+  // String Name Constants
+  static const String nameStatus = 'status';
+  static const String nameData = 'data';
+  static const String nameHistory = 'history';
+  static const String nameLookup = 'lookup';
+  static const String nameFallback = 'fallback';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyStatus = 0;
+  static const int keyData = 1;
+  static const int keyHistory = 2;
+  static const int keyLookup = 3;
+  static const int keyFallback = 4;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$EnvelopeSchema.nameStatus,
+    _$EnvelopeSchema.nameData,
+    _$EnvelopeSchema.nameHistory,
+    _$EnvelopeSchema.nameLookup,
+    _$EnvelopeSchema.nameFallback,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$EnvelopeSchema none = _$EnvelopeSchema(0);
+  static const int _statusBit = 1 << 0;
+  static const _$EnvelopeSchema status = _$EnvelopeSchema(_statusBit);
+  static const int _dataBit = 1 << 1;
+  static const _$EnvelopeSchema data = _$EnvelopeSchema(_dataBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$EnvelopeSchema golden = _$EnvelopeSchema(
+    _statusBit | _dataBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$EnvelopeSchema operator |(_$EnvelopeSchema other) =>
+      _$EnvelopeSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _statusBit) == 0) {
+      missing.add(nameStatus);
+    }
+    if ((_value & _dataBit) == 0) {
+      missing.add(nameData);
+    }
+    throw CodableException(
+      'Missing required fields for Envelope: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for Envelope
+// =============================================================================
+final class EnvelopeCodable<T> implements KeyedCodable<Envelope<T>> {
+  final Codable<T> _$t;
+
+  const EnvelopeCodable(this._$t);
+
+  @override
+  Envelope<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$EnvelopeSchema.keyOptions);
+
+    int? status;
+    T? data;
+    List<T> history = const [];
+    Map<String, T?> lookup = const {};
+    T? fallback;
+    var seen = _$EnvelopeSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$EnvelopeSchema.keyOptions)) {
+        case _$EnvelopeSchema.keyStatus:
+          if ((seen._value & _$EnvelopeSchema.status._value) != 0) {
+            throw const CodableException('Duplicate field "status"');
+          }
+          status = keyed.readInt();
+          seen |= _$EnvelopeSchema.status;
+          break;
+        case _$EnvelopeSchema.keyData:
+          if ((seen._value & _$EnvelopeSchema.data._value) != 0) {
+            throw const CodableException('Duplicate field "data"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            data = null as T;
+          } else {
+            data = keyed.decodeValue(_$t);
+          }
+          seen |= _$EnvelopeSchema.data;
+          break;
+        case _$EnvelopeSchema.keyHistory:
+          {
+            final u = keyed.nestedDecoder().unkeyed();
+            final l = <T>[];
+            while (u.moveNext()) {
+              if (null is T && u.isNextNull()) {
+                u.readNull();
+                l.add(null as T);
+              } else {
+                l.add(_$t.decode(u.nestedDecoder()));
+              }
+            }
+            history = l;
+          }
+          break;
+        case _$EnvelopeSchema.keyLookup:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, T?>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              if (k.isNextNull()) {
+                k.readNull();
+                m[key] = null;
+              } else {
+                m[key] = _$t.decode(k.nestedDecoder());
+              }
+            }
+            lookup = m;
+          }
+          break;
+        case _$EnvelopeSchema.keyFallback:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            fallback = null;
+          } else {
+            fallback = keyed.decodeValue(_$t);
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$EnvelopeSchema.data;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return Envelope<T>(
+      status: status!,
+      data: data as T,
+      history: history,
+      lookup: lookup,
+      fallback: fallback,
+    );
+  }
+
+  @override
+  int encodedFieldCount(Envelope<T> instance) {
+    var count$ = 3;
+    if (instance.data != null) count$++;
+    if (instance.fallback != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Envelope<T> instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$EnvelopeSchema.nameStatus, instance.status);
+    final v$Data = instance.data;
+    if (v$Data != null) {
+      keyed.encodeValue(_$EnvelopeSchema.nameData, v$Data, _$t);
+    }
+    keyed.encodeList(
+      _$EnvelopeSchema.nameHistory,
+      instance.history,
+      Encodable.fromFunction((T item, e) {
+        if (item case final val0?) {
+          _$t.encode(val0, e);
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$EnvelopeSchema.nameLookup)
+          .keyed(length: instance.lookup.length);
+      for (final entry in instance.lookup.entries) {
+        if (entry.value case final val1?) {
+          _$t.encode(val1, k.nestedEncoder(entry.key));
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    final v$Fallback = instance.fallback;
+    if (v$Fallback != null) {
+      keyed.encodeValue(_$EnvelopeSchema.nameFallback, v$Fallback, _$t);
+    }
+  }
+
+  @override
+  void encode(Envelope<T> instance, Encoder encoder) {
+    var count$ = 3;
+    final v$Data = instance.data;
+    if (v$Data != null) count$++;
+    final v$Fallback = instance.fallback;
+    if (v$Fallback != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeInt(_$EnvelopeSchema.nameStatus, instance.status);
+    if (v$Data != null) {
+      keyed.encodeValue(_$EnvelopeSchema.nameData, v$Data, _$t);
+    }
+    keyed.encodeList(
+      _$EnvelopeSchema.nameHistory,
+      instance.history,
+      Encodable.fromFunction((T item, e) {
+        if (item case final val0?) {
+          _$t.encode(val0, e);
+        } else {
+          e.singleValue().encodeNull();
+        }
+      }),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$EnvelopeSchema.nameLookup)
+          .keyed(length: instance.lookup.length);
+      for (final entry in instance.lookup.entries) {
+        if (entry.value case final val1?) {
+          _$t.encode(val1, k.nestedEncoder(entry.key));
+        } else {
+          k.encodeNull(entry.key);
+        }
+      }
+    }
+    if (v$Fallback != null) {
+      keyed.encodeValue(_$EnvelopeSchema.nameFallback, v$Fallback, _$t);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for Pair
+// =============================================================================
+extension type const _$PairSchema(int _value) {
+  // String Name Constants
+  static const String nameFirst = 'first';
+  static const String nameSecond = 'second';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyFirst = 0;
+  static const int keySecond = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PairSchema.nameFirst,
+    _$PairSchema.nameSecond,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PairSchema none = _$PairSchema(0);
+  static const int _firstBit = 1 << 0;
+  static const _$PairSchema first = _$PairSchema(_firstBit);
+  static const int _secondBit = 1 << 1;
+  static const _$PairSchema second = _$PairSchema(_secondBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PairSchema golden = _$PairSchema(_firstBit | _secondBit);
+
+  @pragma('vm:prefer-inline')
+  _$PairSchema operator |(_$PairSchema other) =>
+      _$PairSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _firstBit) == 0) {
+      missing.add(nameFirst);
+    }
+    if ((_value & _secondBit) == 0) {
+      missing.add(nameSecond);
+    }
+    throw CodableException(
+      'Missing required fields for Pair: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for Pair
+// =============================================================================
+final class PairCodable<A, B extends num> implements KeyedCodable<Pair<A, B>> {
+  final Codable<A> _$a;
+  final Codable<B> _$b;
+
+  const PairCodable(this._$a, this._$b);
+
+  @override
+  Pair<A, B> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PairSchema.keyOptions);
+
+    A? first;
+    B? second;
+    var seen = _$PairSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PairSchema.keyOptions)) {
+        case _$PairSchema.keyFirst:
+          if ((seen._value & _$PairSchema.first._value) != 0) {
+            throw const CodableException('Duplicate field "first"');
+          }
+          if (keyed.isNextNull() && null is A) {
+            keyed.readNull();
+            first = null as A;
+          } else {
+            first = keyed.decodeValue(_$a);
+          }
+          seen |= _$PairSchema.first;
+          break;
+        case _$PairSchema.keySecond:
+          if ((seen._value & _$PairSchema.second._value) != 0) {
+            throw const CodableException('Duplicate field "second"');
+          }
+          second = keyed.decodeValue(_$b);
+          seen |= _$PairSchema.second;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is A) {
+      seen |= _$PairSchema.first;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return Pair<A, B>(first as A, second!);
+  }
+
+  @override
+  int encodedFieldCount(Pair<A, B> instance) {
+    var count$ = 1;
+    if (instance.first != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Pair<A, B> instance, KeyedEncoder keyed) {
+    final v$First = instance.first;
+    if (v$First != null) {
+      keyed.encodeValue(_$PairSchema.nameFirst, v$First, _$a);
+    }
+    keyed.encodeValue(_$PairSchema.nameSecond, instance.second, _$b);
+  }
+
+  @override
+  void encode(Pair<A, B> instance, Encoder encoder) {
+    var count$ = 1;
+    final v$First = instance.first;
+    if (v$First != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$First != null) {
+      keyed.encodeValue(_$PairSchema.nameFirst, v$First, _$a);
+    }
+    keyed.encodeValue(_$PairSchema.nameSecond, instance.second, _$b);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for KeyedBucket
+// =============================================================================
+extension type const _$KeyedBucketSchema(int _value) {
+  // String Name Constants
+  static const String nameEntries = 'entries';
+  static const String nameActiveKeys = 'activeKeys';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyEntries = 0;
+  static const int keyActiveKeys = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$KeyedBucketSchema.nameEntries,
+    _$KeyedBucketSchema.nameActiveKeys,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$KeyedBucketSchema none = _$KeyedBucketSchema(0);
+  static const int _entriesBit = 1 << 0;
+  static const _$KeyedBucketSchema entries = _$KeyedBucketSchema(_entriesBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$KeyedBucketSchema golden = _$KeyedBucketSchema(_entriesBit);
+
+  @pragma('vm:prefer-inline')
+  _$KeyedBucketSchema operator |(_$KeyedBucketSchema other) =>
+      _$KeyedBucketSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _entriesBit) == 0) {
+      missing.add(nameEntries);
+    }
+    throw CodableException(
+      'Missing required fields for KeyedBucket: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for KeyedBucket
+// =============================================================================
+final class KeyedBucketCodable<K extends Object, V>
+    implements KeyedCodable<KeyedBucket<K, V>> {
+  final Codable<K> _$k;
+  final Codable<V> _$v;
+
+  const KeyedBucketCodable(this._$k, this._$v);
+
+  @override
+  KeyedBucket<K, V> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$KeyedBucketSchema.keyOptions);
+
+    Map<K, V>? entries;
+    Set<K> activeKeys = const {};
+    var seen = _$KeyedBucketSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$KeyedBucketSchema.keyOptions)) {
+        case _$KeyedBucketSchema.keyEntries:
+          if ((seen._value & _$KeyedBucketSchema.entries._value) != 0) {
+            throw const CodableException('Duplicate field "entries"');
+          }
+          {
+            final mDecoder = keyed.nestedDecoder().map();
+            final m = <K, V>{};
+            while (mDecoder.moveNextEntry()) {
+              final key = _$k.decode(mDecoder.keyDecoder());
+              final dec1Val = mDecoder.valueDecoder();
+              if (null is V) {
+                final sv1Val = dec1Val.singleValue();
+                if (sv1Val.isNull()) {
+                  sv1Val.readNull();
+                  m[key] = null as V;
+                } else {
+                  m[key] = _$v.decode(dec1Val);
+                }
+              } else {
+                m[key] = _$v.decode(dec1Val);
+              }
+            }
+            entries = m;
+          }
+          seen |= _$KeyedBucketSchema.entries;
+          break;
+        case _$KeyedBucketSchema.keyActiveKeys:
+          activeKeys = _$k.decodeList(keyed.nestedDecoder()).toSet();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return KeyedBucket<K, V>(entries: entries!, activeKeys: activeKeys);
+  }
+
+  @override
+  int encodedFieldCount(KeyedBucket<K, V> instance) => 2;
+
+  @override
+  void encodeFields(KeyedBucket<K, V> instance, KeyedEncoder keyed) {
+    {
+      final m = keyed
+          .nestedEncoder(_$KeyedBucketSchema.nameEntries)
+          .map(length: instance.entries.length);
+      for (final entry in instance.entries.entries) {
+        _$k.encode(entry.key, m.keyEncoder());
+        if (entry.value case final val1?) {
+          _$v.encode(val1, m.valueEncoder());
+        } else {
+          m.valueEncoder().singleValue().encodeNull();
+        }
+      }
+    }
+    keyed.encodeList(
+      _$KeyedBucketSchema.nameActiveKeys,
+      instance.activeKeys,
+      _$k,
+    );
+  }
+
+  @override
+  void encode(KeyedBucket<K, V> instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for TreeNode
+// =============================================================================
+extension type const _$TreeNodeSchema(int _value) {
+  // String Name Constants
+  static const String nameValue = 'value';
+  static const String nameChildren = 'children';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyValue = 0;
+  static const int keyChildren = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$TreeNodeSchema.nameValue,
+    _$TreeNodeSchema.nameChildren,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$TreeNodeSchema none = _$TreeNodeSchema(0);
+  static const int _valueBit = 1 << 0;
+  static const _$TreeNodeSchema value = _$TreeNodeSchema(_valueBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$TreeNodeSchema golden = _$TreeNodeSchema(_valueBit);
+
+  @pragma('vm:prefer-inline')
+  _$TreeNodeSchema operator |(_$TreeNodeSchema other) =>
+      _$TreeNodeSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _valueBit) == 0) {
+      missing.add(nameValue);
+    }
+    throw CodableException(
+      'Missing required fields for TreeNode: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for TreeNode
+// =============================================================================
+final class TreeNodeCodable<T> implements KeyedCodable<TreeNode<T>> {
+  final Codable<T> _$t;
+
+  const TreeNodeCodable(this._$t);
+
+  @override
+  TreeNode<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$TreeNodeSchema.keyOptions);
+
+    T? value;
+    List<TreeNode<T>> children = const [];
+    var seen = _$TreeNodeSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TreeNodeSchema.keyOptions)) {
+        case _$TreeNodeSchema.keyValue:
+          if ((seen._value & _$TreeNodeSchema.value._value) != 0) {
+            throw const CodableException('Duplicate field "value"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            value = null as T;
+          } else {
+            value = keyed.decodeValue(_$t);
+          }
+          seen |= _$TreeNodeSchema.value;
+          break;
+        case _$TreeNodeSchema.keyChildren:
+          children = TreeNodeCodable<T>(_$t).decodeList(keyed.nestedDecoder());
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$TreeNodeSchema.value;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return TreeNode<T>(value as T, children: children);
+  }
+
+  @override
+  int encodedFieldCount(TreeNode<T> instance) {
+    var count$ = 1;
+    if (instance.value != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(TreeNode<T> instance, KeyedEncoder keyed) {
+    final v$Value = instance.value;
+    if (v$Value != null) {
+      keyed.encodeValue(_$TreeNodeSchema.nameValue, v$Value, _$t);
+    }
+    keyed.encodeList(
+      _$TreeNodeSchema.nameChildren,
+      instance.children,
+      TreeNodeCodable<T>(_$t),
+    );
+  }
+
+  @override
+  void encode(TreeNode<T> instance, Encoder encoder) {
+    var count$ = 1;
+    final v$Value = instance.value;
+    if (v$Value != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Value != null) {
+      keyed.encodeValue(_$TreeNodeSchema.nameValue, v$Value, _$t);
+    }
+    keyed.encodeList(
+      _$TreeNodeSchema.nameChildren,
+      instance.children,
+      TreeNodeCodable<T>(_$t),
+    );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for DecodeOnlyBox
+// =============================================================================
+extension type const _$DecodeOnlyBoxSchema(int _value) {
+  // String Name Constants
+  static const String nameItem = 'item';
+  static const String nameWrapped = 'wrapped';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyItem = 0;
+  static const int keyWrapped = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$DecodeOnlyBoxSchema.nameItem,
+    _$DecodeOnlyBoxSchema.nameWrapped,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$DecodeOnlyBoxSchema none = _$DecodeOnlyBoxSchema(0);
+  static const int _itemBit = 1 << 0;
+  static const _$DecodeOnlyBoxSchema item = _$DecodeOnlyBoxSchema(_itemBit);
+  static const int _wrappedBit = 1 << 1;
+  static const _$DecodeOnlyBoxSchema wrapped = _$DecodeOnlyBoxSchema(
+    _wrappedBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$DecodeOnlyBoxSchema golden = _$DecodeOnlyBoxSchema(
+    _itemBit | _wrappedBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$DecodeOnlyBoxSchema operator |(_$DecodeOnlyBoxSchema other) =>
+      _$DecodeOnlyBoxSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _itemBit) == 0) {
+      missing.add(nameItem);
+    }
+    if ((_value & _wrappedBit) == 0) {
+      missing.add(nameWrapped);
+    }
+    throw CodableException(
+      'Missing required fields for DecodeOnlyBox: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for DecodeOnlyBox
+// =============================================================================
+final class DecodeOnlyBoxCodable<T> implements Decodable<DecodeOnlyBox<T>> {
+  final Decodable<T> _$t;
+
+  const DecodeOnlyBoxCodable(this._$t);
+
+  @override
+  DecodeOnlyBox<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DecodeOnlyBoxSchema.keyOptions);
+
+    T? item;
+    Envelope<T>? wrapped;
+    var seen = _$DecodeOnlyBoxSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DecodeOnlyBoxSchema.keyOptions)) {
+        case _$DecodeOnlyBoxSchema.keyItem:
+          if ((seen._value & _$DecodeOnlyBoxSchema.item._value) != 0) {
+            throw const CodableException('Duplicate field "item"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            item = null as T;
+          } else {
+            item = keyed.decodeValue(_$t);
+          }
+          seen |= _$DecodeOnlyBoxSchema.item;
+          break;
+        case _$DecodeOnlyBoxSchema.keyWrapped:
+          if ((seen._value & _$DecodeOnlyBoxSchema.wrapped._value) != 0) {
+            throw const CodableException('Duplicate field "wrapped"');
+          }
+          wrapped = EnvelopeCodable<T>(
+            Codable<T>.fromFunctions(
+              decode: _$t.decode,
+              encode: (_, _) => throw UnsupportedError('Decode-only codec'),
+            ),
+          ).decode(keyed.nestedDecoder());
+          seen |= _$DecodeOnlyBoxSchema.wrapped;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$DecodeOnlyBoxSchema.item;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return DecodeOnlyBox<T>(item: item as T, wrapped: wrapped!);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EncodeOnlyBox
+// =============================================================================
+extension type const _$EncodeOnlyBoxSchema(int _value) {
+  // String Name Constants
+  static const String nameItem = 'item';
+  static const String nameWrapped = 'wrapped';
+}
+
+// =============================================================================
+// 2. Companion Codable for EncodeOnlyBox
+// =============================================================================
+final class EncodeOnlyBoxCodable<T>
+    implements KeyedEncodable<EncodeOnlyBox<T>> {
+  final Encodable<T> _$t;
+
+  const EncodeOnlyBoxCodable(this._$t);
+
+  @override
+  int encodedFieldCount(EncodeOnlyBox<T> instance) {
+    var count$ = 1;
+    if (instance.item != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(EncodeOnlyBox<T> instance, KeyedEncoder keyed) {
+    final v$Item = instance.item;
+    if (v$Item != null) {
+      keyed.encodeValue(_$EncodeOnlyBoxSchema.nameItem, v$Item, _$t);
+    }
+    keyed.encodeValue(
+      _$EncodeOnlyBoxSchema.nameWrapped,
+      instance.wrapped,
+      EnvelopeCodable<T>(
+        Codable<T>.fromFunctions(
+          decode: (_) => throw UnsupportedError('Encode-only codec'),
+          encode: _$t.encode,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void encode(EncodeOnlyBox<T> instance, Encoder encoder) {
+    var count$ = 1;
+    final v$Item = instance.item;
+    if (v$Item != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Item != null) {
+      keyed.encodeValue(_$EncodeOnlyBoxSchema.nameItem, v$Item, _$t);
+    }
+    keyed.encodeValue(
+      _$EncodeOnlyBoxSchema.nameWrapped,
+      instance.wrapped,
+      EnvelopeCodable<T>(
+        Codable<T>.fromFunctions(
+          decode: (_) => throw UnsupportedError('Encode-only codec'),
+          encode: _$t.encode,
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for GenericDashboard
+// =============================================================================
+extension type const _$GenericDashboardSchema(int _value) {
+  // String Name Constants
+  static const String nameMainLocation = 'mainLocation';
+  static const String nameFallbackLocation = 'fallbackLocation';
+  static const String nameRoute = 'route';
+  static const String nameTotalCount = 'totalCount';
+  static const String nameRoleMetric = 'roleMetric';
+  static const String nameNotifications = 'notifications';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyMainLocation = 0;
+  static const int keyFallbackLocation = 1;
+  static const int keyRoute = 2;
+  static const int keyTotalCount = 3;
+  static const int keyRoleMetric = 4;
+  static const int keyNotifications = 5;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$GenericDashboardSchema.nameMainLocation,
+    _$GenericDashboardSchema.nameFallbackLocation,
+    _$GenericDashboardSchema.nameRoute,
+    _$GenericDashboardSchema.nameTotalCount,
+    _$GenericDashboardSchema.nameRoleMetric,
+    _$GenericDashboardSchema.nameNotifications,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Enum Options for UserRole
+  static final KeyOptions enumUserRoleKeyOptions = KeyOptions.of(const [
+    'admin',
+    'member',
+    'guest',
+  ]);
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$GenericDashboardSchema none = _$GenericDashboardSchema(0);
+  static const int _mainLocationBit = 1 << 0;
+  static const _$GenericDashboardSchema mainLocation = _$GenericDashboardSchema(
+    _mainLocationBit,
+  );
+  static const int _fallbackLocationBit = 1 << 1;
+  static const _$GenericDashboardSchema fallbackLocation =
+      _$GenericDashboardSchema(_fallbackLocationBit);
+  static const int _routeBit = 1 << 2;
+  static const _$GenericDashboardSchema route = _$GenericDashboardSchema(
+    _routeBit,
+  );
+  static const int _totalCountBit = 1 << 3;
+  static const _$GenericDashboardSchema totalCount = _$GenericDashboardSchema(
+    _totalCountBit,
+  );
+  static const int _roleMetricBit = 1 << 4;
+  static const _$GenericDashboardSchema roleMetric = _$GenericDashboardSchema(
+    _roleMetricBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$GenericDashboardSchema golden = _$GenericDashboardSchema(
+    _mainLocationBit |
+        _fallbackLocationBit |
+        _routeBit |
+        _totalCountBit |
+        _roleMetricBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$GenericDashboardSchema operator |(_$GenericDashboardSchema other) =>
+      _$GenericDashboardSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _mainLocationBit) == 0) {
+      missing.add(nameMainLocation);
+    }
+    if ((_value & _fallbackLocationBit) == 0) {
+      missing.add(nameFallbackLocation);
+    }
+    if ((_value & _routeBit) == 0) {
+      missing.add(nameRoute);
+    }
+    if ((_value & _totalCountBit) == 0) {
+      missing.add(nameTotalCount);
+    }
+    if ((_value & _roleMetricBit) == 0) {
+      missing.add(nameRoleMetric);
+    }
+    throw CodableException(
+      'Missing required fields for GenericDashboard: ${missing.join(", ")}',
+    );
+  }
+
+  // Cached Closed Codecs
+  static final EnvelopeCodable<Address?> codec0 = EnvelopeCodable<Address?>(
+    const AddressCodable().nullable,
+  );
+  static final EnvelopeCodable<List<Point>> codec1 =
+      EnvelopeCodable<List<Point>>(const PointCodable().list);
+  static final EnvelopeCodable<int> codec2 = EnvelopeCodable<int>(
+    Codable<int>.fromFunctions(
+      decode: (d) {
+        final res = d.singleValue().readInt();
+        return res;
+      },
+      encode: (int v, e) {
+        e.singleValue().encodeInt(v);
+      },
+    ),
+  );
+  static final PairCodable<UserRole, double> codec3 =
+      PairCodable<UserRole, double>(
+        Codable<UserRole>.fromFunctions(
+          decode: (d) {
+            final rawEnum0 = d.singleValue().readString();
+            final enumIdx0 = _$GenericDashboardSchema.enumUserRoleKeyOptions
+                .indexOf(rawEnum0);
+            if (enumIdx0 < 0) {
+              throw CodableException(
+                'Unknown UserRole value: "$rawEnum0"',
+                actualValue: rawEnum0,
+              );
+            }
+            final res = UserRole.values[enumIdx0];
+            return res;
+          },
+          encode: (UserRole v, e) {
+            e.singleValue().encodeString(v.name);
+          },
+        ),
+        Codable<double>.fromFunctions(
+          decode: (d) {
+            final res = d.singleValue().readDouble();
+            return res;
+          },
+          encode: (double v, e) {
+            e.singleValue().encodeDouble(v);
+          },
+        ),
+      );
+  static final EnvelopeCodable<String> codec4 = EnvelopeCodable<String>(
+    Codable<String>.fromFunctions(
+      decode: (d) {
+        final res = d.singleValue().readString();
+        return res;
+      },
+      encode: (String v, e) {
+        e.singleValue().encodeString(v);
+      },
+    ),
+  );
+}
+
+// =============================================================================
+// 2. Companion Codable for GenericDashboard
+// =============================================================================
+final class GenericDashboardCodable implements KeyedCodable<GenericDashboard> {
+  const GenericDashboardCodable();
+
+  @override
+  GenericDashboard decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$GenericDashboardSchema.keyOptions);
+
+    Envelope<Address>? mainLocation;
+    Envelope<Address?>? fallbackLocation;
+    Envelope<List<Point>>? route;
+    Envelope<int>? totalCount;
+    Pair<UserRole, double>? roleMetric;
+    List<Envelope<String>> notifications = const [];
+    var seen = _$GenericDashboardSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$GenericDashboardSchema.keyOptions)) {
+        case _$GenericDashboardSchema.keyMainLocation:
+          if ((seen._value & _$GenericDashboardSchema.mainLocation._value) !=
+              0) {
+            throw const CodableException('Duplicate field "mainLocation"');
+          }
+          mainLocation = const EnvelopeCodable<Address>(AddressCodable())
+              .decode(keyed.nestedDecoder());
+          seen |= _$GenericDashboardSchema.mainLocation;
+          break;
+        case _$GenericDashboardSchema.keyFallbackLocation:
+          if ((seen._value &
+                  _$GenericDashboardSchema.fallbackLocation._value) !=
+              0) {
+            throw const CodableException('Duplicate field "fallbackLocation"');
+          }
+          fallbackLocation = _$GenericDashboardSchema.codec0.decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$GenericDashboardSchema.fallbackLocation;
+          break;
+        case _$GenericDashboardSchema.keyRoute:
+          if ((seen._value & _$GenericDashboardSchema.route._value) != 0) {
+            throw const CodableException('Duplicate field "route"');
+          }
+          route = _$GenericDashboardSchema.codec1.decode(keyed.nestedDecoder());
+          seen |= _$GenericDashboardSchema.route;
+          break;
+        case _$GenericDashboardSchema.keyTotalCount:
+          if ((seen._value & _$GenericDashboardSchema.totalCount._value) != 0) {
+            throw const CodableException('Duplicate field "totalCount"');
+          }
+          totalCount = _$GenericDashboardSchema.codec2.decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$GenericDashboardSchema.totalCount;
+          break;
+        case _$GenericDashboardSchema.keyRoleMetric:
+          if ((seen._value & _$GenericDashboardSchema.roleMetric._value) != 0) {
+            throw const CodableException('Duplicate field "roleMetric"');
+          }
+          roleMetric = _$GenericDashboardSchema.codec3.decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$GenericDashboardSchema.roleMetric;
+          break;
+        case _$GenericDashboardSchema.keyNotifications:
+          notifications = _$GenericDashboardSchema.codec4.decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return GenericDashboard(
+      mainLocation: mainLocation!,
+      fallbackLocation: fallbackLocation!,
+      route: route!,
+      totalCount: totalCount!,
+      roleMetric: roleMetric!,
+      notifications: notifications,
+    );
+  }
+
+  @override
+  int encodedFieldCount(GenericDashboard instance) => 6;
+
+  @override
+  void encodeFields(GenericDashboard instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$GenericDashboardSchema.nameMainLocation,
+      instance.mainLocation,
+      const EnvelopeCodable<Address>(AddressCodable()),
+    );
+    keyed.encodeValue(
+      _$GenericDashboardSchema.nameFallbackLocation,
+      instance.fallbackLocation,
+      _$GenericDashboardSchema.codec0,
+    );
+    keyed.encodeValue(
+      _$GenericDashboardSchema.nameRoute,
+      instance.route,
+      _$GenericDashboardSchema.codec1,
+    );
+    keyed.encodeValue(
+      _$GenericDashboardSchema.nameTotalCount,
+      instance.totalCount,
+      _$GenericDashboardSchema.codec2,
+    );
+    keyed.encodeValue(
+      _$GenericDashboardSchema.nameRoleMetric,
+      instance.roleMetric,
+      _$GenericDashboardSchema.codec3,
+    );
+    keyed.encodeList(
+      _$GenericDashboardSchema.nameNotifications,
+      instance.notifications,
+      _$GenericDashboardSchema.codec4,
+    );
+  }
+
+  @override
+  void encode(GenericDashboard instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 6));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for OuterGenericWrapper
+// =============================================================================
+extension type const _$OuterGenericWrapperSchema(int _value) {
+  // String Name Constants
+  static const String namePrimary = 'primary';
+  static const String nameForest = 'forest';
+  static const String nameTaggedCount = 'taggedCount';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPrimary = 0;
+  static const int keyForest = 1;
+  static const int keyTaggedCount = 2;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$OuterGenericWrapperSchema.namePrimary,
+    _$OuterGenericWrapperSchema.nameForest,
+    _$OuterGenericWrapperSchema.nameTaggedCount,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$OuterGenericWrapperSchema none = _$OuterGenericWrapperSchema(
+    0,
+  );
+  static const int _primaryBit = 1 << 0;
+  static const _$OuterGenericWrapperSchema primary =
+      _$OuterGenericWrapperSchema(_primaryBit);
+  static const int _taggedCountBit = 1 << 1;
+  static const _$OuterGenericWrapperSchema taggedCount =
+      _$OuterGenericWrapperSchema(_taggedCountBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$OuterGenericWrapperSchema golden = _$OuterGenericWrapperSchema(
+    _primaryBit | _taggedCountBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$OuterGenericWrapperSchema operator |(_$OuterGenericWrapperSchema other) =>
+      _$OuterGenericWrapperSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _primaryBit) == 0) {
+      missing.add(namePrimary);
+    }
+    if ((_value & _taggedCountBit) == 0) {
+      missing.add(nameTaggedCount);
+    }
+    throw CodableException(
+      'Missing required fields for OuterGenericWrapper: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for OuterGenericWrapper
+// =============================================================================
+final class OuterGenericWrapperCodable<U>
+    implements KeyedCodable<OuterGenericWrapper<U>> {
+  final Codable<U> _$u;
+
+  const OuterGenericWrapperCodable(this._$u);
+
+  @override
+  OuterGenericWrapper<U> decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$OuterGenericWrapperSchema.keyOptions,
+    );
+
+    Envelope<U>? primary;
+    List<TreeNode<U>> forest = const [];
+    Pair<U, int>? taggedCount;
+    var seen = _$OuterGenericWrapperSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$OuterGenericWrapperSchema.keyOptions)) {
+        case _$OuterGenericWrapperSchema.keyPrimary:
+          if ((seen._value & _$OuterGenericWrapperSchema.primary._value) != 0) {
+            throw const CodableException('Duplicate field "primary"');
+          }
+          primary = EnvelopeCodable<U>(_$u).decode(keyed.nestedDecoder());
+          seen |= _$OuterGenericWrapperSchema.primary;
+          break;
+        case _$OuterGenericWrapperSchema.keyForest:
+          forest = TreeNodeCodable<U>(_$u).decodeList(keyed.nestedDecoder());
+          break;
+        case _$OuterGenericWrapperSchema.keyTaggedCount:
+          if ((seen._value & _$OuterGenericWrapperSchema.taggedCount._value) !=
+              0) {
+            throw const CodableException('Duplicate field "taggedCount"');
+          }
+          taggedCount = PairCodable<U, int>(
+            _$u,
+            Codable<int>.fromFunctions(
+              decode: (d) {
+                final res = d.singleValue().readInt();
+                return res;
+              },
+              encode: (int v, e) {
+                e.singleValue().encodeInt(v);
+              },
+            ),
+          ).decode(keyed.nestedDecoder());
+          seen |= _$OuterGenericWrapperSchema.taggedCount;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return OuterGenericWrapper<U>(
+      primary: primary!,
+      forest: forest,
+      taggedCount: taggedCount!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(OuterGenericWrapper<U> instance) => 3;
+
+  @override
+  void encodeFields(OuterGenericWrapper<U> instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$OuterGenericWrapperSchema.namePrimary,
+      instance.primary,
+      EnvelopeCodable<U>(_$u),
+    );
+    keyed.encodeList(
+      _$OuterGenericWrapperSchema.nameForest,
+      instance.forest,
+      TreeNodeCodable<U>(_$u),
+    );
+    keyed.encodeValue(
+      _$OuterGenericWrapperSchema.nameTaggedCount,
+      instance.taggedCount,
+      PairCodable<U, int>(
+        _$u,
+        Codable<int>.fromFunctions(
+          decode: (d) {
+            final res = d.singleValue().readInt();
+            return res;
+          },
+          encode: (int v, e) {
+            e.singleValue().encodeInt(v);
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  void encode(OuterGenericWrapper<U> instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for ShapeEvent
+// =============================================================================
+extension type const _$ShapeEventSchema(int _value) {
+  static const String discriminatorKey = 'type';
+  static const String subtypeCircleEvent = 'circleEvent';
+  static const String subtypeRectEvent = 'rect_box';
+}
+
+// =============================================================================
+// 2. Companion Codable for ShapeEvent
+// =============================================================================
+final class ShapeEventCodable implements KeyedCodable<ShapeEvent> {
+  const ShapeEventCodable();
+
+  @override
+  ShapeEvent decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$ShapeEventSchema.discriminatorKey) ||
+        mapped.isNull(_$ShapeEventSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$ShapeEventSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$ShapeEventSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$ShapeEventSchema.subtypeCircleEvent =>
+        const CircleEventCodable().decode(decoder),
+      _$ShapeEventSchema.subtypeRectEvent => const RectEventCodable().decode(
+        decoder,
+      ),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$ShapeEventSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(ShapeEvent instance) => switch (instance) {
+    final CircleEvent sub =>
+      1 + const CircleEventCodable().encodedFieldCount(sub),
+    final RectEvent sub => 1 + const RectEventCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(ShapeEvent instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final CircleEvent sub:
+        keyed.encodeString(
+          _$ShapeEventSchema.discriminatorKey,
+          _$ShapeEventSchema.subtypeCircleEvent,
+        );
+        const CircleEventCodable().encodeFields(sub, keyed);
+      case final RectEvent sub:
+        keyed.encodeString(
+          _$ShapeEventSchema.discriminatorKey,
+          _$ShapeEventSchema.subtypeRectEvent,
+        );
+        const RectEventCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(ShapeEvent instance, Encoder encoder) {
+    switch (instance) {
+      case final CircleEvent sub:
+        final keyed = encoder.keyed(
+          length: 1 + const CircleEventCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$ShapeEventSchema.discriminatorKey,
+          _$ShapeEventSchema.subtypeCircleEvent,
+        );
+        const CircleEventCodable().encodeFields(sub, keyed);
+      case final RectEvent sub:
+        final keyed = encoder.keyed(
+          length: 1 + const RectEventCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$ShapeEventSchema.discriminatorKey,
+          _$ShapeEventSchema.subtypeRectEvent,
+        );
+        const RectEventCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CircleEvent
+// =============================================================================
+extension type const _$CircleEventSchema(int _value) {
+  // String Name Constants
+  static const String nameRadius = 'radius';
+  static const String nameLabel = 'label';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyRadius = 0;
+  static const int keyLabel = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CircleEventSchema.nameRadius,
+    _$CircleEventSchema.nameLabel,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CircleEventSchema none = _$CircleEventSchema(0);
+  static const int _radiusBit = 1 << 0;
+  static const _$CircleEventSchema radius = _$CircleEventSchema(_radiusBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CircleEventSchema golden = _$CircleEventSchema(_radiusBit);
+
+  @pragma('vm:prefer-inline')
+  _$CircleEventSchema operator |(_$CircleEventSchema other) =>
+      _$CircleEventSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _radiusBit) == 0) {
+      missing.add(nameRadius);
+    }
+    throw CodableException(
+      'Missing required fields for CircleEvent: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for CircleEvent
+// =============================================================================
+final class CircleEventCodable implements KeyedCodable<CircleEvent> {
+  const CircleEventCodable();
+
+  @override
+  CircleEvent decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CircleEventSchema.keyOptions);
+
+    double? radius;
+    String? label;
+    var seen = _$CircleEventSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CircleEventSchema.keyOptions)) {
+        case _$CircleEventSchema.keyRadius:
+          if ((seen._value & _$CircleEventSchema.radius._value) != 0) {
+            throw const CodableException('Duplicate field "radius"');
+          }
+          radius = keyed.readDouble();
+          seen |= _$CircleEventSchema.radius;
+          break;
+        case _$CircleEventSchema.keyLabel:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            label = null;
+          } else {
+            label = keyed.readString();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CircleEvent(radius: radius!, label: label);
+  }
+
+  @override
+  int encodedFieldCount(CircleEvent instance) {
+    var count$ = 1;
+    if (instance.label != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CircleEvent instance, KeyedEncoder keyed) {
+    keyed.encodeDouble(_$CircleEventSchema.nameRadius, instance.radius);
+    final v$Label = instance.label;
+    if (v$Label != null) {
+      keyed.encodeString(_$CircleEventSchema.nameLabel, v$Label);
+    }
+  }
+
+  @override
+  void encode(CircleEvent instance, Encoder encoder) {
+    var count$ = 1;
+    final v$Label = instance.label;
+    if (v$Label != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeDouble(_$CircleEventSchema.nameRadius, instance.radius);
+    if (v$Label != null) {
+      keyed.encodeString(_$CircleEventSchema.nameLabel, v$Label);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for RectEvent
+// =============================================================================
+extension type const _$RectEventSchema(int _value) {
+  // String Name Constants
+  static const String nameWidth = 'width';
+  static const String nameHeight = 'height';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyWidth = 0;
+  static const int keyHeight = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$RectEventSchema.nameWidth,
+    _$RectEventSchema.nameHeight,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$RectEventSchema none = _$RectEventSchema(0);
+  static const int _widthBit = 1 << 0;
+  static const _$RectEventSchema width = _$RectEventSchema(_widthBit);
+  static const int _heightBit = 1 << 1;
+  static const _$RectEventSchema height = _$RectEventSchema(_heightBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$RectEventSchema golden = _$RectEventSchema(
+    _widthBit | _heightBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$RectEventSchema operator |(_$RectEventSchema other) =>
+      _$RectEventSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _widthBit) == 0) {
+      missing.add(nameWidth);
+    }
+    if ((_value & _heightBit) == 0) {
+      missing.add(nameHeight);
+    }
+    throw CodableException(
+      'Missing required fields for RectEvent: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for RectEvent
+// =============================================================================
+final class RectEventCodable implements KeyedCodable<RectEvent> {
+  const RectEventCodable();
+
+  @override
+  RectEvent decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$RectEventSchema.keyOptions);
+
+    int? width;
+    int? height;
+    var seen = _$RectEventSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$RectEventSchema.keyOptions)) {
+        case _$RectEventSchema.keyWidth:
+          if ((seen._value & _$RectEventSchema.width._value) != 0) {
+            throw const CodableException('Duplicate field "width"');
+          }
+          width = keyed.readInt();
+          seen |= _$RectEventSchema.width;
+          break;
+        case _$RectEventSchema.keyHeight:
+          if ((seen._value & _$RectEventSchema.height._value) != 0) {
+            throw const CodableException('Duplicate field "height"');
+          }
+          height = keyed.readInt();
+          seen |= _$RectEventSchema.height;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return RectEvent(width: width!, height: height!);
+  }
+
+  @override
+  int encodedFieldCount(RectEvent instance) => 2;
+
+  @override
+  void encodeFields(RectEvent instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$RectEventSchema.nameWidth, instance.width);
+    keyed.encodeInt(_$RectEventSchema.nameHeight, instance.height);
+  }
+
+  @override
+  void encode(RectEvent instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for PaymentMethod
+// =============================================================================
+extension type const _$PaymentMethodSchema(int _value) {
+  static const String discriminatorKey = 'kind';
+  static const String subtypeCreditCardPayment = 'credit_card_payment';
+  static const String subtypeDebitCardPayment = 'debit_card_payment';
+  static const String subtypeWireTransferPayment = 'wire_transfer_payment';
+}
+
+// =============================================================================
+// 2. Companion Codable for PaymentMethod
+// =============================================================================
+final class PaymentMethodCodable implements KeyedCodable<PaymentMethod> {
+  const PaymentMethodCodable();
+
+  @override
+  PaymentMethod decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$PaymentMethodSchema.discriminatorKey) ||
+        mapped.isNull(_$PaymentMethodSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$PaymentMethodSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$PaymentMethodSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$PaymentMethodSchema.subtypeCreditCardPayment =>
+        const CreditCardPaymentCodable().decode(decoder),
+      _$PaymentMethodSchema.subtypeDebitCardPayment =>
+        const DebitCardPaymentCodable().decode(decoder),
+      _$PaymentMethodSchema.subtypeWireTransferPayment =>
+        const WireTransferPaymentCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$PaymentMethodSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(PaymentMethod instance) => switch (instance) {
+    final CreditCardPayment sub =>
+      1 + const CreditCardPaymentCodable().encodedFieldCount(sub),
+    final DebitCardPayment sub =>
+      1 + const DebitCardPaymentCodable().encodedFieldCount(sub),
+    final WireTransferPayment sub =>
+      1 + const WireTransferPaymentCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(PaymentMethod instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final CreditCardPayment sub:
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeCreditCardPayment,
+        );
+        const CreditCardPaymentCodable().encodeFields(sub, keyed);
+      case final DebitCardPayment sub:
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeDebitCardPayment,
+        );
+        const DebitCardPaymentCodable().encodeFields(sub, keyed);
+      case final WireTransferPayment sub:
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeWireTransferPayment,
+        );
+        const WireTransferPaymentCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(PaymentMethod instance, Encoder encoder) {
+    switch (instance) {
+      case final CreditCardPayment sub:
+        final keyed = encoder.keyed(
+          length: 1 + const CreditCardPaymentCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeCreditCardPayment,
+        );
+        const CreditCardPaymentCodable().encodeFields(sub, keyed);
+      case final DebitCardPayment sub:
+        final keyed = encoder.keyed(
+          length: 1 + const DebitCardPaymentCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeDebitCardPayment,
+        );
+        const DebitCardPaymentCodable().encodeFields(sub, keyed);
+      case final WireTransferPayment sub:
+        final keyed = encoder.keyed(
+          length: 1 + const WireTransferPaymentCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PaymentMethodSchema.discriminatorKey,
+          _$PaymentMethodSchema.subtypeWireTransferPayment,
+        );
+        const WireTransferPaymentCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CreditCardPayment
+// =============================================================================
+extension type const _$CreditCardPaymentSchema(int _value) {
+  // String Name Constants
+  static const String nameLast4 = 'last4';
+  static const String nameExpMonth = 'expMonth';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLast4 = 0;
+  static const int keyExpMonth = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CreditCardPaymentSchema.nameLast4,
+    _$CreditCardPaymentSchema.nameExpMonth,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CreditCardPaymentSchema none = _$CreditCardPaymentSchema(0);
+  static const int _last4Bit = 1 << 0;
+  static const _$CreditCardPaymentSchema last4 = _$CreditCardPaymentSchema(
+    _last4Bit,
+  );
+  static const int _expMonthBit = 1 << 1;
+  static const _$CreditCardPaymentSchema expMonth = _$CreditCardPaymentSchema(
+    _expMonthBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CreditCardPaymentSchema golden = _$CreditCardPaymentSchema(
+    _last4Bit | _expMonthBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$CreditCardPaymentSchema operator |(_$CreditCardPaymentSchema other) =>
+      _$CreditCardPaymentSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _last4Bit) == 0) {
+      missing.add(nameLast4);
+    }
+    if ((_value & _expMonthBit) == 0) {
+      missing.add(nameExpMonth);
+    }
+    throw CodableException(
+      'Missing required fields for CreditCardPayment: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for CreditCardPayment
+// =============================================================================
+final class CreditCardPaymentCodable
+    implements KeyedCodable<CreditCardPayment> {
+  const CreditCardPaymentCodable();
+
+  @override
+  CreditCardPayment decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CreditCardPaymentSchema.keyOptions);
+
+    String? last4;
+    int? expMonth;
+    var seen = _$CreditCardPaymentSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CreditCardPaymentSchema.keyOptions)) {
+        case _$CreditCardPaymentSchema.keyLast4:
+          if ((seen._value & _$CreditCardPaymentSchema.last4._value) != 0) {
+            throw const CodableException('Duplicate field "last4"');
+          }
+          last4 = keyed.readString();
+          seen |= _$CreditCardPaymentSchema.last4;
+          break;
+        case _$CreditCardPaymentSchema.keyExpMonth:
+          if ((seen._value & _$CreditCardPaymentSchema.expMonth._value) != 0) {
+            throw const CodableException('Duplicate field "expMonth"');
+          }
+          expMonth = keyed.readInt();
+          seen |= _$CreditCardPaymentSchema.expMonth;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CreditCardPayment(last4: last4!, expMonth: expMonth!);
+  }
+
+  @override
+  int encodedFieldCount(CreditCardPayment instance) => 2;
+
+  @override
+  void encodeFields(CreditCardPayment instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CreditCardPaymentSchema.nameLast4, instance.last4);
+    keyed.encodeInt(_$CreditCardPaymentSchema.nameExpMonth, instance.expMonth);
+  }
+
+  @override
+  void encode(CreditCardPayment instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for DebitCardPayment
+// =============================================================================
+extension type const _$DebitCardPaymentSchema(int _value) {
+  // String Name Constants
+  static const String nameLast4 = 'last4';
+  static const String namePinVerified = 'pinVerified';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLast4 = 0;
+  static const int keyPinVerified = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$DebitCardPaymentSchema.nameLast4,
+    _$DebitCardPaymentSchema.namePinVerified,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$DebitCardPaymentSchema none = _$DebitCardPaymentSchema(0);
+  static const int _last4Bit = 1 << 0;
+  static const _$DebitCardPaymentSchema last4 = _$DebitCardPaymentSchema(
+    _last4Bit,
+  );
+  static const int _pinVerifiedBit = 1 << 1;
+  static const _$DebitCardPaymentSchema pinVerified = _$DebitCardPaymentSchema(
+    _pinVerifiedBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$DebitCardPaymentSchema golden = _$DebitCardPaymentSchema(
+    _last4Bit | _pinVerifiedBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$DebitCardPaymentSchema operator |(_$DebitCardPaymentSchema other) =>
+      _$DebitCardPaymentSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _last4Bit) == 0) {
+      missing.add(nameLast4);
+    }
+    if ((_value & _pinVerifiedBit) == 0) {
+      missing.add(namePinVerified);
+    }
+    throw CodableException(
+      'Missing required fields for DebitCardPayment: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for DebitCardPayment
+// =============================================================================
+final class DebitCardPaymentCodable implements KeyedCodable<DebitCardPayment> {
+  const DebitCardPaymentCodable();
+
+  @override
+  DebitCardPayment decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DebitCardPaymentSchema.keyOptions);
+
+    String? last4;
+    bool? pinVerified;
+    var seen = _$DebitCardPaymentSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DebitCardPaymentSchema.keyOptions)) {
+        case _$DebitCardPaymentSchema.keyLast4:
+          if ((seen._value & _$DebitCardPaymentSchema.last4._value) != 0) {
+            throw const CodableException('Duplicate field "last4"');
+          }
+          last4 = keyed.readString();
+          seen |= _$DebitCardPaymentSchema.last4;
+          break;
+        case _$DebitCardPaymentSchema.keyPinVerified:
+          if ((seen._value & _$DebitCardPaymentSchema.pinVerified._value) !=
+              0) {
+            throw const CodableException('Duplicate field "pinVerified"');
+          }
+          pinVerified = keyed.readBool();
+          seen |= _$DebitCardPaymentSchema.pinVerified;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return DebitCardPayment(last4: last4!, pinVerified: pinVerified!);
+  }
+
+  @override
+  int encodedFieldCount(DebitCardPayment instance) => 2;
+
+  @override
+  void encodeFields(DebitCardPayment instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$DebitCardPaymentSchema.nameLast4, instance.last4);
+    keyed.encodeBool(
+      _$DebitCardPaymentSchema.namePinVerified,
+      instance.pinVerified,
+    );
+  }
+
+  @override
+  void encode(DebitCardPayment instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for WireTransferPayment
+// =============================================================================
+extension type const _$WireTransferPaymentSchema(int _value) {
+  // String Name Constants
+  static const String nameRoutingCode = 'routingCode';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyRoutingCode = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$WireTransferPaymentSchema.nameRoutingCode,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$WireTransferPaymentSchema none = _$WireTransferPaymentSchema(
+    0,
+  );
+  static const int _routingCodeBit = 1 << 0;
+  static const _$WireTransferPaymentSchema routingCode =
+      _$WireTransferPaymentSchema(_routingCodeBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$WireTransferPaymentSchema golden = _$WireTransferPaymentSchema(
+    _routingCodeBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$WireTransferPaymentSchema operator |(_$WireTransferPaymentSchema other) =>
+      _$WireTransferPaymentSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _routingCodeBit) == 0) {
+      missing.add(nameRoutingCode);
+    }
+    throw CodableException(
+      'Missing required fields for WireTransferPayment: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for WireTransferPayment
+// =============================================================================
+final class WireTransferPaymentCodable
+    implements KeyedCodable<WireTransferPayment> {
+  const WireTransferPaymentCodable();
+
+  @override
+  WireTransferPayment decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$WireTransferPaymentSchema.keyOptions,
+    );
+
+    String? routingCode;
+    var seen = _$WireTransferPaymentSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$WireTransferPaymentSchema.keyOptions)) {
+        case _$WireTransferPaymentSchema.keyRoutingCode:
+          if ((seen._value & _$WireTransferPaymentSchema.routingCode._value) !=
+              0) {
+            throw const CodableException('Duplicate field "routingCode"');
+          }
+          routingCode = keyed.readString();
+          seen |= _$WireTransferPaymentSchema.routingCode;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return WireTransferPayment(routingCode: routingCode!);
+  }
+
+  @override
+  int encodedFieldCount(WireTransferPayment instance) => 1;
+
+  @override
+  void encodeFields(WireTransferPayment instance, KeyedEncoder keyed) {
+    keyed.encodeString(
+      _$WireTransferPaymentSchema.nameRoutingCode,
+      instance.routingCode,
+    );
+  }
+
+  @override
+  void encode(WireTransferPayment instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CheckoutSession
+// =============================================================================
+extension type const _$CheckoutSessionSchema(int _value) {
+  // String Name Constants
+  static const String namePrimary = 'primary';
+  static const String nameBackup = 'backup';
+  static const String nameSavedMethods = 'savedMethods';
+  static const String nameMethodsByAlias = 'methodsByAlias';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPrimary = 0;
+  static const int keyBackup = 1;
+  static const int keySavedMethods = 2;
+  static const int keyMethodsByAlias = 3;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CheckoutSessionSchema.namePrimary,
+    _$CheckoutSessionSchema.nameBackup,
+    _$CheckoutSessionSchema.nameSavedMethods,
+    _$CheckoutSessionSchema.nameMethodsByAlias,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CheckoutSessionSchema none = _$CheckoutSessionSchema(0);
+  static const int _primaryBit = 1 << 0;
+  static const _$CheckoutSessionSchema primary = _$CheckoutSessionSchema(
+    _primaryBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$CheckoutSessionSchema golden = _$CheckoutSessionSchema(
+    _primaryBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$CheckoutSessionSchema operator |(_$CheckoutSessionSchema other) =>
+      _$CheckoutSessionSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _primaryBit) == 0) {
+      missing.add(namePrimary);
+    }
+    throw CodableException(
+      'Missing required fields for CheckoutSession: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for CheckoutSession
+// =============================================================================
+final class CheckoutSessionCodable implements KeyedCodable<CheckoutSession> {
+  const CheckoutSessionCodable();
+
+  @override
+  CheckoutSession decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CheckoutSessionSchema.keyOptions);
+
+    PaymentMethod? primary;
+    PaymentMethod? backup;
+    List<PaymentMethod> savedMethods = const [];
+    Map<String, PaymentMethod> methodsByAlias = const {};
+    var seen = _$CheckoutSessionSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CheckoutSessionSchema.keyOptions)) {
+        case _$CheckoutSessionSchema.keyPrimary:
+          if ((seen._value & _$CheckoutSessionSchema.primary._value) != 0) {
+            throw const CodableException('Duplicate field "primary"');
+          }
+          primary = const PaymentMethodCodable().decode(keyed.nestedDecoder());
+          seen |= _$CheckoutSessionSchema.primary;
+          break;
+        case _$CheckoutSessionSchema.keyBackup:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            backup = null;
+          } else {
+            backup = const PaymentMethodCodable().decode(keyed.nestedDecoder());
+          }
+          break;
+        case _$CheckoutSessionSchema.keySavedMethods:
+          savedMethods = const PaymentMethodCodable().decodeList(
+            keyed.nestedDecoder(),
+          );
+          break;
+        case _$CheckoutSessionSchema.keyMethodsByAlias:
+          {
+            final k = keyed.nestedDecoder().keyed();
+            final m = <String, PaymentMethod>{};
+            while (k.moveNextKey()) {
+              final key = k.nextKey();
+              m[key] = const PaymentMethodCodable().decode(k.nestedDecoder());
+            }
+            methodsByAlias = m;
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CheckoutSession(
+      primary: primary!,
+      backup: backup,
+      savedMethods: savedMethods,
+      methodsByAlias: methodsByAlias,
+    );
+  }
+
+  @override
+  int encodedFieldCount(CheckoutSession instance) {
+    var count$ = 3;
+    if (instance.backup != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CheckoutSession instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$CheckoutSessionSchema.namePrimary,
+      instance.primary,
+      const PaymentMethodCodable(),
+    );
+    final v$Backup = instance.backup;
+    if (v$Backup != null) {
+      keyed.encodeValue(
+        _$CheckoutSessionSchema.nameBackup,
+        v$Backup,
+        const PaymentMethodCodable(),
+      );
+    }
+    keyed.encodeList(
+      _$CheckoutSessionSchema.nameSavedMethods,
+      instance.savedMethods,
+      const PaymentMethodCodable(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$CheckoutSessionSchema.nameMethodsByAlias)
+          .keyed(length: instance.methodsByAlias.length);
+      for (final entry in instance.methodsByAlias.entries) {
+        const PaymentMethodCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
+  }
+
+  @override
+  void encode(CheckoutSession instance, Encoder encoder) {
+    var count$ = 3;
+    final v$Backup = instance.backup;
+    if (v$Backup != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    keyed.encodeValue(
+      _$CheckoutSessionSchema.namePrimary,
+      instance.primary,
+      const PaymentMethodCodable(),
+    );
+    if (v$Backup != null) {
+      keyed.encodeValue(
+        _$CheckoutSessionSchema.nameBackup,
+        v$Backup,
+        const PaymentMethodCodable(),
+      );
+    }
+    keyed.encodeList(
+      _$CheckoutSessionSchema.nameSavedMethods,
+      instance.savedMethods,
+      const PaymentMethodCodable(),
+    );
+    {
+      final k = keyed
+          .nestedEncoder(_$CheckoutSessionSchema.nameMethodsByAlias)
+          .keyed(length: instance.methodsByAlias.length);
+      for (final entry in instance.methodsByAlias.entries) {
+        const PaymentMethodCodable().encode(
+          entry.value,
+          k.nestedEncoder(entry.key),
+        );
+      }
+    }
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for ApiOutcome
+// =============================================================================
+extension type const _$ApiOutcomeSchema(int _value) {
+  static const String discriminatorKey = 'status';
+  static const String subtypeApiSuccess = 'ok';
+  static const String subtypeApiFailure = 'error';
+}
+
+// =============================================================================
+// 2. Companion Codable for ApiOutcome
+// =============================================================================
+final class ApiOutcomeCodable<T> implements KeyedCodable<ApiOutcome<T>> {
+  final Codable<T> _$t;
+
+  const ApiOutcomeCodable(this._$t);
+
+  @override
+  ApiOutcome<T> decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$ApiOutcomeSchema.discriminatorKey) ||
+        mapped.isNull(_$ApiOutcomeSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$ApiOutcomeSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$ApiOutcomeSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$ApiOutcomeSchema.subtypeApiSuccess => ApiSuccessCodable<T>(
+        _$t,
+      ).decode(decoder),
+      _$ApiOutcomeSchema.subtypeApiFailure => const ApiFailureCodable().decode(
+        decoder,
+      ),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$ApiOutcomeSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(ApiOutcome<T> instance) => switch (instance) {
+    final ApiSuccess<T> sub =>
+      1 + ApiSuccessCodable<T>(_$t).encodedFieldCount(sub),
+    final ApiFailure sub =>
+      1 + const ApiFailureCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(ApiOutcome<T> instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final ApiSuccess<T> sub:
+        keyed.encodeString(
+          _$ApiOutcomeSchema.discriminatorKey,
+          _$ApiOutcomeSchema.subtypeApiSuccess,
+        );
+        ApiSuccessCodable<T>(_$t).encodeFields(sub, keyed);
+      case final ApiFailure sub:
+        keyed.encodeString(
+          _$ApiOutcomeSchema.discriminatorKey,
+          _$ApiOutcomeSchema.subtypeApiFailure,
+        );
+        const ApiFailureCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(ApiOutcome<T> instance, Encoder encoder) {
+    switch (instance) {
+      case final ApiSuccess<T> sub:
+        final subCodec = ApiSuccessCodable<T>(_$t);
+        final keyed = encoder.keyed(
+          length: 1 + subCodec.encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$ApiOutcomeSchema.discriminatorKey,
+          _$ApiOutcomeSchema.subtypeApiSuccess,
+        );
+        subCodec.encodeFields(sub, keyed);
+      case final ApiFailure sub:
+        final keyed = encoder.keyed(
+          length: 1 + const ApiFailureCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$ApiOutcomeSchema.discriminatorKey,
+          _$ApiOutcomeSchema.subtypeApiFailure,
+        );
+        const ApiFailureCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for ApiSuccess
+// =============================================================================
+extension type const _$ApiSuccessSchema(int _value) {
+  // String Name Constants
+  static const String namePayload = 'payload';
+  static const String nameRequestId = 'requestId';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyPayload = 0;
+  static const int keyRequestId = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$ApiSuccessSchema.namePayload,
+    _$ApiSuccessSchema.nameRequestId,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$ApiSuccessSchema none = _$ApiSuccessSchema(0);
+  static const int _payloadBit = 1 << 0;
+  static const _$ApiSuccessSchema payload = _$ApiSuccessSchema(_payloadBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$ApiSuccessSchema golden = _$ApiSuccessSchema(_payloadBit);
+
+  @pragma('vm:prefer-inline')
+  _$ApiSuccessSchema operator |(_$ApiSuccessSchema other) =>
+      _$ApiSuccessSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _payloadBit) == 0) {
+      missing.add(namePayload);
+    }
+    throw CodableException(
+      'Missing required fields for ApiSuccess: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for ApiSuccess
+// =============================================================================
+final class ApiSuccessCodable<T> implements KeyedCodable<ApiSuccess<T>> {
+  final Codable<T> _$t;
+
+  const ApiSuccessCodable(this._$t);
+
+  @override
+  ApiSuccess<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ApiSuccessSchema.keyOptions);
+
+    T? payload;
+    String? requestId;
+    var seen = _$ApiSuccessSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ApiSuccessSchema.keyOptions)) {
+        case _$ApiSuccessSchema.keyPayload:
+          if ((seen._value & _$ApiSuccessSchema.payload._value) != 0) {
+            throw const CodableException('Duplicate field "payload"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            payload = null as T;
+          } else {
+            payload = keyed.decodeValue(_$t);
+          }
+          seen |= _$ApiSuccessSchema.payload;
+          break;
+        case _$ApiSuccessSchema.keyRequestId:
+          if (keyed.isNextNull()) {
+            keyed.readNull();
+            requestId = null;
+          } else {
+            requestId = keyed.readString();
+          }
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$ApiSuccessSchema.payload;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return ApiSuccess<T>(payload as T, requestId: requestId);
+  }
+
+  @override
+  int encodedFieldCount(ApiSuccess<T> instance) {
+    var count$ = 0;
+    if (instance.payload != null) count$++;
+    if (instance.requestId != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(ApiSuccess<T> instance, KeyedEncoder keyed) {
+    final v$Payload = instance.payload;
+    if (v$Payload != null) {
+      keyed.encodeValue(_$ApiSuccessSchema.namePayload, v$Payload, _$t);
+    }
+    final v$RequestId = instance.requestId;
+    if (v$RequestId != null) {
+      keyed.encodeString(_$ApiSuccessSchema.nameRequestId, v$RequestId);
+    }
+  }
+
+  @override
+  void encode(ApiSuccess<T> instance, Encoder encoder) {
+    var count$ = 0;
+    final v$Payload = instance.payload;
+    if (v$Payload != null) count$++;
+    final v$RequestId = instance.requestId;
+    if (v$RequestId != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$Payload != null) {
+      keyed.encodeValue(_$ApiSuccessSchema.namePayload, v$Payload, _$t);
+    }
+    if (v$RequestId != null) {
+      keyed.encodeString(_$ApiSuccessSchema.nameRequestId, v$RequestId);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for ApiFailure
+// =============================================================================
+extension type const _$ApiFailureSchema(int _value) {
+  // String Name Constants
+  static const String nameCode = 'code';
+  static const String nameReason = 'reason';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyCode = 0;
+  static const int keyReason = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$ApiFailureSchema.nameCode,
+    _$ApiFailureSchema.nameReason,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$ApiFailureSchema none = _$ApiFailureSchema(0);
+  static const int _codeBit = 1 << 0;
+  static const _$ApiFailureSchema code = _$ApiFailureSchema(_codeBit);
+  static const int _reasonBit = 1 << 1;
+  static const _$ApiFailureSchema reason = _$ApiFailureSchema(_reasonBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$ApiFailureSchema golden = _$ApiFailureSchema(
+    _codeBit | _reasonBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$ApiFailureSchema operator |(_$ApiFailureSchema other) =>
+      _$ApiFailureSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _codeBit) == 0) {
+      missing.add(nameCode);
+    }
+    if ((_value & _reasonBit) == 0) {
+      missing.add(nameReason);
+    }
+    throw CodableException(
+      'Missing required fields for ApiFailure: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for ApiFailure
+// =============================================================================
+final class ApiFailureCodable implements KeyedCodable<ApiFailure> {
+  const ApiFailureCodable();
+
+  @override
+  ApiFailure decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ApiFailureSchema.keyOptions);
+
+    int? code;
+    String? reason;
+    var seen = _$ApiFailureSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ApiFailureSchema.keyOptions)) {
+        case _$ApiFailureSchema.keyCode:
+          if ((seen._value & _$ApiFailureSchema.code._value) != 0) {
+            throw const CodableException('Duplicate field "code"');
+          }
+          code = keyed.readInt();
+          seen |= _$ApiFailureSchema.code;
+          break;
+        case _$ApiFailureSchema.keyReason:
+          if ((seen._value & _$ApiFailureSchema.reason._value) != 0) {
+            throw const CodableException('Duplicate field "reason"');
+          }
+          reason = keyed.readString();
+          seen |= _$ApiFailureSchema.reason;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return ApiFailure(code: code!, reason: reason!);
+  }
+
+  @override
+  int encodedFieldCount(ApiFailure instance) => 2;
+
+  @override
+  void encodeFields(ApiFailure instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$ApiFailureSchema.nameCode, instance.code);
+    keyed.encodeString(_$ApiFailureSchema.nameReason, instance.reason);
+  }
+
+  @override
+  void encode(ApiFailure instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for OutcomeBundle
+// =============================================================================
+extension type const _$OutcomeBundleSchema(int _value) {
+  // String Name Constants
+  static const String nameLocationOutcome = 'locationOutcome';
+  static const String nameCountOutcome = 'countOutcome';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLocationOutcome = 0;
+  static const int keyCountOutcome = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$OutcomeBundleSchema.nameLocationOutcome,
+    _$OutcomeBundleSchema.nameCountOutcome,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$OutcomeBundleSchema none = _$OutcomeBundleSchema(0);
+  static const int _locationOutcomeBit = 1 << 0;
+  static const _$OutcomeBundleSchema locationOutcome = _$OutcomeBundleSchema(
+    _locationOutcomeBit,
+  );
+  static const int _countOutcomeBit = 1 << 1;
+  static const _$OutcomeBundleSchema countOutcome = _$OutcomeBundleSchema(
+    _countOutcomeBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$OutcomeBundleSchema golden = _$OutcomeBundleSchema(
+    _locationOutcomeBit | _countOutcomeBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$OutcomeBundleSchema operator |(_$OutcomeBundleSchema other) =>
+      _$OutcomeBundleSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _locationOutcomeBit) == 0) {
+      missing.add(nameLocationOutcome);
+    }
+    if ((_value & _countOutcomeBit) == 0) {
+      missing.add(nameCountOutcome);
+    }
+    throw CodableException(
+      'Missing required fields for OutcomeBundle: ${missing.join(", ")}',
+    );
+  }
+
+  // Cached Closed Codecs
+  static final ApiOutcomeCodable<int> codec0 = ApiOutcomeCodable<int>(
+    Codable<int>.fromFunctions(
+      decode: (d) {
+        final res = d.singleValue().readInt();
+        return res;
+      },
+      encode: (int v, e) {
+        e.singleValue().encodeInt(v);
+      },
+    ),
+  );
+}
+
+// =============================================================================
+// 2. Companion Codable for OutcomeBundle
+// =============================================================================
+final class OutcomeBundleCodable implements KeyedCodable<OutcomeBundle> {
+  const OutcomeBundleCodable();
+
+  @override
+  OutcomeBundle decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$OutcomeBundleSchema.keyOptions);
+
+    ApiOutcome<Address>? locationOutcome;
+    ApiOutcome<int>? countOutcome;
+    var seen = _$OutcomeBundleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$OutcomeBundleSchema.keyOptions)) {
+        case _$OutcomeBundleSchema.keyLocationOutcome:
+          if ((seen._value & _$OutcomeBundleSchema.locationOutcome._value) !=
+              0) {
+            throw const CodableException('Duplicate field "locationOutcome"');
+          }
+          locationOutcome = const ApiOutcomeCodable<Address>(AddressCodable())
+              .decode(keyed.nestedDecoder());
+          seen |= _$OutcomeBundleSchema.locationOutcome;
+          break;
+        case _$OutcomeBundleSchema.keyCountOutcome:
+          if ((seen._value & _$OutcomeBundleSchema.countOutcome._value) != 0) {
+            throw const CodableException('Duplicate field "countOutcome"');
+          }
+          countOutcome = _$OutcomeBundleSchema.codec0.decode(
+            keyed.nestedDecoder(),
+          );
+          seen |= _$OutcomeBundleSchema.countOutcome;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return OutcomeBundle(
+      locationOutcome: locationOutcome!,
+      countOutcome: countOutcome!,
+    );
+  }
+
+  @override
+  int encodedFieldCount(OutcomeBundle instance) => 2;
+
+  @override
+  void encodeFields(OutcomeBundle instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$OutcomeBundleSchema.nameLocationOutcome,
+      instance.locationOutcome,
+      const ApiOutcomeCodable<Address>(AddressCodable()),
+    );
+    keyed.encodeValue(
+      _$OutcomeBundleSchema.nameCountOutcome,
+      instance.countOutcome,
+      _$OutcomeBundleSchema.codec0,
+    );
+  }
+
+  @override
+  void encode(OutcomeBundle instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for PluginAction
+// =============================================================================
+extension type const _$PluginActionSchema(int _value) {
+  static const String discriminatorKey = 'action';
+  static const String subtypePingAction = 'ping';
+  static const String subtypeEchoAction = 'echo';
+}
+
+// =============================================================================
+// 2. Companion Codable for PluginAction
+// =============================================================================
+final class PluginActionCodable implements KeyedCodable<PluginAction> {
+  const PluginActionCodable();
+
+  @override
+  PluginAction decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$PluginActionSchema.discriminatorKey) ||
+        mapped.isNull(_$PluginActionSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$PluginActionSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$PluginActionSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$PluginActionSchema.subtypePingAction =>
+        const PingActionCodable().decode(decoder),
+      _$PluginActionSchema.subtypeEchoAction =>
+        const EchoActionCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$PluginActionSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(PluginAction instance) => switch (instance) {
+    final PingAction sub =>
+      1 + const PingActionCodable().encodedFieldCount(sub),
+    final EchoAction sub =>
+      1 + const EchoActionCodable().encodedFieldCount(sub),
+    _ => throw CodableException(
+      'No registered subtype for ${instance.runtimeType} on discriminator "action"',
+      actualValue: instance,
+    ),
+  };
+
+  @override
+  void encodeFields(PluginAction instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final PingAction sub:
+        keyed.encodeString(
+          _$PluginActionSchema.discriminatorKey,
+          _$PluginActionSchema.subtypePingAction,
+        );
+        const PingActionCodable().encodeFields(sub, keyed);
+      case final EchoAction sub:
+        keyed.encodeString(
+          _$PluginActionSchema.discriminatorKey,
+          _$PluginActionSchema.subtypeEchoAction,
+        );
+        const EchoActionCodable().encodeFields(sub, keyed);
+      default:
+        throw CodableException(
+          'No registered subtype for ${instance.runtimeType} on discriminator "action"',
+          actualValue: instance,
+        );
+    }
+  }
+
+  @override
+  void encode(PluginAction instance, Encoder encoder) {
+    switch (instance) {
+      case final PingAction sub:
+        final keyed = encoder.keyed(
+          length: 1 + const PingActionCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PluginActionSchema.discriminatorKey,
+          _$PluginActionSchema.subtypePingAction,
+        );
+        const PingActionCodable().encodeFields(sub, keyed);
+      case final EchoAction sub:
+        final keyed = encoder.keyed(
+          length: 1 + const EchoActionCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$PluginActionSchema.discriminatorKey,
+          _$PluginActionSchema.subtypeEchoAction,
+        );
+        const EchoActionCodable().encodeFields(sub, keyed);
+      default:
+        throw CodableException(
+          'No registered subtype for ${instance.runtimeType} on discriminator "action"',
+          actualValue: instance,
+        );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for PingAction
+// =============================================================================
+extension type const _$PingActionSchema(int _value) {
+  // String Name Constants
+  static const String nameSeq = 'seq';
+
+  // Key Indices for selectKeyIndex()
+  static const int keySeq = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$PingActionSchema.nameSeq,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$PingActionSchema none = _$PingActionSchema(0);
+  static const int _seqBit = 1 << 0;
+  static const _$PingActionSchema seq = _$PingActionSchema(_seqBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$PingActionSchema golden = _$PingActionSchema(_seqBit);
+
+  @pragma('vm:prefer-inline')
+  _$PingActionSchema operator |(_$PingActionSchema other) =>
+      _$PingActionSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _seqBit) == 0) {
+      missing.add(nameSeq);
+    }
+    throw CodableException(
+      'Missing required fields for PingAction: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for PingAction
+// =============================================================================
+final class PingActionCodable implements KeyedCodable<PingAction> {
+  const PingActionCodable();
+
+  @override
+  PingAction decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$PingActionSchema.keyOptions);
+
+    int? seq;
+    var seen = _$PingActionSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$PingActionSchema.keyOptions)) {
+        case _$PingActionSchema.keySeq:
+          if ((seen._value & _$PingActionSchema.seq._value) != 0) {
+            throw const CodableException('Duplicate field "seq"');
+          }
+          seq = keyed.readInt();
+          seen |= _$PingActionSchema.seq;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return PingAction(seq!);
+  }
+
+  @override
+  int encodedFieldCount(PingAction instance) => 1;
+
+  @override
+  void encodeFields(PingAction instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$PingActionSchema.nameSeq, instance.seq);
+  }
+
+  @override
+  void encode(PingAction instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EchoAction
+// =============================================================================
+extension type const _$EchoActionSchema(int _value) {
+  // String Name Constants
+  static const String nameText = 'text';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyText = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$EchoActionSchema.nameText,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$EchoActionSchema none = _$EchoActionSchema(0);
+  static const int _textBit = 1 << 0;
+  static const _$EchoActionSchema text = _$EchoActionSchema(_textBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$EchoActionSchema golden = _$EchoActionSchema(_textBit);
+
+  @pragma('vm:prefer-inline')
+  _$EchoActionSchema operator |(_$EchoActionSchema other) =>
+      _$EchoActionSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _textBit) == 0) {
+      missing.add(nameText);
+    }
+    throw CodableException(
+      'Missing required fields for EchoAction: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for EchoAction
+// =============================================================================
+final class EchoActionCodable implements KeyedCodable<EchoAction> {
+  const EchoActionCodable();
+
+  @override
+  EchoAction decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$EchoActionSchema.keyOptions);
+
+    String? text;
+    var seen = _$EchoActionSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$EchoActionSchema.keyOptions)) {
+        case _$EchoActionSchema.keyText:
+          if ((seen._value & _$EchoActionSchema.text._value) != 0) {
+            throw const CodableException('Duplicate field "text"');
+          }
+          text = keyed.readString();
+          seen |= _$EchoActionSchema.text;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return EchoAction(text!);
+  }
+
+  @override
+  int encodedFieldCount(EchoAction instance) => 1;
+
+  @override
+  void encodeFields(EchoAction instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$EchoActionSchema.nameText, instance.text);
+  }
+
+  @override
+  void encode(EchoAction instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for DupSubA
+// =============================================================================
+extension type const _$DupSubASchema(int _value) {
+  // String Name Constants
+
+  // Key Indices for selectKeyIndex()
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const []);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$DupSubASchema none = _$DupSubASchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$DupSubASchema operator |(_$DupSubASchema other) =>
+      _$DupSubASchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for DupSubA
+// =============================================================================
+final class DupSubACodable implements KeyedCodable<DupSubA> {
+  const DupSubACodable();
+
+  @override
+  DupSubA decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DupSubASchema.keyOptions);
+
+    var seen = _$DupSubASchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DupSubASchema.keyOptions)) {
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return const DupSubA();
+  }
+
+  @override
+  int encodedFieldCount(DupSubA instance) => 0;
+
+  @override
+  void encodeFields(DupSubA instance, KeyedEncoder keyed) {}
+
+  @override
+  void encode(DupSubA instance, Encoder encoder) {
+    encoder.keyed(length: 0);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for DupSubB
+// =============================================================================
+extension type const _$DupSubBSchema(int _value) {
+  // String Name Constants
+
+  // Key Indices for selectKeyIndex()
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const []);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$DupSubBSchema none = _$DupSubBSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$DupSubBSchema operator |(_$DupSubBSchema other) =>
+      _$DupSubBSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for DupSubB
+// =============================================================================
+final class DupSubBCodable implements KeyedCodable<DupSubB> {
+  const DupSubBCodable();
+
+  @override
+  DupSubB decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$DupSubBSchema.keyOptions);
+
+    var seen = _$DupSubBSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$DupSubBSchema.keyOptions)) {
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return const DupSubB();
+  }
+
+  @override
+  int encodedFieldCount(DupSubB instance) => 0;
+
+  @override
+  void encodeFields(DupSubB instance, KeyedEncoder keyed) {}
+
+  @override
+  void encode(DupSubB instance, Encoder encoder) {
+    encoder.keyed(length: 0);
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for CollidingFieldSub
+// =============================================================================
+extension type const _$CollidingFieldSubSchema(int _value) {
+  // String Name Constants
+  static const String nameType = 'type';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyType = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$CollidingFieldSubSchema.nameType,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$CollidingFieldSubSchema none = _$CollidingFieldSubSchema(0);
+
+  @pragma('vm:prefer-inline')
+  _$CollidingFieldSubSchema operator |(_$CollidingFieldSubSchema other) =>
+      _$CollidingFieldSubSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {}
+}
+
+// =============================================================================
+// 2. Companion Codable for CollidingFieldSub
+// =============================================================================
+final class CollidingFieldSubCodable
+    implements KeyedCodable<CollidingFieldSub> {
+  const CollidingFieldSubCodable();
+
+  @override
+  CollidingFieldSub decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$CollidingFieldSubSchema.keyOptions);
+
+    String type = 'colliding';
+    var seen = _$CollidingFieldSubSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$CollidingFieldSubSchema.keyOptions)) {
+        case _$CollidingFieldSubSchema.keyType:
+          type = keyed.readString();
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return CollidingFieldSub(type: type);
+  }
+
+  @override
+  int encodedFieldCount(CollidingFieldSub instance) => 1;
+
+  @override
+  void encodeFields(CollidingFieldSub instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$CollidingFieldSubSchema.nameType, instance.type);
+  }
+
+  @override
+  void encode(CollidingFieldSub instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for ConcreteIntOnlySub
+// =============================================================================
+extension type const _$ConcreteIntOnlySubSchema(int _value) {
+  // String Name Constants
+  static const String nameValue = 'value';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyValue = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$ConcreteIntOnlySubSchema.nameValue,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$ConcreteIntOnlySubSchema none = _$ConcreteIntOnlySubSchema(0);
+  static const int _valueBit = 1 << 0;
+  static const _$ConcreteIntOnlySubSchema value = _$ConcreteIntOnlySubSchema(
+    _valueBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$ConcreteIntOnlySubSchema golden = _$ConcreteIntOnlySubSchema(
+    _valueBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$ConcreteIntOnlySubSchema operator |(_$ConcreteIntOnlySubSchema other) =>
+      _$ConcreteIntOnlySubSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _valueBit) == 0) {
+      missing.add(nameValue);
+    }
+    throw CodableException(
+      'Missing required fields for ConcreteIntOnlySub: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for ConcreteIntOnlySub
+// =============================================================================
+final class ConcreteIntOnlySubCodable
+    implements KeyedCodable<ConcreteIntOnlySub> {
+  const ConcreteIntOnlySubCodable();
+
+  @override
+  ConcreteIntOnlySub decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ConcreteIntOnlySubSchema.keyOptions);
+
+    int? value;
+    var seen = _$ConcreteIntOnlySubSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ConcreteIntOnlySubSchema.keyOptions)) {
+        case _$ConcreteIntOnlySubSchema.keyValue:
+          if ((seen._value & _$ConcreteIntOnlySubSchema.value._value) != 0) {
+            throw const CodableException('Duplicate field "value"');
+          }
+          value = keyed.readInt();
+          seen |= _$ConcreteIntOnlySubSchema.value;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return ConcreteIntOnlySub(value!);
+  }
+
+  @override
+  int encodedFieldCount(ConcreteIntOnlySub instance) => 1;
+
+  @override
+  void encodeFields(ConcreteIntOnlySub instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$ConcreteIntOnlySubSchema.nameValue, instance.value);
+  }
+
+  @override
+  void encode(ConcreteIntOnlySub instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for ExtraTypeParamSub
+// =============================================================================
+extension type const _$ExtraTypeParamSubSchema(int _value) {
+  // String Name Constants
+  static const String nameFirst = 'first';
+  static const String nameExtra = 'extra';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyFirst = 0;
+  static const int keyExtra = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$ExtraTypeParamSubSchema.nameFirst,
+    _$ExtraTypeParamSubSchema.nameExtra,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$ExtraTypeParamSubSchema none = _$ExtraTypeParamSubSchema(0);
+  static const int _firstBit = 1 << 0;
+  static const _$ExtraTypeParamSubSchema first = _$ExtraTypeParamSubSchema(
+    _firstBit,
+  );
+  static const int _extraBit = 1 << 1;
+  static const _$ExtraTypeParamSubSchema extra = _$ExtraTypeParamSubSchema(
+    _extraBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$ExtraTypeParamSubSchema golden = _$ExtraTypeParamSubSchema(
+    _firstBit | _extraBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$ExtraTypeParamSubSchema operator |(_$ExtraTypeParamSubSchema other) =>
+      _$ExtraTypeParamSubSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _firstBit) == 0) {
+      missing.add(nameFirst);
+    }
+    if ((_value & _extraBit) == 0) {
+      missing.add(nameExtra);
+    }
+    throw CodableException(
+      'Missing required fields for ExtraTypeParamSub: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for ExtraTypeParamSub
+// =============================================================================
+final class ExtraTypeParamSubCodable<T, U>
+    implements KeyedCodable<ExtraTypeParamSub<T, U>> {
+  final Codable<T> _$t;
+  final Codable<U> _$u;
+
+  const ExtraTypeParamSubCodable(this._$t, this._$u);
+
+  @override
+  ExtraTypeParamSub<T, U> decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ExtraTypeParamSubSchema.keyOptions);
+
+    T? first;
+    U? extra;
+    var seen = _$ExtraTypeParamSubSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ExtraTypeParamSubSchema.keyOptions)) {
+        case _$ExtraTypeParamSubSchema.keyFirst:
+          if ((seen._value & _$ExtraTypeParamSubSchema.first._value) != 0) {
+            throw const CodableException('Duplicate field "first"');
+          }
+          if (keyed.isNextNull() && null is T) {
+            keyed.readNull();
+            first = null as T;
+          } else {
+            first = keyed.decodeValue(_$t);
+          }
+          seen |= _$ExtraTypeParamSubSchema.first;
+          break;
+        case _$ExtraTypeParamSubSchema.keyExtra:
+          if ((seen._value & _$ExtraTypeParamSubSchema.extra._value) != 0) {
+            throw const CodableException('Duplicate field "extra"');
+          }
+          if (keyed.isNextNull() && null is U) {
+            keyed.readNull();
+            extra = null as U;
+          } else {
+            extra = keyed.decodeValue(_$u);
+          }
+          seen |= _$ExtraTypeParamSubSchema.extra;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    if (null is T) {
+      seen |= _$ExtraTypeParamSubSchema.first;
+    }
+    if (null is U) {
+      seen |= _$ExtraTypeParamSubSchema.extra;
+    }
+    // Inlined fast-path check
+    seen.validate();
+
+    return ExtraTypeParamSub<T, U>(first as T, extra as U);
+  }
+
+  @override
+  int encodedFieldCount(ExtraTypeParamSub<T, U> instance) {
+    var count$ = 0;
+    if (instance.first != null) count$++;
+    if (instance.extra != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(ExtraTypeParamSub<T, U> instance, KeyedEncoder keyed) {
+    final v$First = instance.first;
+    if (v$First != null) {
+      keyed.encodeValue(_$ExtraTypeParamSubSchema.nameFirst, v$First, _$t);
+    }
+    final v$Extra = instance.extra;
+    if (v$Extra != null) {
+      keyed.encodeValue(_$ExtraTypeParamSubSchema.nameExtra, v$Extra, _$u);
+    }
+  }
+
+  @override
+  void encode(ExtraTypeParamSub<T, U> instance, Encoder encoder) {
+    var count$ = 0;
+    final v$First = instance.first;
+    if (v$First != null) count$++;
+    final v$Extra = instance.extra;
+    if (v$Extra != null) count$++;
+    final keyed = encoder.keyed(length: count$);
+    if (v$First != null) {
+      keyed.encodeValue(_$ExtraTypeParamSubSchema.nameFirst, v$First, _$t);
+    }
+    if (v$Extra != null) {
+      keyed.encodeValue(_$ExtraTypeParamSubSchema.nameExtra, v$Extra, _$u);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for TieredVehicle
+// =============================================================================
+extension type const _$TieredVehicleSchema(int _value) {
+  static const String discriminatorKey = 'tier';
+  static const String subtypeLuxurySedanVehicle = 'luxury_sedan';
+  static const String subtypeSedanVehicle = 'sedanVehicle';
+}
+
+// =============================================================================
+// 2. Companion Codable for TieredVehicle
+// =============================================================================
+final class TieredVehicleCodable implements KeyedCodable<TieredVehicle> {
+  const TieredVehicleCodable();
+
+  @override
+  TieredVehicle decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$TieredVehicleSchema.discriminatorKey) ||
+        mapped.isNull(_$TieredVehicleSchema.discriminatorKey)) {
+      throw CodableException.missingKey(_$TieredVehicleSchema.discriminatorKey);
+    }
+    final discriminator = mapped.readString(
+      _$TieredVehicleSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$TieredVehicleSchema.subtypeLuxurySedanVehicle =>
+        const LuxurySedanVehicleCodable().decode(decoder),
+      _$TieredVehicleSchema.subtypeSedanVehicle =>
+        const SedanVehicleCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$TieredVehicleSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(TieredVehicle instance) => switch (instance) {
+    final LuxurySedanVehicle sub =>
+      1 + const LuxurySedanVehicleCodable().encodedFieldCount(sub),
+    final SedanVehicle sub =>
+      1 + const SedanVehicleCodable().encodedFieldCount(sub),
+  };
+
+  @override
+  void encodeFields(TieredVehicle instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final LuxurySedanVehicle sub:
+        keyed.encodeString(
+          _$TieredVehicleSchema.discriminatorKey,
+          _$TieredVehicleSchema.subtypeLuxurySedanVehicle,
+        );
+        const LuxurySedanVehicleCodable().encodeFields(sub, keyed);
+      case final SedanVehicle sub:
+        keyed.encodeString(
+          _$TieredVehicleSchema.discriminatorKey,
+          _$TieredVehicleSchema.subtypeSedanVehicle,
+        );
+        const SedanVehicleCodable().encodeFields(sub, keyed);
+    }
+  }
+
+  @override
+  void encode(TieredVehicle instance, Encoder encoder) {
+    switch (instance) {
+      case final LuxurySedanVehicle sub:
+        final keyed = encoder.keyed(
+          length: 1 + const LuxurySedanVehicleCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$TieredVehicleSchema.discriminatorKey,
+          _$TieredVehicleSchema.subtypeLuxurySedanVehicle,
+        );
+        const LuxurySedanVehicleCodable().encodeFields(sub, keyed);
+      case final SedanVehicle sub:
+        final keyed = encoder.keyed(
+          length: 1 + const SedanVehicleCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$TieredVehicleSchema.discriminatorKey,
+          _$TieredVehicleSchema.subtypeSedanVehicle,
+        );
+        const SedanVehicleCodable().encodeFields(sub, keyed);
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for SedanVehicle
+// =============================================================================
+extension type const _$SedanVehicleSchema(int _value) {
+  // String Name Constants
+  static const String nameSeats = 'seats';
+
+  // Key Indices for selectKeyIndex()
+  static const int keySeats = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$SedanVehicleSchema.nameSeats,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$SedanVehicleSchema none = _$SedanVehicleSchema(0);
+  static const int _seatsBit = 1 << 0;
+  static const _$SedanVehicleSchema seats = _$SedanVehicleSchema(_seatsBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$SedanVehicleSchema golden = _$SedanVehicleSchema(_seatsBit);
+
+  @pragma('vm:prefer-inline')
+  _$SedanVehicleSchema operator |(_$SedanVehicleSchema other) =>
+      _$SedanVehicleSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _seatsBit) == 0) {
+      missing.add(nameSeats);
+    }
+    throw CodableException(
+      'Missing required fields for SedanVehicle: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for SedanVehicle
+// =============================================================================
+final class SedanVehicleCodable implements KeyedCodable<SedanVehicle> {
+  const SedanVehicleCodable();
+
+  @override
+  SedanVehicle decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$SedanVehicleSchema.keyOptions);
+
+    int? seats;
+    var seen = _$SedanVehicleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$SedanVehicleSchema.keyOptions)) {
+        case _$SedanVehicleSchema.keySeats:
+          if ((seen._value & _$SedanVehicleSchema.seats._value) != 0) {
+            throw const CodableException('Duplicate field "seats"');
+          }
+          seats = keyed.readInt();
+          seen |= _$SedanVehicleSchema.seats;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return SedanVehicle(seats: seats!);
+  }
+
+  @override
+  int encodedFieldCount(SedanVehicle instance) => 1;
+
+  @override
+  void encodeFields(SedanVehicle instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$SedanVehicleSchema.nameSeats, instance.seats);
+  }
+
+  @override
+  void encode(SedanVehicle instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for LuxurySedanVehicle
+// =============================================================================
+extension type const _$LuxurySedanVehicleSchema(int _value) {
+  // String Name Constants
+  static const String nameSeats = 'seats';
+  static const String nameMassageSeats = 'massageSeats';
+
+  // Key Indices for selectKeyIndex()
+  static const int keySeats = 0;
+  static const int keyMassageSeats = 1;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$LuxurySedanVehicleSchema.nameSeats,
+    _$LuxurySedanVehicleSchema.nameMassageSeats,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$LuxurySedanVehicleSchema none = _$LuxurySedanVehicleSchema(0);
+  static const int _seatsBit = 1 << 0;
+  static const _$LuxurySedanVehicleSchema seats = _$LuxurySedanVehicleSchema(
+    _seatsBit,
+  );
+  static const int _massageSeatsBit = 1 << 1;
+  static const _$LuxurySedanVehicleSchema massageSeats =
+      _$LuxurySedanVehicleSchema(_massageSeatsBit);
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$LuxurySedanVehicleSchema golden = _$LuxurySedanVehicleSchema(
+    _seatsBit | _massageSeatsBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$LuxurySedanVehicleSchema operator |(_$LuxurySedanVehicleSchema other) =>
+      _$LuxurySedanVehicleSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _seatsBit) == 0) {
+      missing.add(nameSeats);
+    }
+    if ((_value & _massageSeatsBit) == 0) {
+      missing.add(nameMassageSeats);
+    }
+    throw CodableException(
+      'Missing required fields for LuxurySedanVehicle: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for LuxurySedanVehicle
+// =============================================================================
+final class LuxurySedanVehicleCodable
+    implements KeyedCodable<LuxurySedanVehicle> {
+  const LuxurySedanVehicleCodable();
+
+  @override
+  LuxurySedanVehicle decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$LuxurySedanVehicleSchema.keyOptions);
+
+    int? seats;
+    bool? massageSeats;
+    var seen = _$LuxurySedanVehicleSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$LuxurySedanVehicleSchema.keyOptions)) {
+        case _$LuxurySedanVehicleSchema.keySeats:
+          if ((seen._value & _$LuxurySedanVehicleSchema.seats._value) != 0) {
+            throw const CodableException('Duplicate field "seats"');
+          }
+          seats = keyed.readInt();
+          seen |= _$LuxurySedanVehicleSchema.seats;
+          break;
+        case _$LuxurySedanVehicleSchema.keyMassageSeats:
+          if ((seen._value & _$LuxurySedanVehicleSchema.massageSeats._value) !=
+              0) {
+            throw const CodableException('Duplicate field "massageSeats"');
+          }
+          massageSeats = keyed.readBool();
+          seen |= _$LuxurySedanVehicleSchema.massageSeats;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return LuxurySedanVehicle(seats: seats!, massageSeats: massageSeats!);
+  }
+
+  @override
+  int encodedFieldCount(LuxurySedanVehicle instance) => 2;
+
+  @override
+  void encodeFields(LuxurySedanVehicle instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$LuxurySedanVehicleSchema.nameSeats, instance.seats);
+    keyed.encodeBool(
+      _$LuxurySedanVehicleSchema.nameMassageSeats,
+      instance.massageSeats,
+    );
+  }
+
+  @override
+  void encode(LuxurySedanVehicle instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
+  }
+}
+
+// =============================================================================
+// 1. Polymorphic Schema Descriptor for SealedWithEnumBranch
+// =============================================================================
+extension type const _$SealedWithEnumBranchSchema(int _value) {
+  static const String discriminatorKey = 'branch';
+  static const String subtypeClassSealedBranch = 'classSealedBranch';
+}
+
+// =============================================================================
+// 2. Companion Codable for SealedWithEnumBranch
+// =============================================================================
+final class SealedWithEnumBranchCodable
+    implements KeyedCodable<SealedWithEnumBranch> {
+  const SealedWithEnumBranchCodable();
+
+  @override
+  SealedWithEnumBranch decode(Decoder decoder) {
+    final mapped = decoder.mapped();
+    if (!mapped.containsKey(_$SealedWithEnumBranchSchema.discriminatorKey) ||
+        mapped.isNull(_$SealedWithEnumBranchSchema.discriminatorKey)) {
+      throw CodableException.missingKey(
+        _$SealedWithEnumBranchSchema.discriminatorKey,
+      );
+    }
+    final discriminator = mapped.readString(
+      _$SealedWithEnumBranchSchema.discriminatorKey,
+    );
+    return switch (discriminator) {
+      _$SealedWithEnumBranchSchema.subtypeClassSealedBranch =>
+        const ClassSealedBranchCodable().decode(decoder),
+      _ => throw CodableException.unknownSubtype(
+        discriminatorKey: _$SealedWithEnumBranchSchema.discriminatorKey,
+        subtypeValue: discriminator,
+      ),
+    };
+  }
+
+  @override
+  int encodedFieldCount(SealedWithEnumBranch instance) => switch (instance) {
+    final ClassSealedBranch sub =>
+      1 + const ClassSealedBranchCodable().encodedFieldCount(sub),
+    _ => throw CodableException(
+      'No registered subtype for ${instance.runtimeType} on discriminator "branch"',
+      actualValue: instance,
+    ),
+  };
+
+  @override
+  void encodeFields(SealedWithEnumBranch instance, KeyedEncoder keyed) {
+    switch (instance) {
+      case final ClassSealedBranch sub:
+        keyed.encodeString(
+          _$SealedWithEnumBranchSchema.discriminatorKey,
+          _$SealedWithEnumBranchSchema.subtypeClassSealedBranch,
+        );
+        const ClassSealedBranchCodable().encodeFields(sub, keyed);
+      default:
+        throw CodableException(
+          'No registered subtype for ${instance.runtimeType} on discriminator "branch"',
+          actualValue: instance,
+        );
+    }
+  }
+
+  @override
+  void encode(SealedWithEnumBranch instance, Encoder encoder) {
+    switch (instance) {
+      case final ClassSealedBranch sub:
+        final keyed = encoder.keyed(
+          length: 1 + const ClassSealedBranchCodable().encodedFieldCount(sub),
+        );
+        keyed.encodeString(
+          _$SealedWithEnumBranchSchema.discriminatorKey,
+          _$SealedWithEnumBranchSchema.subtypeClassSealedBranch,
+        );
+        const ClassSealedBranchCodable().encodeFields(sub, keyed);
+      default:
+        throw CodableException(
+          'No registered subtype for ${instance.runtimeType} on discriminator "branch"',
+          actualValue: instance,
+        );
+    }
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for ClassSealedBranch
+// =============================================================================
+extension type const _$ClassSealedBranchSchema(int _value) {
+  // String Name Constants
+  static const String nameLabel = 'label';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyLabel = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$ClassSealedBranchSchema.nameLabel,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$ClassSealedBranchSchema none = _$ClassSealedBranchSchema(0);
+  static const int _labelBit = 1 << 0;
+  static const _$ClassSealedBranchSchema label = _$ClassSealedBranchSchema(
+    _labelBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$ClassSealedBranchSchema golden = _$ClassSealedBranchSchema(
+    _labelBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$ClassSealedBranchSchema operator |(_$ClassSealedBranchSchema other) =>
+      _$ClassSealedBranchSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _labelBit) == 0) {
+      missing.add(nameLabel);
+    }
+    throw CodableException(
+      'Missing required fields for ClassSealedBranch: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for ClassSealedBranch
+// =============================================================================
+final class ClassSealedBranchCodable
+    implements KeyedCodable<ClassSealedBranch> {
+  const ClassSealedBranchCodable();
+
+  @override
+  ClassSealedBranch decode(Decoder decoder) {
+    final keyed = decoder.keyed(options: _$ClassSealedBranchSchema.keyOptions);
+
+    String? label;
+    var seen = _$ClassSealedBranchSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$ClassSealedBranchSchema.keyOptions)) {
+        case _$ClassSealedBranchSchema.keyLabel:
+          if ((seen._value & _$ClassSealedBranchSchema.label._value) != 0) {
+            throw const CodableException('Duplicate field "label"');
+          }
+          label = keyed.readString();
+          seen |= _$ClassSealedBranchSchema.label;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return ClassSealedBranch(label!);
+  }
+
+  @override
+  int encodedFieldCount(ClassSealedBranch instance) => 1;
+
+  @override
+  void encodeFields(ClassSealedBranch instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$ClassSealedBranchSchema.nameLabel, instance.label);
+  }
+
+  @override
+  void encode(ClassSealedBranch instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for EncodeOnlyLeaf
+// =============================================================================
+extension type const _$EncodeOnlyLeafSchema(int _value) {
+  // String Name Constants
+  static const String nameCode = 'code';
+}
+
+// =============================================================================
+// 2. Companion Codable for EncodeOnlyLeaf
+// =============================================================================
+final class EncodeOnlyLeafCodable implements KeyedEncodable<EncodeOnlyLeaf> {
+  const EncodeOnlyLeafCodable();
+
+  @override
+  int encodedFieldCount(EncodeOnlyLeaf instance) => 1;
+
+  @override
+  void encodeFields(EncodeOnlyLeaf instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$EncodeOnlyLeafSchema.nameCode, instance.code);
+  }
+
+  @override
+  void encode(EncodeOnlyLeaf instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
+  }
+}
+
+// =============================================================================
+// 1. Unified Schema Descriptor for TightenedNumericSub
+// =============================================================================
+extension type const _$TightenedNumericSubSchema(int _value) {
+  // String Name Constants
+  static const String nameNumber = 'number';
+
+  // Key Indices for selectKeyIndex()
+  static const int keyNumber = 0;
+
+  // KeyOptions Table
+  static final KeyOptions options = KeyOptions.of(const [
+    _$TightenedNumericSubSchema.nameNumber,
+  ]);
+  static final KeyOptions keyOptions = options;
+
+  // Bitmask Flags strictly for Required Fields
+  static const _$TightenedNumericSubSchema none = _$TightenedNumericSubSchema(
+    0,
+  );
+  static const int _numberBit = 1 << 0;
+  static const _$TightenedNumericSubSchema number = _$TightenedNumericSubSchema(
+    _numberBit,
+  );
+
+  // Combined Golden Bitmask for fast single-instruction check
+  static const _$TightenedNumericSubSchema golden = _$TightenedNumericSubSchema(
+    _numberBit,
+  );
+
+  @pragma('vm:prefer-inline')
+  _$TightenedNumericSubSchema operator |(_$TightenedNumericSubSchema other) =>
+      _$TightenedNumericSubSchema(_value | other._value);
+
+  /// Validates required fields in 1 CPU test instruction on the fast path.
+  @pragma('vm:prefer-inline')
+  void validate() {
+    if ((_value & golden._value) != golden._value) {
+      _throwMissingFields();
+    }
+  }
+
+  /// Out-of-line cold diagnostic reporting
+  void _throwMissingFields() {
+    final missing = <String>[];
+    if ((_value & _numberBit) == 0) {
+      missing.add(nameNumber);
+    }
+    throw CodableException(
+      'Missing required fields for TightenedNumericSub: ${missing.join(", ")}',
+    );
+  }
+}
+
+// =============================================================================
+// 2. Companion Codable for TightenedNumericSub
+// =============================================================================
+final class TightenedNumericSubCodable<T extends num>
+    implements KeyedCodable<TightenedNumericSub<T>> {
+  final Codable<T> _$t;
+
+  const TightenedNumericSubCodable(this._$t);
+
+  @override
+  TightenedNumericSub<T> decode(Decoder decoder) {
+    final keyed = decoder.keyed(
+      options: _$TightenedNumericSubSchema.keyOptions,
+    );
+
+    T? number;
+    var seen = _$TightenedNumericSubSchema.none;
+
+    while (keyed.moveNextKey()) {
+      switch (keyed.selectKeyIndex(_$TightenedNumericSubSchema.keyOptions)) {
+        case _$TightenedNumericSubSchema.keyNumber:
+          if ((seen._value & _$TightenedNumericSubSchema.number._value) != 0) {
+            throw const CodableException('Duplicate field "number"');
+          }
+          number = keyed.decodeValue(_$t);
+          seen |= _$TightenedNumericSubSchema.number;
+          break;
+        default:
+          keyed.skipValue();
+          break;
+      }
+    }
+
+    // Inlined fast-path check
+    seen.validate();
+
+    return TightenedNumericSub<T>(number!);
+  }
+
+  @override
+  int encodedFieldCount(TightenedNumericSub<T> instance) => 1;
+
+  @override
+  void encodeFields(TightenedNumericSub<T> instance, KeyedEncoder keyed) {
+    keyed.encodeValue(
+      _$TightenedNumericSubSchema.nameNumber,
+      instance.number,
+      _$t,
+    );
+  }
+
+  @override
+  void encode(TightenedNumericSub<T> instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 1));
   }
 }

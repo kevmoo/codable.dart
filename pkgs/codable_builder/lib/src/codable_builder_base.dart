@@ -13,6 +13,7 @@ import 'decoder_helper.dart';
 import 'encoder_helper.dart';
 import 'field_descriptor.dart';
 import 'model_visitor.dart';
+import 'polymorphic_helper.dart';
 
 /// Generator for classes annotated with [@Codable].
 class CodableGenerator extends GeneratorForAnnotation<Codable> {
@@ -48,44 +49,85 @@ class CodableGenerator extends GeneratorForAnnotation<Codable> {
 /// Generates the schema extension type and companion `*Codable` class for
 /// [model].
 String generateForModel(ModelDescriptor model) {
-  final decoderHelper = DecoderGeneratorHelper(model);
-  final encoderHelper = EncoderGeneratorHelper(model);
-
-  final buffer = StringBuffer();
-  buffer.write(decoderHelper.generateSchema());
-
+  final targetType = model.instantiatedClassName;
   final interfaceName = switch ((model.createDecoder, model.createEncoder)) {
-    (true, true) => 'Codable<${model.className}>',
-    (true, false) => 'Decodable<${model.className}>',
-    (false, true) => 'Encodable<${model.className}>',
+    (true, true) => 'KeyedCodable<$targetType>',
+    (true, false) => 'Decodable<$targetType>',
+    (false, true) => 'KeyedEncodable<$targetType>',
     (false, false) => null,
   };
 
-  if (interfaceName != null) {
-    buffer.writeln();
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln('// 2. Companion Codable for ${model.className}');
-    buffer.writeln(
-      '// =============================================================================',
-    );
-    buffer.writeln(
-      'final class ${model.className}Codable implements $interfaceName {',
-    );
-    buffer.writeln('  const ${model.className}Codable();');
+  final String schemaCode;
+  var decodeMethods = '';
+  var encodeMethods = '';
 
-    if (model.createDecoder) {
-      buffer.writeln();
-      buffer.write(decoderHelper.generateMethods());
-    }
+  if (model.isPolymorphic) {
+    final polyHelper = PolymorphicGeneratorHelper(model);
+    decodeMethods = polyHelper.generateDecodeMethod();
+    encodeMethods = polyHelper.generateEncodeMethods();
+    schemaCode = polyHelper.generateSchema();
+  } else {
+    final decoderHelper = DecoderGeneratorHelper(model);
+    if (model.createDecoder) decodeMethods = decoderHelper.generateMethods();
     if (model.createEncoder) {
-      buffer.writeln();
-      buffer.write(encoderHelper.generateMethod());
+      encodeMethods = EncoderGeneratorHelper(model).generateMethod();
     }
+    schemaCode = decoderHelper.generateSchema();
+  }
 
+  final buffer = StringBuffer(schemaCode);
+  if (interfaceName != null) {
+    buffer
+      ..writeln()
+      ..writeln(
+        '// =============================================================================',
+      )
+      ..writeln('// 2. Companion Codable for ${model.className}')
+      ..writeln(
+        '// =============================================================================',
+      )
+      ..writeln(
+        'final class ${model.className}Codable${model.typeParamsDeclaration} '
+        'implements $interfaceName {',
+      );
+    _writeCompanionFieldsAndConstructor(buffer, model);
+    for (final section in [decodeMethods, encodeMethods]) {
+      if (section.isNotEmpty) {
+        buffer
+          ..writeln()
+          ..write(section);
+      }
+    }
     buffer.writeln('}');
   }
 
   return buffer.toString();
+}
+
+void _writeCompanionFieldsAndConstructor(
+  StringBuffer buffer,
+  ModelDescriptor model,
+) {
+  if (!model.isGeneric) {
+    buffer.writeln('  const ${model.className}Codable();');
+    return;
+  }
+  final paramContractPrefix = switch ((
+    model.createDecoder,
+    model.createEncoder,
+  )) {
+    (true, false) => 'Decodable',
+    (false, true) => 'Encodable',
+    _ => 'Codable',
+  };
+  for (final tp in model.typeParameters) {
+    buffer.writeln(
+      '  final $paramContractPrefix<${tp.name}> ${tp.codecFieldName};',
+    );
+  }
+  buffer.writeln();
+  final ctorParams = model.typeParameters
+      .map((tp) => 'this.${tp.codecFieldName}')
+      .join(', ');
+  buffer.writeln('  const ${model.className}Codable($ctorParams);');
 }

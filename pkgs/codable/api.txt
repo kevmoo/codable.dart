@@ -3,13 +3,16 @@ environment:
 package:codable/codable.dart:
   codable (static const getter: Codable<Never>)
   Codable (class<T> extends Object implements Decodable<T>, Encodable<T>, abstract, interface):
-    new (const constructor: Codable<T> Function({bool createDecoder, bool createEncoder, FieldRename fieldRename, bool useGoldenMask}))
+    new (const constructor: Codable<T> Function({bool createDecoder, bool createEncoder, String? discriminatorKey, String? discriminatorValue, FieldRename fieldRename, List<Type>? subtypes, bool useGoldenMask}))
     fromFunctions (const constructor: Codable<T> Function({required T Function(Decoder) decode, required void Function(T, Encoder) encode}))
   CodableAnnotation (class extends Object implements Codable<Never>, final):
-    new (const constructor: CodableAnnotation Function({bool createDecoder, bool createEncoder, FieldRename fieldRename, bool useGoldenMask}))
+    new (const constructor: CodableAnnotation Function({bool createDecoder, bool createEncoder, String? discriminatorKey, String? discriminatorValue, FieldRename fieldRename, List<Type>? subtypes, bool useGoldenMask}))
     createDecoder (getter: bool)
     createEncoder (getter: bool)
+    discriminatorKey (getter: String?)
+    discriminatorValue (getter: String?)
     fieldRename (getter: FieldRename)
+    subtypes (getter: List<Type>?)
     useGoldenMask (getter: bool)
     decode (method: Never Function(Decoder))
     encode (method: void Function(Never, Encoder))
@@ -76,6 +79,7 @@ package:codable/codable.dart:
     compiled (method: T Function<T extends Object>(T Function(List<String>)))
     contains (method: bool Function(String))
     indexOf (method: int Function(String))
+  KeyedCodable (class<T> extends Object implements Codable<T>, KeyedEncodable<T>, abstract, interface)
   KeyedDecoder (class extends Object, abstract, interface):
     decodeBoolList (method: List<bool> Function())
     decodeDoubleList (method: List<double> Function())
@@ -110,6 +114,9 @@ package:codable/codable.dart:
     selectKeyIndex (method: int Function(KeyOptions))
     selectStringIndex (method: int Function(KeyOptions))
     skipValue (method: void Function())
+  KeyedEncodable (class<T> extends Object implements Encodable<T>, abstract, interface):
+    encodeFields (method: void Function(T, KeyedEncoder))
+    encodedFieldCount (method: int? Function(T))
   KeyedEncoder (class extends Object, abstract, interface):
     encodeBool (method: void Function(String, bool))
     encodeBoolList (method: void Function(String, List<bool>))
@@ -164,6 +171,12 @@ package:codable/codable.dart:
     readNullableString (method: String? Function(String))
     readNum (method: num Function(String))
     readString (method: String Function(String))
+  PolymorphicSubtype (class<Base> extends Object, abstract, interface):
+    discriminatorValue (getter: String)
+    decode (method: Base Function(Decoder))
+    encodeFields (method: void Function(Base, KeyedEncoder))
+    encodedFieldCount (method: int? Function(Base))
+    matches (method: bool Function(Base))
   SingleValueDecoder (class extends Object, abstract, interface):
     decode (method: T Function<T>(Decodable<T>))
     decodeNullable (method: T? Function<T>(Decodable<T>))
@@ -199,6 +212,22 @@ package:codable/codable.dart:
     encodeNullableInt (method: void Function(int?))
     encodeNullableString (method: void Function(String?))
     encodeString (method: void Function(String))
+  SubtypeCodable (class<Base, Sub extends Base> extends Object implements PolymorphicSubtype<Base>, final):
+    new (const constructor: SubtypeCodable<Base, Sub> Function(String, KeyedCodable<Sub>))
+    codable (getter: KeyedCodable<Sub>)
+    discriminatorValue (getter: String)
+    decode (method: Sub Function(Decoder))
+    encodeFields (method: void Function(Base, KeyedEncoder))
+    encodedFieldCount (method: int? Function(Base))
+    matches (method: bool Function(Base))
+  SuperCodable (class<T> extends Object implements KeyedCodable<T>, abstract):
+    new (const constructor: SuperCodable<T> Function())
+    discriminatorKey (getter: String)
+    subtypes (getter: List<PolymorphicSubtype<T>>)
+    decode (method: T Function(Decoder))
+    encode (method: void Function(T, Encoder))
+    encodeFields (method: void Function(T, KeyedEncoder))
+    encodedFieldCount (method: int? Function(T))
   SuperDecodable (class<T> extends Object implements Decodable<T>, abstract):
     new (const constructor: SuperDecodable<T> Function())
     discriminatorKey (getter: String)
@@ -262,12 +291,18 @@ package:codable/codable.dart:
     values (static const getter: List<ValueKind>)
   CodableListExtension (extension on Codable<T>):
     list (getter: Codable<List<T>>)
+  CodableNullableExtension (extension on Codable<T>):
+    nullable (getter: Codable<T?>)
   DecodableListExtension (extension on Decodable<T>):
     list (getter: Decodable<List<T>>)
     decodeList (method: List<T> Function(Decoder))
+  DecodableNullableExtension (extension on Decodable<T>):
+    nullable (getter: Decodable<T?>)
   EncodableListExtension (extension on Encodable<T>):
     list (getter: Encodable<Iterable<T>>)
     encodeList (method: void Function(Iterable<T>, Encoder))
+  EncodableNullableExtension (extension on Encodable<T>):
+    nullable (getter: Encodable<T?>)
   SuperDecodableExtension (extension on SuperDecodable<T>):
     decodeSuper (method: T Function(Decoder))
 package:codable/codable_driver.dart:
@@ -412,11 +447,14 @@ package:codable/codable_driver.dart:
   Encoder (see above)
   FieldRename (see above)
   KeyOptions (see above)
+  KeyedCodable (see above)
   KeyedDecoder (see above)
+  KeyedEncodable (see above)
   KeyedEncoder (see above)
   MapDecoder (see above)
   MapEncoder (see above)
   MappedDecoder (see above)
+  PolymorphicSubtype (see above)
   SingleValueDecoder (see above)
   SingleValueEncoder (see above)
   StringMapKeyDecoder (class extends Object with BaseSingleValueDecoderMixin implements Decoder, SingleValueDecoder, final):
@@ -444,13 +482,18 @@ package:codable/codable_driver.dart:
     selectStringIndex (method: int Function(KeyOptions))
     singleValue (method: SingleValueDecoder Function())
     unkeyed (method: UnkeyedDecoder Function())
+  SubtypeCodable (see above)
+  SuperCodable (see above)
   SuperDecodable (see above)
   UnkeyedDecoder (see above)
   UnkeyedEncoder (see above)
   ValueKind (see above)
   CodableListExtension (see above)
+  CodableNullableExtension (see above)
   DecodableListExtension (see above)
+  DecodableNullableExtension (see above)
   EncodableListExtension (see above)
+  EncodableNullableExtension (see above)
   SuperDecodableExtension (see above)
 package:codable/codable_json.dart:
   codable (see above)
@@ -621,20 +664,28 @@ package:codable/codable_json.dart:
     writeRawJson (method: void Function(Uint8List))
     writeString (method: void Function(String))
   KeyOptions (see above)
+  KeyedCodable (see above)
   KeyedDecoder (see above)
+  KeyedEncodable (see above)
   KeyedEncoder (see above)
   MapDecoder (see above)
   MapEncoder (see above)
   MappedDecoder (see above)
+  PolymorphicSubtype (see above)
   SingleValueDecoder (see above)
   SingleValueEncoder (see above)
+  SubtypeCodable (see above)
+  SuperCodable (see above)
   SuperDecodable (see above)
   UnkeyedDecoder (see above)
   UnkeyedEncoder (see above)
   ValueKind (see above)
   CodableListExtension (see above)
+  CodableNullableExtension (see above)
   DecodableListExtension (see above)
+  DecodableNullableExtension (see above)
   EncodableListExtension (see above)
+  EncodableNullableExtension (see above)
   JsonTokenReaderCodableExtension (extension on JsonTokenReader):
     isNextNull (method: bool Function())
   SuperDecodableExtension (see above)

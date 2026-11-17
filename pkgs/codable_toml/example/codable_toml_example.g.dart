@@ -64,7 +64,7 @@ extension type const _$DatabaseConfigSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for DatabaseConfig
 // =============================================================================
-final class DatabaseConfigCodable implements Codable<DatabaseConfig> {
+final class DatabaseConfigCodable implements KeyedCodable<DatabaseConfig> {
   const DatabaseConfigCodable();
 
   @override
@@ -100,10 +100,17 @@ final class DatabaseConfigCodable implements Codable<DatabaseConfig> {
   }
 
   @override
-  void encode(DatabaseConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(DatabaseConfig instance) => 2;
+
+  @override
+  void encodeFields(DatabaseConfig instance, KeyedEncoder keyed) {
     keyed.encodeString(_$DatabaseConfigSchema.nameHost, instance.host);
     keyed.encodeInt(_$DatabaseConfigSchema.namePort, instance.port);
+  }
+
+  @override
+  void encode(DatabaseConfig instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -170,7 +177,7 @@ extension type const _$EndpointRuleSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EndpointRule
 // =============================================================================
-final class EndpointRuleCodable implements Codable<EndpointRule> {
+final class EndpointRuleCodable implements KeyedCodable<EndpointRule> {
   const EndpointRuleCodable();
 
   @override
@@ -210,10 +217,17 @@ final class EndpointRuleCodable implements Codable<EndpointRule> {
   }
 
   @override
-  void encode(EndpointRule instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(EndpointRule instance) => 2;
+
+  @override
+  void encodeFields(EndpointRule instance, KeyedEncoder keyed) {
     keyed.encodeString(_$EndpointRuleSchema.namePath, instance.path);
     keyed.encodeInt(_$EndpointRuleSchema.nameRateLimit, instance.rateLimit);
+  }
+
+  @override
+  void encode(EndpointRule instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -298,7 +312,7 @@ extension type const _$ServiceManifestSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for ServiceManifest
 // =============================================================================
-final class ServiceManifestCodable implements Codable<ServiceManifest> {
+final class ServiceManifestCodable implements KeyedCodable<ServiceManifest> {
   const ServiceManifestCodable();
 
   @override
@@ -372,8 +386,10 @@ final class ServiceManifestCodable implements Codable<ServiceManifest> {
   }
 
   @override
-  void encode(ServiceManifest instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
+  int encodedFieldCount(ServiceManifest instance) => 5;
+
+  @override
+  void encodeFields(ServiceManifest instance, KeyedEncoder keyed) {
     keyed.encodeValue(
       _$ServiceManifestSchema.nameDatabase,
       instance.database,
@@ -399,5 +415,10 @@ final class ServiceManifestCodable implements Codable<ServiceManifest> {
         m.valueEncoder().singleValue().encodeString(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(ServiceManifest instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }

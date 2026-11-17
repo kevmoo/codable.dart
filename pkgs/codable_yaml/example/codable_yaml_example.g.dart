@@ -74,7 +74,7 @@ extension type const _$EndpointConfigSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EndpointConfig
 // =============================================================================
-final class EndpointConfigCodable implements Codable<EndpointConfig> {
+final class EndpointConfigCodable implements KeyedCodable<EndpointConfig> {
   const EndpointConfigCodable();
 
   @override
@@ -118,11 +118,18 @@ final class EndpointConfigCodable implements Codable<EndpointConfig> {
   }
 
   @override
-  void encode(EndpointConfig instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(EndpointConfig instance) => 3;
+
+  @override
+  void encodeFields(EndpointConfig instance, KeyedEncoder keyed) {
     keyed.encodeString(_$EndpointConfigSchema.nameHost, instance.host);
     keyed.encodeInt(_$EndpointConfigSchema.namePort, instance.port);
     keyed.encodeBool(_$EndpointConfigSchema.nameTls, instance.tls);
+  }
+
+  @override
+  void encode(EndpointConfig instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -207,7 +214,7 @@ extension type const _$GatewayManifestSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GatewayManifest
 // =============================================================================
-final class GatewayManifestCodable implements Codable<GatewayManifest> {
+final class GatewayManifestCodable implements KeyedCodable<GatewayManifest> {
   const GatewayManifestCodable();
 
   @override
@@ -279,8 +286,10 @@ final class GatewayManifestCodable implements Codable<GatewayManifest> {
   }
 
   @override
-  void encode(GatewayManifest instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 5);
+  int encodedFieldCount(GatewayManifest instance) => 5;
+
+  @override
+  void encodeFields(GatewayManifest instance, KeyedEncoder keyed) {
     keyed.encodeString(_$GatewayManifestSchema.nameService, instance.service);
     keyed.encodeValue(
       _$GatewayManifestSchema.namePrimary,
@@ -305,5 +314,10 @@ final class GatewayManifestCodable implements Codable<GatewayManifest> {
       _$GatewayManifestSchema.nameAllowedOrigins,
       instance.allowedOrigins,
     );
+  }
+
+  @override
+  void encode(GatewayManifest instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 5));
   }
 }

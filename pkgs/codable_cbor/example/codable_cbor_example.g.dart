@@ -75,7 +75,7 @@ extension type const _$SensorCoordinateSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SensorCoordinate
 // =============================================================================
-final class SensorCoordinateCodable implements Codable<SensorCoordinate> {
+final class SensorCoordinateCodable implements KeyedCodable<SensorCoordinate> {
   const SensorCoordinateCodable();
 
   @override
@@ -115,10 +115,17 @@ final class SensorCoordinateCodable implements Codable<SensorCoordinate> {
   }
 
   @override
-  void encode(SensorCoordinate instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(SensorCoordinate instance) => 2;
+
+  @override
+  void encodeFields(SensorCoordinate instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$SensorCoordinateSchema.nameRack, instance.rack);
     keyed.encodeInt(_$SensorCoordinateSchema.nameSlot, instance.slot);
+  }
+
+  @override
+  void encode(SensorCoordinate instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
 
@@ -196,7 +203,7 @@ extension type const _$SensorBatchSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SensorBatch
 // =============================================================================
-final class SensorBatchCodable implements Codable<SensorBatch> {
+final class SensorBatchCodable implements KeyedCodable<SensorBatch> {
   const SensorBatchCodable();
 
   @override
@@ -263,8 +270,10 @@ final class SensorBatchCodable implements Codable<SensorBatch> {
   }
 
   @override
-  void encode(SensorBatch instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(SensorBatch instance) => 4;
+
+  @override
+  void encodeFields(SensorBatch instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$SensorBatchSchema.nameBatchId, instance.batchId);
     keyed.encodeBytes(_$SensorBatchSchema.nameRawSample, instance.rawSample);
     keyed.encodeDoubleList(_$SensorBatchSchema.nameReadings, instance.readings);
@@ -277,5 +286,10 @@ final class SensorBatchCodable implements Codable<SensorBatch> {
         m.valueEncoder().singleValue().encodeDouble(entry.value);
       }
     }
+  }
+
+  @override
+  void encode(SensorBatch instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }

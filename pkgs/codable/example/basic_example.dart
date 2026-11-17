@@ -23,8 +23,8 @@ final class DateTimeIsoDecoder implements Codable<DateTime> {
       encoder.singleValue().encodeString(value.toIso8601String());
 }
 
-/// Standard model demonstrating primary constructors, custom wire keys,
-/// key aliasing, and nested object collections.
+/// Standard model demonstrating const generative constructors, custom wire
+/// keys, key aliasing, and nested object collections.
 @Codable()
 class Person {
   final String firstName;

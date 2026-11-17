@@ -67,6 +67,27 @@ String toScreamingSnakeCase(String name) {
   return toSnakeCase(name).toUpperCase();
 }
 
+/// Converts identifier to lowerCamelCase.
+String toLowerCamelCase(String name) {
+  if (name.isEmpty) return name;
+  final snake = toSnakeCase(name);
+  final parts = snake
+      .split(RegExp(r'[_-]'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return name;
+  final buffer = StringBuffer(parts.first);
+  for (var i = 1; i < parts.length; i++) {
+    buffer.write(toPascalCase(parts[i]));
+  }
+  return buffer.toString();
+}
+
+/// Computes the default wire discriminator value for a concrete subtype named
+/// [className] under [rename].
+String defaultDiscriminatorValue(String className, FieldRename rename) =>
+    applyFieldRename(toLowerCamelCase(className), rename);
+
 /// Converts a field or wire name into a valid, safe PascalCase identifier
 /// suffix.
 String toSafeIdentifierSuffix(String name) {
@@ -74,4 +95,30 @@ String toSafeIdentifierSuffix(String name) {
   final sanitized = name.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
   final pascal = toPascalCase(sanitized);
   return pascal.isEmpty ? 'Empty' : pascal;
+}
+
+/// Allocates a collision-free identifier suffix from [base] against [used].
+String allocateUniqueSuffix(String base, Set<String> used) {
+  if (used.add(base)) return base;
+  var index = 2;
+  while (!used.add('$base\$$index')) {
+    index++;
+  }
+  return '$base\$$index';
+}
+
+/// Indents every non-empty line in [text] by [indent].
+String indentLines(String text, String indent) {
+  final lines = text.split('\n');
+  final buffer = StringBuffer();
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    if (i == lines.length - 1 && line.isEmpty) break;
+    if (line.isEmpty) {
+      buffer.writeln();
+    } else {
+      buffer.writeln('$indent$line');
+    }
+  }
+  return buffer.toString();
 }

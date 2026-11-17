@@ -91,7 +91,7 @@ extension type const _$CborEnvelopeSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for CborEnvelope
 // =============================================================================
-final class CborEnvelopeCodable implements Codable<CborEnvelope> {
+final class CborEnvelopeCodable implements KeyedCodable<CborEnvelope> {
   const CborEnvelopeCodable();
 
   @override
@@ -171,6 +171,37 @@ final class CborEnvelopeCodable implements Codable<CborEnvelope> {
       headers: headers,
       metrics: metrics,
     );
+  }
+
+  @override
+  int encodedFieldCount(CborEnvelope instance) {
+    var count$ = 5;
+    if (instance.digest != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(CborEnvelope instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$CborEnvelopeSchema.nameId, instance.id);
+    keyed.encodeString(
+      _$CborEnvelopeSchema.namePriority,
+      instance.priority.name,
+    );
+    keyed.encodeBytes(_$CborEnvelopeSchema.nameBody, instance.body);
+    final v$Digest = instance.digest;
+    if (v$Digest != null) {
+      keyed.encodeBytes(_$CborEnvelopeSchema.nameDigest, v$Digest);
+    }
+    {
+      final m = keyed
+          .nestedEncoder(_$CborEnvelopeSchema.nameHeaders)
+          .map(length: instance.headers.length);
+      for (final entry in instance.headers.entries) {
+        m.keyEncoder().singleValue().encodeInt(entry.key);
+        m.valueEncoder().singleValue().encodeString(entry.value);
+      }
+    }
+    keyed.encodeDoubleList(_$CborEnvelopeSchema.nameMetrics, instance.metrics);
   }
 
   @override

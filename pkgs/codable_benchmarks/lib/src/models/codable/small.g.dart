@@ -93,7 +93,7 @@ extension type const _$SmallLocationSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SmallLocation
 // =============================================================================
-final class SmallLocationCodable implements Codable<SmallLocation> {
+final class SmallLocationCodable implements KeyedCodable<SmallLocation> {
   const SmallLocationCodable();
 
   @override
@@ -154,12 +154,19 @@ final class SmallLocationCodable implements Codable<SmallLocation> {
   }
 
   @override
-  void encode(SmallLocation instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 4);
+  int encodedFieldCount(SmallLocation instance) => 4;
+
+  @override
+  void encodeFields(SmallLocation instance, KeyedEncoder keyed) {
     keyed.encodeDouble(_$SmallLocationSchema.nameLatitude, instance.latitude);
     keyed.encodeDouble(_$SmallLocationSchema.nameLongitude, instance.longitude);
     keyed.encodeString(_$SmallLocationSchema.nameCity, instance.city);
     keyed.encodeString(_$SmallLocationSchema.nameCountry, instance.country);
+  }
+
+  @override
+  void encode(SmallLocation instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 4));
   }
 }
 
@@ -238,7 +245,7 @@ extension type const _$SmallMetadataSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SmallMetadata
 // =============================================================================
-final class SmallMetadataCodable implements Codable<SmallMetadata> {
+final class SmallMetadataCodable implements KeyedCodable<SmallMetadata> {
   const SmallMetadataCodable();
 
   @override
@@ -290,8 +297,10 @@ final class SmallMetadataCodable implements Codable<SmallMetadata> {
   }
 
   @override
-  void encode(SmallMetadata instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(SmallMetadata instance) => 3;
+
+  @override
+  void encodeFields(SmallMetadata instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$SmallMetadataSchema.nameLoginCount, instance.loginCount);
     keyed.encodeString(_$SmallMetadataSchema.nameLastLogin, instance.lastLogin);
     keyed.encodeValue(
@@ -299,6 +308,11 @@ final class SmallMetadataCodable implements Codable<SmallMetadata> {
       instance.location,
       const SmallLocationCodable(),
     );
+  }
+
+  @override
+  void encode(SmallMetadata instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -442,7 +456,7 @@ extension type const _$SmallDocumentSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for SmallDocument
 // =============================================================================
-final class SmallDocumentCodable implements Codable<SmallDocument> {
+final class SmallDocumentCodable implements KeyedCodable<SmallDocument> {
   const SmallDocumentCodable();
 
   @override
@@ -557,8 +571,10 @@ final class SmallDocumentCodable implements Codable<SmallDocument> {
   }
 
   @override
-  void encode(SmallDocument instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 10);
+  int encodedFieldCount(SmallDocument instance) => 10;
+
+  @override
+  void encodeFields(SmallDocument instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$SmallDocumentSchema.nameId, instance.id);
     keyed.encodeString(_$SmallDocumentSchema.nameUuid, instance.uuid);
     keyed.encodeString(_$SmallDocumentSchema.nameName, instance.name);
@@ -573,5 +589,10 @@ final class SmallDocumentCodable implements Codable<SmallDocument> {
       const SmallMetadataCodable(),
     );
     keyed.encodeStringList(_$SmallDocumentSchema.nameTags, instance.tags);
+  }
+
+  @override
+  void encode(SmallDocument instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 10));
   }
 }

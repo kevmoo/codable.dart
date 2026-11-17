@@ -91,7 +91,7 @@ extension type const _$PersonSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Person
 // =============================================================================
-final class PersonCodable implements Codable<Person> {
+final class PersonCodable implements KeyedCodable<Person> {
   const PersonCodable();
 
   @override
@@ -165,6 +165,42 @@ final class PersonCodable implements Codable<Person> {
       middleName: middleName,
       lastOrder: lastOrder,
       orders: orders,
+    );
+  }
+
+  @override
+  int encodedFieldCount(Person instance) {
+    var count$ = 4;
+    if (instance.middleName != null) count$++;
+    if (instance.lastOrder != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Person instance, KeyedEncoder keyed) {
+    keyed.encodeString(_$PersonSchema.nameFirstName, instance.firstName);
+    keyed.encodeString(_$PersonSchema.nameLastName, instance.lastName);
+    keyed.encodeValue(
+      _$PersonSchema.nameDateOfBirth,
+      instance.dateOfBirth,
+      const DateTimeIsoDecoder(),
+    );
+    final v$MiddleName = instance.middleName;
+    if (v$MiddleName != null) {
+      keyed.encodeString(_$PersonSchema.nameMiddleName, v$MiddleName);
+    }
+    final v$LastOrder = instance.lastOrder;
+    if (v$LastOrder != null) {
+      keyed.encodeValue(
+        _$PersonSchema.nameLastOrder,
+        v$LastOrder,
+        const DateTimeIsoDecoder(),
+      );
+    }
+    keyed.encodeList(
+      _$PersonSchema.nameOrders,
+      instance.orders,
+      const OrderCodable(),
     );
   }
 
@@ -267,7 +303,7 @@ extension type const _$OrderSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Order
 // =============================================================================
-final class OrderCodable implements Codable<Order> {
+final class OrderCodable implements KeyedCodable<Order> {
   const OrderCodable();
 
   @override
@@ -351,6 +387,42 @@ final class OrderCodable implements Codable<Order> {
   }
 
   @override
+  int encodedFieldCount(Order instance) {
+    var count$ = 1;
+    if (instance.count != null) count$++;
+    if (instance.itemNumber != null) count$++;
+    if (instance.isRushed != null) count$++;
+    if (instance.item != null) count$++;
+    if (instance.prepTimeMs != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Order instance, KeyedEncoder keyed) {
+    keyed.encodeInt(_$OrderSchema.nameDateUs, instance.dateUs);
+    final v$Count = instance.count;
+    if (v$Count != null) {
+      keyed.encodeInt(_$OrderSchema.nameCount, v$Count);
+    }
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$OrderSchema.nameItemNumber, v$ItemNumber);
+    }
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$OrderSchema.nameIsRushed, v$IsRushed);
+    }
+    final v$Item = instance.item;
+    if (v$Item != null) {
+      keyed.encodeValue(_$OrderSchema.nameItem, v$Item, const ItemCodable());
+    }
+    final v$PrepTimeMs = instance.prepTimeMs;
+    if (v$PrepTimeMs != null) {
+      keyed.encodeInt(_$OrderSchema.namePrepTimeMs, v$PrepTimeMs);
+    }
+  }
+
+  @override
   void encode(Order instance, Encoder encoder) {
     var count$ = 1;
     final v$Count = instance.count;
@@ -420,7 +492,7 @@ extension type const _$ItemSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for Item
 // =============================================================================
-final class ItemCodable implements Codable<Item> {
+final class ItemCodable implements KeyedCodable<Item> {
   const ItemCodable();
 
   @override
@@ -468,6 +540,31 @@ final class ItemCodable implements Codable<Item> {
     seen.validate();
 
     return Item(count: count, itemNumber: itemNumber, isRushed: isRushed);
+  }
+
+  @override
+  int encodedFieldCount(Item instance) {
+    var count$ = 0;
+    if (instance.count != null) count$++;
+    if (instance.itemNumber != null) count$++;
+    if (instance.isRushed != null) count$++;
+    return count$;
+  }
+
+  @override
+  void encodeFields(Item instance, KeyedEncoder keyed) {
+    final v$Count = instance.count;
+    if (v$Count != null) {
+      keyed.encodeInt(_$ItemSchema.nameCount, v$Count);
+    }
+    final v$ItemNumber = instance.itemNumber;
+    if (v$ItemNumber != null) {
+      keyed.encodeInt(_$ItemSchema.nameItemNumber, v$ItemNumber);
+    }
+    final v$IsRushed = instance.isRushed;
+    if (v$IsRushed != null) {
+      keyed.encodeBool(_$ItemSchema.nameIsRushed, v$IsRushed);
+    }
   }
 
   @override

@@ -22,12 +22,28 @@ final class CodableAnnotation implements Codable<Never> {
   /// Field naming convention for JSON wire formats.
   final FieldRename fieldRename;
 
+  /// Wire property name used as the subtype discriminator when annotating a
+  /// polymorphic `sealed` or `abstract` base class (defaults to `'type'` on
+  /// `sealed` classes or whenever [subtypes] is provided).
+  final String? discriminatorKey;
+
+  /// Explicit wire value identifying this concrete subtype under an enclosing
+  /// polymorphic base class's [discriminatorKey].
+  final String? discriminatorValue;
+
+  /// Explicit list of concrete `@Codable()` subtype [Type]s for a polymorphic
+  /// non-`sealed` `abstract` base class.
+  final List<Type>? subtypes;
+
   /// Creates a [CodableAnnotation] instance.
   const CodableAnnotation({
     this.createEncoder = true,
     this.createDecoder = true,
     this.useGoldenMask = true,
     this.fieldRename = FieldRename.none,
+    this.discriminatorKey,
+    this.discriminatorValue,
+    this.subtypes,
   });
 
   @override

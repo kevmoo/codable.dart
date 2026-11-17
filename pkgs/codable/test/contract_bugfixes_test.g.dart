@@ -37,7 +37,7 @@ extension type const _$EmptyMarkerSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for EmptyMarker
 // =============================================================================
-final class EmptyMarkerCodable implements Codable<EmptyMarker> {
+final class EmptyMarkerCodable implements KeyedCodable<EmptyMarker> {
   const EmptyMarkerCodable();
 
   @override
@@ -59,6 +59,12 @@ final class EmptyMarkerCodable implements Codable<EmptyMarker> {
 
     return const EmptyMarker();
   }
+
+  @override
+  int encodedFieldCount(EmptyMarker instance) => 0;
+
+  @override
+  void encodeFields(EmptyMarker instance, KeyedEncoder keyed) {}
 
   @override
   void encode(EmptyMarker instance, Encoder encoder) {
@@ -128,7 +134,7 @@ extension type const _$GridCellSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GridCell
 // =============================================================================
-final class GridCellCodable implements Codable<GridCell> {
+final class GridCellCodable implements KeyedCodable<GridCell> {
   const GridCellCodable();
 
   @override
@@ -172,11 +178,18 @@ final class GridCellCodable implements Codable<GridCell> {
   }
 
   @override
-  void encode(GridCell instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 3);
+  int encodedFieldCount(GridCell instance) => 3;
+
+  @override
+  void encodeFields(GridCell instance, KeyedEncoder keyed) {
     keyed.encodeInt(_$GridCellSchema.nameRow, instance.row);
     keyed.encodeInt(_$GridCellSchema.nameCol, instance.col);
     keyed.encodeString(_$GridCellSchema.nameLabel, instance.label);
+  }
+
+  @override
+  void encode(GridCell instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 3));
   }
 }
 
@@ -214,7 +227,7 @@ extension type const _$GridBoardSchema(int _value) {
 // =============================================================================
 // 2. Companion Codable for GridBoard
 // =============================================================================
-final class GridBoardCodable implements Codable<GridBoard> {
+final class GridBoardCodable implements KeyedCodable<GridBoard> {
   const GridBoardCodable();
 
   @override
@@ -260,8 +273,10 @@ final class GridBoardCodable implements Codable<GridBoard> {
   }
 
   @override
-  void encode(GridBoard instance, Encoder encoder) {
-    final keyed = encoder.keyed(length: 2);
+  int encodedFieldCount(GridBoard instance) => 2;
+
+  @override
+  void encodeFields(GridBoard instance, KeyedEncoder keyed) {
     keyed.encodeList(
       _$GridBoardSchema.nameCells,
       instance.cells,
@@ -290,5 +305,10 @@ final class GridBoardCodable implements Codable<GridBoard> {
         }
       }),
     );
+  }
+
+  @override
+  void encode(GridBoard instance, Encoder encoder) {
+    encodeFields(instance, encoder.keyed(length: 2));
   }
 }
