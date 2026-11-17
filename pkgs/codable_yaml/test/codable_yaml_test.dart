@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
@@ -413,6 +414,7 @@ bytes: AQID
           mapEnc.keyEncoder().singleValue().encodeInt(1);
           check(mapEnc.keyEncoder).throws<CodableException>();
           mapEnc.valueEncoder().singleValue().encodeString('one');
+          check(encoder.toYamlString()).equals('1: one\n');
 
           final node = loadYamlNode('first: 1\nsecond: 2\n');
           final keyed = YamlCodableDecoder.fromNode(node).keyed();

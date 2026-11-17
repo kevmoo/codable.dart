@@ -12,8 +12,10 @@
 // ignore_for_file: lines_longer_than_80_chars
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
+import 'package:codable/codable_driver.dart';
 import 'package:codable/codable_json.dart';
 import 'package:test/scaffolding.dart';
 

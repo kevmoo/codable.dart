@@ -9,7 +9,7 @@ import 'package:codable/codable.dart';
 
 /// Maximum nested container depth allowed during MessagePack encoding,
 /// decoding, and value skipping.
-const int maxMsgPackDepth = 64;
+const int _maxMsgPackDepth = 64;
 
 /// Exact value of `2^32` (`4294967296`) for arithmetic 64-bit split/combine
 /// without 32-bit JavaScript bitwise shift truncation.
@@ -21,9 +21,9 @@ const int msgPackJsMaxSafeHi = 0x1fffff;
 /// Exact `Number.MAX_SAFE_INTEGER` (`2^53 - 1`, `9007199254740991`).
 const int msgPackJsMaxSafeInt = 0x1fffff * msgPackTwoPow32 + 0xffffffff;
 
-/// Enforces the anti-DoS container nesting limit of [maxMsgPackDepth].
+/// Enforces the anti-DoS container nesting limit of [_maxMsgPackDepth].
 void checkMsgPackDepth(int depth) {
-  if (depth >= maxMsgPackDepth) {
+  if (depth >= _maxMsgPackDepth) {
     throw const CodableException(
       'MessagePack nesting depth exceeds limit of 64',
     );
@@ -92,21 +92,21 @@ Int32List _buildKeySlots(List<Uint8List> utf8Keys, int mask) {
 
 /// Pre-compiled UTF-8 byte hash/span key table cached on [KeyOptions] via
 /// `compiled<T>`.
-final class MsgPackCompiledKeys {
+final class _MsgPackCompiledKeys {
   final List<Uint8List> utf8Keys;
   final Int32List _slots;
   final int _mask;
 
-  factory MsgPackCompiledKeys(List<String> keys) {
+  factory _MsgPackCompiledKeys(List<String> keys) {
     final encoded = [for (final key in keys) utf8.encode(key)];
     if (encoded.isEmpty) {
-      return MsgPackCompiledKeys._(encoded, Int32List(0), 0);
+      return _MsgPackCompiledKeys._(encoded, Int32List(0), 0);
     }
     final mask = _tableCapacity(encoded.length) - 1;
-    return MsgPackCompiledKeys._(encoded, _buildKeySlots(encoded, mask), mask);
+    return _MsgPackCompiledKeys._(encoded, _buildKeySlots(encoded, mask), mask);
   }
 
-  MsgPackCompiledKeys._(this.utf8Keys, this._slots, this._mask);
+  _MsgPackCompiledKeys._(this.utf8Keys, this._slots, this._mask);
 
   int match(Uint8List buf, int start, int length) {
     if (utf8Keys.isEmpty) return -1;
@@ -144,7 +144,7 @@ ValueKind _peekTaggedKind(int b) => switch (b) {
 final class MsgPackReader {
   final Uint8List bytes;
   late final ByteData _bd = ByteData.sublistView(bytes);
-  late final Int32List _skipStack = Int32List(maxMsgPackDepth);
+  late final Int32List _skipStack = Int32List(_maxMsgPackDepth);
   int offset;
 
   MsgPackReader(this.bytes, [this.offset = 0]);
@@ -416,7 +416,7 @@ final class MsgPackReader {
   int selectString(KeyOptions options) {
     final (start, end) = readTextStringSpan();
     return options
-        .compiled<MsgPackCompiledKeys>(MsgPackCompiledKeys.new)
+        .compiled<_MsgPackCompiledKeys>(_MsgPackCompiledKeys.new)
         .match(bytes, start, end - start);
   }
 

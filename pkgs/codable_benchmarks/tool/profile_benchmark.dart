@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:codable/codable_json.dart' show isMockSubstrate;
+import 'package:codable/src/json/substrate/substrate.dart' show isMockSubstrate;
 import 'package:path/path.dart' as p;
 
 import 'profiler/benchmark_harness.dart'

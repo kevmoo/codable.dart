@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 import 'msgpack_reader.dart';
 
@@ -347,10 +347,9 @@ final class MsgPackCodableEncoder implements Encoder {
   /// Creates a [MsgPackCodableEncoder] writing into a fresh byte buffer.
   MsgPackCodableEncoder({
     this.requireKnownLength = false,
-    Map<Object, Object?>? userInfo,
+    this.userInfo = const {},
   }) : _writer = _MsgPackWriter(),
-       _depth = 0,
-       userInfo = userInfo ?? const {};
+       _depth = 0;
 
   MsgPackCodableEncoder._(
     this._writer,
@@ -364,7 +363,7 @@ final class MsgPackCodableEncoder implements Encoder {
     T value,
     Encodable<T> encodable, {
     bool requireKnownLength = false,
-    Map<Object, Object?>? userInfo,
+    Map<Object, Object?> userInfo = const {},
   }) {
     final encoder = MsgPackCodableEncoder(
       requireKnownLength: requireKnownLength,

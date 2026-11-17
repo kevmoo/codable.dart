@@ -10,6 +10,5 @@ export 'json_token_reader.dart';
 export 'json_token_type.dart';
 export 'json_token_writer.dart';
 export 'json_utf8_codec.dart';
-export 'span_parsers.dart';
 
 const bool isMockSubstrate = true;

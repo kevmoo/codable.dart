@@ -6,9 +6,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:checks/checks.dart';
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 import 'package:codable/codable_json.dart';
-import 'package:codable/codable_streaming.dart' as streaming;
+import 'package:codable/src/json/driver/driver_streaming.dart' as streaming;
 import 'package:test/test.dart';
 
 part 'contract_bugfixes_test.g.dart';
@@ -892,6 +892,40 @@ void _registerExceptionActualValueTests() {
             .throws<CodableException>()
             .has((e) => e.actualValue, 'actualValue')
             .equals('8080 "oops"');
+      },
+    );
+
+    test(
+      'JsonCodableDecoder.decode and decodeBytes roundtrip with userInfo',
+      () {
+        final seenTag = <Object?>[];
+        check(JsonCodableDecoder.decode('{}', const EmptyMarkerCodable()))
+            .equals(const EmptyMarker());
+        check(
+          JsonCodableDecoder.decodeBytes(
+            Uint8List.fromList(utf8.encode('{}')),
+            const EmptyMarkerCodable(),
+          ),
+        ).equals(const EmptyMarker());
+        final intCodec = Decodable<int>.fromFunction((d) {
+          seenTag.add(d.userInfo['tag']);
+          return d.singleValue().readInt();
+        });
+        check(
+          JsonCodableDecoder.decode(
+            '99',
+            intCodec,
+            userInfo: const {'tag': 's'},
+          ),
+        ).equals(99);
+        check(
+          JsonCodableDecoder.decodeBytes(
+            Uint8List.fromList(utf8.encode('42')),
+            intCodec,
+            userInfo: const {'tag': 'b'},
+          ),
+        ).equals(42);
+        check(seenTag).deepEquals(<Object?>['s', 'b']);
       },
     );
   });

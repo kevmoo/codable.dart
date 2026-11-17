@@ -112,9 +112,10 @@ opens one of five container shapes:
   (`package:codable_cbor`, `package:codable_msgpack`) and automatically
   Base64-encode/decode (with `[0..255]` integer-list decode fallback) on text
   drivers.
-- **Driver base mixins (`Base*Mixin`)**: Custom format drivers (such as
-  `package:codable_yaml`, `package:codable_cbor`, `package:codable_msgpack`, and
-  `package:codable_toml`) mix in `BaseKeyedDecoderMixin`,
+- **Driver base mixins (`package:codable/codable_driver.dart`)**: Custom format
+  drivers (such as `package:codable_yaml`, `package:codable_cbor`,
+  `package:codable_msgpack`, and `package:codable_toml`) import
+  `package:codable/codable_driver.dart` and mix in `BaseKeyedDecoderMixin`,
   `BaseMappedDecoderMixin`, `BaseUnkeyedDecoderMixin`,
   `BaseSingleValueDecoderMixin`, `BaseKeyedEncoderMixin`,
   `BaseUnkeyedEncoderMixin`, `BaseSingleValueEncoderMixin`, and

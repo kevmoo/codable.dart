@@ -5,6 +5,7 @@
 // ignore_for_file: unreachable_from_main
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:codable/codable_json.dart';
 

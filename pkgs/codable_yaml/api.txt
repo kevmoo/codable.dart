@@ -1,0 +1,72 @@
+environment:
+  sdk: ^3.13.0
+package:codable_yaml/codable_yaml.dart:
+  YamlCodableDecoder (class extends Object implements Decoder, final):
+    decode (static method: T Function<T>(String, Decodable<T>, {Uri? sourceUrl, Map<Object, Object?> userInfo}))
+    fromNode (constructor: YamlCodableDecoder Function(YamlNode, {Map<Object, Object?> userInfo}))
+    isHumanReadable (getter: bool)
+    payload (getter: Uint8List?)
+    userInfo (getter: Map<Object, Object?>)
+    decodeUniformDoubleList (method: Float64List? Function(List<List<String>>))
+    keyed (method: KeyedDecoder Function({KeyOptions? options}))
+    map (method: MapDecoder Function())
+    mapped (method: MappedDecoder Function())
+    peekKind (method: ValueKind Function())
+    singleValue (method: SingleValueDecoder Function())
+    unkeyed (method: UnkeyedDecoder Function())
+  YamlCodableEncoder (class extends Object implements Encoder, final):
+    encode (static method: String Function<T>(T, Encodable<T>, {bool flow, Map<Object, Object?> userInfo}))
+    new (constructor: YamlCodableEncoder Function({bool flow, Map<Object, Object?> userInfo}))
+    flow (getter: bool)
+    isHumanReadable (getter: bool)
+    userInfo (getter: Map<Object, Object?>)
+    keyed (method: KeyedEncoder Function({int? length, KeyOptions? options}))
+    map (method: MapEncoder Function({int? length}))
+    singleValue (method: SingleValueEncoder Function())
+    toYamlString (method: String Function())
+    unkeyed (method: UnkeyedEncoder Function({int? length}))
+  YamlCodableException (class extends SourceSpanFormatException implements CodableException, final):
+    new (constructor: YamlCodableException Function(String, SourceSpan?, {Object? actualValue, List<Object> path, Object? source, Object? underlyingError}))
+    actualValue (getter: Object?)
+    formattedPath (getter: String)
+    path (getter: List<Object>)
+    underlyingError (getter: Object?)
+    toString (method: String Function({Object? color}))
+dart:core:
+  List (referenced)
+  Map (referenced)
+  Object (referenced)
+  String (referenced)
+  Uri (referenced)
+  bool (referenced)
+  int (referenced)
+dart:typed_data:
+  Float64List (referenced)
+  Uint8List (referenced)
+package:codable/src/contracts/codable.dart:
+  Decodable (referenced)
+  Encodable (referenced)
+package:codable/src/contracts/decoder.dart:
+  Decoder (referenced)
+  KeyedDecoder (referenced)
+  MapDecoder (referenced)
+  MappedDecoder (referenced)
+  SingleValueDecoder (referenced)
+  UnkeyedDecoder (referenced)
+  ValueKind (referenced)
+package:codable/src/contracts/encoder.dart:
+  Encoder (referenced)
+  KeyedEncoder (referenced)
+  MapEncoder (referenced)
+  SingleValueEncoder (referenced)
+  UnkeyedEncoder (referenced)
+package:codable/src/contracts/exceptions.dart:
+  CodableException (referenced)
+package:codable/src/contracts/static_key.dart:
+  KeyOptions (referenced)
+package:source_span/src/span.dart:
+  SourceSpan (referenced)
+package:source_span/src/span_exception.dart:
+  SourceSpanFormatException (referenced)
+package:yaml/src/yaml_node.dart:
+  YamlNode (referenced)

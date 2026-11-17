@@ -24,7 +24,7 @@ const List<double> powersOfTen = [
   1e16,
 ];
 
-const String digitPairs =
+const String _digitPairs =
     '00010203040506070809'
     '10111213141516171819'
     '20212223242526272829'
@@ -38,7 +38,7 @@ const String digitPairs =
 
 const String hexDigits = '0123456789abcdef';
 
-const List<int> digitCountThresholds = [
+const List<int> _digitCountThresholds = [
   -10,
   -100,
   -1000,
@@ -60,22 +60,22 @@ const List<int> digitCountThresholds = [
 ];
 
 @pragma('vm:prefer-inline')
-void emitDigitsBackwardNegative(Uint8List buffer, int writePos, int negVal) {
+void _emitDigitsBackwardNegative(Uint8List buffer, int writePos, int negVal) {
   var temp = negVal;
   while (temp <= -100) {
     final next = temp ~/ 100;
     final rem = -(temp - next * 100);
     final pairIdx = rem << 1;
-    buffer[writePos] = digitPairs.codeUnitAt(pairIdx + 1);
-    buffer[writePos - 1] = digitPairs.codeUnitAt(pairIdx);
+    buffer[writePos] = _digitPairs.codeUnitAt(pairIdx + 1);
+    buffer[writePos - 1] = _digitPairs.codeUnitAt(pairIdx);
     writePos -= 2;
     temp = next;
   }
   if (temp <= -10) {
     final rem = -temp;
     final pairIdx = rem << 1;
-    buffer[writePos] = digitPairs.codeUnitAt(pairIdx + 1);
-    buffer[writePos - 1] = digitPairs.codeUnitAt(pairIdx);
+    buffer[writePos] = _digitPairs.codeUnitAt(pairIdx + 1);
+    buffer[writePos - 1] = _digitPairs.codeUnitAt(pairIdx);
   } else {
     buffer[writePos] = 48 - temp;
   }
@@ -84,7 +84,7 @@ void emitDigitsBackwardNegative(Uint8List buffer, int writePos, int negVal) {
 @pragma('vm:prefer-inline')
 int digitCountNegative(int v) {
   for (var i = 0; i < 18; i++) {
-    if (v > digitCountThresholds[i]) return i + 1;
+    if (v > _digitCountThresholds[i]) return i + 1;
   }
   return 19;
 }
@@ -107,7 +107,7 @@ int writeIntToBuffer(int value, Uint8List buffer, int offset) {
     buffer[cursor++] = 45; // '-'
   }
   final writePos = cursor + digitCount - 1;
-  emitDigitsBackwardNegative(buffer, writePos, v);
+  _emitDigitsBackwardNegative(buffer, writePos, v);
   return totalLen;
 }
 
@@ -124,7 +124,7 @@ bool isSimpleAsciiString(String value) {
 }
 
 @pragma('vm:prefer-inline')
-int writeEscapedChar(int c, Uint8List buffer, int cursor) {
+int _writeEscapedChar(int c, Uint8List buffer, int cursor) {
   buffer[cursor] = 0x5C;
   switch (c) {
     case 0x22:
@@ -159,7 +159,7 @@ int writeEscapedChar(int c, Uint8List buffer, int cursor) {
 }
 
 @pragma('vm:prefer-inline')
-int writeUnicodeHexEscape(int c, Uint8List buffer, int cursor) {
+int _writeUnicodeHexEscape(int c, Uint8List buffer, int cursor) {
   buffer[cursor] = 0x5C;
   buffer[cursor + 1] = 0x75;
   buffer[cursor + 2] = hexDigits.codeUnitAt((c >> 12) & 0xF);
@@ -170,7 +170,7 @@ int writeUnicodeHexEscape(int c, Uint8List buffer, int cursor) {
 }
 
 @pragma('vm:prefer-inline')
-int writeSurrogatePair(int c, int next, Uint8List buffer, int cursor) {
+int _writeSurrogatePair(int c, int next, Uint8List buffer, int cursor) {
   final codePoint = 0x10000 + ((c - 0xD800) << 10) + (next - 0xDC00);
   buffer[cursor] = 0xF0 | (codePoint >> 18);
   buffer[cursor + 1] = 0x80 | ((codePoint >> 12) & 0x3F);
@@ -180,7 +180,7 @@ int writeSurrogatePair(int c, int next, Uint8List buffer, int cursor) {
 }
 
 @pragma('vm:prefer-inline')
-int writeNonAsciiCodeUnit(int c, Uint8List buffer, int cursor) {
+int _writeNonAsciiCodeUnit(int c, Uint8List buffer, int cursor) {
   if (c <= 0x7FF) {
     buffer[cursor] = 0xC0 | (c >> 6);
     buffer[cursor + 1] = 0x80 | (c & 0x3F);
@@ -192,21 +192,21 @@ int writeNonAsciiCodeUnit(int c, Uint8List buffer, int cursor) {
   return 3;
 }
 
-int writeEscapedStringToBuffer(String value, Uint8List buffer, int offset) {
+int _writeEscapedStringToBuffer(String value, Uint8List buffer, int offset) {
   var cursor = offset;
   buffer[cursor++] = 0x22; // '"'
   final len = value.length;
   for (var i = 0; i < len; i++) {
     final c = value.codeUnitAt(i);
     if (c < 0x20 || c == 0x22 || c == 0x5C) {
-      cursor += writeEscapedChar(c, buffer, cursor);
+      cursor += _writeEscapedChar(c, buffer, cursor);
     } else if (c <= 0x7F) {
       buffer[cursor++] = c;
     } else if (c >= 0xD800 && c <= 0xDBFF) {
       if (i + 1 < len &&
           value.codeUnitAt(i + 1) >= 0xDC00 &&
           value.codeUnitAt(i + 1) <= 0xDFFF) {
-        cursor += writeSurrogatePair(
+        cursor += _writeSurrogatePair(
           c,
           value.codeUnitAt(i + 1),
           buffer,
@@ -214,12 +214,12 @@ int writeEscapedStringToBuffer(String value, Uint8List buffer, int offset) {
         );
         i++;
       } else {
-        cursor += writeUnicodeHexEscape(c, buffer, cursor);
+        cursor += _writeUnicodeHexEscape(c, buffer, cursor);
       }
     } else if (c >= 0xDC00 && c <= 0xDFFF) {
-      cursor += writeUnicodeHexEscape(c, buffer, cursor);
+      cursor += _writeUnicodeHexEscape(c, buffer, cursor);
     } else {
-      cursor += writeNonAsciiCodeUnit(c, buffer, cursor);
+      cursor += _writeNonAsciiCodeUnit(c, buffer, cursor);
     }
   }
   buffer[cursor++] = 0x22; // '"'
@@ -237,11 +237,11 @@ int writeStringToBuffer(String value, Uint8List buffer, int offset) {
     buffer[offset + 1 + len] = 0x22; // '"'
     return len + 2;
   }
-  return writeEscapedStringToBuffer(value, buffer, offset);
+  return _writeEscapedStringToBuffer(value, buffer, offset);
 }
 
 @pragma('vm:prefer-inline')
-int writeZeroDouble(bool isNeg, Uint8List buffer, int offset) {
+int _writeZeroDouble(bool isNeg, Uint8List buffer, int offset) {
   var cursor = offset;
   if (isNeg) buffer[cursor++] = 0x2D;
   buffer[cursor++] = 0x30;
@@ -251,7 +251,7 @@ int writeZeroDouble(bool isNeg, Uint8List buffer, int offset) {
 }
 
 @pragma('vm:prefer-inline')
-int tryWriteExactIntDouble(
+int _tryWriteExactIntDouble(
   double absVal,
   bool isNeg,
   Uint8List buffer,
@@ -268,7 +268,7 @@ int tryWriteExactIntDouble(
   var cursor = offset;
   if (isNeg) buffer[cursor++] = 0x2D;
   final writePos = cursor + digitCount - 1;
-  emitDigitsBackwardNegative(buffer, writePos, negVal);
+  _emitDigitsBackwardNegative(buffer, writePos, negVal);
   cursor += digitCount;
   buffer[cursor++] = 0x2E;
   buffer[cursor++] = 0x30;
@@ -276,13 +276,13 @@ int tryWriteExactIntDouble(
 }
 
 @pragma('vm:prefer-inline')
-int writeFractionWhole(Uint8List buffer, int offset, bool isNeg, int negVal) {
+int _writeFractionWhole(Uint8List buffer, int offset, bool isNeg, int negVal) {
   final digitCount = digitCountNegative(negVal);
   final totalLen = (isNeg ? 1 : 0) + digitCount + 2;
   var cursor = offset;
   if (isNeg) buffer[cursor++] = 0x2D;
   final writePos = cursor + digitCount - 1;
-  emitDigitsBackwardNegative(buffer, writePos, negVal);
+  _emitDigitsBackwardNegative(buffer, writePos, negVal);
   cursor += digitCount;
   buffer[cursor++] = 0x2E;
   buffer[cursor++] = 0x30;
@@ -290,7 +290,7 @@ int writeFractionWhole(Uint8List buffer, int offset, bool isNeg, int negVal) {
 }
 
 @pragma('vm:prefer-inline')
-int writeFractionSplitDigits(
+int _writeFractionSplitDigits(
   Uint8List buffer,
   int offset,
   bool isNeg,
@@ -313,12 +313,12 @@ int writeFractionSplitDigits(
     digitsWritten++;
   }
   buffer[writePos--] = 0x2E;
-  emitDigitsBackwardNegative(buffer, writePos, temp);
+  _emitDigitsBackwardNegative(buffer, writePos, temp);
   return totalLen;
 }
 
 @pragma('vm:prefer-inline')
-int writeFractionLeadingZeros(
+int _writeFractionLeadingZeros(
   Uint8List buffer,
   int offset,
   bool isNeg,
@@ -336,12 +336,12 @@ int writeFractionLeadingZeros(
     buffer[cursor++] = 0x30;
   }
   final writePos = cursor + numDigits - 1;
-  emitDigitsBackwardNegative(buffer, writePos, negVal);
+  _emitDigitsBackwardNegative(buffer, writePos, negVal);
   return totalLen;
 }
 
 @pragma('vm:prefer-inline')
-int writeDecimalFraction(
+int _writeDecimalFraction(
   Uint8List buffer,
   int offset,
   bool isNeg,
@@ -350,11 +350,11 @@ int writeDecimalFraction(
 ) {
   final negVal = -intVal;
   if (k == 0) {
-    return writeFractionWhole(buffer, offset, isNeg, negVal);
+    return _writeFractionWhole(buffer, offset, isNeg, negVal);
   }
   final numDigits = digitCountNegative(negVal);
   if (numDigits > k) {
-    return writeFractionSplitDigits(
+    return _writeFractionSplitDigits(
       buffer,
       offset,
       isNeg,
@@ -363,7 +363,14 @@ int writeDecimalFraction(
       k,
     );
   }
-  return writeFractionLeadingZeros(buffer, offset, isNeg, negVal, numDigits, k);
+  return _writeFractionLeadingZeros(
+    buffer,
+    offset,
+    isNeg,
+    negVal,
+    numDigits,
+    k,
+  );
 }
 
 /// Scales [absVal] by [p10] and returns the resulting decimal significand, or
@@ -446,7 +453,7 @@ int tryWriteScaledFractionDouble(
     intVal ~/= 10;
     k--;
   }
-  return writeDecimalFraction(buffer, offset, isNeg, intVal, k);
+  return _writeDecimalFraction(buffer, offset, isNeg, intVal, k);
 }
 
 @pragma('vm:prefer-inline')
@@ -455,13 +462,13 @@ int writeDoubleToBuffer(double value, Uint8List buffer, int offset) {
     throw UnsupportedError('NaN and Infinity are not supported in JSON');
   }
   if (value == 0.0) {
-    return writeZeroDouble(value.isNegative, buffer, offset);
+    return _writeZeroDouble(value.isNegative, buffer, offset);
   }
 
   final isNeg = value.isNegative;
   final absVal = isNeg ? -value : value;
 
-  final intLen = tryWriteExactIntDouble(absVal, isNeg, buffer, offset);
+  final intLen = _tryWriteExactIntDouble(absVal, isNeg, buffer, offset);
   if (intLen > 0) return intLen;
 
   final fracLen = tryWriteScaledFractionDouble(absVal, isNeg, buffer, offset);

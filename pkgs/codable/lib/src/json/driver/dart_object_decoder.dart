@@ -33,7 +33,7 @@ Object? _diagnosticScalar(Object? v) {
 }
 
 /// Maps an in-memory Dart object to a format-agnostic [ValueKind].
-ValueKind dartObjectToValueKind(Object? v) => switch (v) {
+ValueKind _dartObjectToValueKind(Object? v) => switch (v) {
   null => ValueKind.nullValue,
   bool() => ValueKind.boolean,
   num() => ValueKind.number,
@@ -128,7 +128,7 @@ final class DartObjectDecoder implements Decoder {
   Uint8List? get payload => null;
 
   @override
-  ValueKind peekKind() => dartObjectToValueKind(_value);
+  ValueKind peekKind() => _dartObjectToValueKind(_value);
 
   @override
   KeyedDecoder keyed({KeyOptions? options}) {
@@ -170,7 +170,7 @@ final class DartObjectDecoder implements Decoder {
   UnkeyedDecoder unkeyed() {
     final v = _value;
     if (v is List<Object?>) {
-      return DartObjectUnkeyedDecoder(v, userInfo);
+      return _DartObjectUnkeyedDecoder(v, userInfo);
     }
     throw CodableException(
       'Expected array for unkeyed(), found $v',
@@ -203,7 +203,7 @@ final class DartObjectMappedDecoder
   bool isNull(String key) => _map[key] == null;
 
   @override
-  ValueKind peekKind(String key) => dartObjectToValueKind(_map[key]);
+  ValueKind peekKind(String key) => _dartObjectToValueKind(_map[key]);
 
   @override
   int readInt(String key) {
@@ -280,7 +280,7 @@ mixin _DartObjectSequentialMixin {
     return v;
   }
 
-  ValueKind peekKind() => dartObjectToValueKind(_peekCurrentValue());
+  ValueKind peekKind() => _dartObjectToValueKind(_peekCurrentValue());
 
   bool isNextNull() => _hasCurrentValue() && _peekCurrentValue() == null;
 
@@ -476,7 +476,7 @@ final class DartObjectMapDecoder implements MapDecoder {
 }
 
 /// Sequential [UnkeyedDecoder] over a parsed `List<Object?>`.
-final class DartObjectUnkeyedDecoder
+final class _DartObjectUnkeyedDecoder
     with BaseUnkeyedDecoderMixin, _DartObjectSequentialMixin
     implements UnkeyedDecoder {
   final List<Object?> _list;
@@ -484,7 +484,7 @@ final class DartObjectUnkeyedDecoder
   final Map<Object, Object?> _userInfo;
   int _index = 0;
 
-  DartObjectUnkeyedDecoder(this._list, this._userInfo);
+  _DartObjectUnkeyedDecoder(this._list, this._userInfo);
 
   @override
   int? get length => _list.length;

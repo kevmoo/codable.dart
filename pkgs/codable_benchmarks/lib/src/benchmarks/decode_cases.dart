@@ -7,6 +7,8 @@ import 'dart:typed_data';
 
 import 'package:bench_press/bench_press.dart';
 import 'package:codable/codable_json.dart';
+// ignore: implementation_imports
+import 'package:codable/src/json/substrate/substrate.dart' show isMockSubstrate;
 
 import '../data/embedded_datasets.dart';
 import '../models/codable/canada.dart' as codable_canada;

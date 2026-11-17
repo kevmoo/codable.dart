@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:codable/codable.dart';
+import 'package:codable/codable_driver.dart';
 
 const int _yamlTwoPow32 = 0x100000000;
 const int _yamlJsMaxSafeInt = 0x1fffff * _yamlTwoPow32 + 0xffffffff;
@@ -267,8 +267,13 @@ final class YamlCodableEncoder implements Encoder {
   }) {
     final encoder = YamlCodableEncoder(userInfo: userInfo, flow: flow);
     encodable.encode(value, encoder);
+    return encoder.toYamlString();
+  }
+
+  /// Serializes the accumulated YAML root value into a YAML document string.
+  String toYamlString() {
     final buffer = StringBuffer();
-    final root = encoder._resolvedOut();
+    final root = _resolvedOut();
     if (flow) {
       _emitYamlFlow(root, buffer);
     } else {

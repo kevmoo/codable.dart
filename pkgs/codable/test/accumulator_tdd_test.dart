@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
 import 'package:codable/codable_json.dart';
-import 'package:codable/codable_streaming.dart' as streaming;
+import 'package:codable/src/json/driver/driver_streaming.dart' as streaming;
 import 'package:codable/src/json/driver/scratch_byte_accumulator.dart';
 import 'package:test/test.dart';
 

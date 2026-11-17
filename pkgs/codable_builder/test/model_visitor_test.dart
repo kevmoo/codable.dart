@@ -13,7 +13,9 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:checks/checks.dart';
 import 'package:codable/codable.dart';
-import 'package:codable_builder/codable_builder.dart';
+import 'package:codable_builder/src/field_descriptor.dart';
+import 'package:codable_builder/src/model_visitor.dart';
+import 'package:codable_builder/src/type_helper.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:test/test.dart';
 

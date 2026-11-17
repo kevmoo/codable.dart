@@ -2,15 +2,5 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-export 'src/codable_builder_base.dart';
-export 'src/decoder_helper.dart';
-export 'src/encoder_helper.dart';
-export 'src/field_descriptor.dart';
-export 'src/model_visitor.dart';
-export 'src/type_helper.dart'
-    hide
-        TypedDataKind,
-        classifyTypedDataKind,
-        isIntegerTupleTargetType,
-        isNumericTupleTargetType;
-export 'src/utils.dart';
+export 'builder.dart' show codableBuilder;
+export 'src/codable_builder_base.dart' show CodableGenerator;

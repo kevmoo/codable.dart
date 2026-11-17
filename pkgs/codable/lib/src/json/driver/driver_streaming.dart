@@ -18,15 +18,6 @@ import 'dart_object_decoder.dart';
 import 'scratch_byte_accumulator.dart';
 import 'streaming_cursors.dart';
 
-/// Maps a [JsonTokenType] from a pull reader to a format-agnostic [ValueKind].
-@pragma('vm:prefer-inline')
-@pragma('wasm:prefer-inline')
-ValueKind tokenTypeToValueKind(JsonTokenType type) =>
-    streamingTokenTypeToValueKind(type);
-
-/// Maps an in-memory Dart object to a format-agnostic [ValueKind].
-ValueKind objectToValueKind(Object? v) => dartObjectToValueKind(v);
-
 /// Concrete high-performance driver connecting `package:codable` contracts
 /// directly to `JsonTokenReader` and `JsonTokenWriter`.
 final class JsonCodableDecoder implements Decoder {
@@ -73,6 +64,23 @@ final class JsonCodableDecoder implements Decoder {
     return JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
   }
 
+  /// Decodes a JSON [source] string into [T] using [decodable].
+  static T decode<T>(
+    String source,
+    Decodable<T> decodable, {
+    Map<Object, Object?> userInfo = const {},
+  }) => decodable.decode(
+    JsonCodableDecoder.fromString(source, userInfo: userInfo),
+  );
+
+  /// Decodes UTF-8 JSON [bytes] into [T] using [decodable].
+  static T decodeBytes<T>(
+    Uint8List bytes,
+    Decodable<T> decodable, {
+    Map<Object, Object?> userInfo = const {},
+  }) =>
+      decodable.decode(JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo));
+
   /// Starts a chunked conversion that accumulates incoming UTF-8 byte chunks
   /// and invokes [decodable] on the resulting [JsonCodableDecoder] when closed,
   /// emitting the decoded value to [sink].
@@ -81,7 +89,11 @@ final class JsonCodableDecoder implements Decoder {
     Decodable<T> decodable, {
     Map<Object, Object?> userInfo = const {},
   }) {
-    return _JsonCodableChunkedDecoderSink<T>(sink, decodable, userInfo);
+    return ChunkedCodableDecoderSink<T>(sink, (bytes) {
+      final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: userInfo);
+      final value = decodable.decode(decoder);
+      return (value, canPool: !decoder._payloadEscaped);
+    });
   }
 
   JsonCodableDecoder._(this._reader, this._bytes, {this.userInfo = const {}});
@@ -252,35 +264,6 @@ Float64List? decodeUniformDoubleListFromReader(
     throw CodableException('Failed to decode uniform double list: $e');
   }
 }
-
-/// Parses a JSON object from [reader] into a random-access [MappedDecoder]
-/// backed by an in-memory object tree without re-serializing nested values.
-MappedDecoder createMappedDecoderFromReader(
-  JsonTokenReader reader,
-  Map<Object, Object?> userInfo,
-) {
-  return DartObjectMappedDecoder(parseObjectFromReader(reader), userInfo);
-}
-
-/// Wraps an already-parsed object [map] in a [MappedDecoder].
-MappedDecoder createMappedDecoderFromMap(
-  Map<String, Object?> map,
-  Map<Object, Object?> userInfo,
-) {
-  return DartObjectMappedDecoder(map, userInfo);
-}
-
-/// Wraps an already-parsed object [map] in a [KeyedDecoder].
-KeyedDecoder createKeyedDecoderFromMap(
-  Map<String, Object?> map,
-  Map<Object, Object?> userInfo,
-) {
-  return DartObjectKeyedDecoder(map, userInfo);
-}
-
-/// Parses a JSON object from [reader] into an in-memory `Map<String, Object?>`.
-Map<String, Object?> readObjectFromReader(JsonTokenReader reader) =>
-    parseObjectFromReader(reader);
 
 abstract interface class _StreamingClosable {
   void _close();
@@ -1139,52 +1122,6 @@ final class _JsonCodableSingleValueEncoder implements SingleValueEncoder {
     } else {
       encode(value, encodable);
     }
-  }
-}
-
-final class _JsonCodableChunkedDecoderSink<T> extends ByteConversionSinkBase {
-  final Sink<T> _sink;
-  final Decodable<T> _decodable;
-  final Map<Object, Object?> _userInfo;
-  final ScratchByteAccumulator _accumulator = ScratchByteAccumulator();
-  bool _isClosed = false;
-
-  _JsonCodableChunkedDecoderSink(this._sink, this._decodable, this._userInfo);
-
-  @override
-  void add(List<int> chunk) {
-    if (_isClosed) {
-      throw StateError('Cannot add to a closed sink');
-    }
-    _accumulator.add(chunk);
-  }
-
-  @override
-  void addSlice(List<int> chunk, int start, int end, bool isLast) {
-    if (_isClosed) {
-      throw StateError('Cannot addSlice to a closed sink');
-    }
-    RangeError.checkValidRange(start, end, chunk.length);
-    if (start < end) {
-      _accumulator.addSlice(chunk, start, end);
-    }
-    if (isLast) {
-      close();
-    }
-  }
-
-  @override
-  void close() {
-    if (_isClosed) return;
-    _isClosed = true;
-    final bytes = _accumulator.takeBytes();
-    final decoder = JsonCodableDecoder.fromBytes(bytes, userInfo: _userInfo);
-    try {
-      _sink.add(_decodable.decode(decoder));
-    } finally {
-      _accumulator.release(canPool: !decoder._payloadEscaped);
-    }
-    _sink.close();
   }
 }
 

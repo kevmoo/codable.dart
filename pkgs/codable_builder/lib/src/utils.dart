@@ -2,8 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'dart:convert';
-
 import 'package:codable/codable.dart';
 
 /// Applies [FieldRename] convention to [fieldName].
@@ -76,10 +74,4 @@ String toSafeIdentifierSuffix(String name) {
   final sanitized = name.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
   final pascal = toPascalCase(sanitized);
   return pascal.isEmpty ? 'Empty' : pascal;
-}
-
-/// Encodes a UTF-8 string into a Dart const list expression.
-String encodeAsConstBytes(String text) {
-  final bytes = Uint8List.fromList(utf8.encode(text));
-  return 'const [${bytes.join(', ')}]';
 }
