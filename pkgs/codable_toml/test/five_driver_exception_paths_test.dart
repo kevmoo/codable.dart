@@ -288,7 +288,7 @@ void _assertFiveDriverParity<T>(
     if (driverName == 'yaml') {
       check(caught)
           .isA<YamlCodableException>()
-          .has((e) => e.span, 'span')
+          .has('span', (e) => e.span)
           .isNotNull();
     }
     if (driverName == 'toml') {

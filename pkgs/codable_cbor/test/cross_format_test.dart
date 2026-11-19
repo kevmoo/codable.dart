@@ -35,9 +35,9 @@ T _roundtripYaml<T>(T value, Codable<T> codable) {
 }
 
 void _assertNoIndefiniteMarkers(Uint8List cborBytes) {
-  check(cborBytes).not((it) => it.contains(0x9f));
-  check(cborBytes).not((it) => it.contains(0xbf));
-  check(cborBytes).not((it) => it.contains(0xff));
+  check(cborBytes).not(.it()..contains(0x9f));
+  check(cborBytes).not(.it()..contains(0xbf));
+  check(cborBytes).not(.it()..contains(0xff));
 }
 
 bool _containsSubsequence(Uint8List haystack, List<int> needle) {
@@ -465,7 +465,7 @@ void _registerGeneratedModelTests() {
       _assertNoIndefiniteMarkers(cborBytes);
       for (final decoded in [fromJson1, fromCbor, fromYaml, fromJson2]) {
         check(decoded.firstName).equals('Ada');
-        check(decoded.middleName).isNull();
+        check(decoded.middleName).isNull;
         check(decoded.lastName).equals('Lovelace');
         check(decoded.dateOfBirth).equals(DateTime.utc(1815, 12, 10));
         check(decoded.orders.length).equals(1);
@@ -502,14 +502,14 @@ void _registerStringKeyedMapTests() {
         );
 
         _assertNoIndefiniteMarkers(cborBytes);
-        check(_containsSubsequence(cborBytes, const [0xb8, 30])).isTrue();
+        check(_containsSubsequence(cborBytes, const [0xb8, 30])).isTrue;
 
         for (final r in [fromJson, fromYaml, fromCbor]) {
-          check(r.emptyLabels).isEmpty();
+          check(r.emptyLabels).isEmpty;
           check(r.bulkAttributes).deepEquals(bulk);
           check(r.nullableScores)
               .deepEquals({'alpha': 7, 'beta': null, 'gamma': -4});
-          check(r.nullableScores.containsKey('beta')).isTrue();
+          check(r.nullableScores.containsKey('beta')).isTrue;
           check(r.seriesByTag).deepEquals({
             'latencies': [12, 24, 48],
             'empty': <int>[],
@@ -538,11 +538,11 @@ void _registerStringKeyedMapTests() {
           rootStringMapCodec,
         );
         check(cborBytes).deepEquals(Uint8List.fromList([0xa0]));
-        check(fromCbor).isEmpty();
+        check(fromCbor).isEmpty;
         check(_roundtripJson(const <String, String>{}, rootStringMapCodec))
-            .isEmpty();
+            .isEmpty;
         check(_roundtripYaml(const <String, String>{}, rootStringMapCodec))
-            .isEmpty();
+            .isEmpty;
       },
     );
   });
@@ -605,7 +605,7 @@ void _registerCompiledKeyOptionsTests() {
         final cachedProbe = sharedOptions.compiled<_ProbeCompiledTable>(
           compileProbe,
         );
-        check(identical(firstProbe, cachedProbe)).isTrue();
+        check(identical(firstProbe, cachedProbe)).isTrue;
       }
       check(probeCompiles).equals(1);
     });
@@ -644,10 +644,9 @@ void _registerScalarMapAndBytesTests() {
 
         check(jsonText).contains(base64Encode(rawBytes));
         check(yamlText).contains(base64Encode(rawBytes));
-        check(_containsSubsequence(cborBytes, [0x54, ...rawBytes])).isTrue();
-        check(_containsSubsequence(cborBytes, const [0x18, 0xc8])).isTrue();
-        check(_containsSubsequence(cborBytes, const [0x19, 0x01, 0x94]))
-            .isTrue();
+        check(_containsSubsequence(cborBytes, [0x54, ...rawBytes])).isTrue;
+        check(_containsSubsequence(cborBytes, const [0x18, 0xc8])).isTrue;
+        check(_containsSubsequence(cborBytes, const [0x19, 0x01, 0x94])).isTrue;
         _assertNoIndefiniteMarkers(cborBytes);
 
         final fromJson = const OpenApiSpecModelCodable().decode(
@@ -662,7 +661,7 @@ void _registerScalarMapAndBytesTests() {
           check(r.path).equals('/v1/items');
           check(r.method).equals(HttpVerb.post);
           check(r.schemaHash).deepEquals(rawBytes);
-          check(r.signature).isNull();
+          check(r.signature).isNull;
           check(r.responses).deepEquals({200: 'ok', 404: 'not found'});
           check(r.rateLimits)
               .deepEquals({HttpVerb.get: 1000, HttpVerb.post: 250});
@@ -823,12 +822,12 @@ void _testShiftedBackpatch() {
   check(fromCbor.slots).deepEquals(outerSlots);
   check(fromCbor.nested)
       .isNotNull()
-      .has((n) => n.slots, 'slots')
+      .has('slots', (n) => n.slots)
       .deepEquals(innerSlots);
   check(fromJson.slots).deepEquals(outerSlots);
   check(fromYaml.nested)
       .isNotNull()
-      .has((n) => n.slots, 'slots')
+      .has('slots', (n) => n.slots)
       .deepEquals(innerSlots);
 }
 
@@ -872,11 +871,11 @@ void _registerPolymorphicTests() {
         check(list.length).equals(2);
         check(list[0])
             .isA<CircleShape>()
-            .has((c) => c.radius, 'radius')
+            .has('radius', (c) => c.radius)
             .equals(4.5);
         check(list[1])
             .isA<RectShape>()
-            .has((r) => (r.width, r.height), 'dims')
+            .has('dims', (r) => (r.width, r.height))
             .equals((16, 9));
       }
 
@@ -887,7 +886,7 @@ void _registerPolymorphicTests() {
       );
       check(trailingJson)
           .isA<RectShape>()
-          .has((r) => (r.width, r.height), 'dims')
+          .has('dims', (r) => (r.width, r.height))
           .equals((32, 64));
 
       final trailingYaml = YamlCodableDecoder.decode(
@@ -896,7 +895,7 @@ void _registerPolymorphicTests() {
       );
       check(trailingYaml)
           .isA<CircleShape>()
-          .has((c) => c.radius, 'radius')
+          .has('radius', (c) => c.radius)
           .equals(12.25);
     });
   });
@@ -979,7 +978,7 @@ void _registerHumanReadableTests() {
       check(yamlText).contains(uuidStr);
       check(yamlText).contains('2026-11-05T04:30:15.250Z');
 
-      check(_containsSubsequence(cborBytes, [0x50, ...uuid.bytes])).isTrue();
+      check(_containsSubsequence(cborBytes, [0x50, ...uuid.bytes])).isTrue;
       check(cborBytes).contains(0x1b);
       check(cborBytes.length).isLessThan(utf8.encode(jsonText).length);
       _assertNoIndefiniteMarkers(cborBytes);

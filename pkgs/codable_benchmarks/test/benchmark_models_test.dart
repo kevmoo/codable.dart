@@ -64,12 +64,12 @@ void main() {
         final fc = const CanadaFeatureCollectionCodable().decode(decoder);
 
         check(fc.type).equals('FeatureCollection');
-        check(fc.features).isNotEmpty();
+        check(fc.features).isNotEmpty;
         final firstFeature = fc.features.first;
         check(firstFeature.type).equals('Feature');
         check(firstFeature.properties.name).equals('Canada');
         check(firstFeature.geometry.type).equals('Polygon');
-        check(firstFeature.geometry.coordinates).isNotEmpty();
+        check(firstFeature.geometry.coordinates).isNotEmpty;
       });
     });
 
@@ -81,10 +81,10 @@ void main() {
           final decoder = JsonCodableDecoder.fromBytes(bytes);
           final catalog = const CitmCatalogCodable().decode(decoder);
 
-          check(catalog.events).isNotEmpty();
-          check(catalog.performances).isNotEmpty();
-          check(catalog.areaNames).isNotEmpty();
-          check(catalog.seatCategoryNames).isNotEmpty();
+          check(catalog.events).isNotEmpty;
+          check(catalog.performances).isNotEmpty;
+          check(catalog.areaNames).isNotEmpty;
+          check(catalog.seatCategoryNames).isNotEmpty;
         },
       );
     });

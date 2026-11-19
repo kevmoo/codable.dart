@@ -376,17 +376,17 @@ void _registerNullableAndMap16BoundaryTests() {
           allNull,
           const AllOptionalPatchCodable(),
         )) {
-          check(r.alpha).isNull();
-          check(r.beta).isNull();
-          check(r.gamma).isNull();
+          check(r.alpha).isNull;
+          check(r.beta).isNull;
+          check(r.gamma).isNull;
         }
         for (final r in _roundtripAllFourFormats(
           partial,
           const AllOptionalPatchCodable(),
         )) {
-          check(r.alpha).isNull();
+          check(r.alpha).isNull;
           check(r.beta).equals('set');
-          check(r.gamma).isNull();
+          check(r.gamma).isNull;
         }
         for (final r in _roundtripAllFourFormats(
           allPresent,
@@ -476,8 +476,8 @@ void _registerNullableAndMap16BoundaryTests() {
           check(r.f01).equals(1);
           check(r.f12).equals('12');
           check(r.f16).equals(-16.5);
-          check(r.f17).isNull();
-          check(r.f20).isNull();
+          check(r.f17).isNull;
+          check(r.f20).isNull;
         }
         for (final r in _roundtripAllFourFormats(
           allTwenty,
@@ -533,7 +533,7 @@ void _registerCompositeFourWayTests() {
           fuzzTarget(msgpackBytes);
           // Verify wideCounters (18 entries) emitted map16 (0xde 0x00 0x12)
           check(_containsSubsequence(msgpackBytes, const [0xde, 0x00, 18]))
-              .isTrue();
+              .isTrue;
           // Verify payload emitted native bin8 (0xc4, 0x04, ...)
           check(
             _containsSubsequence(msgpackBytes, const [
@@ -544,7 +544,7 @@ void _registerCompositeFourWayTests() {
               0x80,
               0xff,
             ]),
-          ).isTrue();
+          ).isTrue;
 
           for (final decoded in _roundtripAllFourFormats(
             envelope,
@@ -553,19 +553,19 @@ void _registerCompositeFourWayTests() {
             check(decoded.id).equals('env-2026');
             check(decoded.primaryMeta)
                 .equals(const NestedMeta(region: 'us-central1', revision: 12));
-            check(decoded.backupMeta).isNull();
+            check(decoded.backupMeta).isNull;
             check(decoded.history).deepEquals(envelope.history);
             check(decoded.tags).deepEquals(envelope.tags);
             check(decoded.ports).deepEquals(envelope.ports);
             check(decoded.payload).deepEquals([0x00, 0x7f, 0x80, 0xff]);
-            check(decoded.signature).isNull();
+            check(decoded.signature).isNull;
             check(decoded.samples).deepEquals([1.5, -2.25, 0.0, 1024.125]);
             check(decoded.counters).deepEquals(wideCounters);
             check(decoded.statusLabels).deepEquals(envelope.statusLabels);
             check(decoded.quotas).deepEquals(envelope.quotas);
             check(decoded.primaryMetric).equals(42);
             check(decoded.secondaryMetric).equals(3.125);
-            check(decoded.optionalMetric).isNull();
+            check(decoded.optionalMetric).isNull;
           }
         },
       );
@@ -653,11 +653,11 @@ void _registerPolymorphicAndAdaptiveTests() {
         check(list.length).equals(2);
         check(list[0])
             .isA<CircleNode>()
-            .has((c) => (c.radius, c.label), 'circle')
+            .has('circle', (c) => (c.radius, c.label))
             .equals((6.25, 'unit'));
         check(list[1])
             .isA<PolygonNode>()
-            .has((p) => (p.vertices.length, p.closed), 'polygon')
+            .has('polygon', (p) => (p.vertices.length, p.closed))
             .equals((3, false));
       }
     });
@@ -695,9 +695,8 @@ void _registerPolymorphicAndAdaptiveTests() {
         check(jsonStr).contains('2026-11-06T01:30:45.500Z');
         check(yamlStr).contains('2026-11-06T01:30:45.500Z');
         check(_containsSubsequence(msgpackBytes, utf8.encode('2026-11-06')))
-            .isFalse();
-        check(_containsSubsequence(msgpackBytes, [0xc4, 16, ...trace]))
-            .isTrue();
+            .isFalse;
+        check(_containsSubsequence(msgpackBytes, [0xc4, 16, ...trace])).isTrue;
         check(msgpackBytes.length).isLessThan(utf8.encode(jsonStr).length);
         check(cborBytes.length).isLessThan(utf8.encode(jsonStr).length);
 
@@ -738,7 +737,7 @@ void _registerHandWrittenKnownLengthTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains(
             'Single-pass MessagePack encoding requires upfront container length',
           );
@@ -767,7 +766,7 @@ void _registerHandWrittenKnownLengthTests() {
       check(decodedLarge.entries.length).equals(20);
       check(decodedLarge.child)
           .isNotNull()
-          .has((c) => c.entries.length, 'nested entries')
+          .has('nested entries', (c) => c.entries.length)
           .equals(17);
     });
   });
@@ -830,12 +829,12 @@ void _registerContractBugfixFourWayTests() {
           check(r.cells.length).equals(2);
           check(r.cells[0])
               .deepEquals(const [MatrixCell(1, 2), MatrixCell(3, 4)]);
-          check(r.cells[1]).isEmpty();
+          check(r.cells[1]).isEmpty;
           check(r.nullableRows.length).equals(2);
           check(r.nullableRows[0])
               .isNotNull()
               .deepEquals(const [MatrixCell(5, 6)]);
-          check(r.nullableRows[1]).isNull();
+          check(r.nullableRows[1]).isNull;
         }
       });
 

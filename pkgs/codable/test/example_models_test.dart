@@ -131,7 +131,7 @@ void main() {
       check(emptyJson).equals('{"status":204,"message":"No Content"}');
       final emptyDecoded = JsonCodableDecoder.decode(emptyJson, nullableCodec);
       check(emptyDecoded.status).equals(204);
-      check(emptyDecoded.data).isNull();
+      check(emptyDecoded.data).isNull;
     });
 
     test('CustomDecoderExample: DateTimeEpochDecoder', () {
@@ -208,15 +208,15 @@ void main() {
       check(vehicles.length).equals(3);
       check(vehicles[0])
           .isA<Car>()
-          .has((c) => (c.maxSpeed, c.doors), 'car')
+          .has('car', (c) => (c.maxSpeed, c.doors))
           .equals((120, 4));
       check(vehicles[1])
           .isA<Bicycle>()
-          .has((b) => (b.maxSpeed, b.hasBell), 'bicycle')
+          .has('bicycle', (b) => (b.maxSpeed, b.hasBell))
           .equals((25, true));
       check(vehicles[2])
           .isA<CargoVan>()
-          .has((v) => (v.maxSpeed, v.payloadTons), 'van')
+          .has('van', (v) => (v.maxSpeed, v.payloadTons))
           .equals((95, 3.5));
 
       final roundtrippedJson = JsonCodableEncoder.encode(
@@ -231,7 +231,7 @@ void main() {
       check(roundtripped.length).equals(3);
       check(roundtripped[2])
           .isA<CargoVan>()
-          .has((v) => v.payloadTons, 'payloadTons')
+          .has('payloadTons', (v) => v.payloadTons)
           .equals(3.5);
     });
   });

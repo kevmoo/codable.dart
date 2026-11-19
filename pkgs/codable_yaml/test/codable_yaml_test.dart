@@ -101,8 +101,8 @@ void _registerModelRoundtripTests() {
         flow: true,
       );
       check(blockYaml).contains(base64Encode(cert));
-      check(flowYaml.trim().startsWith('{')).isTrue();
-      check(flowYaml.trim().endsWith('}')).isTrue();
+      check(flowYaml.trim().startsWith('{')).isTrue;
+      check(flowYaml.trim().endsWith('}')).isTrue;
 
       for (final encoded in [blockYaml, flowYaml]) {
         final decoded = YamlCodableDecoder.decode(
@@ -209,7 +209,7 @@ name: alias-name
             ),
           )
           .throws<YamlCodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('Duplicate field');
     });
   });
@@ -293,9 +293,9 @@ tags:
           Decodable.fromFunction((d) => d.mapped().readBytes('b')),
         ),
       ).throws<YamlCodableException>().which(
-        (it) => it
-          ..has((e) => e.formattedPath, 'formattedPath').equals('b')
-          ..has((e) => e.actualValue, 'actualValue').equals(123),
+        .it()
+          ..has('formattedPath', (e) => e.formattedPath).equals('b')
+          ..has('actualValue', (e) => e.actualValue).equals(123),
       );
 
       check(
@@ -310,7 +310,7 @@ tags:
             ),
           )
           .throws<YamlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals(true);
     });
   });
@@ -347,11 +347,11 @@ void _registerEncoderStyleTests() {
       check(encoded).contains('-.inf');
 
       final decoded = YamlCodableDecoder.decode(encoded, doubleListCodec);
-      check(decoded[0].isNaN).isTrue();
+      check(decoded[0].isNaN).isTrue;
       check(decoded[1]).equals(double.infinity);
       check(decoded[2]).equals(double.negativeInfinity);
       check(decoded[3]).equals(0.0);
-      check(decoded[3].isNegative).isTrue();
+      check(decoded[3].isNegative).isTrue;
       check(decoded[4]).equals(42.5);
 
       const emptySpec = ServiceSpec(serviceName: 'minimal');
@@ -383,22 +383,22 @@ bytes: AQID
           root,
           userInfo: const {'env': 'test'},
         );
-        check(decoder.isHumanReadable).isTrue();
-        check(decoder.payload).isNull();
+        check(decoder.isHumanReadable).isTrue;
+        check(decoder.payload).isNull;
         check(decoder.userInfo['env']).equals('test');
         check(decoder.peekKind()).equals(ValueKind.map);
 
         final mapped = decoder.mapped();
-        check(mapped.containsKey('id')).isTrue();
-        check(mapped.containsKey('missing')).isFalse();
-        check(mapped.isNull('emptyVal')).isTrue();
-        check(mapped.isNull('missing')).isTrue();
+        check(mapped.containsKey('id')).isTrue;
+        check(mapped.containsKey('missing')).isFalse;
+        check(mapped.isNull('emptyVal')).isTrue;
+        check(mapped.isNull('missing')).isTrue;
         check(mapped.readInt('id')).equals(7);
         check(mapped.readDouble('ratio')).equals(1.5);
         check(mapped.readNum('ratio')).equals(1.5);
-        check(mapped.readBool('active')).isTrue();
+        check(mapped.readBool('active')).isTrue;
         check(mapped.readString('label')).equals('main');
-        check(mapped.readNullableString('emptyVal')).isNull();
+        check(mapped.readNullableString('emptyVal')).isNull;
         check(mapped.readBytes('bytes')).deepEquals([1, 2, 3]);
         check(mapped.decodeDoubleList('nums')).deepEquals([10.0, 20.5]);
         check(() => mapped.readInt('missing')).throws<CodableException>();
@@ -408,7 +408,7 @@ bytes: AQID
         'enforces MapEncoder key/value ordering and KeyedDecoder peekKey',
         () {
           final encoder = YamlCodableEncoder();
-          check(encoder.isHumanReadable).isTrue();
+          check(encoder.isHumanReadable).isTrue;
           final mapEnc = encoder.map();
           check(mapEnc.valueEncoder).throws<CodableException>();
           mapEnc.keyEncoder().singleValue().encodeInt(1);
@@ -418,14 +418,14 @@ bytes: AQID
 
           final node = loadYamlNode('first: 1\nsecond: 2\n');
           final keyed = YamlCodableDecoder.fromNode(node).keyed();
-          check(keyed.moveNextKey()).isTrue();
+          check(keyed.moveNextKey()).isTrue;
           check(keyed.peekKind()).equals(ValueKind.number);
-          check(keyed.isNextNull()).isFalse();
+          check(keyed.isNextNull()).isFalse;
           check(keyed.peekKey()).equals('first');
           check(keyed.nextKey()).equals('first');
           check(keyed.readInt()).equals(1);
           keyed.skipValue();
-          check(keyed.moveNextKey()).isFalse();
+          check(keyed.moveNextKey()).isFalse;
 
           // Preserves duplicate adjacent path indices like matrix[0][0]
           YamlCodableException? nestedPathErr;

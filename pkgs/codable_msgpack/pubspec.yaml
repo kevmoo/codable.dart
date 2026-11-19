@@ -14,7 +14,7 @@ dependencies:
 dev_dependencies:
   api_summary: ^1.2.0
   build_runner: ^2.4.14
-  checks: ^0.3.0
+  checks: ^0.4.0
   codable_builder: ^0.1.0-wip
   codable_cbor: ^0.1.0-wip
   codable_yaml: ^0.1.0-wip

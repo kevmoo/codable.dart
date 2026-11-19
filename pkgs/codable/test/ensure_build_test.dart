@@ -35,6 +35,6 @@ void main() {
       because:
           'substrate.dart must remain untracked (generated via '
           'tool/switch_substrate.dart).',
-    ).not((it) => it.equals(0));
+    ).not(.it()..equals(0));
   });
 }

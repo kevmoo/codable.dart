@@ -46,7 +46,7 @@ void _registerJsIntFidelityTests() {
                   ),
                 )
                 .throws<CodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals(unsafe);
 
             check(
@@ -58,7 +58,7 @@ void _registerJsIntFidelityTests() {
                   ),
                 )
                 .throws<CodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals(unsafe);
 
             check(
@@ -70,7 +70,7 @@ void _registerJsIntFidelityTests() {
                   ),
                 )
                 .throws<CodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals(unsafe);
           }
         } else {
@@ -241,7 +241,7 @@ void _registerAnchorTagAndCoercionParityTests() {
                 yaml,
                 Decodable.fromFunction((d) {
                   final m = d.map();
-                  check(m.moveNextEntry()).isTrue();
+                  check(m.moveNextEntry()).isTrue;
                   return m.keyDecoder().singleValue().readInt();
                 }),
               );
@@ -260,7 +260,7 @@ void _registerAnchorTagAndCoercionParityTests() {
           ]) {
             check(() => decodeSingleIntMapKey('"$rejectedKey": "ok"\n'))
                 .throws<YamlCodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals(rejectedKey);
           }
         },
@@ -298,9 +298,9 @@ void _registerFloatFormattingTests() {
 
         final decoded = YamlCodableDecoder.decode(yaml, doubleListCodec);
         check(decoded[0]).equals(0.0);
-        check(decoded[0].isNegative).isTrue();
+        check(decoded[0].isNegative).isTrue;
         check(decoded[1]).equals(0.0);
-        check(decoded[1].isNegative).isFalse();
+        check(decoded[1].isNegative).isFalse;
         check(decoded[2]).equals(1.0);
         check(decoded[3]).equals(-42.0);
         check(decoded[4]).equals(1e25);
@@ -426,7 +426,7 @@ void _registerMapEncoderAndSurrogateTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(bad);
 
           check(
@@ -438,7 +438,7 @@ void _registerMapEncoderAndSurrogateTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(bad);
 
           check(
@@ -450,7 +450,7 @@ void _registerMapEncoderAndSurrogateTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(bad);
         }
       },

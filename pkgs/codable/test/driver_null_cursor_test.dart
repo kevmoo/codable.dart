@@ -20,15 +20,15 @@ void main() {
         final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
         final keyed = decoder.keyed();
 
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.nextKey()).equals('first');
-        check(keyed.isNextNull()).isTrue();
+        check(keyed.isNextNull()).isTrue;
         keyed.readNull();
 
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.nextKey()).equals('second');
         check(keyed.readInt()).equals(123);
-        check(keyed.moveNextKey()).isFalse();
+        check(keyed.moveNextKey()).isFalse;
       },
     );
 
@@ -39,27 +39,27 @@ void main() {
       final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
       final keyed = decoder.keyed();
 
-      check(keyed.moveNextKey()).isTrue();
+      check(keyed.moveNextKey()).isTrue;
       check(keyed.nextKey()).equals('a');
-      check(keyed.isNextNull()).isTrue();
+      check(keyed.isNextNull()).isTrue;
       keyed.readNull();
 
-      check(keyed.moveNextKey()).isTrue();
+      check(keyed.moveNextKey()).isTrue;
       check(keyed.nextKey()).equals('b');
-      check(keyed.isNextNull()).isFalse();
+      check(keyed.isNextNull()).isFalse;
       check(keyed.readString()).equals('hello');
 
-      check(keyed.moveNextKey()).isTrue();
+      check(keyed.moveNextKey()).isTrue;
       check(keyed.nextKey()).equals('c');
-      check(keyed.isNextNull()).isTrue();
+      check(keyed.isNextNull()).isTrue;
       keyed.readNull();
 
-      check(keyed.moveNextKey()).isTrue();
+      check(keyed.moveNextKey()).isTrue;
       check(keyed.nextKey()).equals('d');
-      check(keyed.isNextNull()).isFalse();
+      check(keyed.isNextNull()).isFalse;
       check(keyed.readInt()).equals(42);
 
-      check(keyed.moveNextKey()).isFalse();
+      check(keyed.moveNextKey()).isFalse;
     });
 
     test('SingleValueDecoder.decode properly scopes nested single value', () {
@@ -70,7 +70,7 @@ void main() {
       final result = single.decode(
         Decodable.fromFunction((d) {
           final keyed = d.keyed();
-          check(keyed.moveNextKey()).isTrue();
+          check(keyed.moveNextKey()).isTrue;
           check(keyed.nextKey()).equals('inner');
           return keyed.readString();
         }),
@@ -91,8 +91,8 @@ void main() {
       final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
       final mapped = decoder.mapped();
 
-      check(mapped.containsKey('name')).isTrue();
-      check(mapped.containsKey('missing')).isFalse();
+      check(mapped.containsKey('name')).isTrue;
+      check(mapped.containsKey('missing')).isFalse;
       check(mapped.readString('name')).equals('test');
       check(mapped.readInt('count')).equals(42);
       check(mapped.readDouble('ratio')).equals(3.5);

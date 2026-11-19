@@ -101,7 +101,7 @@ void main() {
         final decoder = JsonCodableDecoder.fromBytes(jsonBytes);
 
         if (identical(1.0, 1)) {
-          check(decoder.payload).isNull();
+          check(decoder.payload).isNull;
         } else {
           check(decoder.payload).isNotNull().equals(jsonBytes);
         }
@@ -111,7 +111,7 @@ void main() {
         );
         check(streamingDecoder.payload).isNotNull().equals(jsonBytes);
         streamingDecoder.mapped();
-        check(streamingDecoder.payload).isNull();
+        check(streamingDecoder.payload).isNull;
       },
     );
 
@@ -157,7 +157,7 @@ void main() {
           ),
         );
         check(createdAt).equals(DateTime.utc(2026, 8, 16, 21, 30, 0));
-        check(nullSpan).isNull();
+        check(nullSpan).isNull;
       },
       skip: !isSpanSupported
           ? 'readStringSpan is only supported in mock substrate or SDK '
@@ -186,7 +186,7 @@ void main() {
         check(dates.length).equals(3);
         check(dates[0]).equals(DateTime.utc(2026, 8, 16, 12, 0, 0));
         check(dates[1]).equals(DateTime.utc(2026, 8, 16, 13, 0, 0));
-        check(dates[2]).isNull();
+        check(dates[2]).isNull;
       },
       skip: !isSpanSupported
           ? 'readStringSpan is only supported in mock substrate or SDK '

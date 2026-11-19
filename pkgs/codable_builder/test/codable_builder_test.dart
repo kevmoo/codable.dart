@@ -167,7 +167,7 @@ void main() {
         'keyed.encodeDoubleList(_\$UserAccountSchema.nameLocation, v\$Location);',
       );
       // Ignored field internalId not in schema options
-      check(output).not((s) => s.contains('nameInternalId'));
+      check(output).not(.it()..contains('nameInternalId'));
       // Named constructor invocation with defaults
       check(output).contains('id: id!,');
       check(output).contains('emailAddress: emailAddress!,');
@@ -202,7 +202,7 @@ void main() {
         'final k = keyed.nestedEncoder(_\$EnterpriseSchema.nameHeadcountByDept).keyed(length: instance.headcountByDept.length);',
       );
       check(output).contains('k.encodeInt(entry.key, entry.value);');
-      check(output).not((s) => s.contains('.map('));
+      check(output).not(.it()..contains('.map('));
       // Nested encoder call
       check(output).contains(
         'keyed.encodeValue(_\$EnterpriseSchema.nameHeadquarter, instance.headquarter, const AddressCodable());',
@@ -224,7 +224,7 @@ void main() {
       () {
         final output = runGeneratorFor('Team');
 
-        check(output).not((s) => s.contains('.byName('));
+        check(output).not(.it()..contains('.byName('));
         check(output)
             .contains('_\$TeamSchema.enumUserRoleKeyOptions.indexOf(raw)');
         check(output).contains('actualValue: raw');
@@ -235,7 +235,7 @@ void main() {
           'final k = keyed.nestedEncoder(_\$TeamSchema.nameScores).keyed(length: instance.scores.length);',
         );
         check(output).contains('k.encodeNull(entry.key);');
-        check(output).not((s) => s.contains('.map('));
+        check(output).not(.it()..contains('.map('));
         check(output).contains(
           'keyed.encodeList(_\$TeamSchema.nameRoles, instance.roles, Encodable.fromFunction((UserRole item, e) {',
         );
@@ -262,13 +262,13 @@ void main() {
     test('throws InvalidGenerationSourceError when required fields exceed 62 limit', () {
       check(() => runGeneratorFor('HugeModel63'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('exceeds the maximum golden mask limit of 62');
     });
 
     test('omits isNextNull() for non-nullable fields and retains it for nullable fields', () {
       final pointOutput = runGeneratorFor('Point');
-      check(pointOutput).not((s) => s.contains('isNextNull()'));
+      check(pointOutput).not(.it()..contains('isNextNull()'));
 
       final userAccountOutput = runGeneratorFor('UserAccount');
       // UserAccount has 1 nullable field (`location`) and 4 non-nullable fields
@@ -291,8 +291,8 @@ void main() {
       );
       check(output).contains('m[key] = k.readNum();');
       check(output).contains('m[key] = k.readNullableNum();');
-      check(output).not((s) => s.contains('.map('));
-      check(output).not((s) => s.contains('decodeUniformDoubleList'));
+      check(output).not(.it()..contains('.map('));
+      check(output).not(.it()..contains('decodeUniformDoubleList'));
     });
 
     test('generates asymmetric and symmetric codec calls for CodableKeyVariantsModel', () {
@@ -351,9 +351,9 @@ void main() {
         check(output).contains('final k = keyed.nestedDecoder().keyed();');
         check(output).contains('m[key] = k.readBytes();');
         check(output).contains('k.encodeBytes(entry.key, entry.value);');
-        check(output).not((s) => s.contains('.map('));
-        check(output).not((s) => s.contains('decodeIntList'));
-        check(output).not((s) => s.contains('encodeIntList'));
+        check(output).not(.it()..contains('.map('));
+        check(output).not(.it()..contains('decodeIntList'));
+        check(output).not(.it()..contains('encodeIntList'));
       },
     );
 
@@ -370,7 +370,7 @@ void main() {
           .contains('encodeFields(instance, encoder.keyed(length: 4));');
 
       // Zero closures across both decode and encode
-      check(output).not((s) => s.contains('fromFunction'));
+      check(output).not(.it()..contains('fromFunction'));
 
       // Map<int, String> uses MapDecoder / MapEncoder
       check(output).contains('final mDecoder = keyed.nestedDecoder().map();');
@@ -409,8 +409,8 @@ void main() {
     test('emits 1-hop KeyedDecoder / KeyedEncoder for enum, nullable @Codable, and nested String maps', () {
       final output = runGeneratorFor('StringKeyedNestedMapModel');
 
-      check(output).not((s) => s.contains('.map('));
-      check(output).not((s) => s.contains('fromFunction'));
+      check(output).not(.it()..contains('.map('));
+      check(output).not(.it()..contains('fromFunction'));
 
       // Map<String, UserRole> via 1-hop KeyedDecoder + KeyOptions.indexOf + actualValue
       check(output).contains('= k.readString();');
@@ -485,16 +485,16 @@ void main() {
       check(encodeSection).contains('if (v\$Location != null) count\$++;');
       check(encodeSection)
           .contains('final keyed = encoder.keyed(length: count\$);');
-      check(encodeSection).not((s) => s.contains('encoder.keyed()'));
+      check(encodeSection).not(.it()..contains('encoder.keyed()'));
 
       // Each nullable getter is read from `instance.` exactly once in encode
       check('instance.tag'.allMatches(encodeSection).length).equals(1);
       check('instance.score'.allMatches(encodeSection).length).equals(1);
       check('instance.location'.allMatches(encodeSection).length).equals(1);
       // Promoted locals eliminate `!` null-assertions inside encode
-      check(encodeSection).not((s) => s.contains('!;'));
-      check(encodeSection).not((s) => s.contains('!,'));
-      check(encodeSection).not((s) => s.contains('!)'));
+      check(encodeSection).not(.it()..contains('!;'));
+      check(encodeSection).not(.it()..contains('!,'));
+      check(encodeSection).not(.it()..contains('!)'));
 
       // All-nullable model starts fixedNonNullCount at 0
       final allNullOutput = runGeneratorFor('AllNullableModel');
@@ -520,8 +520,8 @@ void main() {
       'synthesizes all 11 dart:typed_data list codecs and tuple length checks',
       () {
         final portable = runGeneratorFor('PortableTypedDataModel');
-        check(portable).not((s) => s.contains('as dynamic'));
-        check(portable).not((s) => s.contains('.toString()'));
+        check(portable).not(.it()..contains('as dynamic'));
+        check(portable).not(.it()..contains('.toString()'));
         check(portable).contains('uint8 = keyed.readBytes();');
         check(portable).contains(
           'uint8Clamped = Uint8ClampedList.fromList(keyed.decodeIntList());',
@@ -544,7 +544,7 @@ void main() {
         check(portable).contains('keyed.encodeDoubleList(');
 
         final vm64 = runGeneratorFor('Vm64BitTypedDataModel');
-        check(vm64).not((s) => s.contains('as dynamic'));
+        check(vm64).not(.it()..contains('as dynamic'));
         check(vm64)
             .contains('int64 = Int64List.fromList(keyed.decodeIntList());');
         check(vm64)
@@ -585,7 +585,7 @@ void main() {
       check(defaults).contains(
         'List<Map<String, int>> nestedStringIntMaps = const [<String, int>{}];',
       );
-      check(defaults).not((s) => s.contains('0x10.0'));
+      check(defaults).not(.it()..contains('0x10.0'));
 
       final aliases = runGeneratorFor('EnumCollectionsAndAliasesModel');
       check(aliases)
@@ -660,21 +660,21 @@ void main() {
         check(dashOut).contains('encodeFields(instance, encoder.keyed(length:');
 
         final outerOut = runGeneratorFor('OuterGenericWrapper');
-        check(outerOut).not((s) => s.contains('const EnvelopeCodable<U>'));
+        check(outerOut).not(.it()..contains('const EnvelopeCodable<U>'));
 
         final encodeOnlyOut = runGeneratorFor('EncodeOnlyBox');
         check(encodeOnlyOut).contains(
           'final class EncodeOnlyBoxCodable<T> implements KeyedEncodable<EncodeOnlyBox<T>>',
         );
-        check(encodeOnlyOut).not((s) => s.contains('keyOptions'));
-        check(encodeOnlyOut).not((s) => s.contains('keyItem'));
+        check(encodeOnlyOut).not(.it()..contains('keyOptions'));
+        check(encodeOnlyOut).not(.it()..contains('keyItem'));
 
         final paymentOut = runGeneratorFor('PaymentMethod');
         check(paymentOut).contains(
           'final class PaymentMethodCodable implements KeyedCodable<PaymentMethod>',
         );
-        check(paymentOut).not((s) => s.contains('default:'));
-        check(paymentOut).not((s) => s.contains('final subCodec = const'));
+        check(paymentOut).not(.it()..contains('default:'));
+        check(paymentOut).not(.it()..contains('final subCodec = const'));
 
         final pluginOut = runGeneratorFor('PluginAction');
         check(pluginOut).contains('default:');

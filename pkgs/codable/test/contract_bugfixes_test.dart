@@ -108,7 +108,7 @@ void _registerNestedListBugfixTests() {
 
       // Buffered object-tree (DartObjectDecoder) via mapped() -> keyed() handoff
       final bufferedDec = streaming.JsonCodableDecoder.fromBytes(encodedBytes);
-      check(bufferedDec.mapped().containsKey('cells')).isTrue();
+      check(bufferedDec.mapped().containsKey('cells')).isTrue;
       _checkBoard(const GridBoardCodable().decode(bufferedDec));
 
       // Non-nullable 2D list rejects null row and null cell element
@@ -145,9 +145,9 @@ void _registerNestedListBugfixTests() {
             .isNotNull()
             .deepEquals(const [GridCell(row: 3, col: 4)]);
         check(mapped.decodeNullableListKey('nulled', const GridCellCodable()))
-            .isNull();
+            .isNull;
         check(mapped.decodeNullableListKey('absent', const GridCellCodable()))
-            .isNull();
+            .isNull;
       }
     });
 
@@ -164,13 +164,13 @@ void _registerNestedListBugfixTests() {
           (d) => d.singleValue().readInt(),
         );
 
-        check(u.moveNext()).isTrue();
+        check(u.moveNext()).isTrue;
         check(u.decodeList(intDec)).deepEquals([10, 20]);
-        check(u.moveNext()).isTrue();
-        check(u.decodeNullableList(intDec)).isNull();
-        check(u.moveNext()).isTrue();
-        check(u.decodeNullableList(intDec)).isNotNull().isEmpty();
-        check(u.moveNext()).isFalse();
+        check(u.moveNext()).isTrue;
+        check(u.decodeNullableList(intDec)).isNull;
+        check(u.moveNext()).isTrue;
+        check(u.decodeNullableList(intDec)).isNotNull().isEmpty;
+        check(u.moveNext()).isFalse;
       },
     );
   });
@@ -182,15 +182,15 @@ void _checkBoard(GridBoard decoded) {
     GridCell(row: 0, col: 0, label: 'origin'),
     GridCell(row: 0, col: 1),
   ]);
-  check(decoded.cells[1]).isEmpty();
+  check(decoded.cells[1]).isEmpty;
   check(decoded.cells[2])
       .deepEquals(const [GridCell(row: 2, col: 0, label: 'end')]);
   check(decoded.nullableRows.length).equals(3);
   check(decoded.nullableRows[0])
       .isNotNull()
       .deepEquals(const [GridCell(row: 1, col: 1, label: 'mid')]);
-  check(decoded.nullableRows[1]).isNull();
-  check(decoded.nullableRows[2]).isNotNull().isEmpty();
+  check(decoded.nullableRows[1]).isNull;
+  check(decoded.nullableRows[2]).isNotNull().isEmpty;
 }
 
 void _registerEmptyMarkerAndEmptyKeyOptionsTests() {
@@ -247,24 +247,24 @@ void _registerEmptyMarkerAndEmptyKeyOptionsTests() {
 
       final streamingKeyed = streaming.JsonCodableDecoder.fromBytes(bytes)
           .keyed(options: emptyOpts);
-      check(streamingKeyed.moveNextKey()).isTrue();
+      check(streamingKeyed.moveNextKey()).isTrue;
       check(streamingKeyed.selectKeyIndex(emptyOpts)).equals(-1);
       check(streamingKeyed.selectStringIndex(emptyOpts)).equals(-1);
-      check(streamingKeyed.moveNextKey()).isTrue();
+      check(streamingKeyed.moveNextKey()).isTrue;
       check(streamingKeyed.selectKeyIndex(emptyOpts)).equals(-1);
       check(streamingKeyed.readInt()).equals(42);
-      check(streamingKeyed.moveNextKey()).isFalse();
+      check(streamingKeyed.moveNextKey()).isFalse;
 
       // Also pass ad-hoc empty KeyOptions when keyed() was opened without options
       final unseededKeyed = JsonCodableDecoder.fromBytes(bytes).keyed();
-      check(unseededKeyed.moveNextKey()).isTrue();
+      check(unseededKeyed.moveNextKey()).isTrue;
       check(unseededKeyed.selectKeyIndex(KeyOptions.of(const []))).equals(-1);
       check(unseededKeyed.selectStringIndex(KeyOptions.of(const [])))
           .equals(-1);
-      check(unseededKeyed.moveNextKey()).isTrue();
+      check(unseededKeyed.moveNextKey()).isTrue;
       check(unseededKeyed.selectKeyIndex(KeyOptions.of(const []))).equals(-1);
       unseededKeyed.skipValue();
-      check(unseededKeyed.moveNextKey()).isFalse();
+      check(unseededKeyed.moveNextKey()).isFalse;
     });
   });
 }
@@ -295,14 +295,14 @@ void _registerByteListFloatRejectionTests() {
             _StrictFloat(2.0),
           ], reportLength: reportLength),
         );
-        check(floatKeyed.moveNextKey()).isTrue();
+        check(floatKeyed.moveNextKey()).isTrue;
         check(floatKeyed.nextKey()).equals('data');
         check(floatKeyed.readBytes).throws<CodableException>();
 
         final floatUnkeyed = _StrictListDecoder([
           [const _StrictFloat(1.0), const _StrictFloat(2.0)],
         ], reportLength: reportLength).unkeyed();
-        check(floatUnkeyed.moveNext()).isTrue();
+        check(floatUnkeyed.moveNext()).isTrue;
         check(floatUnkeyed.readBytes).throws<CodableException>();
 
         // Out-of-range integer bytes (256, -1) rejected
@@ -336,11 +336,11 @@ void _registerStringMapKeyHelperTests() {
       final keyEncoder = _CustomStringMapKeyEncoder(formatName: 'TOML');
       check(() => keyEncoder.encodeBytes(Uint8List.fromList([1, 2, 3])))
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('TOML map keys cannot be binary bytes');
       check(() => keyEncoder.encodeNullableBytes(Uint8List.fromList([1])))
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('TOML map keys cannot be binary bytes');
 
       final keyDecoder = StringMapKeyDecoder(
@@ -350,15 +350,15 @@ void _registerStringMapKeyHelperTests() {
       );
       check(keyDecoder.readBytes)
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('TOML map keys cannot be binary bytes');
 
       // JSON MapDecoder also rejects binary map keys instead of decoding Base64
       final jsonMap = JsonCodableDecoder.fromString('{"AQID": 1}').map();
-      check(jsonMap.moveNextEntry()).isTrue();
+      check(jsonMap.moveNextEntry()).isTrue;
       check(() => jsonMap.keyDecoder().singleValue().readBytes())
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('JSON map keys cannot be binary bytes');
     });
 
@@ -388,7 +388,7 @@ void _registerStringMapKeyHelperTests() {
 
             final jsonMap = JsonCodableDecoder.fromString('{"$unsafeKey": "x"}')
                 .map();
-            check(jsonMap.moveNextEntry()).isTrue();
+            check(jsonMap.moveNextEntry()).isTrue;
             check(() => jsonMap.keyDecoder().singleValue().readInt())
                 .throws<CodableException>();
           }
@@ -409,11 +409,11 @@ void _registerStringMapKeyHelperTests() {
     test('validates scalars, selectStringIndex, and rejects null/NaN/Infinity/containers', () {
       final enumOpts = KeyOptions.of(const ['low', 'high']);
       final keyDec = StringMapKeyDecoder(const {'ctx': 1}, formatName: 'TOML');
-      check(keyDec.isHumanReadable).isTrue();
-      check(keyDec.payload).isNull();
+      check(keyDec.isHumanReadable).isTrue;
+      check(keyDec.payload).isNull;
       check(keyDec.userInfo['ctx']).equals(1);
       check(keyDec.peekKind()).equals(ValueKind.string);
-      check(keyDec.isNull()).isFalse();
+      check(keyDec.isNull()).isFalse;
 
       keyDec.key = 'low';
       check(keyDec.selectStringIndex(enumOpts)).equals(_KeyLevel.low.index);
@@ -421,7 +421,7 @@ void _registerStringMapKeyHelperTests() {
       check(keyDec.readString()).equals('high');
       check(keyDec.selectStringIndex(enumOpts)).equals(_KeyLevel.high.index);
       keyDec.key = 'true';
-      check(keyDec.readBool()).isTrue();
+      check(keyDec.readBool()).isTrue;
       keyDec.key = '-3.25';
       check(keyDec.readDouble()).equals(-3.25);
       check(keyDec.readNum()).equals(-3.25);
@@ -480,7 +480,7 @@ void _registerStringMapKeyHelperTests() {
       keyEnc.reset();
       check(() => keyEnc.encode<int>(0, Encodable.fromFunction((_, _) {})))
           .throws<CodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('TOML map key encoder did not write a key');
 
       // JSON Map<double, String> emits canonical "1.0" and "-0.0" on VM, Wasm, and JS
@@ -772,23 +772,23 @@ void _registerExceptionActualValueTests() {
         );
         check(keyDec.readInt)
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('bad "int" key');
         check(keyDec.readDouble)
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('bad "int" key');
         check(keyDec.readBool)
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('bad "int" key');
         check(keyDec.readBytes)
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('bad "int" key');
         check(keyDec.readNull)
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('bad "int" key');
         for (final openContainer in <Object Function()>[
           keyDec.keyed,
@@ -798,14 +798,14 @@ void _registerExceptionActualValueTests() {
         ]) {
           check(openContainer)
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals('bad "int" key');
         }
 
         final keyEnc = _CustomStringMapKeyEncoder(formatName: 'JSON');
         check(() => keyEnc.encodeDouble(double.infinity))
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(double.infinity);
       },
     );
@@ -820,7 +820,7 @@ void _registerExceptionActualValueTests() {
                       .readBytes('b'),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('not=="base64"');
 
         check(
@@ -830,7 +830,7 @@ void _registerExceptionActualValueTests() {
                 ..readBytes(),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
 
         check(
@@ -840,7 +840,7 @@ void _registerExceptionActualValueTests() {
                 ..readBytes(),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(1.5);
 
         check(
@@ -850,12 +850,12 @@ void _registerExceptionActualValueTests() {
                 ..readBytes(),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(42);
 
         check(() => JsonCodableDecoder.fromString('42').map().moveNextEntry())
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(42);
 
         check(() {
@@ -864,7 +864,7 @@ void _registerExceptionActualValueTests() {
               m.valueDecoder().map().moveNextEntry();
             })
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(42);
 
         if (identical(1, 1.0)) {
@@ -879,7 +879,7 @@ void _registerExceptionActualValueTests() {
                   openOnVal(m.valueDecoder());
                 })
                 .throws<CodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals(42);
           }
         }
@@ -891,7 +891,7 @@ void _registerExceptionActualValueTests() {
                       .readInt('port'),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals('8080 "oops"');
       },
     );
@@ -1051,21 +1051,21 @@ void _registerSuperCodableAndNullableAdapterTests() {
       final decodedStop = JsonCodableDecoder.decode(stopJson, codec);
       check(decodedStop)
           .isA<_StopEvent>()
-          .has((s) => (s.reason, s.exitCode), 'fields')
+          .has('fields', (s) => (s.reason, s.exitCode))
           .equals(('graceful', 0));
 
       final trailingJson = '{"epochMs": 1700, "event": "start"}';
       final decodedStart = JsonCodableDecoder.decode(trailingJson, codec);
       check(decodedStart)
           .isA<_StartEvent>()
-          .has((s) => s.epochMs, 'epochMs')
+          .has('epochMs', (s) => s.epochMs)
           .equals(1700);
 
       check(() => JsonCodableDecoder.decode('{"epochMs": 1}', codec))
           .throws<CodableException>();
       check(() => JsonCodableDecoder.decode('{"event": "other"}', codec))
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('other');
       check(
             () => JsonCodableEncoder.encode<_HandwrittenEvent>(
@@ -1074,14 +1074,14 @@ void _registerSuperCodableAndNullableAdapterTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .isA<_UnhandledEvent>();
     });
 
     test('adapts Codable, Decodable, and Encodable with .nullable', () {
       final nullableCell = const GridCellCodable().nullable;
       check(JsonCodableEncoder.encode(null, nullableCell)).equals('null');
-      check(JsonCodableDecoder.decode('null', nullableCell)).isNull();
+      check(JsonCodableDecoder.decode('null', nullableCell)).isNull;
 
       const cell = GridCell(row: 2, col: 3, label: 'hit');
       final cellJson = JsonCodableEncoder.encode(cell, nullableCell);

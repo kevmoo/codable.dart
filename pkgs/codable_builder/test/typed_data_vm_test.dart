@@ -63,7 +63,7 @@ void main() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals(3);
     });
   });

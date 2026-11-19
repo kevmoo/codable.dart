@@ -269,7 +269,7 @@ void main() {
       });
       final d = CborCodableDecoder.fromBytes(payload);
       final k = d.keyed();
-      check(k.moveNextKey()).isTrue();
+      check(k.moveNextKey()).isTrue;
       check(k.nextKey()).equals('items');
       final u = k.nestedDecoder().unkeyed();
       final out = <String>[];
