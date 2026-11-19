@@ -244,7 +244,7 @@ void main() {
       });
       final d = MsgPackCodableDecoder.fromBytes(payload);
       final k = d.keyed();
-      check(k.moveNextKey()).isTrue();
+      check(k.moveNextKey()).isTrue;
       check(k.nextKey()).equals('tokens');
       final u = k.nestedDecoder().unkeyed();
       final out = <String>[];

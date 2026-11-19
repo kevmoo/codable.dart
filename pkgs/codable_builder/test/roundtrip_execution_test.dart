@@ -55,7 +55,7 @@ void main() {
 
         check(() => const PointCodable().decode(decoder))
             .throws<CodableException>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains('Missing required fields for Point: y');
       });
 
@@ -67,7 +67,7 @@ void main() {
 
           check(() => const PointCodable().decode(decoder))
               .throws<CodableException>()
-              .has((e) => e.message, 'message')
+              .has('message', (e) => e.message)
               .contains('Missing required fields for Point: x, y');
         },
       );
@@ -80,7 +80,7 @@ void main() {
 
         check(() => const PointCodable().decode(decoder))
             .throws<CodableException>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains('Duplicate field "x"');
       });
 
@@ -113,7 +113,7 @@ void main() {
         check(user.emailAddress).equals('alice@example.com');
         check(user.role).equals(UserRole.admin);
         check(user.tags).length.equals(0);
-        check(user.location).isNull();
+        check(user.location).isNull;
         check(user.internalId).equals('');
       });
 
@@ -182,7 +182,7 @@ void main() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains('Unknown UserRole value');
       });
 
@@ -273,13 +273,13 @@ void main() {
         check(roundtripped.roles[0]).equals(UserRole.admin);
         check(roundtripped.roles[1]).equals(UserRole.guest);
 
-        check(roundtripped.nullableTags.contains('backend')).isTrue();
-        check(roundtripped.nullableTags.contains(null)).isTrue();
-        check(roundtripped.nullableTags.contains('distributed')).isTrue();
+        check(roundtripped.nullableTags.contains('backend')).isTrue;
+        check(roundtripped.nullableTags.contains(null)).isTrue;
+        check(roundtripped.nullableTags.contains('distributed')).isTrue;
 
         check(roundtripped.scores['latency']).equals(10);
-        check(roundtripped.scores.containsKey('errors')).isTrue();
-        check(roundtripped.scores['errors']).isNull();
+        check(roundtripped.scores.containsKey('errors')).isTrue;
+        check(roundtripped.scores['errors']).isNull;
         check(roundtripped.scores['qps']).equals(50000);
       });
     });
@@ -314,9 +314,9 @@ void main() {
         check(roundtripped.branches.length).equals(2);
         check(roundtripped.branches[0].city).equals('New York');
         check(roundtripped.branches[1].city).equals('Seattle');
-        check(roundtripped.categories.contains('technology')).isTrue();
-        check(roundtripped.categories.contains('search')).isTrue();
-        check(roundtripped.categories.contains('cloud')).isTrue();
+        check(roundtripped.categories.contains('technology')).isTrue;
+        check(roundtripped.categories.contains('search')).isTrue;
+        check(roundtripped.categories.contains('cloud')).isTrue;
         check(roundtripped.headcountByDept['engineering']).equals(50000);
         check(roundtripped.headcountByDept['sales']).equals(20000);
       });
@@ -359,7 +359,7 @@ void main() {
         check(enterprise.headquarter.city).equals('Zurich');
         check(enterprise.branches.length).equals(1);
         check(enterprise.branches[0].city).equals('London');
-        check(enterprise.categories.contains('tech')).isTrue();
+        check(enterprise.categories.contains('tech')).isTrue;
       });
 
       test(
@@ -388,8 +388,8 @@ void main() {
         check(user.id).equals('usr_100');
         check(user.emailAddress).equals('alias@example.com');
         check(user.role).equals(UserRole.member);
-        check(user.location).isNull();
-        check(user.tags).isEmpty();
+        check(user.location).isNull;
+        check(user.tags).isEmpty;
       });
 
       test(
@@ -406,10 +406,10 @@ void main() {
           check(team.name).equals('Core');
           check(team.roles.length).equals(1);
           check(team.roles.first).equals(UserRole.admin);
-          check(team.nullableTags.contains(null)).isTrue();
-          check(team.nullableTags.contains('v1')).isTrue();
+          check(team.nullableTags.contains(null)).isTrue;
+          check(team.nullableTags.contains('v1')).isTrue;
           check(team.scores['a']).equals(10);
-          check(team.scores['b']).isNull();
+          check(team.scores['b']).isNull;
         },
       );
 
@@ -485,13 +485,13 @@ void main() {
         check(decoded.samples[1]).isA<double>().equals(2.5);
         check(decoded.samples[2]).isA<int>().equals(3);
         check(decoded.nullableSamples[0]).isA<int>().equals(10);
-        check(decoded.nullableSamples[1]).isNull();
+        check(decoded.nullableSamples[1]).isNull;
         check(decoded.nullableSamples[2]).isA<double>().equals(-4.25);
         check(decoded.distinctValues.first).isA<int>().equals(7);
         check(decoded.metrics['count']).isA<int>().equals(99);
         check(decoded.metrics['rate']).isA<double>().equals(0.125);
         check(decoded.nullableMetrics['ok']).isA<int>().equals(1);
-        check(decoded.nullableMetrics['skip']).isNull();
+        check(decoded.nullableMetrics['skip']).isNull;
         check(decoded.nullableMetrics['latency']).isA<double>().equals(12.75);
       });
 
@@ -560,10 +560,10 @@ void main() {
         check(decoded.signature).isNotNull().deepEquals([10, 20, 30]);
         check(decoded.chunks.length).equals(2);
         check(decoded.chunks[0]).deepEquals([7, 8]);
-        check(decoded.chunks[1]).isEmpty();
+        check(decoded.chunks[1]).isEmpty;
         check(decoded.nullableChunks.length).equals(2);
         check(decoded.nullableChunks[0]).isNotNull().deepEquals([99]);
-        check(decoded.nullableChunks[1]).isNull();
+        check(decoded.nullableChunks[1]).isNull;
         check(decoded.namedBlobs['header'])
             .isNotNull()
             .deepEquals([0xCA, 0xFE]);
@@ -575,7 +575,7 @@ void main() {
           JsonCodableDecoder.fromBytes(listFallbackBytes),
         );
         check(fromList.payload).deepEquals([0, 128, 255]);
-        check(fromList.signature).isNull();
+        check(fromList.signature).isNull;
       });
 
       test('TypedKeyMapModel roundtrips Map<int, String> and Map<UserRole, int> and validates enum keys', () {
@@ -607,8 +607,8 @@ void main() {
         final defaultsDecoded = const TypedKeyMapModelCodable().decode(
           JsonCodableDecoder.fromBytes(Uint8List.fromList(utf8.encode('{}'))),
         );
-        check(defaultsDecoded.statusMessages).isEmpty();
-        check(defaultsDecoded.roleCounts).isEmpty();
+        check(defaultsDecoded.statusMessages).isEmpty;
+        check(defaultsDecoded.roleCounts).isEmpty;
 
         final invalidEnumKey = Uint8List.fromList(
           utf8.encode('{"roleCounts": {"superadmin": 1}}'),
@@ -619,7 +619,7 @@ void main() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains('Unknown UserRole value');
       });
 
@@ -719,7 +719,7 @@ void main() {
         void verifyStrictEncode<T>(T value, Encodable<T> codec) {
           final spy = _StrictKnownLengthSpyEncoder();
           codec.encode(value, spy);
-          check(spy.containers).isNotEmpty();
+          check(spy.containers).isNotEmpty;
           spy.verifyAllCountsMatch();
         }
 
@@ -909,16 +909,16 @@ void main() {
             decodeEvents,
           ),
         );
-        check(decodeEvents).not((it) => it.contains('map'));
+        check(decodeEvents).not(.it()..contains('map'));
         check(decoded.rolesByUser)
             .deepEquals({'alice': UserRole.admin, 'bob': UserRole.member});
         check(decoded.officesByCode['mtv']?.city).equals('Mountain View');
-        check(decoded.officesByCode.containsKey('tbd')).isTrue();
-        check(decoded.officesByCode['tbd']).isNull();
+        check(decoded.officesByCode.containsKey('tbd')).isTrue;
+        check(decoded.officesByCode['tbd']).isNull;
         check(decoded.nestedCounts['us'])
             .isNotNull()
             .deepEquals({'ca': 10, 'ny': 5});
-        check(decoded.nestedCounts['eu']).isNotNull().isEmpty();
+        check(decoded.nestedCounts['eu']).isNotNull().isEmpty;
 
         final badEnumBytes = Uint8List.fromList(
           utf8.encode('{"rolesByUser": {"alice": "root"}}'),
@@ -929,7 +929,7 @@ void main() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains('Unknown UserRole value');
       });
 
@@ -1019,15 +1019,15 @@ void main() {
         check(decodedGrid.rows.length).equals(2);
         check(decodedGrid.rows[0].map((p) => (p.x, p.y)).toList())
             .deepEquals(const [(1.0, 2.0), (3.0, 4.0)]);
-        check(decodedGrid.rows[1]).isEmpty();
+        check(decodedGrid.rows[1]).isEmpty;
         check(decodedGrid.nullableRows.length).equals(2);
         check(decodedGrid.nullableRows[0]!.single.x).equals(5.0);
         check(decodedGrid.nullableRows[0]!.single.y).equals(6.0);
-        check(decodedGrid.nullableRows[1]).isNull();
+        check(decodedGrid.nullableRows[1]).isNull;
         check(decodedGrid.sparseRows.single.length).equals(2);
         check(decodedGrid.sparseRows.single[0]!.x).equals(7.0);
         check(decodedGrid.sparseRows.single[0]!.y).equals(8.0);
-        check(decodedGrid.sparseRows.single[1]).isNull();
+        check(decodedGrid.sparseRows.single[1]).isNull;
         check(decodedGrid.cube.single.single.single.x).equals(9.0);
         check(decodedGrid.cube.single.single.single.y).equals(10.0);
 
@@ -1094,27 +1094,25 @@ void main() {
         check(defaults.escapedNote).equals("it's \$5\n");
         check(defaults.retryCount).equals(42);
         check(defaults.factor).equals(2.5);
-        check(defaults.enabled).isTrue();
+        check(defaults.enabled).isTrue;
         check(defaults.role).equals(UserRole.guest);
         check(defaults.tags).deepEquals(const ['alpha', 'beta']);
         check(defaults.metadata).deepEquals(const {'env': 1});
         check(defaults.origin.x).equals(1.5);
         check(defaults.origin.y).equals(-2.5);
-        check(defaults.nullableOverride).isNull();
+        check(defaults.nullableOverride).isNull;
         check(defaults.omittedDefaultKeepCtor).equals('kept_ctor_default');
         check(defaults.weights).deepEquals(const [1.0, 2.0]);
         check(defaults.hexDouble).equals(16.0);
         check(defaults.zeroDouble).equals(0.0);
         check(defaults.countNum).isA<int>().equals(1);
-        check(defaults.emptySet).isEmpty();
-        check(defaults.emptyMap).isEmpty();
+        check(defaults.emptySet).isEmpty;
+        check(defaults.emptyMap).isEmpty;
         check(defaults.nestedIntRows.length).equals(2);
-        check(defaults.nestedIntRows[0]).isA<List<int>>().isEmpty();
+        check(defaults.nestedIntRows[0]).isA<List<int>>().isEmpty;
         check(defaults.nestedIntRows[1]).deepEquals(const [1]);
         check(defaults.nestedStringIntMaps.length).equals(1);
-        check(defaults.nestedStringIntMaps[0])
-            .isA<Map<String, int>>()
-            .isEmpty();
+        check(defaults.nestedStringIntMaps[0]).isA<Map<String, int>>().isEmpty;
 
         final overridden = const DefaultValuesModelCodable().decode(
           JsonCodableDecoder.fromString(
@@ -1190,7 +1188,7 @@ void main() {
           check(decoded.nestedInt16s.length).equals(2);
           check(decoded.nestedInt16s[0]).deepEquals([1, 2]);
           check(decoded.sparseInt16s[0]).isNotNull().deepEquals([7]);
-          check(decoded.sparseInt16s[1]).isNull();
+          check(decoded.sparseInt16s[1]).isNull;
           check(decoded.stringKeyedUint16s['ports'])
               .isNotNull()
               .deepEquals([80, 443]);
@@ -1239,7 +1237,7 @@ void main() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(3);
         check(
               () =>
@@ -1248,7 +1246,7 @@ void main() {
                       .decodeKey('t', const TupleVariantsModelCodable()),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(3);
       });
 
@@ -1325,7 +1323,7 @@ void main() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(badValue);
           check(
                 () => JsonCodableDecoder.fromString('{"m": $payload}')
@@ -1336,7 +1334,7 @@ void main() {
                     ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(badValue);
         }
       });
@@ -1370,7 +1368,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       check(decoded.data.city).equals('Seattle');
       check(decoded.history.single.city).equals('Portland');
       check(decoded.lookup['home']?.city).equals('Tacoma');
-      check(decoded.lookup['away']).isNull();
+      check(decoded.lookup['away']).isNull;
       check(decoded.fallback?.city).equals('Olympia');
 
       final nullableCodec = EnvelopeCodable<Address?>(
@@ -1385,20 +1383,20 @@ void _registerGenericAndPolymorphicRoundtripTests() {
         ],
       );
       final nullJson = JsonCodableEncoder.encode(nullEnv, nullableCodec);
-      check(nullJson).not((s) => s.contains('"data"'));
+      check(nullJson).not(.it()..contains('"data"'));
       final roundtrippedNull = nullableCodec.decode(
         JsonCodableDecoder.fromString(nullJson),
       );
       check(roundtrippedNull.status).equals(204);
-      check(roundtrippedNull.data).isNull();
+      check(roundtrippedNull.data).isNull;
       check(roundtrippedNull.history.length).equals(2);
       check(roundtrippedNull.history[0]?.city).equals('Boise');
-      check(roundtrippedNull.history[1]).isNull();
+      check(roundtrippedNull.history[1]).isNull;
 
       final explicitNull = nullableCodec.decode(
         JsonCodableDecoder.fromString('{"status": 204, "data": null}'),
       );
-      check(explicitNull.data).isNull();
+      check(explicitNull.data).isNull;
 
       const treeCodec = TreeNodeCodable<Point>(PointCodable());
       const root = TreeNode<Point>(
@@ -1462,7 +1460,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
         ),
       );
       check(decodedDash.mainLocation.data.city).equals('SF');
-      check(decodedDash.fallbackLocation.data).isNull();
+      check(decodedDash.fallbackLocation.data).isNull;
       check(decodedDash.route.data.length).equals(2);
       check(decodedDash.totalCount.data).equals(42);
       check(decodedDash.roleMetric.first).equals(UserRole.admin);
@@ -1526,7 +1524,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       );
       check(trailingDisc)
           .isA<CircleEvent>()
-          .has((c) => c.label, 'label')
+          .has('label', (c) => c.label)
           .equals('late');
 
       check(
@@ -1540,7 +1538,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('triangle');
 
       const session = CheckoutSession(
@@ -1559,15 +1557,15 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       );
       check(decodedSession.primary)
           .isA<CreditCardPayment>()
-          .has((c) => c.last4, 'last4')
+          .has('last4', (c) => c.last4)
           .equals('4242');
       check(decodedSession.backup)
           .isA<DebitCardPayment>()
-          .has((d) => d.pinVerified, 'pinVerified')
-          .isTrue();
+          .has('pinVerified', (d) => d.pinVerified)
+          .isTrue;
       check(decodedSession.savedMethods.single)
           .isA<WireTransferPayment>()
-          .has((w) => w.routingCode, 'routingCode')
+          .has('routingCode', (w) => w.routingCode)
           .equals('ABA-999');
       check(decodedSession.methodsByAlias['corp']).isA<CreditCardPayment>();
 
@@ -1588,11 +1586,11 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       );
       check(decodedBundle.locationOutcome)
           .isA<ApiSuccess<Address>>()
-          .has((s) => s.payload.city, 'city')
+          .has('city', (s) => s.payload.city)
           .equals('Chicago');
       check(decodedBundle.countOutcome)
           .isA<ApiFailure>()
-          .has((f) => f.code, 'code')
+          .has('code', (f) => f.code)
           .equals(503);
 
       final echoJson = JsonCodableEncoder.encode<PluginAction>(
@@ -1603,7 +1601,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
         const PluginActionCodable().decode(
           JsonCodableDecoder.fromString(echoJson),
         ),
-      ).isA<EchoAction>().has((e) => e.text, 'text').equals('hello');
+      ).isA<EchoAction>().has('text', (e) => e.text).equals('hello');
 
       check(
             () => JsonCodableEncoder.encode<PluginAction>(
@@ -1612,7 +1610,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .isA<UnregisteredSecretAction>();
 
       // Concrete subclass (LuxurySedanVehicle extends SedanVehicle) must match
@@ -1628,7 +1626,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       );
       check(decodedLuxury)
           .isA<LuxurySedanVehicle>()
-          .has((v) => (v.seats, v.massageSeats), 'luxury')
+          .has('luxury', (v) => (v.seats, v.massageSeats))
           .equals((4, true));
 
       final sedanJson = JsonCodableEncoder.encode<TieredVehicle>(
@@ -1637,7 +1635,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
       );
       check(JsonCodableDecoder.decode(sedanJson, const TieredVehicleCodable()))
           .isA<SedanVehicle>()
-          .has((v) => v.seats, 'seats')
+          .has('seats', (v) => v.seats)
           .equals(5);
 
       // Sealed base implemented by an un-annotated enum emits a fallback branch.
@@ -1650,7 +1648,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
           classBranchJson,
           const SealedWithEnumBranchCodable(),
         ),
-      ).isA<ClassSealedBranch>().has((b) => b.label, 'label').equals('main');
+      ).isA<ClassSealedBranch>().has('label', (b) => b.label).equals('main');
       check(
             () => JsonCodableEncoder.encode<SealedWithEnumBranch>(
               EnumSealedBranch.alpha,
@@ -1658,7 +1656,7 @@ void _registerGenericAndPolymorphicRoundtripTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals(EnumSealedBranch.alpha);
     });
   });

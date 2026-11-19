@@ -1172,8 +1172,8 @@ void main() {
         const coord2 = Coordinate(latitude: 37.7749, longitude: -122.4194);
         const coord3 = Coordinate(latitude: 37.7750, longitude: -122.4194);
 
-        check(coord1 == coord2).isTrue();
-        check(coord1 == coord3).isFalse();
+        check(coord1 == coord2).isTrue;
+        check(coord1 == coord3).isFalse;
         check(coord1.hashCode).equals(coord2.hashCode);
         check(coord1.toString()).contains('37.7749');
       });
@@ -1320,7 +1320,7 @@ void main() {
           const UserProfileCodable(),
         );
 
-        check(profile.tags).isEmpty();
+        check(profile.tags).isEmpty;
       });
 
       test('decodes UserProfile with omitted tags field defaulting to empty', () {
@@ -1331,7 +1331,7 @@ void main() {
           const UserProfileCodable(),
         );
 
-        check(profile.tags).isEmpty();
+        check(profile.tags).isEmpty;
         check(profile.role).equals(UserRole.guest);
         check(profile.zip).equals('SW1A 1AA');
       });
@@ -1411,7 +1411,7 @@ void main() {
         );
         final decodedMap = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-        check(decodedMap['tags']).isA<List<dynamic>>().isEmpty();
+        check(decodedMap['tags']).isA<List<dynamic>>().isEmpty;
       });
 
       test('UserProfile equality and hashCode consistency', () {
@@ -1434,8 +1434,8 @@ void main() {
           zip: '11111',
         );
 
-        check(p1 == p2).isTrue();
-        check(p1 == p3).isFalse();
+        check(p1 == p2).isTrue;
+        check(p1 == p3).isFalse;
         check(p1.hashCode).equals(p2.hashCode);
         check(p1.toString()).contains('usr_1');
       });
@@ -1602,7 +1602,7 @@ void main() {
           final bike = vehicle as Bicycle;
           check(bike.type).equals('bicycle');
           check(bike.maxSpeed).equals(45);
-          check(bike.hasBell).isTrue();
+          check(bike.hasBell).isTrue;
         },
       );
 
@@ -1622,7 +1622,7 @@ void main() {
         );
 
         check(bike.maxSpeed).equals(30);
-        check(bike.hasBell).isFalse();
+        check(bike.hasBell).isFalse;
       });
 
       test('encodes Car to JSON with type="car", maxSpeed, and doors', () {
@@ -1661,10 +1661,10 @@ void main() {
         const bike1 = Bicycle(maxSpeed: 35, hasBell: true);
         const bike2 = Bicycle(maxSpeed: 35, hasBell: true);
 
-        check(car1 == car2).isTrue();
-        check(car1 == car3).isFalse();
+        check(car1 == car2).isTrue;
+        check(car1 == car3).isFalse;
         check(car1.hashCode).equals(car2.hashCode);
-        check(bike1 == bike2).isTrue();
+        check(bike1 == bike2).isTrue;
         check(bike1.hashCode).equals(bike2.hashCode);
       });
 
@@ -1775,7 +1775,7 @@ void main() {
         );
 
         check(vehicle).isA<Bicycle>();
-        check((vehicle as Bicycle).hasBell).isTrue();
+        check((vehicle as Bicycle).hasBell).isTrue;
         check(vehicle.maxSpeed).equals(32);
       });
 
@@ -1800,7 +1800,7 @@ void main() {
         );
 
         check(vehicle).isA<Bicycle>();
-        check((vehicle as Bicycle).hasBell).isFalse();
+        check((vehicle as Bicycle).hasBell).isFalse;
       });
     });
   });
@@ -1910,7 +1910,7 @@ void main() {
           );
 
           check(reDecoded).equals(original);
-          check(reDecoded.tags).isEmpty();
+          check(reDecoded.tags).isEmpty;
         },
       );
 
@@ -2117,7 +2117,7 @@ void main() {
           }),
         );
 
-        check(decodedList).isEmpty();
+        check(decodedList).isEmpty;
       });
     });
   });
@@ -2170,11 +2170,11 @@ void main() {
       check(fleet[0]).isA<Car>();
       check((fleet[0] as Car).doors).equals(4);
       check(fleet[1]).isA<Bicycle>();
-      check((fleet[1] as Bicycle).hasBell).isTrue();
+      check((fleet[1] as Bicycle).hasBell).isTrue;
       check(fleet[2]).isA<Car>();
       check((fleet[2] as Car).doors).equals(2);
       check(fleet[3]).isA<Bicycle>();
-      check((fleet[3] as Bicycle).hasBell).isFalse();
+      check((fleet[3] as Bicycle).hasBell).isFalse;
     });
 
     test('UserProfile with userInfo context map propagation', () {
@@ -2726,18 +2726,18 @@ void _registerStage2JsonDriverTests() {
   group('Stage 2 Contracts & JSON Drivers', () {
     test('isHumanReadable is true across all JSON encoders and decoders', () {
       final bytes = Uint8List.fromList(utf8.encode('{"a": 1}'));
-      check(JsonCodableDecoder.fromBytes(bytes).isHumanReadable).isTrue();
+      check(JsonCodableDecoder.fromBytes(bytes).isHumanReadable).isTrue;
       check(
         JsonCodableDecoder.fromBytes(
           bytes,
           userInfo: const {#forceJsDom: true},
         ).isHumanReadable,
-      ).isTrue();
+      ).isTrue;
 
       final mappedChild = JsonCodableDecoder.fromBytes(bytes)
           .mapped()
           .nestedDecoder('a');
-      check(mappedChild.isHumanReadable).isTrue();
+      check(mappedChild.isHumanReadable).isTrue;
 
       late bool encoderReadable;
       JsonCodableEncoder.encode<int>(
@@ -2747,7 +2747,7 @@ void _registerStage2JsonDriverTests() {
           e.singleValue().encodeInt(v);
         }),
       );
-      check(encoderReadable).isTrue();
+      check(encoderReadable).isTrue;
 
       late bool testDecReadable;
       TestJsonDriver.decodeString(
@@ -2757,7 +2757,7 @@ void _registerStage2JsonDriverTests() {
           return 0;
         }),
       );
-      check(testDecReadable).isTrue();
+      check(testDecReadable).isTrue;
 
       late bool testEncReadable;
       TestJsonDriver.encodeToString<int>(
@@ -2767,7 +2767,7 @@ void _registerStage2JsonDriverTests() {
           e.singleValue().encodeInt(v);
         }),
       );
-      check(testEncReadable).isTrue();
+      check(testEncReadable).isTrue;
     });
 
     test('length hints on UnkeyedDecoder and MapDecoder match driver backing', () {
@@ -2994,7 +2994,7 @@ void _verifyInvalidJsonMapKeysRejected() {
   // Composite @Codable struct key rejected on JSON decode
   check(() {
     final m = JsonCodableDecoder.fromString('{"k": "v"}').map();
-    check(m.moveNextEntry()).isTrue();
+    check(m.moveNextEntry()).isTrue;
     const CoordinateCodable().decode(m.keyDecoder());
   }).throws<CodableException>();
 
@@ -3052,7 +3052,7 @@ void _verifyInvalidJsonMapKeysRejected() {
   // Non-integer string rejected by keyDecoder().singleValue().readInt()
   check(() {
     final m = JsonCodableDecoder.fromString('{"abc": 1}').map();
-    check(m.moveNextEntry()).isTrue();
+    check(m.moveNextEntry()).isTrue;
     m.keyDecoder().singleValue().readInt();
   }).throws<CodableException>();
 }
@@ -3077,7 +3077,7 @@ void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
   );
 
   check(jsonStr).contains('"raw":"${base64Encode(sample)}"');
-  check(jsonStr.contains('"omitted"')).isFalse();
+  check(jsonStr.contains('"omitted"')).isFalse;
   check(jsonStr).contains('"arr":["CQo=",null]');
 
   final rawBytes = Uint8List.fromList(utf8.encode(jsonStr));
@@ -3094,11 +3094,11 @@ void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
         decodedPresent = k.readNullableBytes();
       case 'arr':
         final u = k.nestedDecoder().unkeyed();
-        check(u.moveNext()).isTrue();
+        check(u.moveNext()).isTrue;
         arrFirst = u.readBytes();
-        check(u.moveNext()).isTrue();
+        check(u.moveNext()).isTrue;
         arrSecond = u.readNullableBytes();
-        check(u.moveNext()).isFalse();
+        check(u.moveNext()).isFalse;
       default:
         k.skipValue();
     }
@@ -3106,7 +3106,7 @@ void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
   check(decodedRaw).isNotNull().deepEquals(sample);
   check(decodedPresent).isNotNull().deepEquals([42]);
   check(arrFirst).isNotNull().deepEquals([9, 10]);
-  check(arrSecond).isNull();
+  check(arrSecond).isNull;
 
   // MappedDecoder + SingleValueEncoder/SingleValueDecoder roundtrip
   final mapped = JsonCodableDecoder.fromBytes(
@@ -3114,7 +3114,7 @@ void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
     userInfo: info,
   ).mapped();
   check(mapped.readBytes('raw')).deepEquals(sample);
-  check(mapped.readNullableBytes('omitted')).isNull();
+  check(mapped.readNullableBytes('omitted')).isNull;
 
   final svNull = JsonCodableEncoder.encode<Uint8List?>(
     null,
@@ -3122,7 +3122,7 @@ void _verifyBytesBase64Roundtrip({required bool useJsDom}) {
   );
   check(svNull).equals('null');
   check(JsonCodableDecoder.fromString(svNull).singleValue().readNullableBytes())
-      .isNull();
+      .isNull;
 }
 
 void _verifyBytesFallbackAndRejections({required bool useJsDom}) {
@@ -3153,7 +3153,7 @@ void _verifyBytesFallbackAndRejections({required bool useJsDom}) {
     final encoded = Uint8List.fromList(utf8.encode('{"b": $badJson}'));
     check(() {
       final k = JsonCodableDecoder.fromBytes(encoded, userInfo: info).keyed();
-      check(k.moveNextKey()).isTrue();
+      check(k.moveNextKey()).isTrue;
       check(k.nextKey()).equals('b');
       k.readBytes();
     }).throws<CodableException>();
@@ -3238,7 +3238,7 @@ void _verifyKeyOptionsMultiTypeCompiledCache() {
     countA++;
     return _FakeDriverCompiledA(keys);
   });
-  check(identical(a1, a2)).isTrue();
+  check(identical(a1, a2)).isTrue;
   check(countA).equals(1);
 
   // Distinct driver types populate secondary storage without clobbering A.
@@ -3260,13 +3260,13 @@ void _verifyKeyOptionsMultiTypeCompiledCache() {
     utf8.encode('{"beta": 42, "gamma": "ok"}'),
   );
   final keyed = JsonCodableDecoder.fromBytes(jsonBytes).keyed(options: options);
-  check(keyed.moveNextKey()).isTrue();
+  check(keyed.moveNextKey()).isTrue;
   check(keyed.selectKeyIndex(options)).equals(1);
   check(keyed.readInt()).equals(42);
-  check(keyed.moveNextKey()).isTrue();
+  check(keyed.moveNextKey()).isTrue;
   check(keyed.selectKeyIndex(options)).equals(2);
   check(keyed.selectStringIndex(KeyOptions.of(['no', 'ok']))).equals(1);
-  check(keyed.moveNextKey()).isFalse();
+  check(keyed.moveNextKey()).isFalse;
 
   // All previously cached representations remain intact and identical.
   check(
@@ -3274,19 +3274,19 @@ void _verifyKeyOptionsMultiTypeCompiledCache() {
       a1,
       options.compiled<_FakeDriverCompiledA>((_) => throw StateError('cached')),
     ),
-  ).isTrue();
+  ).isTrue;
   check(
     identical(
       b1,
       options.compiled<_FakeDriverCompiledB>((_) => throw StateError('cached')),
     ),
-  ).isTrue();
+  ).isTrue;
   check(
     identical(
       c1,
       options.compiled<_FakeDriverCompiledC>((_) => throw StateError('cached')),
     ),
-  ).isTrue();
+  ).isTrue;
 }
 
 final class _MinimalDriverDecoder implements Decoder {
@@ -3697,12 +3697,12 @@ void _verifyBaseMixinsDefaults() {
 
   final outMap = enc.output as Map<String, Object?>;
   // BaseKeyedEncoderMixin omits null keys and passes length hints appropriately.
-  check(outMap.containsKey('ni')).isFalse();
-  check(outMap.containsKey('nd')).isFalse();
-  check(outMap.containsKey('ns')).isFalse();
-  check(outMap.containsKey('nb')).isFalse();
-  check(outMap.containsKey('nbytes')).isFalse();
-  check(outMap.containsKey('ncoord')).isFalse();
+  check(outMap.containsKey('ni')).isFalse;
+  check(outMap.containsKey('nd')).isFalse;
+  check(outMap.containsKey('ns')).isFalse;
+  check(outMap.containsKey('nb')).isFalse;
+  check(outMap.containsKey('nbytes')).isFalse;
+  check(outMap.containsKey('ncoord')).isFalse;
   check(enc.recordedUnkeyedLengths).deepEquals([null, 1, 2, 2, 2, 2]);
 
   // Set and EncodableListExtension also forward O(1) lengths without eager copy.
@@ -3757,7 +3757,7 @@ void _verifyMinimalKeyedAndMappedDecode(
     source,
     reportUnkeyedLength: reportLength,
   ).keyed(options: options);
-  check(kd.peekKey()).isNull();
+  check(kd.peekKey()).isNull;
 
   check(kd.selectKeyIndex(options)).equals(0);
   check(kd.readNullableInt()).equals(7);
@@ -3790,10 +3790,10 @@ void _verifyMinimalKeyedAndMappedDecode(
   check(kd.selectKeyIndex(options)).equals(11);
   check(kd.decodeBoolList()).deepEquals([true, false]);
   check(kd.selectKeyIndex(options)).equals(12);
-  check(kd.readNullableStringSpan()).isNull();
-  check(kd.readNullableNum()).isNull();
-  check(kd.decodeNullableValue(const CoordinateCodable())).isNull();
-  check(kd.decodeNullableList(const CoordinateCodable())).isNull();
+  check(kd.readNullableStringSpan()).isNull;
+  check(kd.readNullableNum()).isNull;
+  check(kd.decodeNullableValue(const CoordinateCodable())).isNull;
+  check(kd.decodeNullableList(const CoordinateCodable())).isNull;
   check(kd.selectKeyIndex(options)).equals(13);
   check(kd.readBytes()).deepEquals([0, 128, 255]);
   check(kd.selectKeyIndex(options)).equals(-1);
@@ -3802,17 +3802,17 @@ void _verifyMinimalKeyedAndMappedDecode(
     source,
     reportUnkeyedLength: reportLength,
   ).mapped();
-  check(md.isNull('missing')).isTrue();
-  check(md.isNull('nullField')).isTrue();
-  check(md.readNullableInt('missing')).isNull();
-  check(md.readNullableDouble('nullField')).isNull();
+  check(md.isNull('missing')).isTrue;
+  check(md.isNull('nullField')).isTrue;
+  check(md.readNullableInt('missing')).isNull;
+  check(md.readNullableDouble('nullField')).isNull;
   check(md.readNullableNum('pi')).equals(7);
   check(md.readNullableString('ps')).equals('role_a');
   check(md.readNullableBool('pb')).equals(true);
   check(md.readBytes('b64')).deepEquals([1, 2, 255]);
   check(md.readBytes('rawByteList')).deepEquals([0, 128, 255]);
-  check(md.readNullableBytes('missing')).isNull();
-  check(md.decodeNullableKey('missing', const CoordinateCodable())).isNull();
+  check(md.readNullableBytes('missing')).isNull;
+  check(md.decodeNullableKey('missing', const CoordinateCodable())).isNull;
   check(md.decodeNullableKey('coord', const CoordinateCodable()))
       .equals(const Coordinate(latitude: 10.0, longitude: 20.0));
   check(md.decodeListKey('sizedCoords', const CoordinateCodable()))
@@ -3841,36 +3841,36 @@ void _verifyMinimalUnkeyedAndSingleValueMixins() {
   );
 
   final ud = _MinimalDriverDecoder(uEnc.output).unkeyed();
-  check(ud.length).isNull();
-  check(ud.moveNext()).isTrue();
-  check(ud.readNullableInt()).isNull();
-  check(ud.moveNext()).isTrue();
+  check(ud.length).isNull;
+  check(ud.moveNext()).isTrue;
+  check(ud.readNullableInt()).isNull;
+  check(ud.moveNext()).isTrue;
   check(ud.readNullableInt()).equals(3);
-  check(ud.moveNext()).isTrue();
-  check(ud.readNullableDouble()).isNull();
-  check(ud.moveNext()).isTrue();
-  check(ud.readNullableString()).isNull();
-  check(ud.moveNext()).isTrue();
-  check(ud.readNullableBool()).isNull();
-  check(ud.moveNext()).isTrue();
-  check(ud.readNullableBytes()).isNull();
-  check(ud.moveNext()).isTrue();
+  check(ud.moveNext()).isTrue;
+  check(ud.readNullableDouble()).isNull;
+  check(ud.moveNext()).isTrue;
+  check(ud.readNullableString()).isNull;
+  check(ud.moveNext()).isTrue;
+  check(ud.readNullableBool()).isNull;
+  check(ud.moveNext()).isTrue;
+  check(ud.readNullableBytes()).isNull;
+  check(ud.moveNext()).isTrue;
   check(ud.readBytes()).deepEquals([4, 5]);
-  check(ud.moveNext()).isTrue();
-  check(ud.decodeNullableElement(const CoordinateCodable())).isNull();
-  check(ud.moveNext()).isTrue();
+  check(ud.moveNext()).isTrue;
+  check(ud.decodeNullableElement(const CoordinateCodable())).isNull;
+  check(ud.moveNext()).isTrue;
   check(ud.decodeNullableElement(const CoordinateCodable()))
       .equals(const Coordinate(latitude: 5.0, longitude: 6.0));
-  check(ud.moveNext()).isFalse();
+  check(ud.moveNext()).isFalse;
 
   // SingleValueEncoder & SingleValueDecoder nullable + rejection defaults
   final svEnc = _MinimalDriverEncoder();
   svEnc.singleValue().encodeNullableInt(null);
   check(_MinimalDriverDecoder(svEnc.output).singleValue().readNullableInt())
-      .isNull();
+      .isNull;
   check(
     _MinimalDriverDecoder(svEnc.output).singleValue().readNullableStringSpan(),
-  ).isNull();
+  ).isNull;
 
   svEnc.singleValue().encodeBytes(Uint8List.fromList([7, 8]));
   check(_MinimalDriverDecoder(svEnc.output).singleValue().readBytes())

@@ -33,7 +33,7 @@ void _registerWasmAndCrossPlatformEncoderTests() {
       final intListCodec = Codable<List<int>>.fromFunctions(
         decode: (d) {
           final k = d.keyed();
-          check(k.moveNextKey()).isTrue();
+          check(k.moveNextKey()).isTrue;
           check(k.nextKey()).equals('nums');
           return k.decodeIntList();
         },
@@ -89,8 +89,8 @@ void _registerWasmAndCrossPlatformEncoderTests() {
         final parsed = doubleListCodec.decode(
           JsonCodableDecoder.fromBytes(bytes),
         );
-        check(parsed[0].isNegative).isTrue();
-        check(parsed[1].isNegative).isFalse();
+        check(parsed[0].isNegative).isTrue;
+        check(parsed[1].isNegative).isFalse;
         check(parsed[2]).equals(1.0);
         check(parsed[3]).equals(-42.0);
         check(parsed[4]).equals(3.25);
@@ -231,10 +231,10 @@ void _registerObjectHasOwnTests() {
           userInfo: userInfo,
         ).mapped();
         for (final key in protoKeys) {
-          check(mapped.containsKey(key)).isFalse();
-          check(mapped.isNull(key)).isTrue();
+          check(mapped.containsKey(key)).isFalse;
+          check(mapped.isNull(key)).isTrue;
           check(mapped.peekKind(key)).equals(ValueKind.nullValue);
-          check(mapped.readNullableString(key)).isNull();
+          check(mapped.readNullableString(key)).isNull;
         }
 
         final opts = KeyOptions.of(protoKeys);
@@ -242,7 +242,7 @@ void _registerObjectHasOwnTests() {
           emptyBytes,
           userInfo: userInfo,
         ).keyed(options: opts);
-        check(keyed.moveNextKey()).isFalse();
+        check(keyed.moveNextKey()).isFalse;
 
         final uniformDec = JsonCodableDecoder.fromBytes(
           Uint8List.fromList(utf8.encode('[{"valueOf": 1.5, "alt": 2.5}]')),
@@ -271,10 +271,10 @@ void _registerObjectHasOwnTests() {
           bytes,
           userInfo: userInfo,
         ).mapped();
-        check(mapped.containsKey('constructor')).isTrue();
+        check(mapped.containsKey('constructor')).isTrue;
         check(mapped.readInt('constructor')).equals(10);
         check(mapped.readString('toString')).equals('s');
-        check(mapped.readBool('valueOf')).isTrue();
+        check(mapped.readBool('valueOf')).isTrue;
         check(mapped.readInt('hasOwnProperty')).equals(4);
 
         final keyed = JsonCodableDecoder.fromBytes(
@@ -335,8 +335,8 @@ void _registerProtoAndMapEncoderValidationTests() {
             keyedBytes,
             userInfo: userInfo,
           ).mapped();
-          check(rootMapped.containsKey('__proto__')).isTrue();
-          check(rootMapped.isNull('__proto__')).isTrue();
+          check(rootMapped.containsKey('__proto__')).isTrue;
+          check(rootMapped.isNull('__proto__')).isTrue;
           check(
             rootMapped
                 .nestedDecoder('nested')
@@ -344,12 +344,12 @@ void _registerProtoAndMapEncoderValidationTests() {
                 .decodeIntList('__proto__'),
           ).deepEquals([1, 2]);
           final innerMap = rootMapped.nestedDecoder('asMap').map();
-          check(innerMap.moveNextEntry()).isTrue();
+          check(innerMap.moveNextEntry()).isTrue;
           check(innerMap.keyDecoder().singleValue().readString())
               .equals('__proto__');
           check(innerMap.valueDecoder().singleValue().readString())
               .equals('owned');
-          check(innerMap.moveNextEntry()).isFalse();
+          check(innerMap.moveNextEntry()).isFalse;
         }
       },
     );
@@ -453,29 +453,29 @@ void _registerNullableSpanAndUtf8FatalTests() {
           objBytes,
           userInfo: userInfo,
         ).keyed();
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.nextKey()).equals('nullable');
-        check(keyed.readNullableStringSpan()).isNull();
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.readNullableStringSpan()).isNull;
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.nextKey()).equals('after');
         check(keyed.readInt()).equals(99);
-        check(keyed.moveNextKey()).isFalse();
+        check(keyed.moveNextKey()).isFalse;
 
         final unkeyed = JsonCodableDecoder.fromBytes(
           arrBytes,
           userInfo: userInfo,
         ).unkeyed();
-        check(unkeyed.moveNext()).isTrue();
-        check(unkeyed.readNullableStringSpan()).isNull();
-        check(unkeyed.moveNext()).isTrue();
+        check(unkeyed.moveNext()).isTrue;
+        check(unkeyed.readNullableStringSpan()).isNull;
+        check(unkeyed.moveNext()).isTrue;
         check(unkeyed.readInt()).equals(42);
-        check(unkeyed.moveNext()).isFalse();
+        check(unkeyed.moveNext()).isFalse;
 
         final single = JsonCodableDecoder.fromBytes(
           nullBytes,
           userInfo: userInfo,
         ).singleValue();
-        check(single.readNullableStringSpan()).isNull();
+        check(single.readNullableStringSpan()).isNull;
       }
     });
 
@@ -570,25 +570,25 @@ void _registerPayloadAndMappedHandoffTests() {
         ]) {
           final decForUnkeyed = makeDecoder();
           check(decForUnkeyed.mapped().readInt('id')).equals(7);
-          check(decForUnkeyed.payload).isNull();
+          check(decForUnkeyed.payload).isNull;
           check(decForUnkeyed.unkeyed)
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
-              .isNull();
+              .has('actualValue', (e) => e.actualValue)
+              .isNull;
 
           final decForScalar = makeDecoder();
-          check(decForScalar.mapped().containsKey('id')).isTrue();
+          check(decForScalar.mapped().containsKey('id')).isTrue;
           check(() => decForScalar.singleValue().readInt())
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
-              .isNull();
+              .has('actualValue', (e) => e.actualValue)
+              .isNull;
 
           final decForSingleDecode = makeDecoder();
-          check(decForSingleDecode.mapped().containsKey('id')).isTrue();
+          check(decForSingleDecode.mapped().containsKey('id')).isTrue;
           final extracted = decForSingleDecode.singleValue().decode<int>(
             Decodable.fromFunction((d) {
               final k = d.keyed();
-              check(k.moveNextKey()).isTrue();
+              check(k.moveNextKey()).isTrue;
               check(k.nextKey()).equals('id');
               return k.readInt();
             }),
@@ -610,22 +610,22 @@ void _registerPayloadAndMappedHandoffTests() {
 
         check(() => DartObjectDecoder(mapObj).unkeyed())
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
-            .isNull();
+            .has('actualValue', (e) => e.actualValue)
+            .isNull;
 
         check(() => DartObjectDecoder(listObj).keyed())
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
-            .isNull();
+            .has('actualValue', (e) => e.actualValue)
+            .isNull;
 
         check(() => DartObjectDecoder(mapObj).mapped().readInt('nested'))
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
-            .isNull();
+            .has('actualValue', (e) => e.actualValue)
+            .isNull;
 
         check(() => DartObjectDecoder(42).keyed())
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(42);
       },
     );
@@ -648,31 +648,31 @@ void _registerPayloadAndMappedHandoffTests() {
       ]) {
         // 1. mapped() -> singleValue().readInt() throws CodableException (not FormatException / TypeError)
         final m1 = makeDecoder().map();
-        check(m1.moveNextEntry()).isTrue();
+        check(m1.moveNextEntry()).isTrue;
         final v1 = m1.valueDecoder();
         check(v1.mapped().readInt('id')).equals(7);
-        check(v1.payload).isNull();
+        check(v1.payload).isNull;
         check(v1.peekKind()).equals(ValueKind.map);
-        check(v1.singleValue().isNull()).isFalse();
+        check(v1.singleValue().isNull()).isFalse;
         check(() => v1.singleValue().readInt())
             .throws<CodableException>()
             .which(
-              (it) => it
-                ..has((e) => e.actualValue, 'actualValue').isNull()
+              .it()
+                ..has('actualValue', (e) => e.actualValue).isNull
                 ..has(
-                  (e) => e.message.contains('[object Object]'),
                   'contains [object Object]',
-                ).isFalse(),
+                  (e) => e.message.contains('[object Object]'),
+                ).isFalse,
             );
-        check(m1.moveNextEntry()).isTrue();
+        check(m1.moveNextEntry()).isTrue;
         check(m1.valueDecoder().singleValue().readInt()).equals(42);
-        check(m1.moveNextEntry()).isFalse();
+        check(m1.moveNextEntry()).isFalse;
 
         // 2. mapped() -> singleValue().decodeNullable(...) consumes buffered object
         final m2 = makeDecoder().map();
-        check(m2.moveNextEntry()).isTrue();
+        check(m2.moveNextEntry()).isTrue;
         final v2 = m2.valueDecoder();
-        check(v2.mapped().containsKey('id')).isTrue();
+        check(v2.mapped().containsKey('id')).isTrue;
         final decodedId = v2.singleValue().decodeNullable<int>(
           Decodable.fromFunction((d) {
             final k = d.keyed();
@@ -684,21 +684,21 @@ void _registerPayloadAndMappedHandoffTests() {
           }),
         );
         check(decodedId).equals(7);
-        check(m2.moveNextEntry()).isTrue();
+        check(m2.moveNextEntry()).isTrue;
         check(m2.valueDecoder().singleValue().readInt()).equals(42);
 
         // 3. mapped() -> unkeyed() on valueDecoder throws CodableException
         final m3 = makeDecoder().map();
-        check(m3.moveNextEntry()).isTrue();
+        check(m3.moveNextEntry()).isTrue;
         final v3 = m3.valueDecoder();
         check(v3.mapped().readInt('id')).equals(7);
         check(v3.unkeyed).throws<CodableException>().which(
-          (it) => it
-            ..has((e) => e.actualValue, 'actualValue').isNull()
+          .it()
+            ..has('actualValue', (e) => e.actualValue).isNull
             ..has(
-              (e) => e.message.contains('[object Object]'),
               'contains [object Object]',
-            ).isFalse(),
+              (e) => e.message.contains('[object Object]'),
+            ).isFalse,
         );
       }
 
@@ -708,25 +708,25 @@ void _registerPayloadAndMappedHandoffTests() {
           mapPayload,
           userInfo: const {#forceJsDom: true},
         ).map();
-        check(jsMap.moveNextEntry()).isTrue();
+        check(jsMap.moveNextEntry()).isTrue;
         final jsVal = jsMap.valueDecoder();
         check(jsVal.unkeyed).throws<CodableException>().which(
-          (it) => it
-            ..has((e) => e.actualValue, 'actualValue').isNull()
+          .it()
+            ..has('actualValue', (e) => e.actualValue).isNull
             ..has(
-              (e) => e.message.contains('[object Object]'),
               'contains [object Object]',
-            ).isFalse(),
+              (e) => e.message.contains('[object Object]'),
+            ).isFalse,
         );
         check(() => jsVal.singleValue().readInt())
             .throws<CodableException>()
             .which(
-              (it) => it
-                ..has((e) => e.actualValue, 'actualValue').isNull()
+              .it()
+                ..has('actualValue', (e) => e.actualValue).isNull
                 ..has(
-                  (e) => e.message.contains('[object Object]'),
                   'contains [object Object]',
-                ).isFalse(),
+                  (e) => e.message.contains('[object Object]'),
+                ).isFalse,
             );
       }
     });

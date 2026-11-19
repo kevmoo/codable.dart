@@ -96,7 +96,7 @@ void main() {
         final other = KeyOptions(['b', 'a']);
         final keyed = keyedOver('{"a":1,"b":2}', constructed);
 
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.selectKeyIndex(other)).equals(1);
         check(keyed.readInt()).equals(1);
       });
@@ -105,7 +105,7 @@ void main() {
         final options = KeyOptions(['a', 'b']);
         final keyed = keyedOver('{"a":1,"b":2}', null);
 
-        check(keyed.moveNextKey()).isTrue();
+        check(keyed.moveNextKey()).isTrue;
         check(keyed.selectKeyIndex(options)).equals(0);
         check(keyed.readInt()).equals(1);
       });

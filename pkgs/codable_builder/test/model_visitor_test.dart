@@ -63,9 +63,9 @@ void main() {
     test('extracts positional parameters correctly for Point', () {
       final model = visit('Point');
       check(model.className).equals('Point');
-      check(model.createEncoder).isTrue();
-      check(model.createDecoder).isTrue();
-      check(model.useGoldenMask).isTrue();
+      check(model.createEncoder).isTrue;
+      check(model.createDecoder).isTrue;
+      check(model.useGoldenMask).isTrue;
       check(model.fieldRename).equals(FieldRename.none);
 
       check(model.fields.length).equals(2);
@@ -74,17 +74,17 @@ void main() {
 
       check(x.name).equals('x');
       check(x.wireName).equals('x');
-      check(x.isPositional).isTrue();
-      check(x.isNamed).isFalse();
-      check(x.isRequired).isTrue();
-      check(x.participatesInGoldenMask).isTrue();
+      check(x.isPositional).isTrue;
+      check(x.isNamed).isFalse;
+      check(x.isRequired).isTrue;
+      check(x.participatesInGoldenMask).isTrue;
       check(x.reqBitIndex).equals(0);
 
       check(y.name).equals('y');
       check(y.wireName).equals('y');
-      check(y.isPositional).isTrue();
-      check(y.isRequired).isTrue();
-      check(y.participatesInGoldenMask).isTrue();
+      check(y.isPositional).isTrue;
+      check(y.isRequired).isTrue;
+      check(y.participatesInGoldenMask).isTrue;
       check(y.reqBitIndex).equals(1);
 
       check(model.requiredFields.length).equals(2);
@@ -107,8 +107,8 @@ void main() {
       final email = fieldsByName['emailAddress']!;
       check(email.wireName).equals('email_address');
       check(email.aliases).deepEquals(['email', 'contact_email']);
-      check(email.isRequired).isTrue();
-      check(email.participatesInGoldenMask).isTrue();
+      check(email.isRequired).isTrue;
+      check(email.participatesInGoldenMask).isTrue;
 
       final role = fieldsByName['role']!;
       check(role.category).equals(TypeCategory.enumType);
@@ -117,17 +117,17 @@ void main() {
           .deepEquals(['admin', 'member', 'guest']);
 
       final tags = fieldsByName['tags']!;
-      check(tags.hasDefaultValue).isTrue();
-      check(tags.participatesInGoldenMask).isFalse();
-      check(tags.reqBitIndex).isNull();
+      check(tags.hasDefaultValue).isTrue;
+      check(tags.participatesInGoldenMask).isFalse;
+      check(tags.reqBitIndex).isNull;
 
       final location = fieldsByName['location']!;
       check(location.category).equals(TypeCategory.tuple);
       check(location.tupleLength).equals(2);
-      check(location.isNullable).isTrue();
+      check(location.isNullable).isTrue;
 
       final internalId = fieldsByName['internalId']!;
-      check(internalId.ignore).isTrue();
+      check(internalId.ignore).isTrue;
       check(internalId.keyIndex).equals(-1);
     });
 
@@ -139,11 +139,11 @@ void main() {
         (f) => f.name == 'headquarter',
       );
       check(headquarter.category).equals(TypeCategory.nestedCodable);
-      check(headquarter.isRequired).isTrue();
+      check(headquarter.isRequired).isTrue;
 
       final branches = model.fields.firstWhere((f) => f.name == 'branches');
       check(branches.category).equals(TypeCategory.list);
-      check(branches.hasDefaultValue).isTrue();
+      check(branches.hasDefaultValue).isTrue;
 
       final categories = model.fields.firstWhere((f) => f.name == 'categories');
       check(categories.category).equals(TypeCategory.set);
@@ -161,8 +161,8 @@ void main() {
       final zip = model.fields.firstWhere((f) => f.name == 'zip');
       check(zip.category).equals(TypeCategory.custom);
       check(zip.customDecoderCode).equals('const ZipCodeDecoder()');
-      check(zip.isRequired).isTrue();
-      check(zip.participatesInGoldenMask).isTrue();
+      check(zip.isRequired).isTrue;
+      check(zip.participatesInGoldenMask).isTrue;
     });
 
     test('extracts collections and enum lists for Team', () {
@@ -185,7 +185,7 @@ void main() {
     test('throws InvalidGenerationSourceError when required fields without defaults exceed 62', () {
       check(() => visit('HugeModel63'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('exceeds the maximum golden mask limit of 62');
     });
 
@@ -202,12 +202,12 @@ void main() {
       check(decodeOnlyZip.category).equals(TypeCategory.custom);
       check(decodeOnlyZip.nativeCategory).equals(TypeCategory.primitiveString);
       check(decodeOnlyZip.customDecoderCode).equals('const ZipDecodeOnly()');
-      check(decodeOnlyZip.customEncoderCode).isNull();
+      check(decodeOnlyZip.customEncoderCode).isNull;
 
       final upperCode = fields['upperCode']!;
       check(upperCode.category).equals(TypeCategory.custom);
       check(upperCode.nativeCategory).equals(TypeCategory.primitiveString);
-      check(upperCode.customDecoderCode).isNull();
+      check(upperCode.customDecoderCode).isNull;
       check(upperCode.customEncoderCode)
           .equals('const UpperCaseStringEncoder()');
 
@@ -221,7 +221,7 @@ void main() {
 
     test('extracts primitiveNum and num collections on NumericMeasurement without uniform double list', () {
       final model = visit('NumericMeasurement');
-      check(model.isUniformDoubleModel).isFalse();
+      check(model.isUniformDoubleModel).isFalse;
       final score = model.fields.firstWhere((f) => f.name == 'score');
       check(score.category).equals(TypeCategory.primitiveNum);
     });
@@ -229,22 +229,22 @@ void main() {
     test('validates @CodableKey codec assignability at build time', () {
       check(() => visit('InvalidCodableMissingEncoder'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('must implement Encodable');
 
       check(() => visit('InvalidCustomDecoderNotDecodable'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('must implement Decodable');
 
       check(() => visit('InvalidCustomEncoderNotEncodable'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('must implement Encodable');
 
       check(() => visit('InvalidDecodeOnlyNonNativeType'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('not natively encodable');
     });
 
@@ -266,7 +266,7 @@ void main() {
         ]) {
           check(() => visit(className))
               .throws<InvalidGenerationSourceError>()
-              .has((e) => e.message, 'message')
+              .has('message', (e) => e.message)
               .contains(expectedTypeSnippet);
         }
       },
@@ -284,7 +284,7 @@ void main() {
       check(fields['factor']!.defaultValueCode).equals('2.5');
       check(fields['enabled']!.defaultValueCode).equals('true');
       check(fields['role']!.defaultValueCode).equals('UserRole.guest');
-      check(fields['role']!.participatesInGoldenMask).isFalse();
+      check(fields['role']!.participatesInGoldenMask).isFalse;
       check(fields['tags']!.defaultValueCode).equals("const ['alpha', 'beta']");
       check(fields['metadata']!.defaultValueCode).equals("const {'env': 1}");
       check(fields['origin']!.defaultValueCode)
@@ -301,17 +301,17 @@ void main() {
 
       check(() => visit('InvalidNullDefaultOnNonNullable'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('defaultValue: null');
 
       check(() => visit('InvalidPrivateRevivableDefault'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('private constant');
 
       check(() => visit('InvalidNestedPrivateRevivableDefault'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('private constant');
     });
 
@@ -328,7 +328,7 @@ void main() {
 
       check(() => visit('InvalidUint8ListTuple'))
           .throws<InvalidGenerationSourceError>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('Uint8List');
 
       final binaryModel = visit('BinaryPayloadModel');
@@ -364,16 +364,16 @@ void main() {
       'extracts generic type parameters, bounds, and unbounded nullability',
       () {
         final envelope = visit('Envelope');
-        check(envelope.isGeneric).isTrue();
-        check(envelope.isPolymorphic).isFalse();
+        check(envelope.isGeneric).isTrue;
+        check(envelope.isPolymorphic).isFalse;
         check(envelope.instantiatedClassName).equals('Envelope<T>');
         check(envelope.typeParamsDeclaration).equals('<T>');
         check(envelope.typeParameters.single.codecFieldName).equals('_\$t');
-        check(envelope.typeParameters.single.boundCode).isNull();
+        check(envelope.typeParameters.single.boundCode).isNull;
         final dataField = envelope.fields.firstWhere((f) => f.name == 'data');
         check(dataField.category).equals(TypeCategory.typeParameter);
-        check(dataField.isUnboundedTypeParameter).isTrue();
-        check(dataField.participatesInGoldenMask).isTrue();
+        check(dataField.isUnboundedTypeParameter).isTrue;
+        check(dataField.participatesInGoldenMask).isTrue;
 
         final pair = visit('Pair');
         check(pair.typeParamsDeclaration).equals('<A, B extends num>');
@@ -381,7 +381,7 @@ void main() {
         check(pair.typeParameters.map((p) => p.codecFieldName))
             .deepEquals(['_\$a', '_\$b']);
         final secondField = pair.fields.firstWhere((f) => f.name == 'second');
-        check(secondField.isUnboundedTypeParameter).isFalse();
+        check(secondField.isUnboundedTypeParameter).isFalse;
 
         final bucket = visit('KeyedBucket');
         check(bucket.typeParamsDeclaration).equals('<K extends Object, V>');
@@ -390,8 +390,8 @@ void main() {
 
     test('extracts sealed, multi-level sealed, generic sealed, and abstract polymorphic descriptors', () {
       final shape = visit('ShapeEvent');
-      check(shape.isPolymorphic).isTrue();
-      check(shape.isSealed).isTrue();
+      check(shape.isPolymorphic).isTrue;
+      check(shape.isSealed).isTrue;
       check(shape.discriminatorKey).equals('type');
       check(
         shape.polymorphicSubtypes.map(
@@ -400,8 +400,8 @@ void main() {
       ).deepEquals([('CircleEvent', 'circleEvent'), ('RectEvent', 'rect_box')]);
 
       final payment = visit('PaymentMethod');
-      check(payment.isPolymorphic).isTrue();
-      check(payment.isSealed).isTrue();
+      check(payment.isPolymorphic).isTrue;
+      check(payment.isSealed).isTrue;
       check(payment.discriminatorKey).equals('kind');
       check(
         payment.polymorphicSubtypes.map(
@@ -414,8 +414,8 @@ void main() {
       ]);
 
       final outcome = visit('ApiOutcome');
-      check(outcome.isGeneric).isTrue();
-      check(outcome.isPolymorphic).isTrue();
+      check(outcome.isGeneric).isTrue;
+      check(outcome.isPolymorphic).isTrue;
       check(outcome.discriminatorKey).equals('status');
       check(
         outcome.polymorphicSubtypes.map(
@@ -424,8 +424,8 @@ void main() {
       ).deepEquals([('ApiSuccess<T>', 'ok'), ('ApiFailure', 'error')]);
 
       final plugin = visit('PluginAction');
-      check(plugin.isPolymorphic).isTrue();
-      check(plugin.isSealed).isFalse();
+      check(plugin.isPolymorphic).isTrue;
+      check(plugin.isSealed).isFalse;
       check(plugin.polymorphicSubtypes.map((s) => s.className))
           .deepEquals(['PingAction', 'EchoAction']);
 
@@ -434,7 +434,7 @@ void main() {
           .deepEquals(['LuxurySedanVehicle', 'SedanVehicle']);
 
       final withEnum = visit('SealedWithEnumBranch');
-      check(withEnum.isSealed).isFalse();
+      check(withEnum.isSealed).isFalse;
     });
 
     test('rejects invalid generic type arguments and invalid polymorphic hierarchies', () {
@@ -462,7 +462,7 @@ void main() {
       ]) {
         check(() => visit(className))
             .throws<InvalidGenerationSourceError>()
-            .has((e) => e.message, 'message')
+            .has('message', (e) => e.message)
             .contains(expectedSnippet);
       }
     });

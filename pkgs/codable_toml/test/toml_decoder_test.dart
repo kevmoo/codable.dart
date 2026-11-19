@@ -167,7 +167,7 @@ void _registerStringAndCommentTests() {
         '   # only comment\n\t\n',
         const Decodable.fromFunction(_decodeStringIntMap),
       );
-      check(empty).isEmpty();
+      check(empty).isEmpty;
     });
 
     test(
@@ -227,8 +227,7 @@ site."google.com" = true
       check(root.readString('bare_key-1')).equals('v1');
       check(root.readString('1234')).equals('v2');
       check(root.readString('')).equals('empty_basic');
-      check(root.nestedDecoder('site').mapped().readBool('google.com'))
-          .isTrue();
+      check(root.nestedDecoder('site').mapped().readBool('google.com')).isTrue;
       check(root.nestedDecoder('3').mapped().readString('14159')).equals('pi');
       check(root.nestedDecoder('sub').mapped().readString(''))
           .equals('empty_lit');
@@ -287,7 +286,7 @@ bin = 0b1101_0110
         final m = TomlCodableDecoder.fromString(toml).mapped();
         check(m.readInt('zero')).equals(0);
         check(m.readInt('neg_zero')).equals(0);
-        check(m.readInt('neg_zero').isNegative).isFalse();
+        check(m.readInt('neg_zero').isNegative).isFalse;
         check(m.readInt('pos_zero')).equals(0);
         check(m.readInt('pos')).equals(99);
         check(m.readInt('neg')).equals(-17);
@@ -354,7 +353,7 @@ nan3 = -nan
         check(m.readDouble('pi')).equals(3.1415);
         final nz = m.readDouble('neg_zero');
         check(nz).equals(0.0);
-        check(nz.isNegative).isTrue();
+        check(nz.isNegative).isTrue;
         check(m.readDouble('exp1')).equals(5e22);
         check(m.readDouble('exp2')).equals(1e6);
         check(m.readDouble('exp3')).equals(-0.02);
@@ -363,9 +362,9 @@ nan3 = -nan
         check(m.readDouble('pinf')).equals(double.infinity);
         check(m.readDouble('inf_bare')).equals(double.infinity);
         check(m.readDouble('ninf')).equals(double.negativeInfinity);
-        check(m.readDouble('nan1').isNaN).isTrue();
-        check(m.readDouble('nan2').isNaN).isTrue();
-        check(m.readDouble('nan3').isNaN).isTrue();
+        check(m.readDouble('nan1').isNaN).isTrue;
+        check(m.readDouble('nan2').isNaN).isTrue;
+        check(m.readDouble('nan3').isNaN).isTrue;
       });
 
       test('rejects malformed numbers and int/float type confusion', () {
@@ -430,7 +429,7 @@ void _registerDateTimeTests() {
       final lt = _decodeNativeDateTimeField('dt = 07:32:00.5')!;
       check(lt.kind).equals(TomlDateTimeKind.localTime);
       check(lt.raw).equals('07:32:00.5');
-      check(lt.dateTime).isNull();
+      check(lt.dateTime).isNull;
 
       // Generic callers see ValueKind.string and readString() == dt.raw
       final m = TomlCodableDecoder.fromString('dt = 1979-05-27T07:32:00Z')
@@ -454,7 +453,7 @@ void _registerDateTimeTests() {
       check(quotedIso).equals(DateTime.utc(2026, 11, 14, 0, 30));
 
       // Quoted ISO string returns null from tryReadTomlDateTime()
-      check(_decodeNativeDateTimeField('ts = "2026-11-14T00:30:00Z"')).isNull();
+      check(_decodeNativeDateTimeField('ts = "2026-11-14T00:30:00Z"')).isNull;
 
       // Malformed quoted ISO string throws CodableException (not bare
       // FormatException) and preserves the exact unescaped string (including
@@ -473,7 +472,7 @@ void _registerDateTimeTests() {
             ),
           )
           .throws<CodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('not-a-"date"');
 
       // TomlDateTimeCodable decodes native literals and rejects quoted strings
@@ -494,7 +493,7 @@ void _registerDateTimeTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('07:32:00.5');
       check(
             () => valueCodec.decode(
@@ -502,15 +501,15 @@ void _registerDateTimeTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('bad "toml" dt');
       check(
         () => valueCodec.decode(JsonCodableDecoder.fromString('"2023-02-29"')),
       ).throws<TomlCodableException>().which(
-        (it) => it
-          ..has((e) => e.line, 'line').isNull()
-          ..has((e) => e.column, 'column').isNull()
-          ..has((e) => e.actualValue, 'actualValue').equals('2023-02-29'),
+        .it()
+          ..has('line', (e) => e.line).isNull
+          ..has('column', (e) => e.column).isNull
+          ..has('actualValue', (e) => e.actualValue).equals('2023-02-29'),
       );
 
       // When a custom codec parses a quoted TOML date-time literal on line 3,
@@ -535,7 +534,7 @@ void _registerDateTimeTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals(true);
       final jsonRoundtrip = valueCodec.decode(
         JsonCodableDecoder.fromString(
@@ -654,25 +653,25 @@ name = "plantain"
               .unkeyed();
           check(fruits.length).equals(2);
 
-          check(fruits.moveNext()).isTrue();
+          check(fruits.moveNext()).isTrue;
           final apple = fruits.nestedDecoder().mapped();
           check(apple.readString('name')).equals('apple');
           check(apple.nestedDecoder('physical').mapped().readString('color'))
               .equals('red');
           final appleVars = apple.nestedDecoder('varieties').unkeyed();
           check(appleVars.length).equals(2);
-          check(appleVars.moveNext()).isTrue();
+          check(appleVars.moveNext()).isTrue;
           check(appleVars.nestedDecoder().mapped().readString('name'))
               .equals('red delicious');
-          check(appleVars.moveNext()).isTrue();
+          check(appleVars.moveNext()).isTrue;
           check(appleVars.nestedDecoder().mapped().readString('name'))
               .equals('granny smith');
-          check(appleVars.moveNext()).isFalse();
+          check(appleVars.moveNext()).isFalse;
 
-          check(fruits.moveNext()).isTrue();
+          check(fruits.moveNext()).isTrue;
           final banana = fruits.nestedDecoder().mapped();
           check(banana.readString('name')).equals('banana');
-          check(banana.containsKey('physical')).isFalse();
+          check(banana.containsKey('physical')).isFalse;
           final bananaVars = banana.nestedDecoder('varieties').unkeyed();
           check(bananaVars.length).equals(1);
         },
@@ -733,9 +732,9 @@ void _registerDecoderContainerAndPolymorphicTests() {
           'alpha = "one"\nbeta = [1, 2, 3]\ngamma = [1.5, 2.5]\nflags = [true, false]\nwords = ["a", "b"]\n',
           userInfo: const <Object, Object?>{'env': 'test'},
         );
-        check(dec.isHumanReadable).isTrue();
-        check(dec.payload).isNull();
-        check(dec.decodeUniformDoubleList(const <List<String>>[])).isNull();
+        check(dec.isHumanReadable).isTrue;
+        check(dec.payload).isNull;
+        check(dec.decodeUniformDoubleList(const <List<String>>[])).isNull;
         check(dec.userInfo['env']).equals('test');
         check(dec.peekKind()).equals(ValueKind.map);
 
@@ -760,18 +759,18 @@ void _registerDecoderContainerAndPolymorphicTests() {
         check(keyed.decodeBoolList()).deepEquals(<bool>[true, false]);
         check(keyed.selectKeyIndex(opts)).equals(4);
         check(keyed.decodeStringList()).deepEquals(<String>['a', 'b']);
-        check(keyed.moveNextKey()).isFalse();
+        check(keyed.moveNextKey()).isFalse;
 
         // Non-consuming peekKind() and isNextNull() after moveNextKey() must
         // preserve the active key for nextKey() and selectKeyIndex().
         final peekDec = TomlCodableDecoder.fromString('a = 1\nb = "two"\n')
             .keyed();
-        check(peekDec.moveNextKey()).isTrue();
+        check(peekDec.moveNextKey()).isTrue;
         check(peekDec.peekKind()).equals(ValueKind.number);
-        check(peekDec.isNextNull()).isFalse();
+        check(peekDec.isNextNull()).isFalse;
         check(peekDec.nextKey()).equals('a');
         check(peekDec.readInt()).equals(1);
-        check(peekDec.moveNextKey()).isTrue();
+        check(peekDec.moveNextKey()).isTrue;
         check(peekDec.peekKind()).equals(ValueKind.string);
         check(peekDec.selectKeyIndex(KeyOptions.of(const ['a', 'b'])))
             .equals(1);
@@ -790,8 +789,8 @@ kind = "circle"
         const _ShapeSuperDecodable(),
       );
       check(shape1).isA<_Circle>()
-        ..has((c) => c.radius, 'radius').equals(4.5)
-        ..has((c) => c.label, 'label').equals('unit');
+        ..has('radius', (c) => c.radius).equals(4.5)
+        ..has('label', (c) => c.label).equals('unit');
 
       // In TOML, scalar keys before [meta] and subtable [meta] coexist cleanly,
       // and discriminator can appear at the end of root scalars while [meta] follows.
@@ -808,9 +807,9 @@ layer = 3
         const _ShapeSuperDecodable(),
       );
       check(shape2).isA<_Box>()
-        ..has((b) => b.width, 'width').equals(10)
-        ..has((b) => b.height, 'height').equals(20)
-        ..has((b) => b.meta, 'meta').deepEquals(<String, int>{'layer': 3});
+        ..has('width', (b) => b.width).equals(10)
+        ..has('height', (b) => b.height).equals(20)
+        ..has('meta', (b) => b.meta).deepEquals(<String, int>{'layer': 3});
 
       final unknownErr = _expectTomlError(
         () => TomlCodableDecoder.decode<_Shape>(
@@ -874,7 +873,7 @@ false = 0
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
+          .has('path', (e) => e.path)
           .deepEquals(<Object>['bytes', 'AQID']);
     });
   });
@@ -893,11 +892,11 @@ list_of_bytes = ["AAEC", [10, 20]]
       check(root.readBytes('raw')).deepEquals(<int>[0, 127, 255]);
 
       final u = root.nestedDecoder('list_of_bytes').unkeyed();
-      check(u.moveNext()).isTrue();
+      check(u.moveNext()).isTrue;
       check(u.readBytes()).deepEquals(<int>[0, 1, 2]);
-      check(u.moveNext()).isTrue();
+      check(u.moveNext()).isTrue;
       check(u.readBytes()).deepEquals(<int>[10, 20]);
-      check(u.moveNext()).isFalse();
+      check(u.moveNext()).isFalse;
 
       check(
         () => _decodeField('b = "not-valid-base64!!!"', (k) => k.readBytes()),
@@ -1021,7 +1020,7 @@ ports = [80, "bad_port", 443]
                   ),
                 )
                 .throws<TomlCodableException>()
-                .has((e) => e.actualValue, 'actualValue')
+                .has('actualValue', (e) => e.actualValue)
                 .equals('not_a_table');
           }
           check(
@@ -1032,7 +1031,7 @@ ports = [80, "bad_port", 443]
                         .unkeyed(),
               )
               .throws<TomlCodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(123);
 
           // Repeated adjacent path segments (e.g. matrix[0][0] or node.node)

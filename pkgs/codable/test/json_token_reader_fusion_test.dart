@@ -21,19 +21,19 @@ void main() {
       final options = mock.JsonKeyOptions.of(['a', 'b', 'c']);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(0);
       check(reader.readInt()).equals(1);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(1);
       check(reader.readString()).equals('val');
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(2);
-      check(reader.readBool()).isTrue();
+      check(reader.readBool()).isTrue;
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -46,19 +46,19 @@ void main() {
       final reader = mock.JsonTokenReader.fromBytes(bytes);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('first');
       check(reader.readInt()).equals(10);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('second');
       check(reader.readInt()).equals(20);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('third');
       check(reader.readInt()).equals(30);
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -69,19 +69,19 @@ void main() {
       final reader = mock.JsonTokenReader.fromBytes(bytes);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('');
       check(reader.readInt()).equals(0);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('k"ey');
       check(reader.readInt()).equals(1);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('k\\ey');
       check(reader.readInt()).equals(2);
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -95,23 +95,23 @@ void main() {
       final reader = mock.JsonTokenReader.fromBytes(bytes);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(0);
       check(reader.readInt()).equals(1);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(1);
       check(reader.readInt()).equals(2);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(2);
       check(reader.readInt()).equals(3);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(3);
       check(reader.readInt()).equals(4);
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -121,10 +121,10 @@ void main() {
       final options = mock.JsonKeyOptions.of(['a', 'b', 'c']);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(-1);
       check(reader.readInt()).equals(99);
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -134,10 +134,10 @@ void main() {
       final options = mock.JsonKeyOptions.of(['', 'a']);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(0);
       check(reader.readInt()).equals(42);
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -153,19 +153,19 @@ void main() {
       ]);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('v1');
       check(reader.selectString(stringOptions)).equals(0);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('v2');
       check(reader.selectString(stringOptions)).equals(1);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('v3');
       check(reader.selectString(stringOptions)).equals(2);
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -176,26 +176,26 @@ void main() {
       final reader = mock.JsonTokenReader.fromBytes(bytes);
 
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('nested');
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('inner');
       check(reader.readInt()).equals(42);
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName()).equals('arr');
       reader.beginArray();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.readInt()).equals(1);
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.readInt()).equals(2);
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endArray();
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 
@@ -203,7 +203,7 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode('{"key" 123}'));
       final reader = mock.JsonTokenReader.fromBytes(bytes);
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName).throws<FormatException>();
     });
 
@@ -213,7 +213,7 @@ void main() {
         final bytes = Uint8List.fromList(utf8.encode('{"key"   \t\n  123}'));
         final reader = mock.JsonTokenReader.fromBytes(bytes);
         reader.beginObject();
-        check(reader.moveNext()).isTrue();
+        check(reader.moveNext()).isTrue;
         check(reader.nextName).throws<FormatException>();
       },
     );
@@ -222,7 +222,7 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode('{123: 456}'));
       final reader = mock.JsonTokenReader.fromBytes(bytes);
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName).throws<FormatException>();
     });
 
@@ -230,7 +230,7 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode('{"unterminated: 123}'));
       final reader = mock.JsonTokenReader.fromBytes(bytes);
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName).throws<FormatException>();
     });
 
@@ -240,7 +240,7 @@ void main() {
         final bytes = Uint8List.fromList(utf8.encode(r'{"unterminated\'));
         final reader = mock.JsonTokenReader.fromBytes(bytes);
         reader.beginObject();
-        check(reader.moveNext()).isTrue();
+        check(reader.moveNext()).isTrue;
         check(reader.nextName).throws<FormatException>();
       },
     );
@@ -249,7 +249,7 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode('{"key"'));
       final reader = mock.JsonTokenReader.fromBytes(bytes);
       reader.beginObject();
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.nextName).throws<FormatException>();
     });
   });
@@ -296,7 +296,7 @@ void main() {
       check(id).equals(101);
       check(name).equals('Widget');
       check(price).equals(99.5);
-      check(inStock).isTrue();
+      check(inStock).isTrue;
     });
 
     test(
@@ -335,7 +335,7 @@ void main() {
 
         check(id).equals(202);
         check(name).equals('SpecialWidget');
-        check(happy).isTrue();
+        check(happy).isTrue;
       },
     );
   });

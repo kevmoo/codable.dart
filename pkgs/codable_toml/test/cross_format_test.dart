@@ -672,7 +672,7 @@ void _registerInterleavedOrderingTests() {
         )) {
           check(r.version).equals(4);
           check(r.serviceName).equals('checkout-core');
-          check(r.enabled).isTrue();
+          check(r.enabled).isTrue;
           check(r.subtable).equals(config.subtable);
           check(r.items).deepEquals(config.items);
         }
@@ -747,8 +747,8 @@ void _registerHierarchyAndInlineTableTests() {
       check(toml).contains('emptyMatrix = [[{}]]');
       check(toml).contains('title = "topology-v1"');
       check(toml).contains('[a.b.c]');
-      check(toml).not((it) => it.contains('\n[a]\n'));
-      check(toml).not((it) => it.contains('\n[a.b]\n'));
+      check(toml).not(.it()..contains('\n[a]\n'));
+      check(toml).not(.it()..contains('\n[a.b]\n'));
       check(toml).contains('\n[empty]\n');
       check(toml).contains('\n[[activeItems]]\n');
 
@@ -759,11 +759,11 @@ void _registerHierarchyAndInlineTableTests() {
         check(r.title).equals('topology-v1');
         check(r.a).equals(model.a);
         check(r.empty).equals(const AllOptionalPatch());
-        check(r.emptyItems).isEmpty();
+        check(r.emptyItems).isEmpty;
         check(r.activeItems).deepEquals(model.activeItems);
         check(r.matrix.length).equals(2);
         check(r.matrix[0]).deepEquals(model.matrix[0]);
-        check(r.matrix[1]).isEmpty();
+        check(r.matrix[1]).isEmpty;
         check(r.emptyMatrix.length).equals(1);
         check(r.emptyMatrix[0]).deepEquals(const [AllOptionalPatch()]);
       }
@@ -815,17 +815,17 @@ void _testAllOptionalPatchRoundtrips() {
     allNull,
     const AllOptionalPatchCodable(),
   )) {
-    check(r.alpha).isNull();
-    check(r.beta).isNull();
-    check(r.gamma).isNull();
+    check(r.alpha).isNull;
+    check(r.beta).isNull;
+    check(r.gamma).isNull;
   }
   for (final r in _roundtripAllFiveFormats(
     partial,
     const AllOptionalPatchCodable(),
   )) {
-    check(r.alpha).isNull();
+    check(r.alpha).isNull;
     check(r.beta).equals('present');
-    check(r.gamma).isNull();
+    check(r.gamma).isNull;
   }
   for (final r in _roundtripAllFiveFormats(
     full,
@@ -878,18 +878,18 @@ void _testNullableShowcaseRoundtrips() {
 
 void _verifySparseNullableShowcase(NullableShowcase r) {
   check(r.id).equals('sparse-1');
-  check(r.optInt).isNull();
-  check(r.optDouble).isNull();
-  check(r.optString).isNull();
-  check(r.optBool).isNull();
-  check(r.optStruct).isNull();
-  check(r.optEmpty).isNull();
-  check(r.optBytes).isNull();
-  check(r.optStringList).isNull();
-  check(r.optStructList).isNull();
-  check(r.optIntSet).isNull();
-  check(r.optStringMap).isNull();
-  check(r.optIntMap).isNull();
+  check(r.optInt).isNull;
+  check(r.optDouble).isNull;
+  check(r.optString).isNull;
+  check(r.optBool).isNull;
+  check(r.optStruct).isNull;
+  check(r.optEmpty).isNull;
+  check(r.optBytes).isNull;
+  check(r.optStringList).isNull;
+  check(r.optStructList).isNull;
+  check(r.optIntSet).isNull;
+  check(r.optStringMap).isNull;
+  check(r.optIntMap).isNull;
 }
 
 void _verifyPopulatedNullableShowcase(NullableShowcase r) {
@@ -944,14 +944,14 @@ void _registerMapsBytesTupleAndPolymorphicTests() {
           check(r.statusMessages).deepEquals(env.statusMessages);
           check(r.verbQuotas).deepEquals(env.verbQuotas);
           check(r.binaryPayload).deepEquals([0x00, 0x7f, 0x80, 0xff]);
-          check(r.emptyPayload).isEmpty();
+          check(r.emptyPayload).isEmpty;
           check(r.coords).deepEquals([37.7749, -122.4194]);
           final norm = r.normal;
           check(norm).isNotNull().deepEquals([-0.0, 0.0, 1.0, -0.5]);
           if (!identical(1, 1.0)) {
-            check(norm![0].isNegative).isTrue();
+            check(norm![0].isNegative).isTrue;
           }
-          check(norm![1].isNegative).isFalse();
+          check(norm![1].isNegative).isFalse;
         }
 
         // Chaining YAML -> CBOR -> MessagePack -> TOML directly (without V8's
@@ -965,8 +965,8 @@ void _registerMapsBytesTupleAndPolymorphicTests() {
         final (msgpackHop, _) = _roundtripMsgPack(cborHop, envCodec);
         final (tomlHop, tomlWire, _) = _roundtripToml(msgpackHop, envCodec);
         check(tomlWire).contains('-0.0');
-        check(tomlHop.normal![0].isNegative).isTrue();
-        check(tomlHop.normal![1].isNegative).isFalse();
+        check(tomlHop.normal![0].isNegative).isTrue;
+        check(tomlHop.normal![1].isNegative).isFalse;
       },
     );
 
@@ -988,16 +988,16 @@ void _registerMapsBytesTupleAndPolymorphicTests() {
         check(r.canvasId).equals('scene-42');
         check(r.hero)
             .isA<CircleSpec>()
-            .has((c) => (c.radius, c.label, c.meta), 'circle fields')
+            .has('circle fields', (c) => (c.radius, c.label, c.meta))
             .equals((
               12.5,
               'hero-circle',
               const LevelC(region: 'us-central1', replicas: 3),
             ));
         check(r.secondary).isA<PolygonSpec>().which(
-          (it) => it
-            ..has((p) => p.vertices, 'vertices').deepEquals(const [3, 4, 5])
-            ..has((p) => p.closed, 'closed').equals(false),
+          .it()
+            ..has('vertices', (p) => p.vertices).deepEquals(const [3, 4, 5])
+            ..has('closed', (p) => p.closed).equals(false),
         );
       }
     });
@@ -1018,7 +1018,7 @@ kind = "circle"
       );
       check(fromDotted)
           .isA<CircleSpec>()
-          .has((c) => (c.radius, c.label, c.meta), 'circle')
+          .has('circle', (c) => (c.radius, c.label, c.meta))
           .equals((
             8.75,
             'after-dotted-subtable',
@@ -1051,16 +1051,16 @@ kind = "polygon"
       check(scene.canvasId).equals('reordered-scene');
       check(scene.hero)
           .isA<CircleSpec>()
-          .has((c) => (c.radius, c.label, c.meta), 'hero')
+          .has('hero', (c) => (c.radius, c.label, c.meta))
           .equals((
             19.0,
             'opened-after-subtable',
             const LevelC(region: 'eu-north1', replicas: 5),
           ));
       check(scene.secondary).isA<PolygonSpec>().which(
-        (it) => it
-          ..has((p) => p.vertices, 'vertices').deepEquals(const [6, 8, 10])
-          ..has((p) => p.closed, 'closed').equals(true),
+        .it()
+          ..has('vertices', (p) => p.vertices).deepEquals(const [6, 8, 10])
+          ..has('closed', (p) => p.closed).equals(true),
       );
     });
   });
@@ -1116,10 +1116,10 @@ void _registerDateTimeVsDateStringTests() {
       // `timestamp`, while `rawIsoString` remains UTF-8 text).
       final tsAscii = utf8.encode('2026-11-14T02:38');
       final rawIsoAscii = utf8.encode('2026-11-14T00:00:00Z');
-      check(_containsSubsequence(cborBytes, tsAscii)).isFalse();
-      check(_containsSubsequence(msgpackBytes, tsAscii)).isFalse();
-      check(_containsSubsequence(cborBytes, rawIsoAscii)).isTrue();
-      check(_containsSubsequence(msgpackBytes, rawIsoAscii)).isTrue();
+      check(_containsSubsequence(cborBytes, tsAscii)).isFalse;
+      check(_containsSubsequence(msgpackBytes, tsAscii)).isFalse;
+      check(_containsSubsequence(cborBytes, rawIsoAscii)).isTrue;
+      check(_containsSubsequence(msgpackBytes, rawIsoAscii)).isTrue;
 
       for (final r in _roundtripAllFiveFormats(
         model,
@@ -1152,7 +1152,7 @@ dailyWindow = 07:32:00.5
         check(decoded.calendarDay).equals(DateTime.utc(2026, 11, 14));
         check(decoded.dailyWindow)
             .isNotNull()
-            .has((d) => (d.kind, d.raw, d.dateTime), 'localTime')
+            .has('localTime', (d) => (d.kind, d.raw, d.dateTime))
             .equals((TomlDateTimeKind.localTime, '07:32:00.5', null));
 
         for (final r in _roundtripAllFiveFormats(
@@ -1173,12 +1173,12 @@ dailyWindow = 07:32:00.5
             const LocalDateTimesRecordCodable(),
           ),
         ).throws<TomlCodableException>().which(
-          (it) => it
+          .it()
             ..has(
-              (e) => e.path,
               'path',
+              (e) => e.path,
             ).deepEquals(const <Object>['offsetInstant'])
-            ..has((e) => e.message, 'message').contains('localTime'),
+            ..has('message', (e) => e.message).contains('localTime'),
         );
       },
     );
@@ -1211,7 +1211,7 @@ void _registerStructuralBoundaryRejectionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
+          .has('path', (e) => e.path)
           .deepEquals(const <Object>['values', 1]);
     });
 
@@ -1236,7 +1236,7 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<TomlCodableException>()
-            .has((e) => e.path, 'path')
+            .has('path', (e) => e.path)
             .deepEquals(const <Object>['scores', 'bad']);
 
         const withNullIntKey = NullableIntMapModel(buckets: {1: 10, 2: null});
@@ -1247,7 +1247,7 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<TomlCodableException>()
-            .has((e) => e.path, 'path')
+            .has('path', (e) => e.path)
             .deepEquals(const <Object>['buckets', '2']);
       },
     );
@@ -1262,7 +1262,7 @@ void _registerStructuralBoundaryRejectionTests() {
 
       check(() => TomlCodableEncoder.encode(cells, listCodable))
           .throws<TomlCodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('root must be a table');
 
       check(
@@ -1272,7 +1272,7 @@ void _registerStructuralBoundaryRejectionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.message, 'message')
+          .has('message', (e) => e.message)
           .contains('root must be a table');
     });
 
@@ -1311,7 +1311,7 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<TomlCodableException>()
-            .has((e) => e.path, 'path')
+            .has('path', (e) => e.path)
             .deepEquals(const <Object>['cells', 0]);
 
         check(
@@ -1321,7 +1321,7 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<TomlCodableException>()
-            .has((e) => e.path, 'path')
+            .has('path', (e) => e.path)
             .deepEquals(const <Object>['cells', 'origin']);
       },
     );
@@ -1346,14 +1346,14 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
         check(
               () =>
                   YamlCodableDecoder.decode('b:\n  - 256\n', readBytesFromMap),
             )
             .throws<YamlCodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
         check(
               () => CborCodableDecoder.decode(
@@ -1362,7 +1362,7 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
         check(
               () => MsgPackCodableDecoder.decode(
@@ -1375,11 +1375,11 @@ void _registerStructuralBoundaryRejectionTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
         check(() => TomlCodableDecoder.decode('b = [256]\n', readBytesFromMap))
             .throws<TomlCodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(256);
       },
     );
@@ -1438,29 +1438,29 @@ void _registerGenericAndSealedPolymorphicFiveDriverTests() {
         check(r.targets.items).length.equals(2);
         check(r.targets.tagged['canary'])
             .equals(const LevelC(region: 'eu-west1', replicas: 1));
-        check(r.targets.nextPreview).isNull();
-        check(r.fallbackStage).isNull();
+        check(r.targets.nextPreview).isNull;
+        check(r.fallbackStage).isNull;
         check(r.entryStage)
             .isA<FetchStage>()
-            .has((f) => (f.timeoutMs, f.authHeader, f.source.region), 'fetch')
+            .has('fetch', (f) => (f.timeoutMs, f.authHeader, f.source.region))
             .equals((1500, null, 'us-central1'));
         check(r.stages).length.equals(2);
         check(r.stages[0])
             .isA<FilterStage>()
-            .has((f) => f.dropEmpty, 'dropEmpty')
-            .isTrue();
+            .has('dropEmpty', (f) => f.dropEmpty)
+            .isTrue;
         check(r.stages[1])
             .isA<FetchStage>()
-            .has((f) => f.authHeader, 'authHeader')
+            .has('authHeader', (f) => f.authHeader)
             .equals('Bearer token');
         check(r.stageById['scrub']).isA<FilterStage>();
         check(r.lastRun)
             .isA<StageOk<GridCell>>()
-            .has((s) => (s.data.tag, s.elapsedMs), 'ok')
+            .has('ok', (s) => (s.data.tag, s.elapsedMs))
             .equals(('ok-cell', 42));
         check(r.retryStatus)
             .isA<StageFailed>()
-            .has((f) => f.errorCode, 'errorCode')
+            .has('errorCode', (f) => f.errorCode)
             .equals('RATE_LIMITED');
       }
     });
@@ -1477,7 +1477,7 @@ void _registerGenericAndSealedPolymorphicFiveDriverTests() {
       )) {
         check(r)
             .isA<FetchStage>()
-            .has((s) => (s.source.region, s.timeoutMs), 'stage')
+            .has('stage', (s) => (s.source.region, s.timeoutMs))
             .equals(('sa-east1', 950));
       }
 
@@ -1491,10 +1491,10 @@ void _registerGenericAndSealedPolymorphicFiveDriverTests() {
       )) {
         check(r).isA<FilterStage>()
           ..has(
-            (s) => s.predicates,
             'predicates',
+            (s) => s.predicates,
           ).deepEquals(['status >= 500', 'env == prod'])
-          ..has((s) => s.dropEmpty, 'dropEmpty').isTrue();
+          ..has('dropEmpty', (s) => s.dropEmpty).isTrue;
       }
 
       final nullableEnvCodec = PagedEnvelopeCodable<LevelC?>(
@@ -1503,7 +1503,7 @@ void _registerGenericAndSealedPolymorphicFiveDriverTests() {
       const sparseEnv = PagedEnvelope<LevelC?>(page: 2, primary: null);
       for (final r in _roundtripAllFiveFormats(sparseEnv, nullableEnvCodec)) {
         check(r.page).equals(2);
-        check(r.primary).isNull();
+        check(r.primary).isNull;
       }
     });
   });

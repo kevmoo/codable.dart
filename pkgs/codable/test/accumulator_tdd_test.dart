@@ -26,9 +26,9 @@ void main() {
         ChunkedConversionSink.withCallback((_) {}),
         Decodable.fromFunction((decoder) {
           final unkeyed = decoder.unkeyed();
-          check(unkeyed.moveNext()).isTrue();
+          check(unkeyed.moveNext()).isTrue;
           decodedElement = unkeyed.readInt();
-          check(unkeyed.moveNext()).isFalse();
+          check(unkeyed.moveNext()).isFalse;
         }),
       );
       sink1.add(largeBytes);
@@ -50,7 +50,7 @@ void main() {
           keyed.skipValue();
           check(keyed.nextKey()).equals('b');
           keyed.skipValue();
-          check(keyed.moveNextKey()).isFalse();
+          check(keyed.moveNextKey()).isFalse;
 
           final bytes = (decoder as JsonCodableDecoder).reader.bytes;
           secondLength = bytes.length;
@@ -176,7 +176,7 @@ void main() {
         }),
         Decodable.fromFunction((decoder) {
           if (identical(1.0, 1)) {
-            check(decoder.payload).isNull();
+            check(decoder.payload).isNull;
           } else {
             check(decoder.payload)
                 .isNotNull()
@@ -205,9 +205,9 @@ void main() {
         ChunkedConversionSink.withCallback((_) {}),
         Decodable.fromFunction((decoder) {
           final unkeyed = decoder.unkeyed();
-          check(unkeyed.moveNext()).isTrue();
+          check(unkeyed.moveNext()).isTrue;
           decodedValue = unkeyed.readInt();
-          check(unkeyed.moveNext()).isFalse();
+          check(unkeyed.moveNext()).isFalse;
         }),
       );
 

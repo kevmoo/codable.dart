@@ -410,9 +410,9 @@ void _registerKeyAndStringEscapingTests() {
           }),
         ),
       ).throws<TomlCodableException>().which(
-        (it) => it
-          ..has((e) => e.path, 'path').deepEquals(['bad'])
-          ..has((e) => e.actualValue, 'actualValue').equals(loneSurrogate),
+        .it()
+          ..has('path', (e) => e.path).deepEquals(['bad'])
+          ..has('actualValue', (e) => e.actualValue).equals(loneSurrogate),
       );
 
       check(
@@ -424,7 +424,7 @@ void _registerKeyAndStringEscapingTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals(loneSurrogate);
     });
   });
@@ -465,7 +465,7 @@ void _registerDateTimeAndBytesTests() {
       () {
         final sample = Uint8List.fromList([0xde, 0xad, 0xbe, 0xef]);
         final encodable = Encodable<Uint8List>.fromFunction((bytes, encoder) {
-          check(encoder.isHumanReadable).isTrue();
+          check(encoder.isHumanReadable).isTrue;
           check(encoder.userInfo['tag']).equals('v1');
           final k = encoder.keyed()..encodeBytes('primary', bytes);
           k.nestedEncoder('chunks').unkeyed(length: 1).encodeBytes(bytes);
@@ -561,9 +561,9 @@ void _registerNumericAndJsFloatTests() {
             }),
           ),
         ).throws<TomlCodableException>().which(
-          (it) => it
-            ..has((e) => e.path, 'path').deepEquals(['unsafe'])
-            ..has((e) => e.actualValue, 'actualValue').equals(unsafeJs),
+          .it()
+            ..has('path', (e) => e.path).deepEquals(['unsafe'])
+            ..has('actualValue', (e) => e.actualValue).equals(unsafeJs),
         );
       } else {
         const maxInt64 = 0x7fffffff * 0x100000000 + 0xffffffff;
@@ -702,7 +702,7 @@ void _registerBoundaryExceptionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
+          .has('path', (e) => e.path)
           .deepEquals(['props', 'missing']);
 
       check(
@@ -716,7 +716,7 @@ void _registerBoundaryExceptionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
+          .has('path', (e) => e.path)
           .deepEquals(['nums', 1]);
 
       check(
@@ -730,7 +730,7 @@ void _registerBoundaryExceptionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path, 'path')
+          .has('path', (e) => e.path)
           .deepEquals(['labels', '404']);
     });
 
@@ -777,7 +777,7 @@ void _registerBoundaryExceptionTests() {
             const _PointEncodable().encode(const _Point(1, 2), m.keyEncoder());
           }),
         ),
-      ).throws<TomlCodableException>().has((e) => e.path, 'path').deepEquals([
+      ).throws<TomlCodableException>().has('path', (e) => e.path).deepEquals([
         'coords',
         0,
       ]);
@@ -804,9 +804,9 @@ void _registerBoundaryExceptionTests() {
           }),
         ),
       ).throws<TomlCodableException>().which(
-        (it) => it
-          ..has((e) => e.path, 'path').deepEquals(['labels', 0])
-          ..has((e) => e.message, 'message').contains('did not write a key'),
+        .it()
+          ..has('path', (e) => e.path).deepEquals(['labels', 0])
+          ..has('message', (e) => e.message).contains('did not write a key'),
       );
 
       // Duplicate stringified keys in MapEncoder (`1` and `'1'`)
@@ -823,7 +823,7 @@ void _registerBoundaryExceptionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.actualValue, 'actualValue')
+          .has('actualValue', (e) => e.actualValue)
           .equals('1');
     });
 
@@ -843,7 +843,7 @@ void _registerBoundaryExceptionTests() {
             ),
           )
           .throws<TomlCodableException>()
-          .has((e) => e.path.length, 'path.length')
+          .has('path.length', (e) => e.path.length)
           .equals(64);
     });
   });

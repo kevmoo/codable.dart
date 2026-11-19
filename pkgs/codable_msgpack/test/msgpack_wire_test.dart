@@ -201,9 +201,9 @@ void _registerFloatAndNumSemanticsTests() {
         );
         check(asDoubles[0]).equals(1.5);
         check(asDoubles[1]).equals(1.0);
-        check(asDoubles[2].isNegative).isTrue();
+        check(asDoubles[2].isNegative).isTrue;
         check(asDoubles[3]).equals(double.infinity);
-        check(asDoubles[4].isNaN).isTrue();
+        check(asDoubles[4].isNaN).isTrue;
         check(asDoubles[5]).equals(7.0);
 
         // readNum() returns double for float32/float64 and int for integer tags
@@ -218,7 +218,7 @@ void _registerFloatAndNumSemanticsTests() {
         if (!identical(1.0, 1)) {
           check(asNums[1]).isA<double>();
         }
-        check(asNums[2].toDouble().isNegative).isTrue();
+        check(asNums[2].toDouble().isNegative).isTrue;
         check(asNums[5]).isA<int>().equals(7);
 
         // readInt() strictly rejects float32(1.0) and float64(1.0) even on JS!
@@ -274,12 +274,12 @@ void _registerStringAndBinaryBoundaryTests() {
     test('returns zero-copy sublistView for bin8, bin16, and bin32', () {
       final bytesCodec = Codable<Uint8List>.fromFunctions(
         decode: (d) {
-          check(d.isHumanReadable).isFalse();
+          check(d.isHumanReadable).isFalse;
           check(d.peekKind()).equals(ValueKind.bytes);
           return d.singleValue().readBytes();
         },
         encode: (v, e) {
-          check(e.isHumanReadable).isFalse();
+          check(e.isHumanReadable).isFalse;
           e.singleValue().encodeBytes(v);
         },
       );
@@ -342,10 +342,10 @@ void _registerExtensionSkipAndNeverUsedTests() {
             Decodable.fromFunction((d) {
               final u = d.unkeyed();
               for (var i = 0; i < extFrames.length; i++) {
-                check(u.moveNext()).isTrue();
+                check(u.moveNext()).isTrue;
                 u.skipElement();
               }
-              check(u.moveNext()).isTrue();
+              check(u.moveNext()).isTrue;
               return u.readInt();
             }),
           );
@@ -442,7 +442,7 @@ void _registerSinglePassAndBackpatchTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.message, 'message')
+              .has('message', (e) => e.message)
               .contains(
                 'Single-pass MessagePack encoding requires upfront container length',
               );
@@ -494,7 +494,7 @@ void _registerSinglePassAndBackpatchTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(-1);
       },
     );
@@ -634,7 +634,7 @@ void _registerCursorMappedAndDepthLimitTests() {
         ]);
         final decoder = MsgPackCodableDecoder.fromBytes(wire);
         final mapped = decoder.mapped();
-        check(mapped.containsKey('kind')).isTrue();
+        check(mapped.containsKey('kind')).isTrue;
         check(mapped.readString('kind')).equals('rect');
         check(mapped.readInt('w')).equals(50);
 
@@ -674,21 +674,21 @@ void _registerCursorMappedAndDepthLimitTests() {
         arrBytes,
         Decodable.fromFunction((d) {
           final u = d.unkeyed();
-          check(u.moveNext()).isTrue();
+          check(u.moveNext()).isTrue;
           final peeked = u.nestedDecoder().peekKind();
 
-          check(u.moveNext()).isTrue();
+          check(u.moveNext()).isTrue;
           final partial = u.nestedDecoder().singleValue().decode<int>(
             Decodable.fromFunction((d2) {
               final u2 = d2.unkeyed();
-              check(u2.moveNext()).isTrue();
+              check(u2.moveNext()).isTrue;
               return u2.readInt();
             }),
           );
 
-          check(u.moveNext()).isTrue();
+          check(u.moveNext()).isTrue;
           final last = u.readInt();
-          check(u.moveNext()).isFalse();
+          check(u.moveNext()).isFalse;
           return (peeked, partial, last);
         }),
       );
@@ -724,7 +724,7 @@ void _registerCursorMappedAndDepthLimitTests() {
 
           check(k.nextKey()).equals('tail');
           final tail = k.readInt();
-          check(k.moveNextKey()).isFalse();
+          check(k.moveNextKey()).isFalse;
           return (peeked, partial, tail);
         }),
       );
@@ -799,7 +799,7 @@ void _registerCursorMappedAndDepthLimitTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(bad);
 
         check(
@@ -811,7 +811,7 @@ void _registerCursorMappedAndDepthLimitTests() {
               ),
             )
             .throws<CodableException>()
-            .has((e) => e.actualValue, 'actualValue')
+            .has('actualValue', (e) => e.actualValue)
             .equals(bad);
       }
 

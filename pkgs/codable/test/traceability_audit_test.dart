@@ -18,7 +18,7 @@ void main() {
       // 1. JsonUtf8Codec & 7. jsonUtf8
       check(jsonUtf8).isA<JsonUtf8Codec>();
       final encoded = jsonUtf8.encode(data);
-      check(encoded).isNotEmpty();
+      check(encoded).isNotEmpty;
 
       // 8. jsonUtf8Decode
       final decoded = jsonUtf8Decode(encoded) as Map<String, dynamic>;
@@ -69,11 +69,11 @@ void main() {
           .equals(true);
 
       // 16: isNull
-      check(JsonUtf8Decoder.isNull(nullBytes, 0, nullBytes.length)).isTrue();
+      check(JsonUtf8Decoder.isNull(nullBytes, 0, nullBytes.length)).isTrue;
 
       // 17: equalsAscii
       check(JsonUtf8Decoder.equalsAscii(intBytes, 0, intBytes.length, '7890'))
-          .isTrue();
+          .isTrue;
 
       // 18: matchKey & 39: JsonKeyOptions.of
       final keyOptions = JsonKeyOptions.of(['key', 'flag', 'other']);
@@ -82,8 +82,8 @@ void main() {
           .equals(1);
 
       // 19: isVerbatim
-      check(JsonUtf8Decoder.isVerbatim(intBytes, 0, intBytes.length)).isTrue();
-      check(JsonUtf8Decoder.isVerbatim(strBytes, 0, strBytes.length)).isFalse();
+      check(JsonUtf8Decoder.isVerbatim(intBytes, 0, intBytes.length)).isTrue;
+      check(JsonUtf8Decoder.isVerbatim(strBytes, 0, strBytes.length)).isFalse;
 
       // 20: decodeString
       check(JsonUtf8Decoder.decodeString(strBytes, 1, strBytes.length - 1))
@@ -240,23 +240,23 @@ void main() {
 
       final options = JsonKeyOptions.of(['id', 'price', 'active', 'comment']);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(0);
       check(reader.readInt()).equals(101);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(1);
       check(reader.readDouble()).equals(19.99);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(2);
       check(reader.readBool()).equals(true);
 
-      check(reader.moveNext()).isTrue();
+      check(reader.moveNext()).isTrue;
       check(reader.selectName(options)).equals(3);
       reader.readNull();
 
-      check(reader.moveNext()).isFalse();
+      check(reader.moveNext()).isFalse;
       reader.endObject();
     });
 

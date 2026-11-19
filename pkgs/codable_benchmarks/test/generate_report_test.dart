@@ -2,6 +2,9 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+@TestOn('vm')
+library;
+
 import 'dart:io';
 
 import 'package:checks/checks.dart';
@@ -242,7 +245,7 @@ void main() {
             _ => null,
           },
         );
-        check(problems).isEmpty();
+        check(problems).isEmpty;
       },
     );
 
@@ -361,7 +364,7 @@ void main() {
             p.join(Directory.systemTemp.path, 'nonexistent_bench_press_build'),
           ),
         );
-        check(problems).isEmpty();
+        check(problems).isEmpty;
       },
     );
   });

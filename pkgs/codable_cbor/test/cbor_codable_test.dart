@@ -67,7 +67,7 @@ void _registerGeneratedModelTests() {
       check(decoded.id).equals(9001);
       check(decoded.priority).equals(FramePriority.urgent);
       check(decoded.body).deepEquals([0x00, 0x7f, 0x80, 0xff]);
-      check(decoded.digest).isNull();
+      check(decoded.digest).isNull;
       check(decoded.headers).deepEquals({1: 'trace-id', 256: 'span-id'});
       check(decoded.metrics).deepEquals([1.25, -0.5, 0.0]);
 
@@ -264,13 +264,13 @@ void _registerFloatAndZeroCopyTests() {
         ),
       );
       check(decoded[0]).equals(0.0);
-      check(decoded[1].isNegative).isTrue();
+      check(decoded[1].isNegative).isTrue;
       check(decoded[2]).isGreaterThan(0.0);
       check(decoded[3]).equals(-1.0);
       check(decoded[4]).equals(65504.0);
       check(decoded[5]).equals(double.infinity);
       check(decoded[6]).equals(double.negativeInfinity);
-      check(decoded[7].isNaN).isTrue();
+      check(decoded[7].isNaN).isTrue;
     });
 
     test(
@@ -284,7 +284,7 @@ void _registerFloatAndZeroCopyTests() {
         final view = CborCodableDecoder.decode<Uint8List>(
           cbor,
           Decodable.fromFunction((d) {
-            check(d.isHumanReadable).isFalse();
+            check(d.isHumanReadable).isFalse;
             check(d.peekKind()).equals(ValueKind.bytes);
             return d.singleValue().readBytes();
           }),
@@ -326,20 +326,20 @@ void _registerCursorDrainAndEncoderErrorTests() {
           encoded,
           Decodable.fromFunction((d) {
             final outer = d.unkeyed();
-            check(outer.moveNext()).isTrue();
+            check(outer.moveNext()).isTrue;
             final innerArr = outer.nestedDecoder().unkeyed();
-            check(innerArr.moveNext()).isTrue();
+            check(innerArr.moveNext()).isTrue;
             final firstElem = innerArr.readInt(); // leave 20, 30 unread!
 
-            check(outer.moveNext()).isTrue();
+            check(outer.moveNext()).isTrue;
             final innerMap = outer.nestedDecoder().map();
-            check(innerMap.moveNextEntry()).isTrue();
+            check(innerMap.moveNextEntry()).isTrue;
             final firstMapKey = innerMap
                 .keyDecoder()
                 .singleValue()
                 .readInt(); // leave value & entry 2 unread!
 
-            check(outer.moveNext()).isTrue();
+            check(outer.moveNext()).isTrue;
             final trailing = outer.readInt();
             return (firstElem, firstMapKey, trailing);
           }),
@@ -365,10 +365,10 @@ void _registerCursorDrainAndEncoderErrorTests() {
         ]);
         final decoder = CborCodableDecoder.fromBytes(cbor);
         final mapped = decoder.mapped();
-        check(mapped.containsKey('target')).isTrue();
-        check(mapped.containsKey('absent')).isFalse();
+        check(mapped.containsKey('target')).isTrue;
+        check(mapped.containsKey('absent')).isFalse;
         check(mapped.readInt('target')).equals(42);
-        check(mapped.readBool('flag')).isTrue();
+        check(mapped.readBool('flag')).isTrue;
 
         // Rewind handoff to KeyedDecoder skips integer key 7 cleanly
         final opts = KeyOptions.of(const ['target']);
@@ -426,7 +426,7 @@ void _registerCursorDrainAndEncoderErrorTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(-1);
 
           if (identical(1, 1.0)) {
@@ -441,7 +441,7 @@ void _registerCursorDrainAndEncoderErrorTests() {
                     ),
                   )
                   .throws<CodableException>()
-                  .has((e) => e.actualValue, 'actualValue')
+                  .has('actualValue', (e) => e.actualValue)
                   .equals(badInt);
             }
           }
@@ -465,21 +465,21 @@ void _registerCursorDrainAndEncoderErrorTests() {
           arrBytes,
           Decodable.fromFunction((d) {
             final u = d.unkeyed();
-            check(u.moveNext()).isTrue();
+            check(u.moveNext()).isTrue;
             final peeked = u.nestedDecoder().peekKind();
 
-            check(u.moveNext()).isTrue();
+            check(u.moveNext()).isTrue;
             final partial = u.nestedDecoder().singleValue().decode<int>(
               Decodable.fromFunction((d2) {
                 final u2 = d2.unkeyed();
-                check(u2.moveNext()).isTrue();
+                check(u2.moveNext()).isTrue;
                 return u2.readInt(); // leaves 4 unread!
               }),
             );
 
-            check(u.moveNext()).isTrue();
+            check(u.moveNext()).isTrue;
             final last = u.readInt();
-            check(u.moveNext()).isFalse();
+            check(u.moveNext()).isFalse;
             return (peeked, partial, last);
           }),
         );
@@ -515,7 +515,7 @@ void _registerCursorDrainAndEncoderErrorTests() {
 
             check(k.nextKey()).equals('tail');
             final tail = k.readInt();
-            check(k.moveNextKey()).isFalse();
+            check(k.moveNextKey()).isFalse;
             return (peeked, partial, tail);
           }),
         );
@@ -588,7 +588,7 @@ void _registerCursorDrainAndEncoderErrorTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(bad);
 
           check(
@@ -600,7 +600,7 @@ void _registerCursorDrainAndEncoderErrorTests() {
                 ),
               )
               .throws<CodableException>()
-              .has((e) => e.actualValue, 'actualValue')
+              .has('actualValue', (e) => e.actualValue)
               .equals(bad);
         }
       });
@@ -621,14 +621,14 @@ void _registerDepthLimitAndSiblingTests() {
     int readNestedArrays(Decoder d, int remaining) {
       if (remaining == 0) return d.singleValue().readInt();
       final u = d.unkeyed();
-      check(u.moveNext()).isTrue();
+      check(u.moveNext()).isTrue;
       return readNestedArrays(u.nestedDecoder(), remaining - 1);
     }
 
     int readNestedKeyed(Decoder d, int remaining) {
       if (remaining == 0) return d.singleValue().readInt();
       final k = d.keyed();
-      check(k.moveNextKey()).isTrue();
+      check(k.moveNextKey()).isTrue;
       check(k.nextKey()).equals('k');
       return readNestedKeyed(k.nestedDecoder(), remaining - 1);
     }
@@ -641,7 +641,7 @@ void _registerDepthLimitAndSiblingTests() {
     int readNestedMap(Decoder d, int remaining) {
       if (remaining == 0) return d.singleValue().readInt();
       final m = d.map();
-      check(m.moveNextEntry()).isTrue();
+      check(m.moveNextEntry()).isTrue;
       check(m.keyDecoder().singleValue().readString()).equals('k');
       return readNestedMap(m.valueDecoder(), remaining - 1);
     }

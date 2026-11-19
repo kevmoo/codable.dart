@@ -104,7 +104,7 @@ void main() {
         probe(double.parse(digits.toString()));
       }
 
-      check(probe.failures).isEmpty();
+      check(probe.failures).isEmpty;
       // Guards against the corpus drifting into values that never escalate,
       // which would make this test pass without exercising the change.
       check(probe.escalated).isGreaterThan(1000);
@@ -136,7 +136,7 @@ void main() {
         }
       }
 
-      check(probe.failures).isEmpty();
+      check(probe.failures).isEmpty;
       check(probe.escalated).isGreaterThan(100);
     });
 
@@ -155,7 +155,7 @@ void main() {
         probe(value);
       }
 
-      check(probe.failures).isEmpty();
+      check(probe.failures).isEmpty;
       check(probe.checked).isGreaterThan(1000);
     });
 
@@ -181,7 +181,7 @@ void main() {
         probe(coordinate);
       }
 
-      check(probe.failures).isEmpty();
+      check(probe.failures).isEmpty;
       check(probe.escalated).isGreaterThan(0);
     });
 
